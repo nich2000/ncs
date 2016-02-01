@@ -1,0 +1,239 @@
+//==============================================================================
+//==============================================================================
+#include <math.h>
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+#include <string.h>
+
+#include "test.h"
+#include "protocol.h"
+#include "log.h"
+//==============================================================================
+#define TEST_PACK_COUNT 1
+#define TEST_WORD_COUNT 5
+#define TEST_STRING_SIZE 5
+#define TEST_LOG (TEST_PACK_COUNT <= 5)
+//==============================================================================
+char         tmp[128];
+clock_t      start_c, end_c;
+double       total_c;
+pack_buffer  buffer;
+pack_size    size;
+pack_index   ind;
+pack_key     key;
+int          valueI;
+pack_buffer  valueS;
+float        valueF;
+//==============================================================================
+int test()
+{
+  pack_begin();
+
+  pack_add_cmd("reset");
+  pack_add_param_as_int(123);
+  pack_add_param_as_int(321);
+
+  pack_end();
+
+  while(!pack_queue_next(buffer, &size))
+  {
+    int res = pack_validate(buffer, 0);
+    if(res != 0)
+    {
+      sprintf(tmp, "pack_validate, Error: %u", res);
+      add_to_log(tmp, LOG_ERROR);
+      return 1;
+    }
+
+//    test_parse_pack();
+  }
+
+  return 0;
+
+
+
+  start_c = clock();
+  pack_init();
+  for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
+  {
+    test_create_pack();
+    test_validate_pack();
+    test_parse_pack();
+  };
+  end_c = clock();
+  total_c = (double)(end_c - start_c) / CLOCKS_PER_SEC;
+  sprintf(tmp, "Total time: %f", total_c);
+  add_to_log(tmp, LOG_INFO);
+
+  return 0;
+}
+//==============================================================================
+int test_create_pack()
+{
+  pack_begin();
+
+  pack_add_as_int("SND", 123);
+
+  for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+  {
+    if(i > 9)
+      sprintf(key, "I%d", i);
+    else
+      sprintf(key, "IN%d", i);
+
+    pack_add_as_int(key, rand());
+  };
+
+
+  for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+  {
+    if(i > 9)
+      sprintf(key, "S%d", i);
+    else
+      sprintf(key, "ST%d", i);
+
+    pack_size j = 0;
+    for(j = 0; j < TEST_STRING_SIZE; j++)
+      valueS[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
+    valueS[j] = '\0';
+
+    pack_add_as_string(key, valueS);
+  };
+
+
+  for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+  {
+    if(i > 9)
+      sprintf(key, "F%d", i);
+    else
+      sprintf(key, "FL%d", i);
+
+    float rnd = (float)rand()/(float)(RAND_MAX/1000);
+    pack_add_as_float(key, rnd);
+  };
+
+  pack_end();
+}
+//==============================================================================
+int test_validate_pack()
+{
+  int res;
+  res = pack_queue_next(buffer, &size);
+  if(res != 0)
+  {
+    sprintf(tmp, "pack_queue_next, Error: %u", res);
+    add_to_log(tmp, LOG_ERROR);
+    return 1;
+  }
+
+  res = pack_validate(buffer, 0);
+  if(res != 0)
+  {
+    sprintf(tmp, "pack_validate, Error: %u", res);
+    add_to_log(tmp, LOG_ERROR);
+    return 2;
+  }
+
+  return 0;
+}
+//==============================================================================
+int test_parse_pack()
+{
+  add_to_log("-----------------------------", LOG_DEBUG);
+
+  pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
+  if(tmp_pack != 0)
+  {
+    if(TEST_LOG)
+    {
+      sprintf(tmp, "test_parse_pack, words_count: %d", tmp_pack->words_count);
+      add_to_log(tmp, LOG_DEBUG);
+    }
+    //--------------------------------------------------------------------------
+    if(TEST_LOG)
+      add_to_log("Test CSV out", LOG_DEBUG);
+
+    pack_keys_to_csv(tmp_pack, ';', tmp);
+    if(TEST_LOG)
+      add_to_log(tmp, LOG_DEBUG);
+    else
+      add_to_report(tmp);
+
+    pack_values_to_csv(tmp_pack, ';', tmp);
+    if(TEST_LOG)
+      add_to_log(tmp, LOG_DEBUG);
+    else
+      add_to_report(tmp);
+    //--------------------------------------------------------------------------
+    if(TEST_LOG)
+      add_to_log("Test words out", LOG_DEBUG);
+
+    pack_size tmp_words_count = pack_words_count(tmp_pack);
+    for(pack_size i = 0; i < tmp_words_count; i++)
+    {
+      if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+        if(TEST_LOG)
+        {
+          sprintf(tmp, "%s(%d): %s", key, i, valueS);
+          add_to_log(tmp, LOG_DEBUG);
+        };
+    };
+    //--------------------------------------------------------------------------
+    if(TEST_LOG)
+      add_to_log("Test by key out", LOG_DEBUG);
+
+    memcpy(key, "IN0", PACK_KEY_SIZE);
+    if(pack_val_by_key_as_int(tmp_pack, key, &ind, &valueI) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %d", key, ind, valueI);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+
+    memcpy(key, "ST0", PACK_KEY_SIZE);
+    if(pack_val_by_key_as_string(tmp_pack, key, &ind, valueS) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %s", key, ind, valueS);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+
+    memcpy(key, "FL0", PACK_KEY_SIZE);
+    if(pack_val_by_key_as_float(tmp_pack, key, &ind, &valueF) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %f", key, ind, valueF);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+    //--------------------------------------------------------------------------
+    if(TEST_LOG)
+      add_to_log("Test by index out", LOG_DEBUG);
+
+    ind = 1;
+    if(pack_val_by_index_as_int(tmp_pack, ind, key, &valueI) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %d", key, ind, valueI);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+
+    ind = 7;
+    if(pack_val_by_index_as_string(tmp_pack, ind, key, valueS) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %s", key, ind, valueS);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+
+    ind = 11;
+    if(pack_val_by_index_as_float(tmp_pack, ind, key, &valueF) == 0)
+      if(TEST_LOG)
+      {
+        sprintf(tmp, "%s(%d): %f", key, ind, valueF);
+        add_to_log(tmp, LOG_DEBUG);
+      }
+    //--------------------------------------------------------------------------
+  };
+}
+//==============================================================================
