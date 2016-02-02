@@ -38,7 +38,7 @@ int test()
 
   while(!pack_queue_next(buffer, &size))
   {
-    int res = pack_validate(buffer, 0);
+    int res = pack_validate(buffer, size, 0);
     if(res != 0)
     {
       sprintf(tmp, "pack_validate, Error: %u", res);
@@ -127,7 +127,7 @@ int test_validate_pack()
     return 1;
   }
 
-  res = pack_validate(buffer, 0);
+  res = pack_validate(buffer, size, 0);
   if(res != 0)
   {
     sprintf(tmp, "pack_validate, Error: %u", res);

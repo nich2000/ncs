@@ -9,6 +9,7 @@
 #include "test.h"
 //==============================================================================
 #define SOCK_SERVER_STREAMER 0
+#define SOCK_BUFFER_SIZE     32
 //==============================================================================
 SOCKET work_socket;
 sock_worker_list clients;
@@ -64,6 +65,12 @@ int sock_deinit()
 #endif
 
   return 0;
+}
+//==============================================================================
+int sock_server_init()
+{
+  clients.last_id = 0;
+  clients.index = 0;
 }
 //==============================================================================
 int sock_server_start(int port)
@@ -142,8 +149,6 @@ int sock_server_work()
 
     if(clients.index < SOCK_WORKERS_COUNT)
     {
-      clients.items[clients.index]._socket = tmp_client;
-
       pthread_attr_t tmp_attr;
       pthread_attr_init(&tmp_attr);
       pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
@@ -158,11 +163,11 @@ int sock_server_work()
 
       if(pthread_create(&tmp_thread, &tmp_attr, func, (void*)&tmp_client))
       {
-        if(pthread_join(tmp_thread, NULL) == 0)
-        {
-          clients.items[clients.index]._thread = tmp_thread;
-          clients.index++;
-        }
+        clients.items[clients.index]._socket = tmp_client;
+        clients.items[clients.index]._thread = tmp_thread;
+        clients.items[clients.index]._id     = clients.last_id;
+        clients.index++;
+        clients.last_id++;
       }
     }
     else
@@ -177,6 +182,10 @@ int sock_server_stop()
   add_to_log("sock_stop_server", LOG_INFO);
   closesocket(work_socket);
   return 0;
+}
+//==============================================================================
+int sock_client_init()
+{
 }
 //==============================================================================
 int sock_client_start(int port, const char *host)
@@ -309,21 +318,36 @@ static void *sock_work_send(void *arg)
 
     while(!pack_queue_next(buffer, &size))
     {
-      if(pack_validate(buffer, 0) == 0)
+      if(pack_validate(buffer, size, 0) == 0)
       {
         pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
         pack_buffer csv;
         pack_values_to_csv(tmp_pack, ';', csv);
-        sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s", counter1, sock, csv);
+        sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s(%d)", counter1, sock, csv, size);
         add_to_log(tmp, LOG_DEBUG);
       };
 
-      if(send(sock, buffer, size, 0) == SOCKET_ERROR)
+      int tmp_index = 0;
+      unsigned char tmp_buffer[SOCK_BUFFER_SIZE];
+      while(tmp_index < size)
       {
-        sprintf(tmp, "sock_send_data, send, Error: %u", getSocketError());
-        add_to_log(tmp, LOG_ERROR);
-//        return NULL;
-      };
+        int tmp_cnt;
+        if((size - tmp_index) > SOCK_BUFFER_SIZE)
+          tmp_cnt = SOCK_BUFFER_SIZE;
+        else
+          tmp_cnt = (size - tmp_index);
+        memcpy(tmp_buffer, &buffer[tmp_index], tmp_cnt);
+        tmp_index += tmp_cnt;
+
+        sprintf(tmp, "%d", tmp_cnt);
+        add_to_log(tmp, LOG_DEBUG);
+
+        if(send(sock, tmp_buffer, tmp_cnt, 0) == SOCKET_ERROR)
+        {
+          sprintf(tmp, "sock_send_data, send, Error: %u", getSocketError());
+          add_to_log(tmp, LOG_ERROR);
+        };
+      }
 
       sleep(1);
 //      usleep(1000);
@@ -367,14 +391,20 @@ static void *sock_work_recv(void *arg)
       return NULL;
     }
 
-    if(pack_validate(buffer, 0) == 0)
+    int res = pack_validate(buffer, valread, 0);
+    if(res == 0)
     {
       pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
       pack_buffer csv;
       pack_values_to_csv(tmp_pack, ';', csv);
       sprintf(tmp, "recv, cnt: %d, sock: %d, data: %s", counter, sock, csv);
       add_to_log(tmp, LOG_DEBUG);
-    };
+    }
+    else
+    {
+      sprintf(tmp, "recv, validate: %d", res);
+      add_to_log(tmp, LOG_DEBUG);
+    }
   }
 
   return NULL;

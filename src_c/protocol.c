@@ -37,11 +37,12 @@
  * todo
  * ----
  * 1. Побайтный парсинг входного буфера и добавление в список полученных пакетов
- * 2. Очередь пакетов на отправку
- * 3. Список созданных пакетов(на случай переотправки)
- * 4. Список полученных пакетов
+ * 2. !Очередь пакетов на отправку
+ * 3. !Список созданных пакетов(на случай переотправки)
+ * 4. !Список полученных пакетов
  * 5. Команда переотправить, получает индекс и добавляет пакет в очередь
- * 6. Отправка идет только из очереди
+ * 6. !Отправка идет только из очереди
+ * 7. Списки в клиенте по одному, в сервере на каждого клиента
 */
 //==============================================================================
 #include <string.h>
@@ -68,6 +69,9 @@ pack_size        out_lock = 0;
 pack_number      in_global_number = PACK_GLOBAL_INIT_NUMBER;
 // Current index in packets
 pack_number      in_packets_index = PACK_PACKETS_INIT_INDEX;
+// Validation buffer
+pack_index       in_validation_buffer_size;
+pack_buffer      in_validation_buffer;
 // List of input packets
 pack_in_packets  in_packets;
 // Lock count
@@ -115,23 +119,24 @@ int unlock(pack_type out)
 //==============================================================================
 int pack_init()
 {
-  in_global_number  = PACK_GLOBAL_INIT_NUMBER;
-  in_packets_index  = PACK_PACKETS_INIT_INDEX;
+  in_validation_buffer_size = 0;
 
-  out_global_number = PACK_GLOBAL_INIT_NUMBER;
-  out_packets_index = PACK_PACKETS_INIT_INDEX;
+  in_global_number           = PACK_GLOBAL_INIT_NUMBER;
+  in_packets_index           = PACK_PACKETS_INIT_INDEX;
 
-  queue.empty       = PACK_TRUE;
-  queue.start       = PACK_QUEUE_INIT_INDEX;
-  queue.finish      = PACK_QUEUE_INIT_INDEX;
+  out_global_number          = PACK_GLOBAL_INIT_NUMBER;
+  out_packets_index          = PACK_PACKETS_INIT_INDEX;
+
+  queue.empty                = PACK_TRUE;
+  queue.start                = PACK_QUEUE_INIT_INDEX;
+  queue.finish               = PACK_QUEUE_INIT_INDEX;
 
   return PACK_OK;
 }
 //==============================================================================
 int pack_version(pack_ver version)
 {
-  for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
-    version[i] = PACK_VERSION[i];
+  strncpy(version, PACK_VERSION, PACK_VERSION_SIZE);
 
   return PACK_OK;
 }
@@ -183,13 +188,17 @@ int pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack)
 pack_packet *_pack_pack_by_number(pack_number number, pack_type out)
 {
   if(out)
+  {
     for(pack_size i = 0; i <= PACK_OUT_PACKETS_COUNT; i++)
       if(out_packets[i].number == number)
         return &out_packets[i];
+  }
   else
+  {
     for(pack_size i = 0; i <= PACK_IN_PACKETS_COUNT; i++)
       if(in_packets[i].number == number)
         return &in_packets[i];
+  };
 
   return NULL;
 }
@@ -512,14 +521,17 @@ int pack_queue_add(pack_number number)
 {
   pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT);
 
-  if(tmp_pack != 0)
-  {
-    queue.packets[queue.finish] = tmp_pack;
-    queue.empty = PACK_FALSE;
-    queue.finish++;
-    if(queue.finish > PACK_QUEUE_COUNT)
-      queue.finish = 0;
-  };
+  if(tmp_pack == 0)
+    return 1;
+
+  pack_index tmp_finish = queue.finish;
+  queue.packets[tmp_finish] = tmp_pack;
+  queue.empty = PACK_FALSE;
+  queue.finish++;
+  if(queue.finish > PACK_QUEUE_COUNT)
+    queue.finish = 0;
+
+  return 0;
 }
 //==============================================================================
 int pack_queue_next(pack_buffer buffer, pack_size *size)
@@ -530,7 +542,8 @@ int pack_queue_next(pack_buffer buffer, pack_size *size)
   if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
     return 2;
 
-  pack_packet *tmp_pack = queue.packets[queue.start];
+  pack_index tmp_start = queue.start;
+  pack_packet *tmp_pack = queue.packets[tmp_start];
   pack_packet_to_buffer(tmp_pack, buffer, size);
 
   queue.start++;
@@ -705,70 +718,73 @@ int pack_add_param_as_bytes (char *param, pack_size size)
   pack_add_as_bytes(PACK_PARAM_KEY, param, size);
 }
 //==============================================================================
-int pack_validate(pack_buffer buffer, pack_type only_validate)
+int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 {
 //  add_to_log("pack_validate", LOG_DEBUG);
 
-  pack_size tmp_pack_pos = 0;
+  pack_size i = in_validation_buffer_size;
+  for(pack_size j = 0; j < size; j++)
+    in_validation_buffer[i++] = buffer[j];
+  in_validation_buffer_size += size;
 
-  // Get version
-  for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
-    if(buffer[tmp_pack_pos++] != PACK_VERSION[i])
-      return 1;
+  while(1)
+  {
+    if(in_validation_buffer_size <= 0)
+      return 0;
 
-  // Get size
-  pack_size tmp_size = buffer[tmp_pack_pos++] << 8;
-  tmp_size          |= buffer[tmp_pack_pos++];
+    pack_size tmp_pack_pos = 0;
 
-  // Get value
-  pack_buffer tmp_value_buffer;
-  for(pack_size i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
-    tmp_value_buffer[i] = buffer[tmp_pack_pos++];
+    // Get version
+    for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
+      if(in_validation_buffer[tmp_pack_pos++] != PACK_VERSION[i])
+        return 1;
 
-  // Get index
-  pack_index tmp_index = (tmp_value_buffer[0] << 8) | tmp_value_buffer[1];
+    // Get size
+    pack_size tmp_size = in_validation_buffer[tmp_pack_pos++] << 8;
+    tmp_size          |= in_validation_buffer[tmp_pack_pos++];
 
-  // Get crc16 1
-  pack_crc16 tmp_crc16_1 = buffer[tmp_pack_pos++] << 8;
-  tmp_crc16_1           |= buffer[tmp_pack_pos++];
-  // Get crc16 2
-  pack_crc16 tmp_crc16_2 = getCRC16(tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
-  // Check crc16
-  if(tmp_crc16_1 != tmp_crc16_2)
-    return 2;
+    // Get value
+    pack_buffer tmp_value_buffer;
+    for(pack_size i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
+      tmp_value_buffer[i] = in_validation_buffer[tmp_pack_pos++];
 
-  if(only_validate)
-    return 0;
+    // Get index
+    pack_index tmp_index = (tmp_value_buffer[0] << 8) | tmp_value_buffer[1];
 
-//  add_to_log("pack_validate_1", LOG_DEBUG);
-  in_packets_index++;
-  if(in_packets_index >= PACK_IN_PACKETS_COUNT)
-    in_packets_index = PACK_PACKETS_INIT_INDEX;
+    // Get crc16 1
+    pack_crc16 tmp_crc16_1 = in_validation_buffer[tmp_pack_pos++] << 8;
+    tmp_crc16_1           |= in_validation_buffer[tmp_pack_pos++];
+    // Get crc16 2
+    pack_crc16 tmp_crc16_2 = getCRC16(tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
+    // Check crc16
+    if(tmp_crc16_1 != tmp_crc16_2)
+      return 2;
 
-//  char tmp[128];
-//  sprintf(tmp, "in_packets_index: %d", in_packets_index);
-//  add_to_log(tmp, LOG_DEBUG);
+    pack_size i = in_validation_buffer_size - tmp_pack_pos;
+    for(pack_size j = 0; j < in_validation_buffer_size; j++)
+      in_validation_buffer[j] = in_validation_buffer[i++];
+    in_validation_buffer_size -= tmp_pack_pos;
 
-//  add_to_log("pack_validate_2", LOG_DEBUG);
-  pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
+    if(only_validate)
+      return 0;
 
-  if(tmp_pack == NULL)
-    return 3;
+    in_packets_index++;
+    if(in_packets_index >= PACK_IN_PACKETS_COUNT)
+      in_packets_index = PACK_PACKETS_INIT_INDEX;
 
-//  add_to_log("pack_validate_30", LOG_DEBUG);
-  strncpy(tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
-//  add_to_log("pack_validate_31", LOG_DEBUG);
-  tmp_pack->size = tmp_size;
-//  add_to_log("pack_validate_32", LOG_DEBUG);
-  tmp_pack->number = tmp_index;
-//  add_to_log("pack_validate_33", LOG_DEBUG);
-  tmp_pack->crc = tmp_crc16_1;
+    pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
+    if(tmp_pack == NULL)
+      return 3;
 
-//  add_to_log("pack_validate_4", LOG_DEBUG);
-  pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
+    strncpy(tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
+    tmp_pack->size = tmp_size;
+    tmp_pack->number = tmp_index;
+    tmp_pack->crc = tmp_crc16_1;
 
-//  add_to_log("pack_validate_5", LOG_DEBUG);
-  pack_parse_cmd(tmp_pack);
+    pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
+
+    pack_parse_cmd(tmp_pack);
+  };
 
   return 0;
 }

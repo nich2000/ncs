@@ -28,10 +28,12 @@
 //==============================================================================
 #define SOCK_WORKERS_COUNT 32
 //==============================================================================
+typedef unsigned short sock_id;
 typedef unsigned short sock_index;
 //==============================================================================
 typedef struct
 {
+  sock_id   _id;
   SOCKET    _socket;
   pthread_t _thread;
 }sock_worker;
@@ -40,6 +42,7 @@ typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
 //==============================================================================
 typedef struct
 {
+  sock_id      last_id;
   sock_index   index;
   sock_workers items;
 }sock_worker_list;
@@ -47,10 +50,12 @@ typedef struct
 int sock_init();
 int sock_deinit();
 //==============================================================================
+int sock_server_init();
 int sock_server_start(int port);
 int sock_server_stop();
 int sock_server_work();
 //==============================================================================
+int sock_client_init();
 int sock_client_start(int port, const char *host);
 int sock_client_work();
 int sock_client_stop();

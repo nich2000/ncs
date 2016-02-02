@@ -1,1 +1,0 @@
-c:\develop\DEMS\TestArea\ProtocolTest\src_c\CMakeLists.txt.user

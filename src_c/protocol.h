@@ -99,6 +99,8 @@ typedef union
   char  buff[sizeof(float)];
 } floatUnion;
 //==============================================================================
+int pack_version(pack_ver version);
+//==============================================================================
 int pack_init();
 int pack_begin();
 int pack_end();
@@ -137,20 +139,24 @@ int pack_word_by_index(pack_packet *pack, pack_index index, pack_key key,      p
 //==============================================================================
 int pack_key_by_index(pack_packet *pack, pack_index index, pack_key key);
 //==============================================================================
-int pack_val_by_key_as_int     (pack_packet *pack, pack_key key, pack_index *index, int   *value);
-int pack_val_by_key_as_float   (pack_packet *pack, pack_key key, pack_index *index, float *value);
-int pack_val_by_key_as_string  (pack_packet *pack, pack_key key, pack_index *index, char  *value);
-int pack_val_by_key_as_bytes   (pack_packet *pack, pack_key key, pack_index *index, char  *value, pack_size *size);
-
+int pack_val_by_key_as_int   (pack_packet *pack, pack_key key, pack_index *index, int   *value);
+int pack_val_by_key_as_float (pack_packet *pack, pack_key key, pack_index *index, float *value);
+int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index, char  *value);
+int pack_val_by_key_as_bytes (pack_packet *pack, pack_key key, pack_index *index, char  *value, pack_size *size);
+//==============================================================================
 int pack_val_by_index_as_int   (pack_packet *pack, pack_index index, pack_key key, int   *value);
 int pack_val_by_index_as_float (pack_packet *pack, pack_index index, pack_key key, float *value);
 int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, char  *value);
 int pack_val_by_index_as_bytes (pack_packet *pack, pack_index index, pack_key key, char  *value, pack_size *size);
 //==============================================================================
-int pack_validate(pack_buffer buffer, pack_type only_validate);
+int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
 //==============================================================================
 int pack_parse_cmd(pack_packet *pack);
 int pack_exec_cmd (pack_packet *pack);
+//==============================================================================
+int pack_key_by_index (pack_packet *pack, pack_index index, pack_key key);
+int pack_keys_to_csv  (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
+int pack_values_to_csv(pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
 //==============================================================================
 int is_locked(pack_type out);
 int lock(pack_type out);
@@ -165,9 +171,5 @@ int pack_word_as_float (pack_word *word, float *value);
 int pack_word_as_string(pack_word *word, char  *value);
 int pack_word_as_bytes (pack_word *word, char  *value, pack_size *size);
 pack_size pack_word_size(pack_word *word);
-int pack_version(pack_ver version);
-int pack_key_by_index          (pack_packet *pack, pack_index index, pack_key key);
-int pack_keys_to_csv           (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
-int pack_values_to_csv         (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
 //==============================================================================
 #endif //PROTOCOL_H

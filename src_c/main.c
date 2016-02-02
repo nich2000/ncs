@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
       add_to_log(tmp, LOG_INFO);
 
       sock_init();
+      sock_server_init();
       sock_server_start(port);
       sock_server_work();
       sock_server_stop();
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
       add_to_log(tmp, LOG_INFO);
 
       sock_init();
+      sock_client_init();
       sock_client_start(port, host);
       sock_client_work();
       sock_client_stop();
