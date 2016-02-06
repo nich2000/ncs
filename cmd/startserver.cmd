@@ -4,6 +4,6 @@ cd ../bin
 
 @rem del log.txt
 
-SocketTestC -s -p 5700
+SocketTestC -s -p 5600
 
 pause

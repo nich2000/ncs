@@ -5,13 +5,14 @@
 
 #include "log.h"
 #include "protocol.h"
+#include "protocol_utils.h"
 
 #include "socket.h"
 #include "test.h"
 //==============================================================================
 #define SOCK_PACK_MODE
 #define SOCK_SERVER_STREAMER 0
-#define SOCK_BUFFER_SIZE     32
+#define SOCK_BUFFER_SIZE     10
 //==============================================================================
 SOCKET work_socket;
 sock_worker_list clients;
@@ -257,7 +258,7 @@ static void *sock_work_send(void *arg)
 {
   SOCKET sock = *(SOCKET*)arg;
 
-  char         tmp[128];
+  char         tmp[512];
 
   sprintf(tmp, "sock_work_send, socket: %d", sock);
   log_add(tmp, LOG_INFO);
@@ -280,7 +281,15 @@ static void *sock_work_send(void *arg)
     for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
     {
       pack_begin();
-      pack_add_as_int("SOC", sock);
+//      pack_add_as_int("SOC", sock);
+//      pack_add_as_int("СNT", counter);
+//      pack_add_as_int("CN1", counter1++);
+
+      pack_add_as_float("_PI", 3.14);
+//      pack_add_as_int("СNT", counter);
+//      pack_add_as_int("CN1", counter1++);
+
+      pack_add_as_string("_ID", "Car_001");
       pack_add_as_int("СNT", counter);
       pack_add_as_int("CN1", counter1++);
 
@@ -326,11 +335,36 @@ static void *sock_work_send(void *arg)
       if(pack_validate(buffer, size, 0) == 0)
       {
         pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
-        pack_buffer csv;
-        pack_values_to_csv(tmp_pack, ';', csv);
-        sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s(%d)", counter1, sock, csv, size);
-        log_add(tmp, LOG_DEBUG);
+
+        pack_size tmp_words_count = pack_words_count(tmp_pack);
+        pack_key key;
+        pack_value valueS;
+
+        clrscr();
+        for(pack_size i = 0; i < tmp_words_count; i++)
+        {
+          if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+          {
+            sprintf(tmp, "%s: %s", key, valueS);
+            log_add(tmp, LOG_DATA);
+          }
+        };
+
+//        pack_buffer csv;
+//        pack_values_to_csv(tmp_pack, ';', csv);
+//        log_add(csv, LOG_DEBUG);
+
+//        sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s(%d)", counter1, sock, csv, size);
+//        log_add(tmp, LOG_DEBUG);
       };
+
+//      #ifdef SOCK_PACK_MODE
+//      bytes_to_hex(buffer, (pack_size)size, tmp);
+//      log_add(tmp, LOG_DATA);
+//      #else
+//      add_to_log(buffer, LOG_DATA);
+//      continue;
+//      #endif
 
       int tmp_index = 0;
       unsigned char tmp_buffer[SOCK_BUFFER_SIZE];
@@ -344,8 +378,16 @@ static void *sock_work_send(void *arg)
         memcpy(tmp_buffer, &buffer[tmp_index], tmp_cnt);
         tmp_index += tmp_cnt;
 
-        sprintf(tmp, "%d", tmp_cnt);
-        log_add(tmp, LOG_DEBUG);
+//        sprintf(tmp, "%d", tmp_cnt);
+//        log_add(tmp, LOG_DEBUG);
+
+//        #ifdef SOCK_PACK_MODE
+//        bytes_to_hex(tmp_buffer, (pack_size)tmp_cnt, tmp);
+//        log_add(tmp, LOG_DATA);
+//        #else
+//        add_to_log(buffer, LOG_DATA);
+//        continue;
+//        #endif
 
         if(send(sock, tmp_buffer, tmp_cnt, 0) == SOCKET_ERROR)
         {
@@ -390,38 +432,40 @@ static void *sock_work_recv(void *arg)
       return NULL;
     }
 
-    clrscr();
+//    clrscr();
 
-    sprintf(tmp, "Bytes: %d", valread);
-    log_add(tmp, LOG_DEBUG);
+//    sprintf(tmp, "Bytes: %d", valread);
+//    log_add(tmp, LOG_DEBUG);
 
     if(valread > PACK_BUFFER_SIZE)
       continue;
 
-    #ifdef SOCK_PACK_MODE
+//    #ifdef SOCK_PACK_MODE
 //    bytes_to_hex(buffer, (pack_size)valread, tmp);
-//    add_to_log(tmp, LOG_DATA);
+//    log_add(tmp, LOG_DATA);
+//    #else
+//    add_to_log(buffer, LOG_DATA);
 //    continue;
-    #else
-    add_to_log(buffer, LOG_DATA);
-    continue;
-    #endif
+//    #endif
 
     int res = pack_validate(buffer, valread, 0);
     if(res == 0)
     {
       pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
 
-//      pack_buffer csv;
-//      pack_values_to_csv(tmp_pack, ';', csv);
-//      add_to_log(csv, LOG_DATA);
+      pack_buffer csv;
+      pack_values_to_csv(tmp_pack, ';', csv);
+      log_add(csv, LOG_DATA);
 
       pack_size tmp_words_count = pack_words_count(tmp_pack);
-      sprintf(tmp, "Words: %d", tmp_words_count);
-      log_add(tmp, LOG_DEBUG);
+
+//      sprintf(tmp, "Words: %d", tmp_words_count);
+//      log_add(tmp, LOG_DEBUG);
 
       pack_key key;
       pack_value valueS;
+
+      clrscr();
       for(pack_size i = 0; i < tmp_words_count; i++)
       {
         if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
@@ -430,14 +474,11 @@ static void *sock_work_recv(void *arg)
           log_add(tmp, LOG_DATA);
         }
       };
-
-//      sprintf(tmp, "sock_work_recv, cnt: %d, sock: %d, data: %s", counter, sock, csv);
-//      add_to_log(tmp, LOG_DEBUG);
     }
     else
     {
-      sprintf(tmp, "sock_work_recv, validate: %d", res);
-      log_add(tmp, LOG_DEBUG);
+//      sprintf(tmp, "sock_work_recv, validate: %d", res);
+//      log_add(tmp, LOG_DEBUG);
     }
   }
 

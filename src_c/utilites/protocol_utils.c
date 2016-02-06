@@ -27,6 +27,21 @@ int bytes_to_float(unsigned char *bytes, int size, float *value)
   return 0;
 }
 //==============================================================================
+char nibbles[] = {"0123456789ABCDEF"};
+int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
+{
+  int j = 0;
+
+  for(int i = 0; i < size; i++)
+  {
+    hex[j++] = nibbles[bytes[i] >> 0x04];
+    hex[j++] = nibbles[bytes[i] &  0x0F];
+    hex[j++] = ' ';
+  }
+
+  return 0;
+}
+//==============================================================================
 //int bytes_from_int  (unsigned char *bytes, size_t size, int   *value);
 //int bytes_from_float(unsigned char *bytes, size_t size, float *value);
 //==============================================================================

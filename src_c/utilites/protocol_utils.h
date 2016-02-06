@@ -15,6 +15,7 @@ typedef union
 //==============================================================================
 int bytes_to_int  (unsigned char *bytes, int size, int   *value);
 int bytes_to_float(unsigned char *bytes, int size, float *value);
+int bytes_to_hex  (unsigned char *bytes, int size, unsigned char *hex);
 //==============================================================================
 //int bytes_from_int  (unsigned char *bytes, size_t size, int   *value);
 //int bytes_from_float(unsigned char *bytes, size_t size, float *value);
