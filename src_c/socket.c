@@ -392,7 +392,7 @@ static void *sock_work_recv(void *arg)
 
     clrscr();
 
-    sprintf(tmp, "%d", valread);
+    sprintf(tmp, "Bytes: %d", valread);
     log_add(tmp, LOG_DEBUG);
 
     if(valread > PACK_BUFFER_SIZE)
@@ -417,7 +417,7 @@ static void *sock_work_recv(void *arg)
 //      add_to_log(csv, LOG_DATA);
 
       pack_size tmp_words_count = pack_words_count(tmp_pack);
-      sprintf(tmp, "%d", tmp_words_count);
+      sprintf(tmp, "Words: %d", tmp_words_count);
       log_add(tmp, LOG_DEBUG);
 
       pack_key key;
