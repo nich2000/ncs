@@ -1,8 +1,8 @@
 #include "log.h"
-#include "protocol.h"
-#include "gps_parse.h"
 #include "socket.h"
 #include "test.h"
+
+#include "gps_parse.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
@@ -58,12 +58,13 @@ int main(int argc, char *argv[])
     log_set_name("test_log.txt");
     log_add("Test mode", LOG_INFO);
 
-//    test();
+    test_pack();
 
+    // См. коммент в test_gps
+    // NIch 06.02.2016
     gps_init();
     gps_parse_str(GPS_TEST_STR);
     GPRMC_t *tmp_data = gps_data();
-
     sprintf(tmp, "%s", tmp_data->time_gps);
     log_add(tmp, LOG_DEBUG);
   };

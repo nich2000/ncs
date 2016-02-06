@@ -6,8 +6,9 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "protocol.h"
 #include "log.h"
+#include "protocol.h"
+#include "gps_parse.h"
 
 #include "test.h"
 //==============================================================================
@@ -27,7 +28,29 @@ int          valueI;
 pack_buffer  valueS;
 float        valueF;
 //==============================================================================
-int test()
+int test_create_pack();
+int test_validate_pack();
+int test_parse_pack();
+//==============================================================================
+int test_gps()
+{
+  // Почему то ошибка
+  // undefined reference to `gps_init'
+  // undefined reference to `gps_parse_str'
+  // undefined reference to `gps_data'
+  // Файл gps_parse.h подключен
+  // Если этот файл подключить в main, то все ок, эти функции видны
+  // NIch 06.02.2016
+  /*
+  gps_init();
+  gps_parse_str(GPS_TEST_STR);
+  GPRMC_t *tmp_data = gps_data();
+  sprintf(tmp, "%s", tmp_data->time_gps);
+  log_add(tmp, LOG_DEBUG);
+  */
+}
+//==============================================================================
+int test_pack()
 {
   pack_begin();
 

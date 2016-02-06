@@ -5,13 +5,10 @@
  *  Author: andy
  *  Edit: NIch 08-10-2015
  */
-
+//==============================================================================
 #ifndef GPS_PARSE_H
 #define GPS_PARSE_H
-
-#include <stdio.h>
-#include <inttypes.h>
-
+//==============================================================================
 /*
 NMEA 0183 version 3.00
 $GPRMC,hhmmss.sss,A,GGMM.MM   ,P,gggmm.mm   ,J,v.v  ,b.b   ,ddmmyy,x.x,n  ,m*hh<CR><LF>
@@ -31,9 +28,7 @@ $GPRMC,065315.080,A,5535.26112,N,03753.79745,E,5.527,264.98,081015,_._,_._,A *61
 12 = Mode indicator, (A=Autonomous, D=Differential, E=Estimated, N=Data not valid)
 13 = Checksum
 */
-
-#define GPS_TEST_STR "$GNRMC,233552.90,V,5618.86234,N,04402.97895,E,2.7,23.1,210116,,,A*6B"
-
+//==============================================================================
 typedef struct
 {
   // 1
@@ -68,10 +63,9 @@ typedef struct
   // 13
   unsigned char check_summ[2];
 } GPRMC_t;
-
-void gps_init(void);
-void gps_parse(uint8_t ch);
-int gps_parse_str(uint8_t *str);
+//==============================================================================
+void     gps_init();
+int      gps_parse_str(unsigned char *str);
 GPRMC_t *gps_data();
-
+//==============================================================================
 #endif /* GPS_PARSE_H */

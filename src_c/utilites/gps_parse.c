@@ -8,15 +8,16 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "gps_parse.h"
-#include "protocol_utils.h"
 
+unsigned char  is_init = 0;
 uint8_t       *gprmc_token[13];
 unsigned char  gprmc_str[128];
 GPRMC_t        gprms_data;
 
-void gps_init(void)
+void gps_init()
 {
   gprmc_token[0]  = &gprms_data.time_gps[0];
   gprmc_token[1]  = &gprms_data.data_valid[0];
@@ -31,11 +32,14 @@ void gps_init(void)
   gprmc_token[10] = &gprms_data.E_W_magnetic[0];
   gprmc_token[11] = &gprms_data.mode[0];
   gprmc_token[12] = &gprms_data.check_summ[0];
+
+  is_init = 1;
 }
 
 int gps_parse_str(unsigned char *str)
 {
-  strcpy(gprmc_str, str);
+  if(!is_init)
+    return 0;
 
   uint8_t new_gps_string    = 0;
   uint8_t count             = 0;
@@ -43,6 +47,8 @@ int gps_parse_str(unsigned char *str)
   uint8_t gprmc_parse_allow = 1;
   uint8_t gprmc_done_flag   = 0;
   uint8_t* ptr_temp         = NULL;
+
+  strcpy(gprmc_str, str);
 
   // printf("gps_parse_str\n", str);
   while(*str)
@@ -118,7 +124,7 @@ int gps_parse_str(unsigned char *str)
   }
   // printf("\n");
 
-  return gprmc_done_flag;
+  return (int)gprmc_done_flag;
 }
 
 GPRMC_t *gps_data()
