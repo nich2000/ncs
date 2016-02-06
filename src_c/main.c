@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "log.h"
 #include "socket.h"
 #include "test.h"
