@@ -1,5 +1,6 @@
 #include "log.h"
 #include "protocol.h"
+#include "gps_parse.h"
 #include "socket.h"
 #include "test.h"
 //==============================================================================
@@ -7,7 +8,7 @@
 //==============================================================================
 int main(int argc, char *argv[])
 {
-  add_to_log("Hello!", LOG_INFO);
+  log_add("Hello!", LOG_INFO);
 
   char tmp[128];
 
@@ -27,9 +28,9 @@ int main(int argc, char *argv[])
 
     if(strcmp(argv[1], "-s") == 0)
     {
-      set_log_name("server_log.txt");
+      log_set_name("server_log.txt");
       sprintf(tmp, "Server mode, port: %d", port);
-      add_to_log(tmp, LOG_INFO);
+      log_add(tmp, LOG_INFO);
 
       sock_init();
       sock_server_init();
@@ -40,9 +41,9 @@ int main(int argc, char *argv[])
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
-      set_log_name("client_log.txt");
+      log_set_name("client_log.txt");
       sprintf(tmp, "Client mode, port: %d, host: %s", port, host);
-      add_to_log(tmp, LOG_INFO);
+      log_add(tmp, LOG_INFO);
 
       sock_init();
       sock_client_init();
@@ -54,10 +55,17 @@ int main(int argc, char *argv[])
   }
   else
   {
-    set_log_name("test_log.txt");
-    add_to_log("Test mode", LOG_INFO);
+    log_set_name("test_log.txt");
+    log_add("Test mode", LOG_INFO);
 
-    test();
+//    test();
+
+    gps_init();
+    gps_parse_str(GPS_TEST_STR);
+    GPRMC_t *tmp_data = gps_data();
+
+    sprintf(tmp, "%s", tmp_data->time_gps);
+    log_add(tmp, LOG_DEBUG);
   };
 
   return 0;

@@ -5,9 +5,11 @@
 
 #include "log.h"
 #include "protocol.h"
+
 #include "socket.h"
 #include "test.h"
 //==============================================================================
+#define SOCK_PACK_MODE
 #define SOCK_SERVER_STREAMER 0
 #define SOCK_BUFFER_SIZE     32
 //==============================================================================
@@ -34,14 +36,14 @@ int sock_init()
   {
     char *tmp;
     sprintf(tmp, "sock_init, WSAStartup, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
 
     WSACleanup();
 
     return 1;
   }
   else
-    add_to_log("sock_init, WSAStartup OK", LOG_INFO);
+    log_add("sock_init, WSAStartup OK", LOG_INFO);
 #else
 #endif
 
@@ -56,11 +58,11 @@ int sock_deinit()
   {
     char tmp[128];
     sprintf(tmp, "sock_deinit, WSACleanup, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 1;
   }
   else
-    add_to_log("sock_deinit, WSACleanup OK", LOG_INFO);
+    log_add("sock_deinit, WSACleanup OK", LOG_INFO);
 #else
 #endif
 
@@ -80,21 +82,21 @@ int sock_server_start(int port)
     sprintf(tmp, "sock_start_server(SERVER_STREAMER), Port: %d", port);
   else
     sprintf(tmp, "sock_start_server(CLIENT_STREAMER), Port: %d", port);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   pack_init();
   pack_version(tmp);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   work_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (work_socket == INVALID_SOCKET)
   {
     sprintf(tmp, "sock_start_server, socket, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 1;
   }
   else
-    add_to_log("sock_start_server, Create socket", LOG_INFO);
+    log_add("sock_start_server, Create socket", LOG_INFO);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -103,27 +105,27 @@ int sock_server_start(int port)
   if(bind(work_socket, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_start_server, bind, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 2;
   }
   else
-    add_to_log("sock_start_server, Bind socket", LOG_INFO);
+    log_add("sock_start_server, Bind socket", LOG_INFO);
 
   if (listen(work_socket, SOMAXCONN) == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_start_server, listen, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 3;
   }
   else
-    add_to_log("sock_start_server, Listen socket", LOG_INFO);
+    log_add("sock_start_server, Listen socket", LOG_INFO);
 
   return 0;
 }
 //==============================================================================
 int sock_server_work()
 {
-  add_to_log("sock_work", LOG_INFO);
+  log_add("sock_work", LOG_INFO);
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -137,14 +139,17 @@ int sock_server_work()
     if(tmp_client == INVALID_SOCKET)
     {
       sprintf(tmp, "sock_work, accept, Error: %d", getSocketError());
-      add_to_log(tmp, LOG_ERROR);
+      log_add(tmp, LOG_ERROR);
       return 1;
     }
     else
     {
+      struct sockaddr_in sin;
+      int len = sizeof(sin);
+      getsockname(tmp_client, (struct sockaddr *)&sin, &len);
       sprintf(tmp, "sock_work, accept, socket: %d, ip: %s, port: %d",
-              tmp_client, inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
-      add_to_log(tmp, LOG_INFO);
+              tmp_client, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+      log_add(tmp, LOG_INFO);
     };
 
     if(clients.index < SOCK_WORKERS_COUNT)
@@ -179,7 +184,7 @@ int sock_server_work()
 //==============================================================================
 int sock_server_stop()
 {
-  add_to_log("sock_stop_server", LOG_INFO);
+  log_add("sock_stop_server", LOG_INFO);
   closesocket(work_socket);
   return 0;
 }
@@ -196,23 +201,23 @@ int sock_client_start(int port, const char *host)
     sprintf(tmp, "sock_start_client(SERVER_STREAMER), Port: %d, Host: %s", port, host);
   else
     sprintf(tmp, "sock_start_client(CLIENT_STREAMER), Port: %d, Host: %s", port, host);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   pack_init();
   pack_version(tmp);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   work_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (work_socket == INVALID_SOCKET)
   {
     sprintf(tmp, "sock_start_client, socket, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 1;
   }
   else
   {
     sprintf(tmp, "sock_start_client, socket: %d", work_socket);
-    add_to_log(tmp, LOG_INFO);
+    log_add(tmp, LOG_INFO);
   };
 
   struct sockaddr_in addr;
@@ -223,12 +228,12 @@ int sock_client_start(int port, const char *host)
   if(connect(work_socket, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_start_client, connect, Error: %d", getSocketError());
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 1;
   }
 
   sprintf(tmp, "sock_start_client, connect");
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   return 0;
 }
@@ -243,7 +248,7 @@ int sock_client_work()
 //==============================================================================
 int sock_client_stop()
 {
-  add_to_log("sock_stop_client", LOG_INFO);
+  log_add("sock_stop_client", LOG_INFO);
   closesocket(work_socket);
   return 0;
 }
@@ -255,7 +260,7 @@ static void *sock_work_send(void *arg)
   char         tmp[128];
 
   sprintf(tmp, "sock_work_send, socket: %d", sock);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   pack_buffer  buffer;
   pack_size    size;
@@ -324,7 +329,7 @@ static void *sock_work_send(void *arg)
         pack_buffer csv;
         pack_values_to_csv(tmp_pack, ';', csv);
         sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s(%d)", counter1, sock, csv, size);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       };
 
       int tmp_index = 0;
@@ -340,12 +345,12 @@ static void *sock_work_send(void *arg)
         tmp_index += tmp_cnt;
 
         sprintf(tmp, "%d", tmp_cnt);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
 
         if(send(sock, tmp_buffer, tmp_cnt, 0) == SOCKET_ERROR)
         {
           sprintf(tmp, "sock_send_data, send, Error: %u", getSocketError());
-          add_to_log(tmp, LOG_ERROR);
+          log_add(tmp, LOG_ERROR);
         };
       }
 
@@ -361,49 +366,78 @@ static void *sock_work_recv(void *arg)
 {
   SOCKET sock = *(SOCKET*)arg;
 
-  char         tmp[128];
+//  sprintf(tmp, "sock_work_recv, socket: %d", sock);
+//  add_to_log(tmp, LOG_INFO);
 
-  sprintf(tmp, "sock_work_recv, socket: %d", sock);
-  add_to_log(tmp, LOG_INFO);
-
+  char tmp[512];
   pack_buffer buffer;
   int valread;
-
-  int counter = 0;
 
   while(1)
   {
     valread = recv(sock, buffer, PACK_BUFFER_SIZE, 0);
 
-    counter++;
-
     if(valread == SOCKET_ERROR)
     {
-      sprintf(tmp, "sock_handle_connection, recv, Error: %d", getSocketError());
-      add_to_log(tmp, LOG_ERROR);
+      sprintf(tmp, "sock_work_recv, recv, Error: %d", getSocketError());
+      log_add(tmp, LOG_ERROR);
       continue;
-//      return NULL;
     }
 
     if(valread == 0)
     {
-      add_to_log("sock_handle_connection, recv, socket closed", LOG_WARNING);
+      log_add("sock_work_recv, recv, socket closed", LOG_WARNING);
       return NULL;
     }
+
+    clrscr();
+
+    sprintf(tmp, "%d", valread);
+    log_add(tmp, LOG_DEBUG);
+
+    if(valread > PACK_BUFFER_SIZE)
+      continue;
+
+    #ifdef SOCK_PACK_MODE
+//    bytes_to_hex(buffer, (pack_size)valread, tmp);
+//    add_to_log(tmp, LOG_DATA);
+//    continue;
+    #else
+    add_to_log(buffer, LOG_DATA);
+    continue;
+    #endif
 
     int res = pack_validate(buffer, valread, 0);
     if(res == 0)
     {
       pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
-      pack_buffer csv;
-      pack_values_to_csv(tmp_pack, ';', csv);
-      sprintf(tmp, "recv, cnt: %d, sock: %d, data: %s", counter, sock, csv);
-      add_to_log(tmp, LOG_DEBUG);
+
+//      pack_buffer csv;
+//      pack_values_to_csv(tmp_pack, ';', csv);
+//      add_to_log(csv, LOG_DATA);
+
+      pack_size tmp_words_count = pack_words_count(tmp_pack);
+      sprintf(tmp, "%d", tmp_words_count);
+      log_add(tmp, LOG_DEBUG);
+
+      pack_key key;
+      pack_value valueS;
+      for(pack_size i = 0; i < tmp_words_count; i++)
+      {
+        if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+        {
+          sprintf(tmp, "%s: %s", key, valueS);
+          log_add(tmp, LOG_DATA);
+        }
+      };
+
+//      sprintf(tmp, "sock_work_recv, cnt: %d, sock: %d, data: %s", counter, sock, csv);
+//      add_to_log(tmp, LOG_DEBUG);
     }
     else
     {
-      sprintf(tmp, "recv, validate: %d", res);
-      add_to_log(tmp, LOG_DEBUG);
+      sprintf(tmp, "sock_work_recv, validate: %d", res);
+      log_add(tmp, LOG_DEBUG);
     }
   }
 

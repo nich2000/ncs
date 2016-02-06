@@ -6,9 +6,10 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "test.h"
 #include "protocol.h"
 #include "log.h"
+
+#include "test.h"
 //==============================================================================
 #define TEST_PACK_COUNT 1
 #define TEST_WORD_COUNT 5
@@ -42,7 +43,7 @@ int test()
     if(res != 0)
     {
       sprintf(tmp, "pack_validate, Error: %u", res);
-      add_to_log(tmp, LOG_ERROR);
+      log_add(tmp, LOG_ERROR);
       return 1;
     }
 
@@ -64,7 +65,7 @@ int test()
   end_c = clock();
   total_c = (double)(end_c - start_c) / CLOCKS_PER_SEC;
   sprintf(tmp, "Total time: %f", total_c);
-  add_to_log(tmp, LOG_INFO);
+  log_add(tmp, LOG_INFO);
 
   return 0;
 }
@@ -123,7 +124,7 @@ int test_validate_pack()
   if(res != 0)
   {
     sprintf(tmp, "pack_queue_next, Error: %u", res);
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 1;
   }
 
@@ -131,7 +132,7 @@ int test_validate_pack()
   if(res != 0)
   {
     sprintf(tmp, "pack_validate, Error: %u", res);
-    add_to_log(tmp, LOG_ERROR);
+    log_add(tmp, LOG_ERROR);
     return 2;
   }
 
@@ -140,7 +141,7 @@ int test_validate_pack()
 //==============================================================================
 int test_parse_pack()
 {
-  add_to_log("-----------------------------", LOG_DEBUG);
+  log_add("-----------------------------", LOG_DEBUG);
 
   pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
   if(tmp_pack != 0)
@@ -148,26 +149,26 @@ int test_parse_pack()
     if(TEST_LOG)
     {
       sprintf(tmp, "test_parse_pack, words_count: %d", tmp_pack->words_count);
-      add_to_log(tmp, LOG_DEBUG);
+      log_add(tmp, LOG_DEBUG);
     }
     //--------------------------------------------------------------------------
     if(TEST_LOG)
-      add_to_log("Test CSV out", LOG_DEBUG);
+      log_add("Test CSV out", LOG_DEBUG);
 
     pack_keys_to_csv(tmp_pack, ';', tmp);
     if(TEST_LOG)
-      add_to_log(tmp, LOG_DEBUG);
+      log_add(tmp, LOG_DEBUG);
     else
-      add_to_report(tmp);
+      report_add(tmp);
 
     pack_values_to_csv(tmp_pack, ';', tmp);
     if(TEST_LOG)
-      add_to_log(tmp, LOG_DEBUG);
+      log_add(tmp, LOG_DEBUG);
     else
-      add_to_report(tmp);
+      report_add(tmp);
     //--------------------------------------------------------------------------
     if(TEST_LOG)
-      add_to_log("Test words out", LOG_DEBUG);
+      log_add("Test words out", LOG_DEBUG);
 
     pack_size tmp_words_count = pack_words_count(tmp_pack);
     for(pack_size i = 0; i < tmp_words_count; i++)
@@ -176,19 +177,19 @@ int test_parse_pack()
         if(TEST_LOG)
         {
           sprintf(tmp, "%s(%d): %s", key, i, valueS);
-          add_to_log(tmp, LOG_DEBUG);
+          log_add(tmp, LOG_DEBUG);
         };
     };
     //--------------------------------------------------------------------------
     if(TEST_LOG)
-      add_to_log("Test by key out", LOG_DEBUG);
+      log_add("Test by key out", LOG_DEBUG);
 
     memcpy(key, "IN0", PACK_KEY_SIZE);
     if(pack_val_by_key_as_int(tmp_pack, key, &ind, &valueI) == 0)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %d", key, ind, valueI);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
 
     memcpy(key, "ST0", PACK_KEY_SIZE);
@@ -196,7 +197,7 @@ int test_parse_pack()
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %s", key, ind, valueS);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
 
     memcpy(key, "FL0", PACK_KEY_SIZE);
@@ -204,18 +205,18 @@ int test_parse_pack()
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %f", key, ind, valueF);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
     //--------------------------------------------------------------------------
     if(TEST_LOG)
-      add_to_log("Test by index out", LOG_DEBUG);
+      log_add("Test by index out", LOG_DEBUG);
 
     ind = 1;
     if(pack_val_by_index_as_int(tmp_pack, ind, key, &valueI) == 0)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %d", key, ind, valueI);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
 
     ind = 7;
@@ -223,7 +224,7 @@ int test_parse_pack()
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %s", key, ind, valueS);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
 
     ind = 11;
@@ -231,7 +232,7 @@ int test_parse_pack()
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %f", key, ind, valueF);
-        add_to_log(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_DEBUG);
       }
     //--------------------------------------------------------------------------
   };
