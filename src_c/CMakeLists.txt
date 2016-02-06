@@ -13,11 +13,13 @@ add_definitions(-DTURN_ON_STDCALL)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-set(_LOG log.c)
+include_directories(utilites)
+
+set(_LOG utilites/log.c)
 add_library(log SHARED ${_LOG})
 set_property(TARGET log PROPERTY C_STANDARD 99)
 
-set(_PROTOCOL protocol.c utils.c test.c)
+set(_PROTOCOL utilites/protocol.c utilites/protocol_utils.c test.c)
 add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log)
@@ -30,7 +32,7 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 
-set(_PROG main.c utils.c)
+set(_PROG main.c utilites/protocol_utils.c utilites/gps_parse.c)
 
 find_package(Threads)
 

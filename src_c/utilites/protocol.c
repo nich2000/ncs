@@ -50,7 +50,7 @@
 
 #include "protocol.h"
 #include "log.h"
-#include "utils.h"
+#include "protocol_utils.h"
 //==============================================================================
 // out
 //==============================================================================
@@ -61,7 +61,7 @@ pack_number      out_packets_index = PACK_PACKETS_INIT_INDEX;
 // List of output packets
 pack_out_packets out_packets;
 // Lock count
-pack_size        out_lock = 0;
+int              out_lock = 0;
 //==============================================================================
 // in
 //==============================================================================
@@ -75,7 +75,7 @@ pack_buffer      in_validation_buffer;
 // List of input packets
 pack_in_packets  in_packets;
 // Lock count
-pack_size        in_lock = 0;
+int              in_lock = 0;
 //==============================================================================
 // queue
 //==============================================================================
@@ -136,7 +136,7 @@ int pack_init()
 //==============================================================================
 int pack_version(pack_ver version)
 {
-  strncpy(version, PACK_VERSION, PACK_VERSION_SIZE);
+  strncpy((char *)version, PACK_VERSION, PACK_VERSION_SIZE);
 
   return PACK_OK;
 }
@@ -246,7 +246,7 @@ int pack_word_by_key(pack_packet *pack, pack_key key, pack_size *index, pack_wor
     return 1;
 
   for(pack_size i = 0; i < pack->words_count; i++)
-    if(strcmp(pack->words[i].key, key) == 0)
+    if(strcmp((char *)pack->words[i].key, (char *)key) == 0)
     {
       *word = pack->words[i];
       *index = i;
@@ -292,7 +292,7 @@ int pack_word_as_float(pack_word *word, float *value)
   return 0;
 }
 //==============================================================================
-int pack_word_as_string(pack_word *word, char *value)
+int pack_word_as_string(pack_word *word, pack_string value)
 {
   value[0] = '\0';
 
@@ -304,14 +304,14 @@ int pack_word_as_string(pack_word *word, char *value)
       {
         int valueI;
         pack_word_as_int(word, &valueI);
-        sprintf(value, "%d", valueI);
+        sprintf((char *)value, "%d", valueI);
       }
       break;
     case PACK_WORD_FLOAT:
       {
         float valueF;
         pack_word_as_float(word, &valueF);
-        sprintf(value, "%f", valueF);
+        sprintf((char *)value, "%f", valueF);
       }
       break;
     case PACK_WORD_STRING:
@@ -330,7 +330,7 @@ int pack_word_as_string(pack_word *word, char *value)
   return 0;
 }
 //==============================================================================
-int pack_word_as_bytes(pack_word *word, char *value, pack_size *size)
+int pack_word_as_bytes(pack_word *word, pack_bytes value, pack_size *size)
 {
   return 0;
 }
@@ -353,7 +353,7 @@ int pack_val_by_key_as_float(pack_packet *pack, pack_key key, pack_index *index,
     return 1;
 }
 //==============================================================================
-int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index, char *value)
+int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index, pack_string value)
 {
   pack_word tmp_word;
   if(pack_word_by_key(pack, key, index, &tmp_word) == PACK_OK)
@@ -362,7 +362,7 @@ int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index
     return 1;
 }
 //==============================================================================
-int pack_val_by_key_as_bytes(pack_packet *pack, pack_key key, pack_index *index, char *value, pack_size *size)
+int pack_val_by_key_as_bytes(pack_packet *pack, pack_key key, pack_index *index, pack_bytes value, pack_size *size)
 {
   pack_word tmp_word;
   if(pack_word_by_key(pack, key, index, &tmp_word) == PACK_OK)
@@ -375,8 +375,9 @@ int pack_val_by_index_as_int(pack_packet *pack, pack_index index, pack_key key, 
 {
   pack_word tmp_word;
   if(pack_word_by_index(pack, index, key, &tmp_word) == PACK_OK)
+    return pack_word_as_int(&tmp_word, value);
 
-  return pack_word_as_int(&tmp_word, value);
+  return 0;
 }
 //==============================================================================
 int pack_val_by_index_as_float(pack_packet *pack, pack_index index, pack_key key, float *value)
@@ -388,7 +389,7 @@ int pack_val_by_index_as_float(pack_packet *pack, pack_index index, pack_key key
     return 1;
 }
 //==============================================================================
-int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, char *value)
+int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, pack_string value)
 {
   pack_word tmp_word;
   if(pack_word_by_index(pack, index, key, &tmp_word) == PACK_OK)
@@ -397,7 +398,7 @@ int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key ke
     return 1;
 }
 //==============================================================================
-int pack_val_by_index_as_bytes(pack_packet *pack, pack_index index, pack_key key, char *value, pack_size *size)
+int pack_val_by_index_as_bytes(pack_packet *pack, pack_index index, pack_key key, pack_bytes value, pack_size *size)
 {
   pack_word tmp_word;
   if(pack_word_by_index(pack, index, key, &tmp_word) == PACK_OK)
@@ -435,7 +436,7 @@ int pack_keys_to_csv(pack_packet *pack, unsigned char delimeter, pack_buffer buf
 
   for(pack_size i = 0; i < pack->words_count; i++)
   {
-    for(pack_size j = 0; j < strlen(pack->words[i].key); j++)
+    for(pack_size j = 0; j < strlen((char *)pack->words[i].key); j++)
       buffer[tmp_pos++] = pack->words[i].key[j];
     buffer[tmp_pos++] = delimeter;
   }
@@ -454,12 +455,13 @@ int pack_values_to_csv(pack_packet *pack, unsigned char delimeter, pack_buffer b
 
   buffer[0] = '\0';
 
+  pack_value valueS;
+
   for(pack_size i = 0; i < pack->words_count; i++)
   {
-    pack_buffer valueS;
     pack_word_as_string(&pack->words[i], valueS);
 
-    for(pack_size j = 0; j < strlen(valueS); j++)
+    for(pack_size j = 0; j < strlen((char *)valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
@@ -478,14 +480,14 @@ int pack_begin()
   lock(PACK_OUT);
 
   out_global_number++;
-  if(out_global_number >= UINT_MAX)
+  if(out_global_number >= USHRT_MAX)
     out_global_number = PACK_GLOBAL_INIT_NUMBER;
 
   out_packets_index++;
   if(out_packets_index >= PACK_OUT_PACKETS_COUNT)
     out_packets_index = PACK_PACKETS_INIT_INDEX;
 
-  char tmp[128];
+//  char tmp[128];
 
 //  sprintf(tmp, "out_global_number: %d", out_global_number);
 //  add_to_log(tmp, LOG_DEBUG);
@@ -623,9 +625,9 @@ int pack_add_as_float(pack_key key, float value)
   return 0;
 }
 //==============================================================================
-int pack_add_as_string(pack_key key, char *value)
+int pack_add_as_string(pack_key key, pack_string value)
 {
-  pack_size tmp_size = strlen(value);
+  pack_size tmp_size = strlen((char *)value);
 
   if(tmp_size >= PACK_VALUE_SIZE)
     return 1;
@@ -659,7 +661,7 @@ int pack_add_as_string(pack_key key, char *value)
   return 0;
 }
 //==============================================================================
-int pack_add_as_bytes (pack_key key, char *value, pack_size size)
+int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size)
 {
   if(size >= PACK_VALUE_SIZE)
     return 1;
@@ -695,27 +697,32 @@ int pack_add_as_bytes (pack_key key, char *value, pack_size size)
 //==============================================================================
 int pack_add_cmd(pack_value command)
 {
-  pack_add_as_string(PACK_CMD_KEY, command);
+  pack_key tmp_key = PACK_CMD_KEY;
+  return pack_add_as_string(tmp_key, (pack_string)command);
 }
 //==============================================================================
 int pack_add_param_as_int(int param)
 {
-  pack_add_as_int(PACK_PARAM_KEY, param);
+  pack_key tmp_key = PACK_PARAM_KEY;
+  return pack_add_as_int(tmp_key, param);
 }
 //==============================================================================
 int pack_add_param_as_float(float param)
 {
-  pack_add_as_float(PACK_PARAM_KEY, param);
+  pack_key tmp_key = PACK_PARAM_KEY;
+  return pack_add_as_float(tmp_key, param);
 }
 //==============================================================================
-int pack_add_param_as_string(char *param)
+int pack_add_param_as_string(pack_string param)
 {
-  pack_add_as_string(PACK_PARAM_KEY, param);
+  pack_key tmp_key = PACK_PARAM_KEY;
+  return pack_add_as_string(tmp_key, param);
 }
 //==============================================================================
-int pack_add_param_as_bytes (char *param, pack_size size)
+int pack_add_param_as_bytes (pack_bytes param, pack_size size)
 {
-  pack_add_as_bytes(PACK_PARAM_KEY, param, size);
+  pack_key tmp_key = PACK_PARAM_KEY;
+  return pack_add_as_bytes(tmp_key, param, size);
 }
 //==============================================================================
 int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
@@ -755,7 +762,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     pack_crc16 tmp_crc16_1 = in_validation_buffer[tmp_pack_pos++] << 8;
     tmp_crc16_1           |= in_validation_buffer[tmp_pack_pos++];
     // Get crc16 2
-    pack_crc16 tmp_crc16_2 = getCRC16(tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
+    pack_crc16 tmp_crc16_2 = getCRC16((char *)tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
       return 2;
@@ -776,7 +783,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     if(tmp_pack == NULL)
       return 3;
 
-    strncpy(tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
+    strncpy((char *)tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
     tmp_pack->size = tmp_size;
     tmp_pack->number = tmp_index;
     tmp_pack->crc = tmp_crc16_1;
@@ -785,8 +792,6 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 
     pack_parse_cmd(tmp_pack);
   };
-
-  return 0;
 }
 //==============================================================================
 int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words words, pack_size *words_count)
@@ -927,7 +932,7 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
     buffer[tmp_pack_pos++] = tmp_buffer[i];
 
   // CRC16
-  pack_crc16 tmp_crc16 = getCRC16(tmp_buffer, tmp_total_size);
+  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
   buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
   buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
 
@@ -991,7 +996,7 @@ int pack_parse_cmd(pack_packet *pack)
     if(res != 0)
       return res;
 
-    if(strcmp(tmp_key, PACK_CMD_KEY) == 0)
+    if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
       return 10 + pack_exec_cmd(pack);
   };
 
@@ -1009,7 +1014,7 @@ pack_size pack_params_count(pack_packet *pack)
     int res = pack_key_by_index(pack, i, tmp_key);
 
     if(res == 0)
-      if(strcmp(tmp_key, PACK_PARAM_KEY) == 0)
+      if(strcmp((char *)tmp_key, PACK_PARAM_KEY) == 0)
         tmp_params_count++;
   }
 
@@ -1029,7 +1034,9 @@ int pack_exec_cmd(pack_packet *pack)
     pack_size tmp_params_count = pack_params_count(pack);
 
     sprintf(tmp, "%s: %s(%d)", tmp_key, tmp_command, tmp_params_count);
-    add_to_log(tmp, LOG_DEBUG);
+    log_add(tmp, LOG_DEBUG);
   }
+
+  return 0;
 }
 //==============================================================================

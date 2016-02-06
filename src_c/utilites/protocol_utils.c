@@ -1,11 +1,34 @@
 //==============================================================================
-#include "utils.h"
+#include "protocol_utils.h"
 //==============================================================================
 /*
 * b[0] = si & 0xff;
 * b[1] = (si >> 8) & 0xff;
 * si = (b[0] << 8) | b[1];
 */
+//==============================================================================
+int bytes_to_int  (unsigned char *bytes, int size, int   *value)
+{
+  intUnion tmp_value;
+  for(unsigned int j = 0; j < sizeof(int); j++)
+    tmp_value.buff[j] = bytes[j];
+  *value = tmp_value.i;
+
+  return 0;
+}
+//==============================================================================
+int bytes_to_float(unsigned char *bytes, int size, float *value)
+{
+  floatUnion tmp_value;
+  for(unsigned int j = 0; j < sizeof(float); j++)
+    tmp_value.buff[j] = bytes[j];
+  *value = tmp_value.f;
+
+  return 0;
+}
+//==============================================================================
+//int bytes_from_int  (unsigned char *bytes, size_t size, int   *value);
+//int bytes_from_float(unsigned char *bytes, size_t size, float *value);
 //==============================================================================
 // http://stjarnhimlen.se/snippets/crc-16.c
 //==============================================================================

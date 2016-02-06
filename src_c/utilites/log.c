@@ -1,5 +1,6 @@
 //==============================================================================
 //==============================================================================
+#include <unistd.h>
 #include <string.h>
 
 #include "log.h"
@@ -7,18 +8,30 @@
 char log_name[64]    = "log.txt";
 char report_name[64] = "report.txt";
 //==============================================================================
-void set_log_name(char *name)
+int clrscr()
+{
+#ifdef __linux__
+  system("clear");
+#elif _WIN32
+  system("cls");
+#else
+#endif
+  return 0;
+}
+//==============================================================================
+void log_set_name(char *name)
 {
   strncpy(log_name, name, 64);
 }
 //==============================================================================
-void set_report_name(char *name)
+void report_set_name(char *name)
 {
   strncpy(report_name, name, 64);
 }
 //==============================================================================
-void add_to_log(char *message, int logType)
+void log_add(char *message, int logType)
 {
+#if defined(__linux__) || defined(_WIN32)
   // time_t rawtime;
   // struct tm *timeinfo;
   // time (&rawtime);
@@ -30,29 +43,42 @@ void add_to_log(char *message, int logType)
   char *prefix = "";
   switch(logType)
   {
-    case LOG_ERROR: prefix = "ERROR";
+    case LOG_ERROR: prefix = "[ERROR]";
     break;
-    case LOG_WARNING: prefix = "WARNING";
+    case LOG_WARNING: prefix = "[WARNING]";
     break;
-    case LOG_DEBUG: prefix = "DEBUG";
+    case LOG_DEBUG: prefix = "[DEBUG]";
     break;
-    case LOG_INFO: prefix = "INFO";
+    case LOG_INFO: prefix = "[INFO]";
+    break;
+    case LOG_DATA:
     break;
   };
 
-  printf("%s [%s] %s\n", t, prefix, message);
+  printf("%s %s %s\n", t, prefix, message);
 
   FILE *log;
   log = fopen(log_name, "a");
-  fprintf(log, "%s [%s] %s\n", t, prefix, message);
+  fprintf(log, "%s %s %s\n", t, prefix, message);
   fclose(log);
+#else
+#endif
 }
 //==============================================================================
-void add_to_report(char *message)
+void report_add(char *message)
 {
+#if defined(__linux__) || defined(_WIN32)
   FILE *log;
   log = fopen(report_name, "a");
   fprintf(log, "%s\n", message);
   fclose(log);
+#else
+#endif
+}
+//==============================================================================
+void skip_lines(size_t count)
+{
+  for(int i = 0; i < count; i++)
+    printf("\n");
 }
 //==============================================================================

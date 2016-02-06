@@ -6,15 +6,19 @@
 // http://www.binarytides.com/code-tcp-socket-server-winsock/
 // http://www.binarytides.com/server-client-example-c-sockets-linux/
 //==============================================================================
-#define PACK_BUFFER_SIZE         1024
+#include "protocol_utils.h"
+//==============================================================================
+#define USE_BINARY_PROTOCOL
+//==============================================================================
+#define PACK_BUFFER_SIZE         512
 #define PACK_VALUE_SIZE          32
 #define PACK_KEY_SIZE            4
 #define PACK_VERSION_SIZE        6
 //==============================================================================
-#define PACK_WORDS_COUNT         25
-#define PACK_OUT_PACKETS_COUNT   30
-#define PACK_IN_PACKETS_COUNT    20
-#define PACK_QUEUE_COUNT         10
+#define PACK_WORDS_COUNT         20
+#define PACK_OUT_PACKETS_COUNT   10
+#define PACK_IN_PACKETS_COUNT    10
+#define PACK_QUEUE_COUNT         5
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0
 #define PACK_QUEUE_INIT_INDEX    0
@@ -38,6 +42,8 @@
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
 //==============================================================================
+typedef unsigned char           *pack_string;
+typedef unsigned char           *pack_bytes;
 typedef unsigned char            pack_buffer[PACK_BUFFER_SIZE];
 typedef unsigned char            pack_value[PACK_VALUE_SIZE];
 typedef unsigned char            pack_ver[PACK_VERSION_SIZE];
@@ -87,18 +93,6 @@ typedef struct
   pack_queue_packets packets;
 } pack_queue;
 //==============================================================================
-typedef union
-{
-  int  i;
-  char buff[sizeof(int)];
-} intUnion;
-//==============================================================================
-typedef union
-{
-  float f;
-  char  buff[sizeof(float)];
-} floatUnion;
-//==============================================================================
 int pack_version(pack_ver version);
 //==============================================================================
 int pack_init();
@@ -107,14 +101,14 @@ int pack_end();
 //==============================================================================
 int pack_add_as_int   (pack_key key, int   value);
 int pack_add_as_float (pack_key key, float value);
-int pack_add_as_string(pack_key key, char *value);
-int pack_add_as_bytes (pack_key key, char *value, pack_size size);
+int pack_add_as_string(pack_key key, pack_string value);
+int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size);
 //==============================================================================
 int pack_add_cmd(pack_value command);
 int pack_add_param_as_int   (int   param);
 int pack_add_param_as_float (float param);
-int pack_add_param_as_string(char *param);
-int pack_add_param_as_bytes (char *param, pack_size size);
+int pack_add_param_as_string(pack_string param);
+int pack_add_param_as_bytes (pack_bytes param, pack_size size);
 //==============================================================================
 int pack_queue_add(pack_number number);
 int pack_queue_next(pack_buffer buffer, pack_size *size);
@@ -141,13 +135,13 @@ int pack_key_by_index(pack_packet *pack, pack_index index, pack_key key);
 //==============================================================================
 int pack_val_by_key_as_int   (pack_packet *pack, pack_key key, pack_index *index, int   *value);
 int pack_val_by_key_as_float (pack_packet *pack, pack_key key, pack_index *index, float *value);
-int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index, char  *value);
-int pack_val_by_key_as_bytes (pack_packet *pack, pack_key key, pack_index *index, char  *value, pack_size *size);
+int pack_val_by_key_as_string(pack_packet *pack, pack_key key, pack_index *index, pack_string value);
+int pack_val_by_key_as_bytes (pack_packet *pack, pack_key key, pack_index *index, pack_bytes value, pack_size *size);
 //==============================================================================
 int pack_val_by_index_as_int   (pack_packet *pack, pack_index index, pack_key key, int   *value);
 int pack_val_by_index_as_float (pack_packet *pack, pack_index index, pack_key key, float *value);
-int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, char  *value);
-int pack_val_by_index_as_bytes (pack_packet *pack, pack_index index, pack_key key, char  *value, pack_size *size);
+int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, pack_string value);
+int pack_val_by_index_as_bytes (pack_packet *pack, pack_index index, pack_key key, pack_bytes value, pack_size *size);
 //==============================================================================
 int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
 //==============================================================================
@@ -166,10 +160,10 @@ int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words w
 int pack_word_to_buffer  (pack_word *word,     pack_buffer buffer, pack_size *start_index);
 int pack_words_to_buffer (pack_packet *pack,   pack_buffer buffer, pack_size start_index);
 int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
-int pack_word_as_int   (pack_word *word, int   *value);
-int pack_word_as_float (pack_word *word, float *value);
-int pack_word_as_string(pack_word *word, char  *value);
-int pack_word_as_bytes (pack_word *word, char  *value, pack_size *size);
+int pack_word_as_int    (pack_word *word, int   *value);
+int pack_word_as_float  (pack_word *word, float *value);
+int pack_word_as_string (pack_word *word, pack_string value);
+int pack_word_as_bytes  (pack_word *word, pack_bytes value, pack_size *size);
 pack_size pack_word_size(pack_word *word);
 //==============================================================================
 #endif //PROTOCOL_H
