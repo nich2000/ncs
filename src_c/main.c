@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    log_set_name("test_log.txt");
+    log_set_name("log.txt");
     log_add("Test mode", LOG_INFO);
 
     test_pack();

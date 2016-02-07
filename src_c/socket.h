@@ -35,7 +35,8 @@ typedef struct
 {
   sock_id   _id;
   SOCKET    _socket;
-  pthread_t _thread;
+  pthread_t _sender;
+  pthread_t _receiver;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
@@ -52,8 +53,8 @@ int sock_deinit();
 //==============================================================================
 int sock_server_init();
 int sock_server_start(int port);
-int sock_server_stop();
 int sock_server_work();
+int sock_server_stop();
 //==============================================================================
 int sock_client_init();
 int sock_client_start(int port, const char *host);

@@ -70,7 +70,7 @@ pack_number      in_global_number = PACK_GLOBAL_INIT_NUMBER;
 // Current index in packets
 pack_number      in_packets_index = PACK_PACKETS_INIT_INDEX;
 // Validation buffer
-pack_index       in_validation_buffer_size;
+pack_size        in_validation_buffer_size;
 pack_buffer      in_validation_buffer;
 // List of input packets
 pack_in_packets  in_packets;
@@ -734,6 +734,8 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     in_validation_buffer[i++] = buffer[j];
   in_validation_buffer_size += size;
 
+  pack_size tmp_validation_size = in_validation_buffer_size;
+
   while(1)
   {
     if(in_validation_buffer_size <= 0)
@@ -743,29 +745,48 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 
     // Get version
     for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
+    {
       if(in_validation_buffer[tmp_pack_pos++] != PACK_VERSION[i])
         return 1;
 
+      tmp_validation_size--;
+      if(tmp_validation_size <= 0)
+        return 2;
+    };
+
     // Get size
+    if(tmp_validation_size < 2)
+      return 2;
     pack_size tmp_size = in_validation_buffer[tmp_pack_pos++] << 8;
     tmp_size          |= in_validation_buffer[tmp_pack_pos++];
 
     // Get value
     pack_buffer tmp_value_buffer;
     for(pack_size i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
+    {
       tmp_value_buffer[i] = in_validation_buffer[tmp_pack_pos++];
 
+      tmp_validation_size--;
+      if(tmp_validation_size <= 0)
+        return 2;
+    };
+
     // Get index
-    pack_index tmp_index = (tmp_value_buffer[0] << 8) | tmp_value_buffer[1];
+    pack_index tmp_index = tmp_value_buffer[0] << 8;
+    tmp_index           |= tmp_value_buffer[1];
 
     // Get crc16 1
+    if(tmp_validation_size < 2)
+      return 2;
     pack_crc16 tmp_crc16_1 = in_validation_buffer[tmp_pack_pos++] << 8;
     tmp_crc16_1           |= in_validation_buffer[tmp_pack_pos++];
+
     // Get crc16 2
     pack_crc16 tmp_crc16_2 = getCRC16((char *)tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
+
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
-      return 2;
+      return 3;
 
     pack_size i = in_validation_buffer_size - tmp_pack_pos;
     for(pack_size j = 0; j < in_validation_buffer_size; j++)
@@ -781,7 +802,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 
     pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
     if(tmp_pack == NULL)
-      return 3;
+      return 4;
 
     strncpy((char *)tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
     tmp_pack->size = tmp_size;
