@@ -278,54 +278,50 @@ static void *sock_work_send(void *arg)
   {
     counter++;
 
+    pack_key key;
+    pack_value valueS;
+
     for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
     {
       pack_begin();
-//      pack_add_as_int("SOC", sock);
-//      pack_add_as_int("СNT", counter);
-//      pack_add_as_int("CN1", counter1++);
 
-      pack_add_as_float("_PI", 3.14);
-//      pack_add_as_int("СNT", counter);
-//      pack_add_as_int("CN1", counter1++);
-
-      pack_add_as_string("_ID", "Car_001");
-      pack_add_as_int("СNT", counter);
+      pack_add_as_int("SOC", sock);
+      pack_add_as_int("CCC", counter);
       pack_add_as_int("CN1", counter1++);
 
-//      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
-//      {
-//        if(i > 9)
-//          sprintf(key, "I%d", i);
-//        else
-//          sprintf(key, "IN%d", i);
+      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+      {
+        if(i > 9)
+          sprintf(key, "I%d", i);
+        else
+          sprintf(key, "IN%d", i);
 
-//        pack_add_as_int(key, rand());
-//      };
-//      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
-//      {
-//        if(i > 9)
-//          sprintf(key, "S%d", i);
-//        else
-//          sprintf(key, "ST%d", i);
+        pack_add_as_int(key, rand());
+      };
+      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+      {
+        if(i > 9)
+          sprintf(key, "S%d", i);
+        else
+          sprintf(key, "ST%d", i);
 
-//        pack_size j = 0;
-//        for(j = 0; j < TEST_STRING_SIZE; j++)
-//          valueS[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
-//        valueS[j] = '\0';
+        pack_size j = 0;
+        for(j = 0; j < TEST_STRING_SIZE; j++)
+          valueS[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
+        valueS[j] = '\0';
 
-//        pack_add_as_string(key, valueS, strlen(valueS));
-//      };
-//      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
-//      {
-//        if(i > 9)
-//          sprintf(key, "F%d", i);
-//        else
-//          sprintf(key, "FL%d", i);
+        pack_add_as_string(key, valueS);
+      };
+      for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+      {
+        if(i > 9)
+          sprintf(key, "F%d", i);
+        else
+          sprintf(key, "FL%d", i);
 
-//        float rnd = (float)rand()/(float)(RAND_MAX/1000);
-//        pack_add_as_float(key, rnd);
-//      };
+        float rnd = (float)rand()/(float)(RAND_MAX/1000);
+        pack_add_as_float(key, rnd);
+      };
 
       pack_end();
     }
