@@ -13,6 +13,7 @@
 #endif
 //==============================================================================
 #include <pthread.h>
+#include "protocol.h"
 //==============================================================================
 #ifdef __linux__
   #define INVALID_SOCKET -1
@@ -26,17 +27,27 @@
 #else
 #endif
 //==============================================================================
-#define SOCK_WORKERS_COUNT 32
+//#define SOCK_PACK_MODE
 //==============================================================================
+#define MODE_SERVER          0
+#define MODE_CLIENT          1
+#define SOCK_SERVER_STREAMER 0
+#define SOCK_BUFFER_SIZE     100
+#define SOCK_WORKERS_COUNT   32
+//==============================================================================
+typedef unsigned short sock_mode;
 typedef unsigned short sock_id;
 typedef unsigned short sock_index;
 //==============================================================================
 typedef struct
 {
-  sock_id   _id;
-  SOCKET    _socket;
-  pthread_t _sender;
-  pthread_t _receiver;
+  sock_id          id;
+  sock_mode        mode;
+  SOCKET           sock;
+  pthread_t        sender;
+  pthread_t        receiver;
+  pack_out_packets sender_packets;
+  pack_in_packets  receiver_packets;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
@@ -60,8 +71,5 @@ int sock_client_init();
 int sock_client_start(int port, const char *host);
 int sock_client_work();
 int sock_client_stop();
-//==============================================================================
-static void *sock_work_recv(void *arg);
-static void *sock_work_send(void *arg);
 //==============================================================================
 #endif //SOCKET_H

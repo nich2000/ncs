@@ -5,15 +5,21 @@
 #include "socket.h"
 #include "test.h"
 
+#include "protocol.h"
 #include "gps_parse.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
 int main(int argc, char *argv[])
 {
-  log_add("Hello!", LOG_INFO);
-
   char tmp[128];
+  sprintf(tmp, "word size: %d, packet size: %d, buffer size: %d",
+          sizeof(pack_word), sizeof(pack_packet), (sizeof(pack_packet) * 10 * 60));
+  log_add(tmp, LOG_INFO);
+
+  sprintf(tmp, "worker size: %d, clients size: %d",
+          sizeof(sock_worker), sizeof(sock_worker_list));
+  log_add(tmp, LOG_INFO);
 
   if(argc > 1)
   {

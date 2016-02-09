@@ -58,7 +58,11 @@ int test_pack()
   pack_add_param_as_int(123);
   pack_add_param_as_int(321);
 
+#ifdef PACK_USE_OWN_QUEUE
   pack_end();
+#else
+  pack_end(buffer, &size);
+#endif
 
   while(!pack_queue_next(buffer, &size))
   {
@@ -137,7 +141,11 @@ int test_create_pack()
     pack_add_as_float(key, rnd);
   };
 
+#ifdef PACK_USE_OWN_QUEUE
   pack_end();
+#else
+  pack_end(buffer, &size);
+#endif
 }
 //==============================================================================
 int test_validate_pack()
@@ -193,7 +201,7 @@ int test_parse_pack()
     if(TEST_LOG)
       log_add("Test words out", LOG_DEBUG);
 
-    pack_size tmp_words_count = pack_words_count(tmp_pack);
+    pack_size tmp_words_count = _pack_words_count(tmp_pack);
     for(pack_size i = 0; i < tmp_words_count; i++)
     {
       if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)

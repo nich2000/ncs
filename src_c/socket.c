@@ -4,26 +4,21 @@
 #include <pthread.h>
 
 #include "log.h"
-#include "protocol.h"
 #include "protocol_utils.h"
 
 #include "socket.h"
 #include "test.h"
 //==============================================================================
-#define MODE_SERVER          0
-#define MODE_CLIENT          1
-#define SOCK_PACK_MODE
-#define SOCK_SERVER_STREAMER 0
-#define SOCK_BUFFER_SIZE     100
+sock_worker      worker;
+sock_worker_list clients; // MODE_SERVER
 //==============================================================================
-int work_mode;
-SOCKET work_socket;
-sock_worker_list clients;
+void *sock_work_recv(void *arg);
+void *sock_work_send(void *arg);
 //==============================================================================
-void do_send   (SOCKET sock, pack_buffer buffer, pack_size  size);
-void do_receive(SOCKET sock, pack_buffer buffer, pack_size *size);
+void sock_do_recv(SOCKET sock, pack_buffer buffer, pack_size *size);
+void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size  size);
 //==============================================================================
-int getSocketError()
+int sock_get_error()
 {
 #ifdef __linux__
   return errno;
@@ -42,7 +37,7 @@ int sock_init()
   if (WSAStartup(WINSOCK_VERSION, &wsaData))
   {
     char *tmp;
-    sprintf(tmp, "sock_init, WSAStartup, Error: %d", getSocketError());
+    sprintf(tmp, "sock_init, WSAStartup, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
 
     WSACleanup();
@@ -64,7 +59,7 @@ int sock_deinit()
   if (WSACleanup())
   {
     char tmp[128];
-    sprintf(tmp, "sock_deinit, WSACleanup, Error: %d", getSocketError());
+    sprintf(tmp, "sock_deinit, WSACleanup, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 1;
   }
@@ -78,8 +73,14 @@ int sock_deinit()
 //==============================================================================
 int sock_server_init()
 {
-  clients.last_id = 0;
-  clients.index = 0;
+  worker.id       = 0;
+  worker.mode     = MODE_SERVER;
+  worker.sock     = INVALID_SOCKET;
+  worker.sender   = 0;
+  worker.receiver = 0;
+
+  clients.last_id  = 0;
+  clients.index    = 0;
 }
 //==============================================================================
 int sock_server_start(int port)
@@ -95,10 +96,10 @@ int sock_server_start(int port)
   pack_version(tmp);
   log_add(tmp, LOG_INFO);
 
-  work_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-  if (work_socket == INVALID_SOCKET)
+  worker.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if (worker.sock == INVALID_SOCKET)
   {
-    sprintf(tmp, "sock_start_server, socket, Error: %d", getSocketError());
+    sprintf(tmp, "sock_start_server, socket, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 1;
   }
@@ -109,18 +110,18 @@ int sock_server_start(int port)
   addr.sin_family = AF_INET;
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  if(bind(work_socket, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
+  if(bind(worker.sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
-    sprintf(tmp, "sock_start_server, bind, Error: %d", getSocketError());
+    sprintf(tmp, "sock_start_server, bind, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 2;
   }
   else
     log_add("sock_start_server, Bind socket", LOG_INFO);
 
-  if (listen(work_socket, SOMAXCONN) == SOCKET_ERROR)
+  if (listen(worker.sock, SOMAXCONN) == SOCKET_ERROR)
   {
-    sprintf(tmp, "sock_start_server, listen, Error: %d", getSocketError());
+    sprintf(tmp, "sock_start_server, listen, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 3;
   }
@@ -134,8 +135,6 @@ int sock_server_work()
 {
   log_add("sock_work", LOG_INFO);
 
-  work_mode = MODE_SERVER;
-
   char tmp[128];
   struct sockaddr_in addr;
   int addrlen = sizeof(struct sockaddr_in);
@@ -144,10 +143,10 @@ int sock_server_work()
   {
     SOCKET tmp_client;
 
-    tmp_client = accept(work_socket, (struct sockaddr *)&addr, (int *)&addrlen);
+    tmp_client = accept(worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
-      sprintf(tmp, "sock_work, accept, Error: %d", getSocketError());
+      sprintf(tmp, "sock_work, accept, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
       return 1;
     }
@@ -173,10 +172,10 @@ int sock_server_work()
       pthread_t tmp_receiver;
       pthread_create(&tmp_receiver, &tmp_attr, sock_work_recv, (void*)&tmp_client);
 
-      clients.items[clients.index]._socket   = tmp_client;
-      clients.items[clients.index]._sender   = tmp_sender;
-      clients.items[clients.index]._receiver = tmp_receiver;
-      clients.items[clients.index]._id       = clients.last_id;
+      clients.items[clients.index].sock     = tmp_client;
+      clients.items[clients.index].sender   = tmp_sender;
+      clients.items[clients.index].receiver = tmp_receiver;
+      clients.items[clients.index].id       = clients.last_id;
       clients.index++;
       clients.last_id++;
     }
@@ -190,12 +189,17 @@ int sock_server_work()
 int sock_server_stop()
 {
   log_add("sock_stop_server", LOG_INFO);
-  closesocket(work_socket);
+  closesocket(worker.sock);
   return 0;
 }
 //==============================================================================
 int sock_client_init()
 {
+  worker.id       = 0;
+  worker.mode     = MODE_CLIENT;
+  worker.sock     = INVALID_SOCKET;
+  worker.sender   = 0;
+  worker.receiver = 0;
 }
 //==============================================================================
 int sock_client_start(int port, const char *host)
@@ -212,16 +216,16 @@ int sock_client_start(int port, const char *host)
   pack_version(tmp);
   log_add(tmp, LOG_INFO);
 
-  work_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-  if (work_socket == INVALID_SOCKET)
+  worker.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if (worker.sock == INVALID_SOCKET)
   {
-    sprintf(tmp, "sock_start_client, socket, Error: %d", getSocketError());
+    sprintf(tmp, "sock_start_client, socket, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 1;
   }
   else
   {
-    sprintf(tmp, "sock_start_client, socket: %d", work_socket);
+    sprintf(tmp, "sock_start_client, socket: %d", worker.sock);
     log_add(tmp, LOG_INFO);
   };
 
@@ -230,9 +234,9 @@ int sock_client_start(int port, const char *host)
   addr.sin_port = htons(port);
   addr.sin_addr.s_addr = inet_addr(host);
 
-  if(connect(work_socket, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
+  if(connect(worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
   {
-    sprintf(tmp, "sock_start_client, connect, Error: %d", getSocketError());
+    sprintf(tmp, "sock_start_client, connect, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return 1;
   }
@@ -245,22 +249,20 @@ int sock_client_start(int port, const char *host)
 //==============================================================================
 int sock_client_work()
 {
-  work_mode = MODE_CLIENT;
-
   if(SOCK_SERVER_STREAMER)
-    sock_work_recv((void*)&work_socket);
+    sock_work_recv((void*)&worker.sock);
   else
-    sock_work_send((void*)&work_socket);
+    sock_work_send((void*)&worker.sock);
 }
 //==============================================================================
 int sock_client_stop()
 {
   log_add("sock_stop_client", LOG_INFO);
-  closesocket(work_socket);
+  closesocket(worker.sock);
   return 0;
 }
 //==============================================================================
-static void *sock_work_send(void *arg)
+void *sock_work_send(void *arg)
 {
   SOCKET sock = *(SOCKET*)arg;
 
@@ -282,8 +284,8 @@ static void *sock_work_send(void *arg)
 
   while(1)
   {
-    if(((!SOCK_SERVER_STREAMER) && (work_mode == MODE_SERVER)) ||
-       ((SOCK_SERVER_STREAMER)  && (work_mode == MODE_CLIENT)))
+    if(((!SOCK_SERVER_STREAMER) && (worker.mode == MODE_SERVER)) ||
+       ((SOCK_SERVER_STREAMER)  && (worker.mode == MODE_CLIENT)))
     {
       sleep(1);
       continue;
@@ -342,7 +344,11 @@ static void *sock_work_send(void *arg)
         pack_add_as_float(key, rnd);
       };
 
+    #ifdef PACK_USE_OWN_QUEUE
       pack_end();
+    #else
+      pack_end(buffer, &size);
+    #endif
     }
 
     while(!pack_queue_next(buffer, &size))
@@ -351,7 +357,7 @@ static void *sock_work_send(void *arg)
       {
         pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
 
-        pack_size tmp_words_count = pack_words_count(tmp_pack);
+        pack_size tmp_words_count = _pack_words_count(tmp_pack);
         pack_key key;
         pack_value valueS;
 
@@ -403,7 +409,7 @@ static void *sock_work_send(void *arg)
 //        continue;
 //        #endif
 
-        do_send(sock, tmp_buffer, tmp_cnt);
+        sock_do_send(sock, tmp_buffer, tmp_cnt);
 
         counter2 += tmp_cnt;
         sprintf(tmp, "Bytes: %d of %d", counter2, size);
@@ -419,7 +425,7 @@ static void *sock_work_send(void *arg)
   return NULL;
 }
 //==============================================================================
-static void *sock_work_recv(void *arg)
+void *sock_work_recv(void *arg)
 {
   SOCKET sock = *(SOCKET*)arg;
 
@@ -437,7 +443,7 @@ static void *sock_work_recv(void *arg)
 
     if(valread == SOCKET_ERROR)
     {
-      sprintf(tmp, "sock_work_recv, recv, Error: %d", getSocketError());
+      sprintf(tmp, "sock_work_recv, recv, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
       continue;
     }
@@ -456,21 +462,20 @@ static void *sock_work_recv(void *arg)
     if(valread > PACK_BUFFER_SIZE)
       continue;
 
-//    #ifdef SOCK_PACK_MODE
-//    bytes_to_hex(buffer, (pack_size)valread, tmp);
-//    log_add(tmp, LOG_DATA);
-//    #else
-//    add_to_log(buffer, LOG_DATA);
-//    continue;
-//    #endif
+    #ifdef SOCK_PACK_MODE
+    bytes_to_hex(buffer, (pack_size)valread, tmp);
+    log_add(tmp, LOG_DATA);
+    continue;
+    #else
+    log_add(buffer, LOG_DATA);
+    continue;
+    #endif
 
     counter += valread;
     if(counter >= 21)
       sleep(1);
 
     int res = pack_validate(buffer, valread, 0);
-//    sprintf(tmp, "Validate: %d", res);
-//    log_ausleep(1000);dd(tmp, LOG_DEBUG);
     if(res == 0)
     {
       counter = 0;
@@ -480,7 +485,7 @@ static void *sock_work_recv(void *arg)
 //      pack_values_to_csv(tmp_pack, ';', csv);
 //      log_add(csv, LOG_DATA);
 
-      pack_size tmp_words_count = pack_words_count(tmp_pack);
+      pack_size tmp_words_count = _pack_words_count(tmp_pack);
 
 //      sprintf(tmp, "Words: %d", tmp_words_count);
 //      log_add(tmp, LOG_DEBUG);
@@ -508,17 +513,17 @@ static void *sock_work_recv(void *arg)
   return NULL;
 }
 //==============================================================================
-void do_send(SOCKET sock, pack_buffer buffer, pack_size size)
+void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size size)
 {
   if(send(sock, buffer, size, 0) == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "do_send, send, Error: %u", getSocketError());
+    sprintf(tmp, "do_send, send, Error: %u", sock_get_error());
     log_add(tmp, LOG_ERROR);
   };
 }
 //==============================================================================
-void do_receive(SOCKET sock, pack_buffer buffer, pack_size *size)
+void sock_do_recv(SOCKET sock, pack_buffer buffer, pack_size *size)
 {
 }
 //==============================================================================

@@ -52,34 +52,60 @@
 #include "log.h"
 #include "protocol_utils.h"
 //==============================================================================
-// out
-//==============================================================================
 // Global total output packets counter
-pack_number      out_global_number = PACK_GLOBAL_INIT_NUMBER;
-// Current index in packets
-pack_number      out_packets_index = PACK_PACKETS_INIT_INDEX;
-// List of output packets
-pack_out_packets out_packets;
-// Lock count
-int              out_lock = 0;
+static pack_number out_global_number = PACK_GLOBAL_INIT_NUMBER;
 //==============================================================================
-// in
+pack_out_packets_list out_packets_list;
+int out_lock = 0;
 //==============================================================================
-// Global total input packets counter
-pack_number      in_global_number = PACK_GLOBAL_INIT_NUMBER;
-// Current index in packets
-pack_number      in_packets_index = PACK_PACKETS_INIT_INDEX;
-// Validation buffer
-pack_size        in_validation_buffer_size;
-pack_buffer      in_validation_buffer;
-// List of input packets
-pack_in_packets  in_packets;
-// Lock count
-int              in_lock = 0;
+pack_validation_buffer validation_buffer;
+//==============================================================================
+pack_in_packets_list in_packets_list;
+int in_lock = 0;
 //==============================================================================
 // queue
 //==============================================================================
-pack_queue    queue;
+#ifdef PACK_USE_OWN_QUEUE
+pack_queue queue;
+#endif
+//==============================================================================
+//==============================================================================
+#ifdef PACK_USE_OWN_QUEUE
+int pack_queue_add(pack_number number);
+#endif
+//==============================================================================
+pack_index  _pack_current_index(pack_type out);
+//==============================================================================
+//pack_out_packets_list packets_list,
+int           pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack);
+pack_packet *_pack_pack_by_number(pack_number number, pack_type out);
+//==============================================================================
+int           pack_pack_by_index (pack_index index,   pack_type out, pack_packet *pack);
+pack_packet *_pack_pack_by_index (pack_index index,   pack_type out);
+//==============================================================================
+int pack_parse_cmd(pack_packet *pack);
+int pack_exec_cmd (pack_packet *pack);
+//==============================================================================
+int pack_key_by_index (pack_packet *pack, pack_index index, pack_key key);
+//==============================================================================
+int is_locked(pack_type out);
+int lock(pack_type out);
+int unlock(pack_type out);
+//==============================================================================
+int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words words, pack_size *words_count);
+//==============================================================================
+int pack_word_to_buffer  (pack_word *word,     pack_buffer buffer, pack_size *start_index);
+int pack_words_to_buffer (pack_packet *pack,   pack_buffer buffer, pack_size start_index);
+int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
+//==============================================================================
+int pack_word_as_int    (pack_word *word, int   *value);
+int pack_word_as_float  (pack_word *word, float *value);
+int pack_word_as_string (pack_word *word, pack_string value);
+int pack_word_as_bytes  (pack_word *word, pack_bytes value, pack_size *size);
+//==============================================================================
+pack_size _pack_words_size(pack_packet *pack);
+pack_size _pack_word_size(pack_word *word);
+//==============================================================================
 //==============================================================================
 int is_locked(pack_type out)
 {
@@ -119,17 +145,18 @@ int unlock(pack_type out)
 //==============================================================================
 int pack_init()
 {
-  in_validation_buffer_size = 0;
-
-  in_global_number           = PACK_GLOBAL_INIT_NUMBER;
-  in_packets_index           = PACK_PACKETS_INIT_INDEX;
-
   out_global_number          = PACK_GLOBAL_INIT_NUMBER;
-  out_packets_index          = PACK_PACKETS_INIT_INDEX;
 
+  validation_buffer.size  = 0;
+
+  in_packets_list.index      = PACK_PACKETS_INIT_INDEX;
+  out_packets_list.index     = PACK_PACKETS_INIT_INDEX;
+
+#ifdef PACK_USE_OWN_QUEUE
   queue.empty                = PACK_TRUE;
   queue.start                = PACK_QUEUE_INIT_INDEX;
   queue.finish               = PACK_QUEUE_INIT_INDEX;
+#endif
 
   return PACK_OK;
 }
@@ -141,31 +168,29 @@ int pack_version(pack_ver version)
   return PACK_OK;
 }
 //==============================================================================
-pack_number _pack_global_number(pack_type out)
+pack_number pack_global_number()
 {
-  if(out)
-    return out_global_number;
-  else
-    return in_global_number;
+  return out_global_number;
 }
 //==============================================================================
 pack_index _pack_current_index(pack_type out)
 {
   if(out)
-    return out_packets_index;
+    return out_packets_list.index;
   else
-    return in_packets_index;
+    return in_packets_list.index;
 }
 //==============================================================================
+//pack_out_packets_list packets_list,
 int pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack)
 {
   if(out)
   {
     for(pack_size i = 0; i <= PACK_OUT_PACKETS_COUNT; i++)
     {
-      if(out_packets[i].number == number)
+      if(out_packets_list.items[i].number == number)
       {
-        pack = &out_packets[i];
+        pack = &out_packets_list.items[i];
         return PACK_OK;
       }
     };
@@ -174,9 +199,9 @@ int pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack)
   {
     for(pack_size i = 0; i <= PACK_IN_PACKETS_COUNT; i++)
     {
-      if(in_packets[i].number == number)
+      if(in_packets_list.items[i].number == number)
       {
-        pack = &in_packets[i];
+        pack = &in_packets_list.items[i];
         return PACK_OK;
       }
     };
@@ -190,14 +215,14 @@ pack_packet *_pack_pack_by_number(pack_number number, pack_type out)
   if(out)
   {
     for(pack_size i = 0; i <= PACK_OUT_PACKETS_COUNT; i++)
-      if(out_packets[i].number == number)
-        return &out_packets[i];
+      if(out_packets_list.items[i].number == number)
+        return &out_packets_list.items[i];
   }
   else
   {
     for(pack_size i = 0; i <= PACK_IN_PACKETS_COUNT; i++)
-      if(in_packets[i].number == number)
-        return &in_packets[i];
+      if(in_packets_list.items[i].number == number)
+        return &in_packets_list.items[i];
   };
 
   return NULL;
@@ -206,9 +231,9 @@ pack_packet *_pack_pack_by_number(pack_number number, pack_type out)
 int pack_pack_by_index(pack_index index, pack_type out, pack_packet *pack)
 {
   if(out)
-    pack = &out_packets[index];
+    pack = &out_packets_list.items[index];
   else
-    pack = &in_packets[index];
+    pack = &in_packets_list.items[index];
 
   return PACK_OK;
 }
@@ -216,9 +241,9 @@ int pack_pack_by_index(pack_index index, pack_type out, pack_packet *pack)
 pack_packet *_pack_pack_by_index (pack_index index, pack_type out)
 {
   if(out)
-    return &out_packets[index];
+    return &out_packets_list.items[index];
   else
-    return &in_packets[index];
+    return &in_packets_list.items[index];
 }
 //==============================================================================
 int pack_pack_current(pack_type out, pack_packet *pack)
@@ -235,9 +260,9 @@ pack_packet *_pack_pack_current(pack_type out)
   pack_index tmp_index = _pack_current_index(out);
 
   if(out)
-    return &out_packets[tmp_index];
+    return &out_packets_list.items[tmp_index];
   else
-    return &in_packets[tmp_index];
+    return &in_packets_list.items[tmp_index];
 }
 //==============================================================================
 int pack_word_by_key(pack_packet *pack, pack_key key, pack_size *index, pack_word *word)
@@ -483,9 +508,9 @@ int pack_begin()
   if(out_global_number >= USHRT_MAX)
     out_global_number = PACK_GLOBAL_INIT_NUMBER;
 
-  out_packets_index++;
-  if(out_packets_index >= PACK_OUT_PACKETS_COUNT)
-    out_packets_index = PACK_PACKETS_INIT_INDEX;
+  out_packets_list.index++;
+  if(out_packets_list.index >= PACK_OUT_PACKETS_COUNT)
+    out_packets_list.index = PACK_PACKETS_INIT_INDEX;
 
 //  char tmp[128];
 
@@ -497,28 +522,37 @@ int pack_begin()
 
   pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
 
-  memcpy(tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
-  tmp_pack->size        = 0;
+//  memcpy(tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
+//  tmp_pack->size        = 0;
   tmp_pack->number      = out_global_number;
   tmp_pack->words_count = 0;
 
   return 0;
 }
 //==============================================================================
+#ifdef PACK_USE_OWN_QUEUE
 int pack_end()
+#else
+int pack_end(pack_buffer buffer, pack_size *size)
+#endif
 {
   if(!is_locked(PACK_OUT))
     return 1;
 
   pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
 
+#ifdef PACK_USE_OWN_QUEUE
   pack_queue_add(tmp_pack->number);
+#else
+  pack_packet_to_buffer(tmp_pack, buffer, size);
+#endif
 
   unlock(PACK_OUT);
 
   return 0;
 }
 //==============================================================================
+#ifdef PACK_USE_OWN_QUEUE
 int pack_queue_add(pack_number number)
 {
   pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT);
@@ -535,9 +569,11 @@ int pack_queue_add(pack_number number)
 
   return 0;
 }
+#endif
 //==============================================================================
 int pack_queue_next(pack_buffer buffer, pack_size *size)
 {
+#ifdef PACK_USE_OWN_QUEUE
   if(queue.empty)
     return 1;
 
@@ -556,6 +592,9 @@ int pack_queue_next(pack_buffer buffer, pack_size *size)
     queue.empty = PACK_TRUE;
 
   return 0;
+#else
+  return 3;
+#endif
 }
 //==============================================================================
 int pack_add_as_int(pack_key key, int value)
@@ -584,7 +623,7 @@ int pack_add_as_int(pack_key key, int value)
   tmp_word->value[i++] = (value      ) & 0xff;
 
   // Size counter
-  tmp_pack->size += pack_word_size(tmp_word);
+//  tmp_pack->size += pack_word_size(tmp_word);
 
   // Words counter
   tmp_pack->words_count++;
@@ -617,7 +656,7 @@ int pack_add_as_float(pack_key key, float value)
     tmp_word->value[i] = tmp_value.buff[i];
 
   // Size counter
-  tmp_pack->size += pack_word_size(tmp_word);
+//  tmp_pack->size += pack_word_size(tmp_word);
 
   // Words counter
   tmp_pack->words_count++;
@@ -653,7 +692,7 @@ int pack_add_as_string(pack_key key, pack_string value)
     tmp_word->value[i] = value[i];
 
   // Size counter
-  tmp_pack->size += pack_word_size(tmp_word);
+//  tmp_pack->size += pack_word_size(tmp_word);
 
   // Words counter
   tmp_pack->words_count++;
@@ -687,7 +726,7 @@ int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size)
     tmp_word->value[i] = value[i];
 
   // Size counter
-  tmp_pack->size += pack_word_size(tmp_word);
+//  tmp_pack->size += pack_word_size(tmp_word);
 
   // Words counter
   tmp_pack->words_count++;
@@ -729,16 +768,16 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 {
 //  add_to_log("pack_validate", LOG_DEBUG);
 
-  pack_size i = in_validation_buffer_size;
+  pack_size i = validation_buffer.size;
   for(pack_size j = 0; j < size; j++)
-    in_validation_buffer[i++] = buffer[j];
-  in_validation_buffer_size += size;
+    validation_buffer.buffer[i++] = buffer[j];
+  validation_buffer.size += size;
 
-  pack_size tmp_validation_size = in_validation_buffer_size;
+  pack_size tmp_validation_size = validation_buffer.size;
 
   while(1)
   {
-    if(in_validation_buffer_size <= 0)
+    if(validation_buffer.size <= 0)
       return 0;
 
     pack_size tmp_pack_pos = 0;
@@ -746,7 +785,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     // Get version
     for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
     {
-      if(in_validation_buffer[tmp_pack_pos++] != PACK_VERSION[i])
+      if(validation_buffer.buffer[tmp_pack_pos++] != PACK_VERSION[i])
         return 1;
 
       tmp_validation_size--;
@@ -757,14 +796,14 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     // Get size
     if(tmp_validation_size < 2)
       return 2;
-    pack_size tmp_size = in_validation_buffer[tmp_pack_pos++] << 8;
-    tmp_size          |= in_validation_buffer[tmp_pack_pos++];
+    pack_size tmp_size = validation_buffer.buffer[tmp_pack_pos++] << 8;
+    tmp_size          |= validation_buffer.buffer[tmp_pack_pos++];
 
     // Get value
     pack_buffer tmp_value_buffer;
     for(pack_size i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
     {
-      tmp_value_buffer[i] = in_validation_buffer[tmp_pack_pos++];
+      tmp_value_buffer[i] = validation_buffer.buffer[tmp_pack_pos++];
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
@@ -778,8 +817,8 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     // Get crc16 1
     if(tmp_validation_size < 2)
       return 2;
-    pack_crc16 tmp_crc16_1 = in_validation_buffer[tmp_pack_pos++] << 8;
-    tmp_crc16_1           |= in_validation_buffer[tmp_pack_pos++];
+    pack_crc16 tmp_crc16_1 = validation_buffer.buffer[tmp_pack_pos++] << 8;
+    tmp_crc16_1           |= validation_buffer.buffer[tmp_pack_pos++];
 
     // Get crc16 2
     pack_crc16 tmp_crc16_2 = getCRC16((char *)tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
@@ -788,26 +827,26 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
     if(tmp_crc16_1 != tmp_crc16_2)
       return 3;
 
-    pack_size i = in_validation_buffer_size - tmp_pack_pos;
-    for(pack_size j = 0; j < in_validation_buffer_size; j++)
-      in_validation_buffer[j] = in_validation_buffer[i++];
-    in_validation_buffer_size -= tmp_pack_pos;
+    pack_size i = validation_buffer.size - tmp_pack_pos;
+    for(pack_size j = 0; j < validation_buffer.size; j++)
+      validation_buffer.buffer[j] = validation_buffer.buffer[i++];
+    validation_buffer.size -= tmp_pack_pos;
 
     if(only_validate)
       return 0;
 
-    in_packets_index++;
-    if(in_packets_index >= PACK_IN_PACKETS_COUNT)
-      in_packets_index = PACK_PACKETS_INIT_INDEX;
+    in_packets_list.index++;
+    if(in_packets_list.index >= PACK_IN_PACKETS_COUNT)
+      in_packets_list.index = PACK_PACKETS_INIT_INDEX;
 
     pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
     if(tmp_pack == NULL)
       return 4;
 
-    strncpy((char *)tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
-    tmp_pack->size = tmp_size;
+//    strncpy((char *)tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
+//    tmp_pack->size = tmp_size;
     tmp_pack->number = tmp_index;
-    tmp_pack->crc = tmp_crc16_1;
+//    tmp_pack->crc = tmp_crc16_1;
 
     pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
 
@@ -932,9 +971,13 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
   for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
     buffer[tmp_pack_pos++] = PACK_VERSION[i];
 
+  pack_size tmp_packet_size = _pack_words_size(packet);
+
   // Size(IndexSize + DataSize)
-  buffer[tmp_pack_pos++] = (packet->size >> 8) & 0xff;
-  buffer[tmp_pack_pos++] = (packet->size     ) & 0xff;
+//  buffer[tmp_pack_pos++] = (packet->size >> 8) & 0xff;
+//  buffer[tmp_pack_pos++] = (packet->size     ) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
 
   // Index
   buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
@@ -946,7 +989,8 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
   tmp_buffer[1] = (packet->number     ) & 0xff;
   pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
 
-  pack_size tmp_total_size = (PACK_INDEX_SIZE + packet->size);
+//  pack_size tmp_total_size = (PACK_INDEX_SIZE + packet->size);
+  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
 
   // Words to buffer
   for(pack_size i = PACK_INDEX_SIZE; i < tmp_total_size; i++)
@@ -958,17 +1002,25 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
   buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
 
   // pack_outer_size include PACK_INDEX_SIZE
-  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + packet->size + PACK_CRC_SIZE;
+//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + packet->size + PACK_CRC_SIZE;
+  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
 
   return 0;
 }
 //==============================================================================
-pack_size pack_words_count(pack_packet *pack)
+pack_size _pack_words_count(pack_packet *pack)
 {
   return pack->words_count;
 }
 //==============================================================================
-pack_size pack_word_size(pack_word *word)
+pack_size _pack_words_size(pack_packet *pack)
+{
+  pack_size tmp_size = 0;
+  for(pack_size i = 0; i < pack->words_count; i++)
+    tmp_size += _pack_word_size(&pack->words[i]);
+}
+//==============================================================================
+pack_size _pack_word_size(pack_word *word)
 {
   pack_size tmp_size = PACK_KEY_SIZE + PACK_TYPE_SIZE;
 
@@ -1008,7 +1060,7 @@ pack_size pack_word_size(pack_word *word)
 //==============================================================================
 int pack_parse_cmd(pack_packet *pack)
 {
-  pack_size tmp_words_count = pack_words_count(pack);
+  pack_size tmp_words_count = _pack_words_count(pack);
 
   if(tmp_words_count >= 1)
   {
@@ -1024,9 +1076,9 @@ int pack_parse_cmd(pack_packet *pack)
   return PACK_OK;
 }
 //==============================================================================
-pack_size pack_params_count(pack_packet *pack)
+pack_size _pack_params_count(pack_packet *pack)
 {
-  pack_size tmp_words_count = pack_words_count(pack);
+  pack_size tmp_words_count = _pack_words_count(pack);
   pack_size tmp_params_count = 0;
   pack_key  tmp_key;
 
@@ -1052,7 +1104,7 @@ int pack_exec_cmd(pack_packet *pack)
 
   if(res == PACK_OK)
   {
-    pack_size tmp_params_count = pack_params_count(pack);
+    pack_size tmp_params_count = _pack_params_count(pack);
 
     sprintf(tmp, "%s: %s(%d)", tmp_key, tmp_command, tmp_params_count);
     log_add(tmp, LOG_DEBUG);
