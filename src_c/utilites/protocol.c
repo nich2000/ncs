@@ -678,12 +678,12 @@ int pack_queue_next(pack_buffer buffer, pack_size *size)
 int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol)
 #endif
 {
-#ifdef PACK_USE_OWN_QUEUE
+  #ifdef PACK_USE_OWN_QUEUE
   if(queue.empty)
-    return PACK_OK;
+    return PACK_QUEUE_EMPTY;
 
   if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
-    return PACK_ERROR;
+    return PACK_QUEUE_EMPTY;
 
   pack_index tmp_start = queue.start;
   pack_packet *tmp_pack = queue.packets[tmp_start];
@@ -695,17 +695,15 @@ int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol
 
   if(queue.start == queue.finish)
     queue.empty = PACK_TRUE;
-#else
+  #else
   #ifdef PACK_USE_OWN_BUFFER
   pack_current_packet_to_buffer(buffer, size);
   #else
   pack_current_packet_to_buffer(buffer, size, protocol);
   #endif
+  #endif
 
-  return PACK_OK;
-#endif
-
-  return PACK_OK;
+  return PACK_QUEUE_FULL;
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
