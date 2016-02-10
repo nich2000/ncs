@@ -123,31 +123,45 @@ typedef struct
 int _pack_get_last_error       ();
 pack_number _pack_global_number();
 //==============================================================================
+#ifdef PACK_USE_OWN_BUFFER
+int pack_begin();
+int pack_end();
+pack_packet *_pack_pack_current(pack_type out);
+int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
+int pack_pack_current(pack_type out, pack_packet *pack);
+int pack_add_as_int(pack_key key, int value);
+int pack_add_as_float(pack_key key, float value);
+int pack_add_as_string(pack_key key, pack_string value);
+int pack_add_as_bytes(pack_key key, pack_bytes value, pack_size size);
+int pack_add_cmd(pack_value command);
+int pack_add_param_as_int(int   param);
+int pack_add_param_as_float(float param);
+int pack_add_param_as_string(pack_string param);
+int pack_add_param_as_bytes(pack_bytes param, pack_size size);
+int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size);
+int pack_queue_next(pack_buffer buffer, pack_size *size);
+#else
+int pack_begin(pack_protocol *protocol);
+int pack_end(pack_protocol *protocol);
+pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);
+int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
+int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
+int pack_add_as_int(pack_key key, int value, pack_protocol *protocol);
+int pack_add_as_float(pack_key key, float value, pack_protocol *protocol);
+int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol);
+int pack_add_as_bytes(pack_key key, pack_bytes value, pack_size size, pack_protocol *protocol);
+int pack_add_cmd(pack_value command, pack_protocol *protocol);
+int pack_add_param_as_int(int   param, pack_protocol *protocol);
+int pack_add_param_as_float(float param, pack_protocol *protocol);
+int pack_add_param_as_string(pack_string param, pack_protocol *protocol);
+int pack_add_param_as_bytes(pack_bytes param, pack_size size, pack_protocol *protocol);
+int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+#endif
+//==============================================================================
 int pack_version               (pack_ver version);
 //==============================================================================
 int pack_init                  ();
-int pack_begin                 ();
-int pack_end                   ();
-//==============================================================================
-int pack_add_as_int            (pack_key key, int   value);
-int pack_add_as_float          (pack_key key, float value);
-int pack_add_as_string         (pack_key key, pack_string value);
-int pack_add_as_bytes          (pack_key key, pack_bytes value, pack_size size);
-//==============================================================================
-int pack_add_cmd               (pack_value command);
-int pack_add_param_as_int      (int   param);
-int pack_add_param_as_float    (float param);
-int pack_add_param_as_string   (pack_string param);
-int pack_add_param_as_bytes    (pack_bytes param, pack_size size);
-//==============================================================================
-int pack_queue_next            (pack_buffer buffer, pack_size *size);
-//==============================================================================
-int pack_validate              (pack_buffer buffer, pack_size size, pack_type only_validate);
-//==============================================================================
-int           pack_pack_current(pack_type out, pack_packet *pack);
-pack_packet *_pack_pack_current(pack_type out);
-//==============================================================================
-int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size);
 //==============================================================================
 pack_size _pack_words_count    (pack_packet *pack);
 pack_size _pack_params_count   (pack_packet *pack);

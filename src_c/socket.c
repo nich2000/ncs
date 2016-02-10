@@ -264,6 +264,7 @@ int sock_client_stop()
 //==============================================================================
 void *sock_work_send(void *arg)
 {
+/*
   SOCKET sock = *(SOCKET*)arg;
 
   char tmp[512];
@@ -419,10 +420,12 @@ void *sock_work_send(void *arg)
     }
   }
   return NULL;
+*/
 }
 //==============================================================================
 void *sock_work_recv(void *arg)
 {
+/*
   SOCKET sock = *(SOCKET*)arg;
 
   char tmp[512];
@@ -507,6 +510,7 @@ void *sock_work_recv(void *arg)
   }
 
   return NULL;
+*/
 }
 //==============================================================================
 void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size size)

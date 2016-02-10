@@ -52,6 +52,7 @@ int test_gps()
 //==============================================================================
 int test_pack()
 {
+/*
   pack_begin();
   pack_add_cmd("reset");
   pack_add_param_as_int(123);
@@ -74,7 +75,6 @@ int test_pack()
   return 0;
 
 
-
   start_c = clock();
   pack_init();
   for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
@@ -89,10 +89,12 @@ int test_pack()
   log_add(tmp, LOG_INFO);
 
   return 0;
+*/
 }
 //==============================================================================
 int test_create_pack()
 {
+/*
   pack_begin();
 
   pack_add_as_int("SND", 123);
@@ -136,10 +138,12 @@ int test_create_pack()
   };
 
   pack_end();
+*/
 }
 //==============================================================================
 int test_validate_pack()
 {
+/*
   int res;
   res = pack_queue_next(buffer, &size);
   if(res != 0)
@@ -158,10 +162,12 @@ int test_validate_pack()
   }
 
   return 0;
+*/
 }
 //==============================================================================
 int test_parse_pack()
 {
+/*
   log_add("-----------------------------", LOG_DEBUG);
 
   pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
@@ -257,5 +263,6 @@ int test_parse_pack()
       }
     //--------------------------------------------------------------------------
   };
+*/
 }
 //==============================================================================
