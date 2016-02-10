@@ -45,9 +45,7 @@ typedef struct
   SOCKET                 sock;
   pthread_t              sender;
   pthread_t              receiver;
-  pack_validation_buffer validation_buffer;
-  pack_out_packets_list  out_packets_list;
-  pack_in_packets_list   in_packets_list;
+  pack_protocol          protocol;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];

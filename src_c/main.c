@@ -13,8 +13,8 @@
 int main(int argc, char *argv[])
 {
   char tmp[128];
-  sprintf(tmp, "word size: %d, packet size: %d, out buffer size: %d, in buffer size: %d",
-          sizeof(pack_word), sizeof(pack_packet), sizeof(pack_out_packets_list), sizeof(pack_in_packets_list));
+  sprintf(tmp, "word size: %d, packet size: %d, out buffer size: %d, in buffer size: %d, pack_protocol: %d",
+          sizeof(pack_word), sizeof(pack_packet), sizeof(pack_out_packets_list), sizeof(pack_in_packets_list), sizeof(pack_protocol));
   log_add(tmp, LOG_INFO);
 
   sprintf(tmp, "worker size: %d, clients size: %d",
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     log_set_name("log.txt");
     log_add("Test mode", LOG_INFO);
 
-    test_pack();
+//    test_pack();
 
     // См. коммент в test_gps
     // NIch 06.02.2016

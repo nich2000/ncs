@@ -16,6 +16,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
 include_directories(utilites)
+include_directories(/)
 #-------------------------------------------------------------------------------
 set(_LOG utilites/log.c defines.h)
 add_library(log SHARED ${_LOG})

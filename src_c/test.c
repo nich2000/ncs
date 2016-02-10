@@ -53,18 +53,12 @@ int test_gps()
 int test_pack()
 {
   pack_begin();
-
   pack_add_cmd("reset");
   pack_add_param_as_int(123);
   pack_add_param_as_int(321);
-
-#ifdef PACK_USE_OWN_QUEUE
   pack_end();
-#else
-  pack_end(buffer, &size);
-#endif
 
-  while(!pack_queue_next(buffer, &size))
+  while(pack_queue_next(buffer, &size))
   {
     int res = pack_validate(buffer, size, 0);
     if(res != 0)
@@ -141,11 +135,7 @@ int test_create_pack()
     pack_add_as_float(key, rnd);
   };
 
-#ifdef PACK_USE_OWN_QUEUE
   pack_end();
-#else
-  pack_end(buffer, &size);
-#endif
 }
 //==============================================================================
 int test_validate_pack()
@@ -204,7 +194,7 @@ int test_parse_pack()
     pack_size tmp_words_count = _pack_words_count(tmp_pack);
     for(pack_size i = 0; i < tmp_words_count; i++)
     {
-      if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+      if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
         if(TEST_LOG)
         {
           sprintf(tmp, "%s(%d): %s", key, i, valueS);
@@ -216,7 +206,7 @@ int test_parse_pack()
       log_add("Test by key out", LOG_DEBUG);
 
     memcpy(key, "IN0", PACK_KEY_SIZE);
-    if(pack_val_by_key_as_int(tmp_pack, key, &ind, &valueI) == 0)
+    if(pack_val_by_key_as_int(tmp_pack, key, &ind, &valueI) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %d", key, ind, valueI);
@@ -224,7 +214,7 @@ int test_parse_pack()
       }
 
     memcpy(key, "ST0", PACK_KEY_SIZE);
-    if(pack_val_by_key_as_string(tmp_pack, key, &ind, valueS) == 0)
+    if(pack_val_by_key_as_string(tmp_pack, key, &ind, valueS) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %s", key, ind, valueS);
@@ -232,7 +222,7 @@ int test_parse_pack()
       }
 
     memcpy(key, "FL0", PACK_KEY_SIZE);
-    if(pack_val_by_key_as_float(tmp_pack, key, &ind, &valueF) == 0)
+    if(pack_val_by_key_as_float(tmp_pack, key, &ind, &valueF) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %f", key, ind, valueF);
@@ -243,7 +233,7 @@ int test_parse_pack()
       log_add("Test by index out", LOG_DEBUG);
 
     ind = 1;
-    if(pack_val_by_index_as_int(tmp_pack, ind, key, &valueI) == 0)
+    if(pack_val_by_index_as_int(tmp_pack, ind, key, &valueI) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %d", key, ind, valueI);
@@ -251,7 +241,7 @@ int test_parse_pack()
       }
 
     ind = 7;
-    if(pack_val_by_index_as_string(tmp_pack, ind, key, valueS) == 0)
+    if(pack_val_by_index_as_string(tmp_pack, ind, key, valueS) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %s", key, ind, valueS);
@@ -259,7 +249,7 @@ int test_parse_pack()
       }
 
     ind = 11;
-    if(pack_val_by_index_as_float(tmp_pack, ind, key, &valueF) == 0)
+    if(pack_val_by_index_as_float(tmp_pack, ind, key, &valueF) == PACK_OK)
       if(TEST_LOG)
       {
         sprintf(tmp, "%s(%d): %f", key, ind, valueF);

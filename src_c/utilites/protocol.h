@@ -63,12 +63,6 @@ typedef unsigned short           pack_crc16;
 //==============================================================================
 typedef struct
 {
-  pack_size   size;
-  pack_buffer buffer;
-} pack_validation_buffer;
-//==============================================================================
-typedef struct
-{
   pack_key   key;
   pack_type  type;
   pack_size  size;
@@ -93,6 +87,12 @@ typedef pack_packet *pack_queue_packets[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {
+  pack_size   size;
+  pack_buffer buffer;
+} pack_validation_buffer;
+//==============================================================================
+typedef struct
+{
   pack_index       index;
   pack_out_packets items;
   pack_count       lock_count;
@@ -107,14 +107,23 @@ typedef struct
 //==============================================================================
 typedef struct
 {
+  pack_validation_buffer validation_buffer;
+  pack_out_packets_list  out_packets_list;
+  pack_in_packets_list   in_packets_list;
+} pack_protocol;
+//==============================================================================
+typedef struct
+{
   pack_type          empty;
   pack_index         start;
   pack_index         finish;
   pack_queue_packets packets;
 } pack_queue;
 //==============================================================================
+int _pack_get_last_error       ();
+pack_number _pack_global_number();
+//==============================================================================
 int pack_version               (pack_ver version);
-pack_number pack_global_number ();
 //==============================================================================
 int pack_init                  ();
 int pack_begin                 ();

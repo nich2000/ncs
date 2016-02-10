@@ -344,16 +344,12 @@ void *sock_work_send(void *arg)
         pack_add_as_float(key, rnd);
       };
 
-    #ifdef PACK_USE_OWN_QUEUE
       pack_end();
-    #else
-      pack_end(buffer, &size);
-    #endif
     }
 
-    while(!pack_queue_next(buffer, &size))
+    while(pack_queue_next(buffer, &size))
     {
-      if(pack_validate(buffer, size, 0) == 0)
+      if(pack_validate(buffer, size, 0) == PACK_OK)
       {
         pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
 
@@ -364,7 +360,7 @@ void *sock_work_send(void *arg)
 //        clrscr();
         for(pack_size i = 0; i < tmp_words_count; i++)
         {
-          if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+          if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
           {
             sprintf(tmp, "%s: %s", key, valueS);
             log_add(tmp, LOG_DATA);
@@ -476,7 +472,7 @@ void *sock_work_recv(void *arg)
       sleep(1);
 
     int res = pack_validate(buffer, valread, 0);
-    if(res == 0)
+    if(res == PACK_OK)
     {
       counter = 0;
       pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
@@ -496,7 +492,7 @@ void *sock_work_recv(void *arg)
 //      clrscr();
       for(pack_size i = 0; i < tmp_words_count; i++)
       {
-        if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == 0)
+        if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
         {
           sprintf(tmp, "%s: %s", key, valueS);
           log_add(tmp, LOG_DATA);
