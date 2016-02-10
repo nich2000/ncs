@@ -34,8 +34,9 @@ ENDIF()
 
 set(_PROG main.c utilites/protocol_utils.c utilites/gps_parse.c)
 
-find_package(Threads)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log socket ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(${PROJECT_NAME} protocol log socket Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
