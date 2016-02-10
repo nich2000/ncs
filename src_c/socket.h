@@ -13,6 +13,7 @@
 #endif
 //==============================================================================
 #include <pthread.h>
+#include "defines.h"
 #include "protocol.h"
 //==============================================================================
 #ifdef __linux__
@@ -27,8 +28,6 @@
 #else
 #endif
 //==============================================================================
-//#define SOCK_PACK_MODE
-//==============================================================================
 #define MODE_SERVER          0
 #define MODE_CLIENT          1
 #define SOCK_SERVER_STREAMER 0
@@ -41,13 +40,14 @@ typedef unsigned short sock_index;
 //==============================================================================
 typedef struct
 {
-  sock_id          id;
-  sock_mode        mode;
-  SOCKET           sock;
-  pthread_t        sender;
-  pthread_t        receiver;
-  pack_out_packets sender_packets;
-  pack_in_packets  receiver_packets;
+  sock_id                id;
+  sock_mode              mode;
+  SOCKET                 sock;
+  pthread_t              sender;
+  pthread_t              receiver;
+  pack_validation_buffer validation_buffer;
+  pack_out_packets_list  out_packets_list;
+  pack_in_packets_list   in_packets_list;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];

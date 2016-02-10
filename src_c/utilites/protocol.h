@@ -8,16 +8,14 @@
 //==============================================================================
 #include "protocol_utils.h"
 //==============================================================================
-#define PACK_USE_OWN_QUEUE
-//==============================================================================
 #define PACK_BUFFER_SIZE         512
 #define PACK_VALUE_SIZE          10
 #define PACK_KEY_SIZE            4
 #define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_WORDS_COUNT         20
-#define PACK_OUT_PACKETS_COUNT   6000
-#define PACK_IN_PACKETS_COUNT    100
+#define PACK_OUT_PACKETS_COUNT   (1 * 60 * 10) // 1 minute
+#define PACK_IN_PACKETS_COUNT    (    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0
@@ -50,6 +48,7 @@ typedef unsigned char            pack_value [PACK_VALUE_SIZE];
 typedef unsigned char            pack_ver   [PACK_VERSION_SIZE];
 typedef unsigned char            pack_key   [PACK_KEY_SIZE];
 //==============================================================================
+typedef unsigned short           pack_count;
 typedef unsigned short           pack_size;
 typedef unsigned short           pack_index;
 typedef unsigned short           pack_number;
@@ -96,12 +95,14 @@ typedef struct
 {
   pack_index       index;
   pack_out_packets items;
+  pack_count       lock_count;
 } pack_out_packets_list;
 //==============================================================================
 typedef struct
 {
   pack_index      index;
   pack_in_packets items;
+  pack_count      lock_count;
 } pack_in_packets_list;
 //==============================================================================
 typedef struct
@@ -117,12 +118,7 @@ pack_number pack_global_number ();
 //==============================================================================
 int pack_init                  ();
 int pack_begin                 ();
-//==============================================================================
-#ifdef PACK_USE_OWN_QUEUE
-int pack_end();
-#else
-int pack_end(pack_buffer buffer, pack_size *size);
-#endif
+int pack_end                   ();
 //==============================================================================
 int pack_add_as_int            (pack_key key, int   value);
 int pack_add_as_float          (pack_key key, float value);
@@ -141,6 +137,8 @@ int pack_validate              (pack_buffer buffer, pack_size size, pack_type on
 //==============================================================================
 int           pack_pack_current(pack_type out, pack_packet *pack);
 pack_packet *_pack_pack_current(pack_type out);
+//==============================================================================
+int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size);
 //==============================================================================
 pack_size _pack_words_count    (pack_packet *pack);
 pack_size _pack_params_count   (pack_packet *pack);

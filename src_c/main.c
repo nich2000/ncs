@@ -13,8 +13,8 @@
 int main(int argc, char *argv[])
 {
   char tmp[128];
-  sprintf(tmp, "word size: %d, packet size: %d, buffer size: %d",
-          sizeof(pack_word), sizeof(pack_packet), (sizeof(pack_packet) * 10 * 60));
+  sprintf(tmp, "word size: %d, packet size: %d, out buffer size: %d, in buffer size: %d",
+          sizeof(pack_word), sizeof(pack_packet), sizeof(pack_out_packets_list), sizeof(pack_in_packets_list));
   log_add(tmp, LOG_INFO);
 
   sprintf(tmp, "worker size: %d, clients size: %d",
