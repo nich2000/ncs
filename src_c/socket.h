@@ -42,7 +42,10 @@ typedef struct
 {
   sock_id                id;
   sock_mode              mode;
+  int                    port;
+  char                  *host;
   SOCKET                 sock;
+  pthread_t              worker;
   pthread_t              sender;
   pthread_t              receiver;
   pack_protocol          protocol;
@@ -57,17 +60,7 @@ typedef struct
   sock_workers items;
 }sock_worker_list;
 //==============================================================================
-int sock_init();
-int sock_deinit();
-//==============================================================================
-int sock_server_init();
-int sock_server_start(int port);
-int sock_server_work();
-int sock_server_stop();
-//==============================================================================
-int sock_client_init();
-int sock_client_start(int port, const char *host);
-int sock_client_work();
-int sock_client_stop();
+int sock_server(int port);
+int sock_client(int port, char *host);
 //==============================================================================
 #endif //SOCKET_H

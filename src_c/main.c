@@ -10,6 +10,33 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
+int port = 5600;
+char *host = "127.0.0.1";
+//==============================================================================
+int handle_command(char *command)
+{
+  if(strcmp(command, "exit") == 0)
+  {
+    return 0;
+  }
+  else if(strcmp(command, "server") == 0)
+  {
+    sock_server(port);
+    return 1;
+  }
+  else if(strcmp(command, "client") == 0)
+  {
+    sock_client(port, host);
+    return 1;
+  }
+  else if(strcmp(command, "test") == 0)
+  {
+    return 1;
+  }
+  else
+    return -1;
+}
+//==============================================================================
 int main(int argc, char *argv[])
 {
   char tmp[128];
@@ -25,12 +52,10 @@ int main(int argc, char *argv[])
   {
     // 0     1  2 3     4 5
     // name -c -p 5600 -h 127.0.0.1
-    int port = 5600;
     if(argc > 3)
       if(strcmp(argv[2], "-p") == 0)
         port = atoi(argv[3]);
 
-    char *host = "127.0.0.1";
     if(argc > 5)
       if(strcmp(argv[4], "-h") == 0)
         host = argv[5];
@@ -41,12 +66,7 @@ int main(int argc, char *argv[])
       sprintf(tmp, "Server mode, port: %d", port);
       log_add(tmp, LOG_INFO);
 
-      sock_init();
-      sock_server_init();
-      sock_server_start(port);
-      sock_server_work();
-      sock_server_stop();
-      sock_deinit();
+//      sock_server(port);
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
@@ -54,12 +74,7 @@ int main(int argc, char *argv[])
       sprintf(tmp, "Client mode, port: %d, host: %s", port, host);
       log_add(tmp, LOG_INFO);
 
-      sock_init();
-      sock_client_init();
-      sock_client_start(port, host);
-      sock_client_work();
-      sock_client_stop();
-      sock_deinit();
+//      sock_client(port, host);
     }
   }
   else
@@ -77,6 +92,26 @@ int main(int argc, char *argv[])
     sprintf(tmp, "%s", tmp_data->time_gps);
     log_add(tmp, LOG_DEBUG);
   };
+
+  printf(">");
+  char command[128];
+  while(1)
+  {
+    gets(command);
+    printf("echo: %s\n", command);
+
+    switch(handle_command(command))
+    {
+      case 0:
+        return 0;
+        break;
+      case -1:
+        printf("unknown command: %s\n", command);
+        break;
+    }
+
+    printf(">");
+  }
 
   return 0;
 }

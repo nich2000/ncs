@@ -12,11 +12,91 @@
 sock_worker      worker;
 sock_worker_list clients; // MODE_SERVER
 //==============================================================================
-void *sock_work_recv(void *arg);
-void *sock_work_send(void *arg);
+int sock_init();
+int sock_deinit();
+//==============================================================================
+void *sock_server_worker(void *arg);
+//==============================================================================
+int sock_server_init();
+int sock_server_start();
+int sock_server_work();
+int sock_server_stop();
+//==============================================================================
+void *sock_client_worker(void *arg);
+//==============================================================================
+int sock_client_init();
+int sock_client_start();
+int sock_client_work();
+int sock_client_stop();
+//==============================================================================
+void *sock_recv_worker(void *arg);
+void *sock_send_worker(void *arg);
 //==============================================================================
 void sock_do_recv(SOCKET sock, pack_buffer buffer, pack_size *size);
 void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size  size);
+//==============================================================================
+//==============================================================================
+int sock_server(int port)
+{
+  log_add("sock_server", LOG_INFO);
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  worker.port = port;
+  worker.host = "";
+
+  int res = pthread_create(&worker.worker, &tmp_attr, sock_server_worker, (void*)&worker);
+
+//  int status;
+//  pthread_join(worker.worker, (void*)&status);
+
+  return res;
+}
+//==============================================================================
+void *sock_server_worker(void *arg)
+{
+  log_add("sock_server_worker", LOG_INFO);
+
+  sock_init();
+  sock_server_init();
+  sock_server_start();
+  sock_server_work();
+  sock_server_stop();
+  sock_deinit();
+}
+//==============================================================================
+int sock_client(int port, char *host)
+{
+  log_add("sock_client", LOG_INFO);
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  worker.port = port;
+  strcpy(worker.host, host);
+
+  int res = pthread_create(&worker.worker, &tmp_attr, sock_client_worker, (void*)&worker);
+
+//  int status;
+//  pthread_join(worker.worker, (void*)&status);
+
+  return res;
+}
+//==============================================================================
+void *sock_client_worker(void *arg)
+{
+  log_add("sock_client_worker", LOG_INFO);
+
+  sock_init();
+  sock_client_init();
+  sock_client_start();
+  sock_client_work();
+  sock_client_stop();
+  sock_deinit();
+}
 //==============================================================================
 int sock_get_error()
 {
@@ -83,13 +163,13 @@ int sock_server_init()
   clients.index    = 0;
 }
 //==============================================================================
-int sock_server_start(int port)
+int sock_server_start()
 {
   char tmp[128];
   if(SOCK_SERVER_STREAMER)
-    sprintf(tmp, "sock_start_server(SERVER_STREAMER), Port: %d", port);
+    sprintf(tmp, "sock_start_server(SERVER_STREAMER), Port: %d", worker.port);
   else
-    sprintf(tmp, "sock_start_server(CLIENT_STREAMER), Port: %d", port);
+    sprintf(tmp, "sock_start_server(CLIENT_STREAMER), Port: %d", worker.port);
   log_add(tmp, LOG_INFO);
 
   pack_version(tmp);
@@ -107,7 +187,7 @@ int sock_server_start(int port)
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
+  addr.sin_port = htons(worker.port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(bind(worker.sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
@@ -173,11 +253,11 @@ int sock_server_work()
       tmp_worker->id   = clients.last_id;
 
       pthread_t tmp_sender;
-      pthread_create(&tmp_sender, &tmp_attr, sock_work_send, (void*)tmp_worker);
+      pthread_create(&tmp_sender, &tmp_attr, sock_send_worker, (void*)tmp_worker);
       tmp_worker->sender   = tmp_sender;
 
       pthread_t tmp_receiver;
-      pthread_create(&tmp_receiver, &tmp_attr, sock_work_recv, (void*)tmp_worker);
+      pthread_create(&tmp_receiver, &tmp_attr, sock_recv_worker, (void*)tmp_worker);
       tmp_worker->receiver = tmp_receiver;
 
       clients.index++;
@@ -206,14 +286,14 @@ int sock_client_init()
   worker.receiver = 0;
 }
 //==============================================================================
-int sock_client_start(int port, const char *host)
+int sock_client_start()
 {
   char tmp[128];
 
   if(SOCK_SERVER_STREAMER)
-    sprintf(tmp, "sock_start_client(SERVER_STREAMER), Port: %d, Host: %s", port, host);
+    sprintf(tmp, "sock_start_client(SERVER_STREAMER), Port: %d, Host: %s", worker.port, worker.host);
   else
-    sprintf(tmp, "sock_start_client(CLIENT_STREAMER), Port: %d, Host: %s", port, host);
+    sprintf(tmp, "sock_start_client(CLIENT_STREAMER), Port: %d, Host: %s", worker.port, worker.host);
   log_add(tmp, LOG_INFO);
 
   pack_version(tmp);
@@ -234,8 +314,8 @@ int sock_client_start(int port, const char *host)
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  addr.sin_addr.s_addr = inet_addr(host);
+  addr.sin_port = htons(worker.port);
+  addr.sin_addr.s_addr = inet_addr(worker.host);
 
   if(connect(worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
   {
@@ -255,9 +335,9 @@ int sock_client_work()
   pack_init(&worker.protocol);
 
   if(SOCK_SERVER_STREAMER)
-    sock_work_recv((void*)&worker);
+    sock_recv_worker((void*)&worker);
   else
-    sock_work_send((void*)&worker);
+    sock_send_worker((void*)&worker);
 }
 //==============================================================================
 int sock_client_stop()
@@ -267,7 +347,7 @@ int sock_client_stop()
   return 0;
 }
 //==============================================================================
-void *sock_work_send(void *arg)
+void *sock_send_worker(void *arg)
 {
   sock_worker *tmp_worker = (sock_worker*)arg;
 
@@ -428,7 +508,7 @@ void *sock_work_send(void *arg)
   return NULL;
 }
 //==============================================================================
-void *sock_work_recv(void *arg)
+void *sock_recv_worker(void *arg)
 {
   sock_worker *tmp_worker = (sock_worker*)arg;
 

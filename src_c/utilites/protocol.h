@@ -76,12 +76,9 @@ typedef pack_word pack_words[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-//  pack_ver    version;
-//  pack_size   size;
   pack_number number;
   pack_words  words;
   pack_size   words_count;
-//  pack_crc16  crc;
 } pack_packet;
 //==============================================================================
 typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
@@ -123,8 +120,9 @@ typedef struct
   pack_queue_packets packets;
 } pack_queue;
 //==============================================================================
-int _pack_get_last_error       ();
-pack_number _pack_global_number();
+int         _pack_get_last_error       ();
+pack_number _pack_global_number        ();
+int          pack_version              (pack_ver version);
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 int pack_init();
@@ -164,8 +162,6 @@ int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size, pack_prot
 int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
 #endif
 //==============================================================================
-int pack_version               (pack_ver version);
-//==============================================================================
 pack_size _pack_words_count    (pack_packet *pack);
 pack_size _pack_params_count   (pack_packet *pack);
 //==============================================================================
@@ -174,7 +170,6 @@ int pack_values_to_csv         (pack_packet *pack, unsigned char delimeter, pack
 //==============================================================================
 int pack_word_by_key           (pack_packet *pack, pack_key key,     pack_index *index, pack_word *word);
 int pack_word_by_index         (pack_packet *pack, pack_index index, pack_key key,      pack_word *word);
-//==============================================================================
 int pack_key_by_index          (pack_packet *pack, pack_index index, pack_key key);
 //==============================================================================
 int pack_val_by_key_as_int     (pack_packet *pack, pack_key key, pack_index *index, int   *value);

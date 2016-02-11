@@ -171,19 +171,19 @@ int pack_init(pack_protocol *protocol)
 {
   pack_global_number          = PACK_GLOBAL_INIT_NUMBER;
 
-#ifdef PACK_USE_OWN_BUFFER
+  #ifdef PACK_USE_OWN_BUFFER
 //  protocol = new pack_protocol;
-#endif
+  #endif
 
   protocol->validation_buffer.size     = 0;
   protocol->in_packets_list.index      = PACK_PACKETS_INIT_INDEX;
   protocol->out_packets_list.index     = PACK_PACKETS_INIT_INDEX;
 
-#ifdef PACK_USE_OWN_QUEUE
+  #ifdef PACK_USE_OWN_QUEUE
   queue.empty                = PACK_TRUE;
   queue.start                = PACK_QUEUE_INIT_INDEX;
   queue.finish               = PACK_QUEUE_INIT_INDEX;
-#endif
+  #endif
 
   return PACK_OK;
 }
