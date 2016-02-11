@@ -2,6 +2,7 @@
 //==============================================================================
 #include <unistd.h>
 #include <pthread.h>
+//#include <malloc.h>
 
 #include "log.h"
 #include "protocol_utils.h"
@@ -35,17 +36,25 @@ void *sock_send_worker(void *arg);
 void sock_do_recv(SOCKET sock, pack_buffer buffer, pack_size *size);
 void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size  size);
 //==============================================================================
+void sock_print_all_data(sock_worker *worker)
+{
+//pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &tmp_worker->protocol);
+}
+//==============================================================================
 //==============================================================================
 int sock_server(int port)
 {
-  log_add("sock_server", LOG_INFO);
+  char tmp[128];
+  log_set_name("server_log.txt");
+  sprintf(tmp, "Server mode, port: %d", port);
+  log_add(tmp, LOG_INFO);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
   worker.port = port;
-  worker.host = "";
+  memset(worker.host,'0', sizeof(worker.host));
 
   int res = pthread_create(&worker.worker, &tmp_attr, sock_server_worker, (void*)&worker);
 
@@ -69,7 +78,10 @@ void *sock_server_worker(void *arg)
 //==============================================================================
 int sock_client(int port, char *host)
 {
-  log_add("sock_client", LOG_INFO);
+  char tmp[128];
+  log_set_name("client_log.txt");
+  sprintf(tmp, "Client mode, port: %d, host: %s", port, host);
+  log_add(tmp, LOG_INFO);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -350,19 +362,18 @@ int sock_client_stop()
 void *sock_send_worker(void *arg)
 {
   sock_worker *tmp_worker = (sock_worker*)arg;
-
   SOCKET sock = tmp_worker->sock;
 
   char tmp[512];
-  sprintf(tmp, "sock_work_send started, socket: %d", sock);
+  sprintf(tmp, "sock_send_worker started, socket: %d", sock);
   log_add(tmp, LOG_INFO);
 
   pack_buffer  buffer;
   pack_size    size;
   int          counter  = 0;
   int          counter1 = 0;
-//  pack_key     key;
-//  pack_buffer  valueS;
+  pack_key     key;
+  pack_value   valueS;
 
   #define TEST_SEND_COUNT  100
   #define TEST_PACK_COUNT  1
@@ -386,17 +397,12 @@ void *sock_send_worker(void *arg)
 
     counter++;
 
-    pack_key key;
-    pack_value valueS;
-
     for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
     {
       pack_begin(&tmp_worker->protocol);
-
-//      pack_add_as_int("SOC", sock);
-//      pack_add_as_int("CCC", counter);
+      pack_add_as_int("SOC", sock, &tmp_worker->protocol);
+      pack_add_as_int("CCC", counter, &tmp_worker->protocol);
       pack_add_as_int("CN1", counter1++, &tmp_worker->protocol);
-
       for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
       {
         if(i > 9)
@@ -430,21 +436,20 @@ void *sock_send_worker(void *arg)
         float rnd = (float)rand()/(float)(RAND_MAX/1000);
         pack_add_as_float(key, rnd, &tmp_worker->protocol);
       };
-
       pack_end(&tmp_worker->protocol);
     }
 
     while(pack_queue_next(buffer, &size, &tmp_worker->protocol))
     {
+      log_add("validate pack", LOG_DEBUG);
       if(pack_validate(buffer, size, 0, &tmp_worker->protocol) == PACK_OK)
       {
+        log_add("valid pack", LOG_DEBUG);
         pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &tmp_worker->protocol);
 
         pack_size tmp_words_count = _pack_words_count(tmp_pack);
-        pack_key key;
-        pack_value valueS;
 
-//        clrscr();
+        clrscr();
         for(pack_size i = 0; i < tmp_words_count; i++)
         {
           if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
@@ -457,9 +462,6 @@ void *sock_send_worker(void *arg)
 //        pack_buffer csv;
 //        pack_values_to_csv(tmp_pack, ';', csv);
 //        log_add(csv, LOG_DEBUG);
-
-//        sprintf(tmp, "send, cnt: %d:, sock: %d, data: %s(%d)", counter1, sock, csv, size);
-//        log_add(tmp, LOG_DEBUG);
       };
 
 //      #ifdef SOCK_PACK_MODE
@@ -473,7 +475,7 @@ void *sock_send_worker(void *arg)
       int tmp_index = 0;
       int real_buffer_size = rand() % SOCK_BUFFER_SIZE + 1;
       unsigned char tmp_buffer[real_buffer_size];
-      int counter2 = 0;
+//      int counter2 = 0;
       while(tmp_index < size)
       {
         int tmp_cnt;
@@ -494,9 +496,10 @@ void *sock_send_worker(void *arg)
 
         sock_do_send(sock, tmp_buffer, tmp_cnt);
 
-        counter2 += tmp_cnt;
-        sprintf(tmp, "Bytes: %d of %d", counter2, size);
-        log_add(tmp, LOG_DEBUG);
+//        counter2 += tmp_cnt;
+//        sprintf(tmp, "Bytes: %d of %d", counter2, size);
+//        log_add(tmp, LOG_DEBUG);
+
 //        sleep(1);
         usleep(5000);
       }
@@ -515,7 +518,7 @@ void *sock_recv_worker(void *arg)
   SOCKET sock = tmp_worker->sock;
 
   char tmp[512];
-  sprintf(tmp, "sock_work_recv started, socket: %d", sock);
+  sprintf(tmp, "sock_recv_worker started, socket: %d", sock);
   log_add(tmp, LOG_INFO);
 
   pack_buffer buffer;
@@ -541,8 +544,8 @@ void *sock_recv_worker(void *arg)
 
 //    clrscr();
 
-    sprintf(tmp, "Bytes: %d", valread);
-    log_add(tmp, LOG_DEBUG);
+//    sprintf(tmp, "Bytes: %d", valread);
+//    log_add(tmp, LOG_DEBUG);
 
     if(valread > PACK_BUFFER_SIZE)
       continue;
@@ -600,12 +603,19 @@ void *sock_recv_worker(void *arg)
 //==============================================================================
 void sock_do_send(SOCKET sock, pack_buffer buffer, pack_size size)
 {
-  if(send(sock, buffer, size, 0) == SOCKET_ERROR)
+  int res = send(sock, buffer, size, 0);
+  if(res == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "do_send, send, Error: %u", sock_get_error());
+    sprintf(tmp, "sock_do_send, send, Error: %u", sock_get_error());
     log_add(tmp, LOG_ERROR);
-  };
+  }
+  else
+  {
+//    char tmp[128];
+//    sprintf(tmp, "sock_do_send, send, result: %u", res);
+//    log_add(tmp, LOG_ERROR);
+  }
 }
 //==============================================================================
 void sock_do_recv(SOCKET sock, pack_buffer buffer, pack_size *size)

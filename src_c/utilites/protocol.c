@@ -945,6 +945,15 @@ int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *pr
 }
 #endif
 //==============================================================================
+/*
+ * TODO
+ * 1. Проверить флаг only_validate, если буфер валидации содержит несколько пакетов, что будет с буфером
+ * 2. Если прошел хоть один цикл валидации, а лучше, если в буфере осталось меньше пакета(как проверить хз),
+ *    то не возвращать ошибку валидации, все же отработало
+ * 3. Если в буфере валидации, несколько пакетов, то флаг only_validate не даст проверить остальные
+ * 4.
+*/
+//==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 #else
@@ -960,10 +969,15 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
   pack_size tmp_validation_size = protocol->validation_buffer.size;
 
+  int tmp_one_is_valid = 0;
+
   while(1)
   {
     if(protocol->validation_buffer.size <= 0)
-      return PACK_ERROR;
+      if(tmp_one_is_valid)
+        return PACK_OK;
+      else
+        return PACK_ERROR;
 
     pack_size tmp_pack_pos = 0;
 
@@ -971,16 +985,26 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
     {
       if(protocol->validation_buffer.buffer[tmp_pack_pos++] != PACK_VERSION[i])
-        return PACK_ERROR;
+        if(tmp_one_is_valid)
+          return PACK_OK;
+        else
+          return PACK_ERROR;
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
-        return PACK_ERROR;
+        if(tmp_one_is_valid)
+          return PACK_OK;
+        else
+          return PACK_ERROR;
     };
 
     // Get size
     if(tmp_validation_size < 2)
-      return PACK_ERROR;
+      if(tmp_one_is_valid)
+        return PACK_OK;
+      else
+        return PACK_ERROR;
+
     pack_size tmp_size = protocol->validation_buffer.buffer[tmp_pack_pos++] << 8;
     tmp_size          |= protocol->validation_buffer.buffer[tmp_pack_pos++];
 
@@ -992,7 +1016,10 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
-        return PACK_ERROR;
+        if(tmp_one_is_valid)
+          return PACK_OK;
+        else
+          return PACK_ERROR;
     };
 
     // Get index
@@ -1001,7 +1028,11 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
     // Get crc16 1
     if(tmp_validation_size < 2)
-      return PACK_ERROR;
+      if(tmp_one_is_valid)
+        return PACK_OK;
+      else
+        return PACK_ERROR;
+
     pack_crc16 tmp_crc16_1 = protocol->validation_buffer.buffer[tmp_pack_pos++] << 8;
     tmp_crc16_1           |= protocol->validation_buffer.buffer[tmp_pack_pos++];
 
@@ -1010,13 +1041,19 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
-      return PACK_ERROR;
+      if(tmp_one_is_valid)
+        return PACK_OK;
+      else
+        return PACK_ERROR;
 
     pack_size i = protocol->validation_buffer.size - tmp_pack_pos;
     for(pack_size j = 0; j < protocol->validation_buffer.size; j++)
       protocol->validation_buffer.buffer[j] = protocol->validation_buffer.buffer[i++];
     protocol->validation_buffer.size -= tmp_pack_pos;
 
+    tmp_one_is_valid++;
+
+    // TODO 3
     if(only_validate)
       return PACK_OK;
 
@@ -1031,16 +1068,16 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     #endif
 
     if(tmp_pack == NULL)
-      return PACK_ERROR;
+      if(tmp_one_is_valid)
+        return PACK_OK;
+      else
+        return PACK_ERROR;
 
-//    strncpy((char *)tmp_pack->version, PACK_VERSION, PACK_VERSION_SIZE);
-//    tmp_pack->size = tmp_size;
     tmp_pack->number = tmp_index;
-//    tmp_pack->crc = tmp_crc16_1;
 
     pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
 
-    pack_parse_cmd(tmp_pack);
+//    pack_parse_cmd(tmp_pack);
   };
 
   return PACK_OK;

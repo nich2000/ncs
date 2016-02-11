@@ -43,7 +43,7 @@ typedef struct
   sock_id                id;
   sock_mode              mode;
   int                    port;
-  char                  *host;
+  char                   host[15];
   SOCKET                 sock;
   pthread_t              worker;
   pthread_t              sender;
