@@ -28,11 +28,15 @@
 #else
 #endif
 //==============================================================================
-#define MODE_SERVER          0
-#define MODE_CLIENT          1
+#define SOCK_OK              0
+#define SOCK_ERROR          -1
+//==============================================================================
+#define SOCK_MODE_SERVER     0
+#define SOCK_MODE_CLIENT     1
 #define SOCK_SERVER_STREAMER 0
 #define SOCK_BUFFER_SIZE     100
 #define SOCK_WORKERS_COUNT   32
+#define SOCK_ERRORS_COUNT    10
 //==============================================================================
 typedef unsigned short sock_mode;
 typedef unsigned short sock_id;

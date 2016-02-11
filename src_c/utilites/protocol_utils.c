@@ -39,6 +39,8 @@ int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
     hex[j++] = ' ';
   }
 
+  hex[j] = '0';
+
   return 0;
 }
 //==============================================================================
