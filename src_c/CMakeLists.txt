@@ -35,7 +35,7 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
-set(_PROG main.c utilites/protocol_utils.c utilites/gps_parse.c defines.h)
+set(_PROG main.c utilites/protocol_utils.c utilites/gps_parse.c utilites/exec.c defines.h)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

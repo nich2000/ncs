@@ -15,6 +15,7 @@
 #include <pthread.h>
 #include "defines.h"
 #include "protocol.h"
+#include "execute.h"
 //==============================================================================
 #ifdef __linux__
   #define INVALID_SOCKET -1
@@ -73,5 +74,7 @@ int sock_server(int port);
 int sock_client(int port, char *host);
 //==============================================================================
 int sock_send_cmd(int argc, ...);
+//==============================================================================
+int soch_exec_cmd(int argc, ...);
 //==============================================================================
 #endif //SOCKET_H
