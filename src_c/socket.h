@@ -15,7 +15,7 @@
 #include <pthread.h>
 #include "defines.h"
 #include "protocol.h"
-#include "execute.h"
+#include "exec.h"
 //==============================================================================
 #ifdef __linux__
   #define INVALID_SOCKET -1
@@ -57,6 +57,7 @@ typedef struct
   pthread_t              sender;
   pthread_t              receiver;
   pack_protocol          protocol;
+  exec_cmd               exec;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
