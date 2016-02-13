@@ -15,6 +15,10 @@ char *host = "127.0.0.1";
 //==============================================================================
 int handle_command(char *command)
 {
+  char token[128];
+  char cmd[128];
+  char param[128];
+
   if(strcmp(command, "exit") == 0)
   {
     return 0;
@@ -32,6 +36,13 @@ int handle_command(char *command)
   else if(strcmp(command, "test") == 0)
   {
     return 1;
+  }
+  else if(scanf(command, "%s %s %s", token, cmd, param) >= 3)
+  {
+    if(strcmp(token, "send"))
+    {
+      sock_send_cmd(cmd, param);
+    }
   }
   else
     return -1;
@@ -79,7 +90,7 @@ int main(int argc, char *argv[])
     while(1)
     {
       gets(command);
-      printf("echo: %s\n", command);
+//      printf("echo: %s\n", command);
 
       switch(handle_command(command))
       {
@@ -91,7 +102,7 @@ int main(int argc, char *argv[])
           break;
       }
 
-      printf(">");
+//      printf(">");
     }
   };
 
