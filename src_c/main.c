@@ -15,34 +15,61 @@ char *host = "127.0.0.1";
 //==============================================================================
 int handle_command(char *command)
 {
-  char token[128];
-  char cmd[128];
-  char param[128];
+//  printf("echo: %s\n", command);
 
-  if(strcmp(command, "exit") == 0)
+  char token[128];
+  char param1[128];
+  char param2[128];
+  char param3[128];
+  char param4[128];
+  char param5[128];
+
+  int res = sscanf(command, "%s %s %s %s %s %s", token, param1, param2, param3, param4, param5);
+
+  if(res == 1)
   {
-    return 0;
-  }
-  else if(strcmp(command, "server") == 0)
-  {
-    sock_server(port);
-    return 1;
-  }
-  else if(strcmp(command, "client") == 0)
-  {
-    sock_client(port, host);
-    return 1;
-  }
-  else if(strcmp(command, "test") == 0)
-  {
-    return 1;
-  }
-  else if(scanf(command, "%s %s %s", token, cmd, param) >= 3)
-  {
-    if(strcmp(token, "send"))
+    if(strcmp(token, "exit") == 0)
     {
-      sock_send_cmd(cmd, param);
+      return 0;
     }
+    else if(strcmp(token, "server") == 0)
+    {
+      sock_server(port);
+      return 1;
+    }
+    else if(strcmp(token, "client") == 0)
+    {
+      sock_client(port, host);
+      return 1;
+    }
+    else if(strcmp(token, "test") == 0)
+    {
+      return 1;
+    }
+  }
+  else if(res == 2)
+  {
+    return -1;
+  }
+  else if(res == 3)
+  {
+    if(strcmp(token, "send") == 0)
+    {
+      sock_send_cmd(param1, param2);
+    }
+    return 1;
+  }
+  else if(res == 4)
+  {
+    return -1;
+  }
+  else if(res == 5)
+  {
+    return -1;
+  }
+  else if(res == 6)
+  {
+    return -1;
   }
   else
     return -1;
@@ -90,7 +117,6 @@ int main(int argc, char *argv[])
     while(1)
     {
       gets(command);
-//      printf("echo: %s\n", command);
 
       switch(handle_command(command))
       {

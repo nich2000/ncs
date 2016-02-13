@@ -8,6 +8,12 @@
 
 #include "log.h"
 //==============================================================================
+#if defined(__linux__) || defined(_WIN32)
+  time_t rawtime;
+  struct tm *timeinfo;
+#else
+#endif
+//==============================================================================
 char log_name[64]    = "log.txt";
 char report_name[64] = "report.txt";
 //==============================================================================
@@ -32,33 +38,34 @@ void report_set_name(char *name)
   strncpy(report_name, name, 64);
 }
 //==============================================================================
-void log_add(char *message, int logType)
+void log_add(char *message, int log_type)
 {
 #if defined(__linux__) || defined(_WIN32)
-  // time_t rawtime;
-  // struct tm *timeinfo;
-  // time (&rawtime);
+  // time(&rawtime);
   // timeinfo = localtime(&rawtime);
 
   char *t = "";
   // strftime(t, 128, "%T", timeinfo);
 
   char *prefix = "";
-  switch(logType)
+  switch(log_type)
   {
-    case LOG_ERROR: prefix = "[ERROR]";
+    case LOG_CRITICAL_ERROR: prefix = "[CRITICAL_ERROR]";
     break;
-    case LOG_WARNING: prefix = "[WARNING]";
+    case LOG_ERROR:          prefix = "[ERROR]";
     break;
-    case LOG_DEBUG: prefix = "[DEBUG]";
+    case LOG_WARNING:        prefix = "[WARNING]";
     break;
-    case LOG_INFO: prefix = "[INFO]";
+    case LOG_DEBUG:          prefix = "[DEBUG]";
+    break;
+    case LOG_INFO:
     break;
     case LOG_DATA:
     break;
   };
 
-  printf("%s %s %s\n", t, prefix, message);
+  if((log_type == LOG_INFO) || (log_type == LOG_CRITICAL_ERROR))
+    printf("%s %s %s\n", t, prefix, message);
 
   FILE *log;
   log = fopen(log_name, "a");
