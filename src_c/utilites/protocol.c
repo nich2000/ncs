@@ -960,7 +960,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol)
 #endif
 {
-  log_add("pack_validate", LOG_INFO);
+//  log_add("pack_validate", LOG_INFO);
 
   pack_size i = protocol->validation_buffer.size;
   for(pack_size j = 0; j < size; j++)
@@ -1306,14 +1306,14 @@ pack_size _pack_word_size(pack_word *word)
 //==============================================================================
 int pack_parse_cmd(pack_packet *pack)
 {
-  char tmp[128];
+//  char tmp[128];
 
-  log_add("pack_parse_cmd", LOG_DEBUG);
+//  log_add("pack_parse_cmd", LOG_DEBUG);
 
   pack_size tmp_words_count = _pack_words_count(pack);
 
-  sprintf(tmp, "pack_parse_cmd, words count: %d", tmp_words_count);
-  log_add(tmp, LOG_INFO);
+//  sprintf(tmp, "pack_parse_cmd, words count: %d", tmp_words_count);
+//  log_add(tmp, LOG_INFO);
 
   if(tmp_words_count >= 1)
   {
@@ -1324,7 +1324,7 @@ int pack_parse_cmd(pack_packet *pack)
 
     if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
     {
-      log_add("pack_parse_cmd, CMD token found", LOG_INFO);
+//      log_add("pack_parse_cmd, CMD token found", LOG_INFO);
 
       return 100 + pack_exec_cmd(pack);
     };
@@ -1353,7 +1353,7 @@ pack_size _pack_params_count(pack_packet *pack)
 int pack_exec_cmd(pack_packet *pack)
 {
   char tmp[128];
-  log_add("pack_exec_cmd", LOG_INFO);
+//  log_add("pack_exec_cmd", LOG_INFO);
 
   pack_key tmp_key;
   pack_value tmp_command;
@@ -1361,12 +1361,12 @@ int pack_exec_cmd(pack_packet *pack)
 
   if(res == PACK_OK)
   {
-    pack_size tmp_params_count = _pack_params_count(pack);
+//    pack_size tmp_params_count = _pack_params_count(pack);
 
 //    sprintf(tmp, "pack_exec_cmd, params count: %d", tmp_params_count);
 //    log_add(tmp, LOG_INFO);
 
-    sprintf(tmp, "%s: %s(%d)", tmp_key, tmp_command, tmp_params_count);
+    sprintf(tmp, "Command: %s", tmp_command);
     log_add(tmp, LOG_INFO);
   }
 

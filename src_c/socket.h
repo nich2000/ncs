@@ -72,6 +72,6 @@ int sock_version(char *version);
 int sock_server(int port);
 int sock_client(int port, char *host);
 //==============================================================================
-int sock_send_cmd(char *cmd, char *param);
+int sock_send_cmd(int argc, ...);
 //==============================================================================
 #endif //SOCKET_H

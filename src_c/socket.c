@@ -636,27 +636,78 @@ int sock_do_send(SOCKET sock, pack_buffer buffer, int size)
   return SOCK_OK;
 }
 //==============================================================================
-int sock_do_send_cmd(pack_protocol *protocol, char *cmd, char *param)
+// Почему-то не могу передать параметры корректно,
+// поэтому пока не использую
+int sock_do_send_cmd(pack_protocol *protocol, int argc, ...)
 {
-  pack_begin(&worker.protocol);
+  pack_begin(protocol);
+
+  va_list params;
+  va_start(params, argc);
+
+  char *cmd = va_arg(params, char*);
   pack_add_cmd(cmd, protocol);
-  pack_add_param_as_string(param, protocol);
-  pack_end(&worker.protocol);
+
+  for(int i = 0; i < argc; i++)
+  {
+    char *param = va_arg(params, char*);
+    pack_add_param_as_string(param, protocol);
+  };
+
+  va_end(params);
+  pack_end(protocol);
 
   return SOCK_OK;
 }
 //==============================================================================
-int sock_send_cmd(char *cmd, char *param)
+int sock_send_cmd(int argc, ...)
 {
+  va_list params;
+  va_start(params, argc);
+
   if(worker.mode == SOCK_MODE_CLIENT)
   {
-    sock_do_send_cmd(&worker.protocol, cmd, param);
+    pack_protocol *protocol = &worker.protocol;
+
+    pack_begin(protocol);
+    va_list params;
+    va_start(params, argc);
+    char *cmd = va_arg(params, char*);
+    pack_add_cmd(cmd, protocol);
+    for(int i = 1; i < argc; i++)
+    {
+      char *param = va_arg(params, char*);
+      pack_add_param_as_string(param, protocol);
+    };
+    va_end(params);
+    pack_end(protocol);
+
+//    sock_do_send_cmd(&worker.protocol, argc, params);
   }
   else
   {
     for(int i = 0; i < clients.index; i++)
-      sock_do_send_cmd(&clients.items[i].protocol, cmd, param);
+    {
+      pack_protocol *protocol = &clients.items[i].protocol;
+
+      pack_begin(protocol);
+      va_list params;
+      va_start(params, argc);
+      char *cmd = va_arg(params, char*);
+      pack_add_cmd(cmd, protocol);
+      for(int i = 1; i < argc; i++)
+      {
+        char *param = va_arg(params, char*);
+        pack_add_param_as_string(param, protocol);
+      };
+      va_end(params);
+      pack_end(protocol);
+
+//      sock_do_send_cmd(&clients.items[i].protocol, argc, params);
+    };
   }
+
+  va_end(params);
 
   return SOCK_OK;
 }

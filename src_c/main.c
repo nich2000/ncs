@@ -49,27 +49,43 @@ int handle_command(char *command)
   }
   else if(res == 2)
   {
-    return -1;
+    if(strcmp(token, "send") == 0)
+    {
+      sock_send_cmd(1, param1);
+    }
+    return 1;
   }
   else if(res == 3)
   {
     if(strcmp(token, "send") == 0)
     {
-      sock_send_cmd(param1, param2);
+      sock_send_cmd(2, param1, param2);
     }
     return 1;
   }
   else if(res == 4)
   {
-    return -1;
+    if(strcmp(token, "send") == 0)
+    {
+      sock_send_cmd(3, param1, param2, param3);
+    }
+    return 1;
   }
   else if(res == 5)
   {
-    return -1;
+    if(strcmp(token, "send") == 0)
+    {
+      sock_send_cmd(4, param1, param2, param3, param4);
+    }
+    return 1;
   }
   else if(res == 6)
   {
-    return -1;
+    if(strcmp(token, "send") == 0)
+    {
+      sock_send_cmd(5, param1, param2, param3, param4, param5);
+    }
+    return 1;
   }
   else
     return -1;
