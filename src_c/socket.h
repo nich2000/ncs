@@ -35,6 +35,7 @@
 #define SOCK_OK              0
 #define SOCK_ERROR          -1
 //==============================================================================
+#define SOCK_MODE_UNKNOWN   -1
 #define SOCK_MODE_SERVER     0
 #define SOCK_MODE_CLIENT     1
 #define SOCK_SERVER_STREAMER 0
@@ -53,11 +54,14 @@ typedef struct
   int                    port;
   char                   host[15];
   SOCKET                 sock;
+  int                    worker_kill_flag;
+  int                    sender_kill_flag;
+  int                    receiver_kill_flag;
   pthread_t              worker;
   pthread_t              sender;
   pthread_t              receiver;
   pack_protocol          protocol;
-  exec_cmd               exec;
+  exec_func              exec_cmd;
 }sock_worker;
 //==============================================================================
 typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
@@ -73,6 +77,7 @@ int sock_version(char *version);
 //==============================================================================
 int sock_server(int port);
 int sock_client(int port, char *host);
+int sock_exit();
 //==============================================================================
 int sock_send_cmd(int argc, ...);
 //==============================================================================

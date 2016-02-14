@@ -30,6 +30,7 @@ int handle_command(char *command)
   {
     if(strcmp(token, "exit") == 0)
     {
+      sock_exit();
       return 0;
     }
     else if(strcmp(token, "server") == 0)
@@ -44,6 +45,11 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "test") == 0)
     {
+      return 1;
+    }
+    else if(strcmp(token, "clear") == 0)
+    {
+      clrscr();
       return 1;
     }
   }

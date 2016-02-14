@@ -7,6 +7,7 @@
 // http://www.binarytides.com/server-client-example-c-sockets-linux/
 //==============================================================================
 #include "protocol_utils.h"
+#include "exec.h"
 //==============================================================================
 #define PACK_BUFFER_SIZE         512
 #define PACK_VALUE_SIZE          10
@@ -140,7 +141,7 @@ int pack_add_param_as_int(int   param);
 int pack_add_param_as_float(float param);
 int pack_add_param_as_string(pack_string param);
 int pack_add_param_as_bytes(pack_bytes param, pack_size size);
-int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size);
+int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
 int pack_queue_next(pack_buffer buffer, pack_size *size);
 #else
 int pack_init(pack_protocol *protocol);
@@ -158,11 +159,13 @@ int pack_add_param_as_int(int   param, pack_protocol *protocol);
 int pack_add_param_as_float(float param, pack_protocol *protocol);
 int pack_add_param_as_string(pack_string param, pack_protocol *protocol);
 int pack_add_param_as_bytes(pack_bytes param, pack_size size, pack_protocol *protocol);
-int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
 int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
 #endif
 //==============================================================================
 pack_size _pack_words_count    (pack_packet *pack);
+//==============================================================================
+int pack_pack_command          (pack_packet *pack, pack_value command);
 pack_size _pack_params_count   (pack_packet *pack);
 //==============================================================================
 int pack_keys_to_csv           (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);

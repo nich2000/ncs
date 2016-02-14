@@ -10,6 +10,7 @@
 #define LOG_DEBUG          3
 #define LOG_INFO           4
 #define LOG_DATA           5
+#define LOG_RAW_DATA       6
 //==============================================================================
 int clrscr();
 void skip_lines(size_t count);

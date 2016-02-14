@@ -70,9 +70,6 @@ int pack_queue_add(pack_number number, pack_protocol *protocol);
 #endif
 #endif
 //==============================================================================
-int pack_parse_cmd(pack_packet *pack);
-int pack_exec_cmd (pack_packet *pack);
-//==============================================================================
 int pack_key_by_index (pack_packet *pack, pack_index index, pack_key key);
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
@@ -1077,7 +1074,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
     pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
 
-    pack_parse_cmd(tmp_pack);
+//    pack_parse_private_cmd(tmp_pack);
   };
 
   return PACK_OK;
@@ -1193,15 +1190,15 @@ int pack_words_to_buffer(pack_packet *pack, pack_buffer buffer, pack_size start_
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size)
+int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size)
 {
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+  pack_packet *tmp_pack = _pack_pack_current(out);
   return pack_packet_to_buffer(tmp_pack, buffer, size);
 }
 #else
-int pack_current_packet_to_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol)
+int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol)
 {
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+  pack_packet *tmp_pack = _pack_pack_current(out, protocol);
   return pack_packet_to_buffer(tmp_pack, buffer, size);
 }
 #endif
@@ -1304,33 +1301,24 @@ pack_size _pack_word_size(pack_word *word)
  * etc
 */
 //==============================================================================
-int pack_parse_cmd(pack_packet *pack)
+int pack_pack_command(pack_packet *pack, pack_value command)
 {
-//  char tmp[128];
-
-//  log_add("pack_parse_cmd", LOG_DEBUG);
-
-  pack_size tmp_words_count = _pack_words_count(pack);
-
-//  sprintf(tmp, "pack_parse_cmd, words count: %d", tmp_words_count);
-//  log_add(tmp, LOG_INFO);
-
+  pack_count tmp_words_count = _pack_words_count(pack);
   if(tmp_words_count >= 1)
   {
-    pack_key tmp_key;
-    int res = pack_key_by_index(pack, 0, tmp_key);
-    if(res != 0)
-      return res;
+    pack_key  tmp_key;
+    pack_value valueS;
 
-    if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
-    {
-//      log_add("pack_parse_cmd, CMD token found", LOG_INFO);
-
-      return 100 + pack_exec_cmd(pack);
-    };
+    int res = pack_val_by_index_as_string(pack, 0, tmp_key, valueS);
+    if(res == PACK_OK)
+      if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
+      {
+        strcpy(command, valueS);
+        return PACK_OK;
+      };
   };
 
-  return PACK_OK;
+  return PACK_ERROR;
 }
 //==============================================================================
 pack_size _pack_params_count(pack_packet *pack)
@@ -1348,28 +1336,5 @@ pack_size _pack_params_count(pack_packet *pack)
   }
 
   return tmp_params_count;
-}
-//==============================================================================
-int pack_exec_cmd(pack_packet *pack)
-{
-  char tmp[128];
-//  log_add("pack_exec_cmd", LOG_INFO);
-
-  pack_key tmp_key;
-  pack_value tmp_command;
-  int res = pack_val_by_index_as_string(pack, 0, tmp_key, tmp_command);
-
-  if(res == PACK_OK)
-  {
-//    pack_size tmp_params_count = _pack_params_count(pack);
-
-//    sprintf(tmp, "pack_exec_cmd, params count: %d", tmp_params_count);
-//    log_add(tmp, LOG_INFO);
-
-    sprintf(tmp, "Command: %s", tmp_command);
-    log_add(tmp, LOG_INFO);
-  }
-
-  return PACK_OK;
 }
 //==============================================================================

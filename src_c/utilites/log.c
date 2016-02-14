@@ -41,11 +41,11 @@ void report_set_name(char *name)
 void log_add(char *message, int log_type)
 {
 #if defined(__linux__) || defined(_WIN32)
-  // time(&rawtime);
-  // timeinfo = localtime(&rawtime);
+//   time(&rawtime);
+//   timeinfo = localtime(&rawtime);
 
   char *t = "";
-  // strftime(t, 128, "%T", timeinfo);
+//  strftime(t, 128, "%T", timeinfo);
 
   char *prefix = "";
   switch(log_type)
@@ -62,10 +62,12 @@ void log_add(char *message, int log_type)
     break;
     case LOG_DATA:
     break;
+    case LOG_RAW_DATA:      prefix = "[RAW_DATA]";
+    break;
   };
 
   if((log_type == LOG_INFO) || (log_type == LOG_CRITICAL_ERROR))
-    printf("%s %s %s\n", t, prefix, message);
+    printf("%s %s\n", prefix, message);
 
   FILE *log;
   log = fopen(log_name, "a");
