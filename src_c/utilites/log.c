@@ -58,11 +58,11 @@ void log_add(char *message, int log_type)
     break;
     case LOG_DEBUG:          prefix = "[DEBUG]";
     break;
-    case LOG_INFO:
+    case LOG_INFO:           prefix = "[INFO]";
     break;
-    case LOG_DATA:
+    case LOG_DATA:           prefix = "DATA";
     break;
-    case LOG_RAW_DATA:      prefix = "[RAW_DATA]";
+    case LOG_RAW_DATA:       prefix = "[RAW_DATA]";
     break;
   };
 

@@ -2,7 +2,6 @@
 //==============================================================================
 #include <unistd.h>
 #include <pthread.h>
-//#include <malloc.h>
 
 #include "log.h"
 #include "protocol_utils.h"
@@ -31,6 +30,8 @@ int sock_client_init();
 int sock_client_start();
 int sock_client_work();
 int sock_client_stop();
+//==============================================================================
+int sock_do_work(sock_worker * worker, int wait);
 //==============================================================================
 void *sock_recv_worker(void *arg);
 void *sock_send_worker(void *arg);
@@ -87,26 +88,24 @@ int sock_server(int port)
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
   _worker.port = port;
-  memset(_worker.host,'0', sizeof(_worker.host));
+  memset(_worker.host, '0', sizeof(_worker.host));
 
   return pthread_create(&_worker.worker, &tmp_attr, sock_server_worker, (void*)&_worker);
 }
 //==============================================================================
 void *sock_server_worker(void *arg)
 {
-  log_add("sock_server_worker started", LOG_DEBUG);
+  log_add("BEGIN sock_server_worker", LOG_INFO);
 
   sock_init();
 
   sock_server_init();
-
   sock_server_start();
   sock_server_work();
   sock_server_stop();
-
   sock_deinit();
 
-  log_add("sock_server_worker finished", LOG_DEBUG);
+  log_add("END sock_server_worker", LOG_INFO);
 }
 //==============================================================================
 int sock_client(int port, char *host)
@@ -137,18 +136,21 @@ int sock_client(int port, char *host)
 //==============================================================================
 void *sock_client_worker(void *arg)
 {
-  log_add("sock_client_worker started", LOG_DEBUG);
+  log_add("BEGIN sock_client_worker", LOG_INFO);
 
   sock_init();
 
-  sock_client_init();
-  sock_client_start();
-  sock_client_work();
-  sock_client_stop();
+  while(!_worker.worker_kill_flag)
+  {
+    sock_client_init();
+    sock_client_start();
+    sock_client_work();
+    sock_client_stop();
+  };
 
   sock_deinit();
 
-  log_add("sock_client_worker finished", LOG_DEBUG);
+  log_add("END sock_client_worker", LOG_INFO);
 }
 //==============================================================================
 int sock_get_error()
@@ -216,6 +218,8 @@ int sock_server_init()
 //==============================================================================
 int sock_server_start()
 {
+  log_add("BEGIN sock_server_start", LOG_INFO);
+
   char tmp[128];
   if(SOCK_SERVER_STREAMER)
     sprintf(tmp, "sock_server_start(SERVER_STREAMER), Port: %d", _worker.port);
@@ -231,7 +235,7 @@ int sock_server_start()
     return 1;
   }
   else
-    log_add("sock_server_start, Create socket", LOG_DEBUG);
+    log_add("sock_server_start, socket", LOG_DEBUG);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -244,7 +248,7 @@ int sock_server_start()
     return 2;
   }
   else
-    log_add("sock_server_start, Bind socket", LOG_DEBUG);
+    log_add("sock_server_start, bind", LOG_DEBUG);
 
   if (listen(_worker.sock, SOMAXCONN) == SOCKET_ERROR)
   {
@@ -253,15 +257,16 @@ int sock_server_start()
     return 3;
   }
   else
-    log_add("sock_server_start, Listen socket", LOG_DEBUG);
+    log_add("sock_server_start, listen", LOG_DEBUG);
+
+  log_add("END sock_server_start", LOG_INFO);
 
   return 0;
 }
 //==============================================================================
 int sock_server_work()
 {
-  log_add("sock_server_work", LOG_INFO);
-  log_add("----------", LOG_INFO);
+  log_add("BEGIN sock_server_work", LOG_INFO);
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -271,46 +276,46 @@ int sock_server_work()
   {
     SOCKET tmp_client;
 
+    log_add("sock_server_work, accept", LOG_INFO);
     tmp_client = accept(_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
       sprintf(tmp, "sock_server_work, accept, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
-      return 1;
+      return SOCK_ERROR;
     }
     else
     {
       struct sockaddr_in sin;
       int len = sizeof(sin);
       getsockname(tmp_client, (struct sockaddr *)&sin, &len);
-      sprintf(tmp, "sock_server_work, accept, socket: %d, ip: %s, port: %d",
+      sprintf(tmp, "sock_server_work, accepted, socket: %d, ip: %s, port: %d",
               tmp_client, inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
-      log_add(tmp, LOG_DEBUG);
+      log_add(tmp, LOG_INFO);
     };
 
     if(_clients.index < SOCK_WORKERS_COUNT)
     {
-      pthread_attr_t tmp_attr;
-      pthread_attr_init(&tmp_attr);
-      pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
-
       sock_worker *tmp_worker = &_clients.items[_clients.index];
 
       pack_init(&tmp_worker->protocol);
       tmp_worker->sock = tmp_client;
-      tmp_worker->id   = _clients.last_id;
+      tmp_worker->id = _clients.last_id;
 
-      pthread_create(&tmp_worker->sender,   &tmp_attr, sock_send_worker, (void*)tmp_worker);
-      pthread_create(&tmp_worker->receiver, &tmp_attr, sock_recv_worker, (void*)tmp_worker);
+      sock_do_work(tmp_worker, 0);
 
       _clients.index++;
+      if(_clients.index > SOCK_WORKERS_COUNT)
+        _clients.index++;
       _clients.last_id++;
     }
     else
-      return 3;
+      return SOCK_ERROR;
   };
 
-  return 0;
+  log_add("END sock_server_work", LOG_INFO);
+
+  return SOCK_OK;
 }
 //==============================================================================
 int sock_server_stop()
@@ -329,15 +334,15 @@ int sock_client_init()
 //==============================================================================
 int sock_client_start()
 {
-  char tmp[128];
+  log_add("BEGIN sock_client_start", LOG_INFO);
 
-  log_add("sock_client_start begin", LOG_INFO);
+  char tmp[128];
 
   if(SOCK_SERVER_STREAMER)
     sprintf(tmp, "sock_client_start(SERVER_STREAMER), Port: %d, Host: %s", _worker.port, _worker.host);
   else
     sprintf(tmp, "sock_client_start(CLIENT_STREAMER), Port: %d, Host: %s", _worker.port, _worker.host);
-  log_add(tmp, LOG_DEBUG);
+  log_add(tmp, LOG_INFO);
 
   _worker.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (_worker.sock == INVALID_SOCKET)
@@ -352,50 +357,39 @@ int sock_client_start()
     log_add(tmp, LOG_DEBUG);
   };
 
-  log_add("sock_client_start end", LOG_INFO);
+  log_add("END sock_client_start", LOG_INFO);
 }
 //==============================================================================
 int sock_client_work()
 {
-  log_add("sock_client_work start", LOG_INFO);
-  log_add("----------", LOG_INFO);
+  log_add("BEGIN sock_client_work", LOG_INFO);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(_worker.port);
   addr.sin_addr.s_addr = inet_addr(_worker.host);
 
+  log_add("sock_client_work, connect", LOG_INFO);
   while(!_worker.worker_kill_flag)
   {
     if(connect(_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
       char tmp[128];
-      sprintf(tmp, "sock_client_start, connect, Error: %d", sock_get_error());
+      sprintf(tmp, "sock_client_work, connect, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
       sleep(5);
       continue;
     }
     else
-    {
-      log_add("sock_client_start, connect", LOG_DEBUG);
+      break;
+  };
+  log_add("sock_client_work, connected", LOG_INFO);
 
-      pack_init(&_worker.protocol);
+  pack_init(&_worker.protocol);
 
-      pthread_attr_t tmp_attr;
-      pthread_attr_init(&tmp_attr);
-      pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  sock_do_work(&_worker, 1);
 
-      pthread_create(&_worker.sender,   &tmp_attr, sock_send_worker, (void*)&_worker);
-      pthread_create(&_worker.receiver, &tmp_attr, sock_recv_worker, (void*)&_worker);
-
-      int status;
-      pthread_join(_worker.sender  , (void**)&status);
-      pthread_join(_worker.receiver, (void**)&status);
-    }
-  }
-
-  log_add("sock_client_work finish", LOG_INFO);
-  log_add("----------", LOG_INFO);
+  log_add("END sock_client_work", LOG_INFO);
 }
 //==============================================================================
 int sock_client_stop()
@@ -403,6 +397,23 @@ int sock_client_stop()
   log_add("sock_client_stop", LOG_INFO);
   closesocket(_worker.sock);
   return 0;
+}
+//==============================================================================
+int sock_do_work(sock_worker *worker, int wait)
+{
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  pthread_create(&worker->sender,   &tmp_attr, sock_send_worker, (void*)worker);
+  pthread_create(&worker->receiver, &tmp_attr, sock_recv_worker, (void*)worker);
+
+  if(wait)
+  {
+    int status;
+    pthread_join(worker->sender  , (void**)&status);
+    pthread_join(worker->receiver, (void**)&status);
+  };
 }
 //==============================================================================
 int sock_stream_prepare()
@@ -529,8 +540,8 @@ void *sock_send_worker(void *arg)
   SOCKET sock = tmp_worker->sock;
 
   char tmp[1024];
-  sprintf(tmp, "sock_send_worker started, socket: %d", sock);
-  log_add(tmp, LOG_DEBUG);
+  sprintf(tmp, "BEGIN sock_send_worker, socket: %d", sock);
+  log_add(tmp, LOG_INFO);
 
   pack_buffer buffer;
   pack_size   size = 0;
@@ -557,7 +568,7 @@ void *sock_send_worker(void *arg)
       continue;
   }
 
-  sprintf(tmp, "sock_send_worker finished, socket: %d", sock);
+  sprintf(tmp, "END sock_send_worker, socket: %d", sock);
   log_add(tmp, LOG_INFO);
 
   tmp_worker->sender_kill_flag = 1;
@@ -572,8 +583,8 @@ void *sock_recv_worker(void *arg)
   SOCKET sock = tmp_worker->sock;
 
   char tmp[1024];
-  sprintf(tmp, "sock_recv_worker started, socket: %d", sock);
-  log_add(tmp, LOG_DEBUG);
+  sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", sock);
+  log_add(tmp, LOG_INFO);
 
   pack_buffer buffer;
   int         size = 0;
@@ -638,7 +649,7 @@ void *sock_recv_worker(void *arg)
     };
   }
 
-  sprintf(tmp, "sock_recv_worker finished, socket: %d", sock);
+  sprintf(tmp, "END sock_recv_worker, socket: %d", sock);
   log_add(tmp, LOG_INFO);
 
   tmp_worker->sender_kill_flag = 1;
