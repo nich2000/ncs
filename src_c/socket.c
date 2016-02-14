@@ -374,10 +374,12 @@ int sock_client_work()
   {
     if(connect(_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
+      #ifdef SOCK_EXTRA_LOGS
       char tmp[128];
-      sprintf(tmp, "sock_client_work, connect, Error: %d", sock_get_error());
+      sprintf(tmp, "sock_client_work, connect, try in %d seconds, Error: %d", sock_get_error(), SOCK_WAIT_CONNECT);
       log_add(tmp, LOG_ERROR);
-      sleep(5);
+      #endif
+      sleep(SOCK_WAIT_CONNECT);
       continue;
     }
     else
@@ -489,7 +491,10 @@ int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer,
   if(clear)
     clrscr();
 
-  char         tmp[1024];
+  if(!buffer && !pack && !csv)
+    return PACK_OK;
+
+  char tmp[1024];
 
   if(buffer)
   {
@@ -508,7 +513,7 @@ int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer,
 
   if(pack || csv)
   {
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, &worker->protocol);
+    pack_packet *tmp_pack = _pack_pack_current(out, &worker->protocol);
 
     if(pack)
     {
@@ -532,6 +537,8 @@ int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer,
       log_add(csv, LOG_DATA);
     };
   };
+
+  return PACK_OK;
 }
 //==============================================================================
 void *sock_send_worker(void *arg)
@@ -555,7 +562,7 @@ void *sock_send_worker(void *arg)
       int res = pack_validate(buffer, size, 1, &tmp_worker->protocol);
       if(res == PACK_OK)
       {
-        sock_stream_print(tmp_worker, PACK_OUT, 0, 0, 1, 0);
+        sock_stream_print(tmp_worker, PACK_OUT, 0, 0, 0, 1);
 
         if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
           tmp_errors++;
@@ -593,7 +600,7 @@ void *sock_recv_worker(void *arg)
   struct timeval tv;
   int retval;
 
-  tv.tv_sec  = 3;
+  tv.tv_sec  = SOCK_WAIT_SELECT;
   tv.tv_usec = 0;
 
   int tmp_errors = 0;
@@ -617,7 +624,10 @@ void *sock_recv_worker(void *arg)
     }
     else if(!retval)
     {
-      log_add("sock_recv_worker, select, empty for 5 seconds", LOG_WARNING);
+      #ifdef SOCK_EXTRA_LOGS
+      sprintf(tmp, "sock_recv_worker, select, empty for %d seconds", SOCK_WAIT_SELECT);
+      log_add(tmp, LOG_WARNING);
+      #endif
       continue;
     }
     else
@@ -660,8 +670,6 @@ void *sock_recv_worker(void *arg)
 //==============================================================================
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker)
 {
-  char tmp[128];
-
   int res = pack_validate(buffer, (pack_size)size, 0, &worker->protocol);
   if(res == PACK_OK)
   {
@@ -669,6 +677,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker)
   }
   else
   {
+    char tmp[128];
     sprintf(tmp, "sock_recv_worker, pack_validate, Place: %d", res);
     log_add(tmp, LOG_WARNING);
   }

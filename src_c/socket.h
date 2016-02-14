@@ -29,6 +29,8 @@
 #else
 #endif
 //==============================================================================
+//#define SOCK_EXTRA_LOGS
+//==============================================================================
 #define SOCK_VERSION        "SOCK001"
 #define SOCK_VERSION_SIZE   7
 //==============================================================================
@@ -42,6 +44,9 @@
 #define SOCK_BUFFER_SIZE     100
 #define SOCK_WORKERS_COUNT   32
 #define SOCK_ERRORS_COUNT    10
+//==============================================================================
+#define SOCK_WAIT_SELECT     5
+#define SOCK_WAIT_CONNECT    5
 //==============================================================================
 typedef unsigned short sock_mode;
 typedef unsigned short sock_id;
