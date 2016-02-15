@@ -78,12 +78,6 @@ typedef struct
   sock_workers items;
 }sock_worker_list;
 //==============================================================================
-typedef struct
-{
-  int is_stream;
-  int last_number;
-}sock_streamer;
-//==============================================================================
 int sock_version(char *version);
 //==============================================================================
 int sock_server(int port);

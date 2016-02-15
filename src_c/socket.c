@@ -6,13 +6,14 @@
 #include "log.h"
 #include "protocol_utils.h"
 
+#include "streamer.h"
 #include "socket.h"
 #include "test.h"
 //==============================================================================
 sock_worker      _worker;
 sock_worker_list _clients; // MODE_SERVER
 //==============================================================================
-sock_streamer    _streamer;
+streamer_worker  _streamer;
 //==============================================================================
 int sock_init();
 int sock_deinit();
@@ -64,9 +65,6 @@ int sock_custom_init()
   _worker.sender             =  0;
   _worker.receiver           =  0;
   _worker.exec_cmd           =  0;
-
-  _streamer.is_stream        =  0;
-  _streamer.last_number      = -1;
 }
 //==============================================================================
 int sock_exit()
@@ -336,6 +334,8 @@ int sock_client_init()
 {
   sock_custom_init();
 
+  streamer_init(&_streamer, &_worker.protocol);
+
   _worker.mode = SOCK_MODE_CLIENT;
 }
 //==============================================================================
@@ -549,21 +549,24 @@ int sock_route_data(sock_worker *worker)
 //==============================================================================
 int sock_exec_cmd(sock_worker *worker)
 {
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, &worker->protocol);
+  pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &worker->protocol);
   pack_value tmp_cmd;
 
   if(pack_command(tmp_pack, tmp_cmd) == PACK_OK)
   {
-    if(strcmp(tmp_cmd, "stream") == 0)
+    if(_worker.mode == SOCK_MODE_CLIENT)
     {
-      pack_key   tmp_key;
-      pack_value tmp_param;
-      if(pack_param_by_index_as_string(tmp_pack, 1, tmp_key, tmp_param) == PACK_OK)
+      if(strcmp(tmp_cmd, "stream") == 0)
       {
-        if(strcmp(tmp_param, "on") == 0)
-          _streamer.is_stream =  1;
-        else
-          _streamer.is_stream = 0;
+        pack_key   tmp_key;
+        pack_value tmp_param;
+        if(pack_param_by_index_as_string(tmp_pack, 1, tmp_key, tmp_param) == PACK_OK)
+        {
+          if(strcmp(tmp_param, "on") == 0)
+            streamer_start(&_streamer);
+          else
+            streamer_stop(&_streamer);
+        };
       };
     };
   };
@@ -592,7 +595,7 @@ void *sock_send_worker(void *arg)
       int res = pack_validate(buffer, size, 1, &tmp_worker->protocol);
       if(res == PACK_OK)
       {
-        sock_stream_print(tmp_worker, PACK_OUT, 0, 0, 0, 1);
+        sock_stream_print(tmp_worker, PACK_OUT, 0, 0, 1, 0);
 
         if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
           tmp_errors++;
