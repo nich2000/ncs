@@ -12,6 +12,8 @@
 sock_worker      _worker;
 sock_worker_list _clients; // MODE_SERVER
 //==============================================================================
+sock_streamer    _streamer;
+//==============================================================================
 int sock_init();
 int sock_deinit();
 //==============================================================================
@@ -38,9 +40,11 @@ void *sock_send_worker(void *arg);
 //==============================================================================
 int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
 //==============================================================================
-void sock_print_all_data(sock_worker *worker);
-int sock_stream_print   (sock_worker *worker, pack_type out, int clear, int buffer, int pack, int csv);
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker);
+//==============================================================================
+int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer, int pack, int csv);
+int sock_route_datacc(sock_worker *worker);
+int sock_exec_cmdcccc(sock_worker *worker);
 //==============================================================================
 int sock_version(char *version)
 {
@@ -51,15 +55,18 @@ int sock_version(char *version)
 //==============================================================================
 int sock_custom_init()
 {
-  _worker.id                 = 0;
-  _worker.mode               = SOCK_MODE_UNKNOWN;
-  _worker.sock               = INVALID_SOCKET;
-  _worker.worker_kill_flag   = 0;
-  _worker.sender_kill_flag   = 0;
-  _worker.receiver_kill_flag = 0;
-  _worker.sender             = 0;
-  _worker.receiver           = 0;
-  _worker.exec_cmd           = 0;
+  _worker.id                 =  0;
+  _worker.mode               =  SOCK_MODE_UNKNOWN;
+  _worker.sock               =  INVALID_SOCKET;
+  _worker.worker_kill_flag   =  0;
+  _worker.sender_kill_flag   =  0;
+  _worker.receiver_kill_flag =  0;
+  _worker.sender             =  0;
+  _worker.receiver           =  0;
+  _worker.exec_cmd           =  0;
+
+  _streamer.is_stream        =  0;
+  _streamer.last_number      = -1;
 }
 //==============================================================================
 int sock_exit()
@@ -480,11 +487,6 @@ int sock_stream_prepare()
 ////    usleep(10000000);
 }
 //==============================================================================
-void sock_print_all_data(sock_worker *worker)
-{
-//pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &tmp_worker->protocol);
-}
-//==============================================================================
 // sock_stream_print(worker, PACK_OUT, 0, 0, 0, 0)
 int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer, int pack, int csv)
 {
@@ -539,6 +541,34 @@ int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer,
   };
 
   return PACK_OK;
+}
+//==============================================================================
+int sock_route_data(sock_worker *worker)
+{
+}
+//==============================================================================
+int sock_exec_cmd(sock_worker *worker)
+{
+  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, &worker->protocol);
+  pack_value tmp_cmd;
+
+  if(pack_command(tmp_pack, tmp_cmd) == PACK_OK)
+  {
+    if(strcmp(tmp_cmd, "stream") == 0)
+    {
+      pack_key   tmp_key;
+      pack_value tmp_param;
+      if(pack_param_by_index_as_string(tmp_pack, 1, tmp_key, tmp_param) == PACK_OK)
+      {
+        if(strcmp(tmp_param, "on") == 0)
+          _streamer.is_stream =  1;
+        else
+          _streamer.is_stream = 0;
+      };
+    };
+  };
+
+  return SOCK_ERROR;
 }
 //==============================================================================
 void *sock_send_worker(void *arg)
@@ -674,12 +704,18 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker)
   if(res == PACK_OK)
   {
     sock_stream_print(worker, PACK_IN, 0, 0, 1, 0);
+
+    sock_route_data(worker);
+
+    sock_exec_cmd(worker);
   }
   else
   {
+    #ifdef SOCK_EXTRA_LOGS
     char tmp[128];
     sprintf(tmp, "sock_recv_worker, pack_validate, Place: %d", res);
     log_add(tmp, LOG_WARNING);
+    #endif
   }
 }
 //==============================================================================

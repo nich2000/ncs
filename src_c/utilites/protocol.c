@@ -1301,7 +1301,7 @@ pack_size _pack_word_size(pack_word *word)
  * etc
 */
 //==============================================================================
-int pack_pack_command(pack_packet *pack, pack_value command)
+int pack_command(pack_packet *pack, pack_value command)
 {
   pack_count tmp_words_count = _pack_words_count(pack);
   if(tmp_words_count >= 1)
@@ -1336,5 +1336,10 @@ pack_size _pack_params_count(pack_packet *pack)
   }
 
   return tmp_params_count;
+}
+//==============================================================================
+int pack_param_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, pack_string value)
+{
+  return pack_val_by_index_as_string(pack, index, key, value);
 }
 //==============================================================================
