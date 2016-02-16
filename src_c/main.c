@@ -13,6 +13,21 @@
 int port   = 5700;
 char *host = "127.0.0.1";
 //==============================================================================
+//extern "C" __declspec(dllexport) void __cdecl CreateServer(int ID, char* Port, char* RootLocation, HWND SendMsgHandler, bool UseSSL);
+//extern "C" __declspec(dllexport) void __cdecl StopServer(int ID);
+//==============================================================================
+typedef void (*_func)(int, char*, char*, int, short);
+//==============================================================================
+int web_server()
+{
+  HMODULE handle = LoadLibrary("libWebServer.dll");
+  if (handle != 0)
+  {
+    _func CreateServer = GetProcAddress(handle, "CreateServer");
+    CreateServer(0, "8080", "../www/", 0, 0);
+  }
+}
+//==============================================================================
 void print_types_info()
 {
   char tmp[256];
@@ -76,6 +91,10 @@ int handle_command(char *command)
       sock_exit();
       return 0;
     }
+    else if(strcmp(token, "webserver") == 0)
+    {
+      web_server();
+    }
     else if(strcmp(token, "server") == 0)
     {
       sock_server(port);
@@ -95,7 +114,7 @@ int handle_command(char *command)
       clrscr();
       return 1;
     }
-    else if(strcmp(token, "typesinfo") == 0)
+    else if(strcmp(token, "typeinfo") == 0)
     {
       print_types_info();
       return 1;
