@@ -7,16 +7,16 @@
 // http://www.binarytides.com/server-client-example-c-sockets-linux/
 //==============================================================================
 #include "protocol_utils.h"
-#include "exec.h"
+//#include "exec.h"
 //==============================================================================
-#define PACK_BUFFER_SIZE         512
-#define PACK_VALUE_SIZE          10
+#define PACK_BUFFER_SIZE         256
+#define PACK_VALUE_SIZE          12
 #define PACK_KEY_SIZE            4
 #define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_WORDS_COUNT         20
-#define PACK_OUT_PACKETS_COUNT   (1 * 60 * 10) // 1 minute
-#define PACK_IN_PACKETS_COUNT    (    10 * 10) // 10 seconds
+#define PACK_OUT_PACKETS_COUNT   8 //(1 * 60 * 10) // 1 minute
+#define PACK_IN_PACKETS_COUNT    8 //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0
@@ -67,20 +67,22 @@ typedef unsigned short           pack_crc16;
 //==============================================================================
 typedef struct
 {
-  pack_key   key;
-  pack_type  type;
-  pack_size  size;
-  pack_value value;
-} pack_word;
+  pack_key   key;        // 4
+  pack_value value;      // 12
+  pack_type  type;       // 1
+  char       _align1[3]; // 3
+  pack_size  size;       // 2
+  char       _align2[2]; // 2
+} pack_word;             // 24
 //==============================================================================
 typedef pack_word pack_words[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_number number;
-  pack_words  words;
-  pack_size   words_count;
-} pack_packet;
+  pack_number number;      // 2
+  pack_size   words_count; // 2
+  pack_words  words;       // 24 * 20
+} pack_packet;             // 484
 //==============================================================================
 typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
 typedef pack_packet  pack_in_packets   [PACK_IN_PACKETS_COUNT];
@@ -88,37 +90,39 @@ typedef pack_packet *pack_queue_packets[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_size   size;
-  pack_buffer buffer;
-} pack_validation_buffer;
+  pack_size   size;       // 2
+  char        _align1[2]; // 2
+  pack_buffer buffer;     // 256
+} pack_validation_buffer; // 260
 //==============================================================================
 typedef struct
 {
-  pack_index       index;
-  pack_out_packets items;
-  pack_count       lock_count;
-} pack_out_packets_list;
+  pack_index       index;      // 2
+  pack_count       lock_count; // 2
+  pack_out_packets items;      // 484 * 8
+} pack_out_packets_list;       // 3872
 //==============================================================================
 typedef struct
 {
-  pack_index      index;
-  pack_in_packets items;
-  pack_count      lock_count;
-} pack_in_packets_list;
+  pack_index      index;      // 2
+  pack_count      lock_count; // 2
+  pack_in_packets items;      // 484 * 8
+} pack_in_packets_list;       // 3872
 //==============================================================================
 typedef struct
 {
-  pack_validation_buffer validation_buffer;
-  pack_out_packets_list  out_packets_list;
-  pack_in_packets_list   in_packets_list;
-} pack_protocol;
+  pack_validation_buffer validation_buffer; // 260
+  pack_out_packets_list  out_packets_list;  // 3872
+  pack_in_packets_list   in_packets_list;   // 3872
+} pack_protocol;                            // 4132
 //==============================================================================
 typedef struct
 {
-  pack_type          empty;
-  pack_index         start;
-  pack_index         finish;
-  pack_queue_packets packets;
+  pack_type          empty;      // 1
+  char               _align1[2]; // 3
+  pack_index         start;      // 2
+  pack_index         finish;     // 2
+  pack_queue_packets packets;    // 4
 } pack_queue;
 //==============================================================================
 int         _pack_get_last_error       ();
