@@ -67,22 +67,24 @@ typedef unsigned short           pack_crc16;
 //==============================================================================
 typedef struct
 {
-  pack_key   key;        // 4
-  pack_value value;      // 12
-  pack_type  type;       // 1
-  char       _align1[3]; // 3
-  pack_size  size;       // 2
-  char       _align2[2]; // 2
-} pack_word;             // 24
+  pack_key   key;              // 4
+  pack_value value;            // 12
+  pack_type  type;             // 1
+  char       _align1[3];       // 3
+  pack_size  size;             // 2
+  char       _align2[2];       // 2
+} pack_word;                   // 24
 //==============================================================================
 typedef pack_word pack_words[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_number number;      // 2
-  pack_size   words_count; // 2
-  pack_words  words;       // 24 * 20
-} pack_packet;             // 484
+  pack_number number;          // 2
+  char       _align1[2];       // 2
+  pack_size   words_count;     // 2
+  char       _align2[2];       // 2
+  pack_words  words;           // 24 * 20
+} pack_packet;                 // 488
 //==============================================================================
 typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
 typedef pack_packet  pack_in_packets   [PACK_IN_PACKETS_COUNT];
@@ -90,87 +92,92 @@ typedef pack_packet *pack_queue_packets[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_size   size;       // 2
-  char        _align1[2]; // 2
-  pack_buffer buffer;     // 256
-} pack_validation_buffer; // 260
+  pack_size   size;            // 2
+  char        _align1[2];      // 2
+  pack_buffer buffer;          // 256
+} pack_validation_buffer;      // 260
 //==============================================================================
 typedef struct
 {
   pack_index       index;      // 2
+  char            _align1[2];  // 2
   pack_count       lock_count; // 2
-  pack_out_packets items;      // 484 * 8
-} pack_out_packets_list;       // 3872
+  char            _align2[2];  // 2
+  pack_out_packets items;      // 488 * 8
+} pack_out_packets_list;       // 3912
 //==============================================================================
 typedef struct
 {
   pack_index      index;      // 2
+  char           _align1[2];  // 2
   pack_count      lock_count; // 2
-  pack_in_packets items;      // 484 * 8
-} pack_in_packets_list;       // 3872
+  char           _align2[2];  // 2
+  pack_in_packets items;      // 488 * 8
+} pack_in_packets_list;       // 3912
 //==============================================================================
 typedef struct
 {
   pack_validation_buffer validation_buffer; // 260
-  pack_out_packets_list  out_packets_list;  // 3872
-  pack_in_packets_list   in_packets_list;   // 3872
-} pack_protocol;                            // 4132
+  pack_out_packets_list  out_packets_list;  // 3912
+  pack_in_packets_list   in_packets_list;   // 3912
+} pack_protocol;                            // 8084
 //==============================================================================
 typedef struct
 {
   pack_type          empty;      // 1
-  char               _align1[2]; // 3
+  char               _align1[3]; // 3
   pack_index         start;      // 2
+  char               _align2[2]; // 2
   pack_index         finish;     // 2
+  char               _align3[2]; // 2
   pack_queue_packets packets;    // 4
-} pack_queue;
+} pack_queue;                    // 16
+//==============================================================================
 //==============================================================================
 int         _pack_get_last_error       ();
 pack_number _pack_global_number        ();
 int          pack_version              (pack_ver version);
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_init();
-int pack_begin();
-int pack_end();
-pack_packet *_pack_pack_current(pack_type out);
-int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
-int pack_pack_current(pack_type out, pack_packet *pack);
-int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
-int pack_queue_next(pack_buffer buffer, pack_size *size);
-//------------------------------------------------------------------------------
-int pack_add_as_int(pack_key key, int value);
-int pack_add_as_float(pack_key key, float value);
-int pack_add_as_string(pack_key key, pack_string value);
-int pack_add_as_bytes(pack_key key, pack_bytes value, pack_size size);
-//------------------------------------------------------------------------------
-int pack_add_cmd(pack_value command);
-int pack_add_param_as_int(int   param);
-int pack_add_param_as_float(float param);
-int pack_add_param_as_string(pack_string param);
-int pack_add_param_as_bytes(pack_bytes param, pack_size size);
-//------------------------------------------------------------------------------
+  int pack_init();
+  int pack_begin();
+  int pack_end();
+  pack_packet *_pack_pack_current(pack_type out);
+  int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
+  int pack_pack_current(pack_type out, pack_packet *pack);
+  int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
+  int pack_queue_next(pack_buffer buffer, pack_size *size);
+  //------------------------------------------------------------------------------
+  int pack_add_as_int(pack_key key, int value);
+  int pack_add_as_float(pack_key key, float value);
+  int pack_add_as_string(pack_key key, pack_string value);
+  int pack_add_as_bytes(pack_key key, pack_bytes value, pack_size size);
+  //------------------------------------------------------------------------------
+  int pack_add_cmd(pack_value command);
+  int pack_add_param_as_int(int   param);
+  int pack_add_param_as_float(float param);
+  int pack_add_param_as_string(pack_string param);
+  int pack_add_param_as_bytes(pack_bytes param, pack_size size);
 #else
-int pack_init (pack_protocol *protocol);
-int pack_begin(pack_protocol *protocol);
-int pack_end  (pack_protocol *protocol);
-pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);
-int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
-int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
-int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
-int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
-//------------------------------------------------------------------------------
-int pack_add_as_int   (pack_key key, int         value, pack_protocol *protocol);
-int pack_add_as_float (pack_key key, float       value, pack_protocol *protocol);
-int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol);
-int pack_add_as_bytes (pack_key key, pack_bytes  value, pack_size size, pack_protocol *protocol);
-//------------------------------------------------------------------------------
-int pack_add_cmd            (pack_value command, pack_protocol *protocol);
-int pack_add_param_as_int   (int   param,        pack_protocol *protocol);
-int pack_add_param_as_float (float param,        pack_protocol *protocol);
-int pack_add_param_as_string(pack_string param,  pack_protocol *protocol);
-int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *protocol);
-//------------------------------------------------------------------------------
+  int pack_init (pack_protocol *protocol);
+  int pack_begin(pack_protocol *protocol);
+  int pack_end  (pack_protocol *protocol);
+  pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);
+  int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
+  int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
+  int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+  int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+  //------------------------------------------------------------------------------
+  int pack_add_as_int   (pack_key key, int         value, pack_protocol *protocol);
+  int pack_add_as_float (pack_key key, float       value, pack_protocol *protocol);
+  int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol);
+  int pack_add_as_bytes (pack_key key, pack_bytes  value, pack_size size, pack_protocol *protocol);
+  //------------------------------------------------------------------------------
+  int pack_add_cmd            (pack_value command, pack_protocol *protocol);
+  int pack_add_param_as_int   (int   param,        pack_protocol *protocol);
+  int pack_add_param_as_float (float param,        pack_protocol *protocol);
+  int pack_add_param_as_string(pack_string param,  pack_protocol *protocol);
+  int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *protocol);
 #endif
 //==============================================================================
 pack_size _pack_words_count    (pack_packet *pack);

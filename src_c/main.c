@@ -13,6 +13,49 @@
 int port   = 5700;
 char *host = "127.0.0.1";
 //==============================================================================
+void print_types_info()
+{
+  char tmp[256];
+
+  sprintf(
+    tmp,
+    "\r\n" \
+    "pack_word: %d, \r\n" \
+    "pack_words: %d, \r\n" \
+    "pack_packet: %d, \r\n" \
+    "pack_out_packets: %d, \r\n" \
+    "pack_in_packets: %d, \r\n" \
+    "pack_queue_packets: %d, \r\n" \
+    "pack_validation_buffer: %d, \r\n" \
+    "pack_out_packets_list: %d, \r\n" \
+    "pack_in_packets_list: %d, \r\n" \
+    "pack_protocol: %d, \r\n" \
+    "pack_queue: %d",
+    sizeof(pack_word),
+    sizeof(pack_words),
+    sizeof(pack_packet),
+    sizeof(pack_out_packets),
+    sizeof(pack_in_packets),
+    sizeof(pack_queue_packets),
+    sizeof(pack_validation_buffer),
+    sizeof(pack_out_packets_list),
+    sizeof(pack_in_packets_list),
+    sizeof(pack_protocol),
+    sizeof(pack_queue)
+  );
+  log_add(tmp, LOG_INFO);
+
+  sprintf(
+    tmp,
+    "\r\n" \
+    "sock_worker: %d, \r\n" \
+    "sock_worker_list: %d",
+    sizeof(sock_worker),
+    sizeof(sock_worker_list)
+  );
+  log_add(tmp, LOG_INFO);
+}
+//==============================================================================
 int handle_command(char *command)
 {
 //  printf("echo: %s\n", command);
@@ -50,6 +93,11 @@ int handle_command(char *command)
     else if(strcmp(token, "clear") == 0)
     {
       clrscr();
+      return 1;
+    }
+    else if(strcmp(token, "typesinfo") == 0)
+    {
+      print_types_info();
       return 1;
     }
   }
@@ -99,16 +147,6 @@ int handle_command(char *command)
 //==============================================================================
 int main(int argc, char *argv[])
 {
-//  char tmp[128];
-
-//  sprintf(tmp, "word size: %d, packet size: %d, out buffer size: %d, in buffer size: %d, pack_protocol: %d",
-//          sizeof(pack_word), sizeof(pack_packet), sizeof(pack_out_packets_list), sizeof(pack_in_packets_list), sizeof(pack_protocol));
-//  log_add(tmp, LOG_INFO);
-
-//  sprintf(tmp, "worker size: %d, clients size: %d",
-//          sizeof(sock_worker), sizeof(sock_worker_list));
-//  log_add(tmp, LOG_INFO);
-
   if(argc > 1)
   {
     // 0     1  2 3     4 5
