@@ -47,6 +47,7 @@
 //==============================================================================
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
 
 #include "defines.h"
 #include "protocol.h"
@@ -55,6 +56,7 @@
 //==============================================================================
 static pack_number pack_last_error    = PACK_OK;
 static pack_number pack_global_number = PACK_GLOBAL_INIT_NUMBER;
+static int         pack_is_init       = PACK_FALSE;
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 pack_protocol *protocol;
@@ -165,21 +167,30 @@ int pack_init()
 int pack_init(pack_protocol *protocol)
 #endif
 {
-  pack_global_number          = PACK_GLOBAL_INIT_NUMBER;
+  if(pack_is_init)
+    return PACK_ERROR;
+
+  pack_global_number = PACK_GLOBAL_INIT_NUMBER;
 
   #ifdef PACK_USE_OWN_BUFFER
-//  protocol = new pack_protocol;
+  protocol = malloc(sizeof(pack_protocol));
   #endif
 
-  protocol->validation_buffer.size     = 0;
-  protocol->in_packets_list.index      = PACK_PACKETS_INIT_INDEX;
-  protocol->out_packets_list.index     = PACK_PACKETS_INIT_INDEX;
+  protocol->validation_buffer.size      = 0;
+
+  protocol->in_packets_list.index       = PACK_PACKETS_INIT_INDEX;
+  protocol->in_packets_list.lock_count  = 0;
+
+  protocol->out_packets_list.index      = PACK_PACKETS_INIT_INDEX;
+  protocol->out_packets_list.lock_count = 0;
 
   #ifdef PACK_USE_OWN_QUEUE
-  queue.empty                = PACK_TRUE;
-  queue.start                = PACK_QUEUE_INIT_INDEX;
-  queue.finish               = PACK_QUEUE_INIT_INDEX;
+  queue.empty  = PACK_TRUE;
+  queue.start  = PACK_QUEUE_INIT_INDEX;
+  queue.finish = PACK_QUEUE_INIT_INDEX;
   #endif
+
+  pack_is_init = PACK_TRUE;
 
   return PACK_OK;
 }
@@ -1212,37 +1223,37 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
 
   pack_size tmp_packet_size = _pack_words_size(packet);
 
-//  // Size(IndexSize + DataSize)
-////  buffer[tmp_pack_pos++] = (packet->size >> 8) & 0xff;
-////  buffer[tmp_pack_pos++] = (packet->size     ) & 0xff;
-//  buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
-//
-//  // Index
-//  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
-//
-//  // Buffer for calc crc
-//  pack_buffer tmp_buffer;
-//  tmp_buffer[0] = (packet->number >> 8) & 0xff;
-//  tmp_buffer[1] = (packet->number     ) & 0xff;
-//  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
-//
-////  pack_size tmp_total_size = (PACK_INDEX_SIZE + packet->size);
-//  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
-//
-//  // Words to buffer
-//  for(pack_size i = PACK_INDEX_SIZE; i < tmp_total_size; i++)
-//    buffer[tmp_pack_pos++] = tmp_buffer[i];
-//
-//  // CRC16
-//  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
-//  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
-//
-//  // pack_outer_size include PACK_INDEX_SIZE
-////  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + packet->size + PACK_CRC_SIZE;
-//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
+  // Size(IndexSize + DataSize)
+//  buffer[tmp_pack_pos++] = (packet->size >> 8) & 0xff;
+//  buffer[tmp_pack_pos++] = (packet->size     ) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
+
+  // Index
+  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
+
+  // Buffer for calc crc
+  pack_buffer tmp_buffer;
+  tmp_buffer[0] = (packet->number >> 8) & 0xff;
+  tmp_buffer[1] = (packet->number     ) & 0xff;
+  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
+
+//  pack_size tmp_total_size = (PACK_INDEX_SIZE + packet->size);
+  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
+
+  // Words to buffer
+  for(pack_size i = PACK_INDEX_SIZE; i < tmp_total_size; i++)
+    buffer[tmp_pack_pos++] = tmp_buffer[i];
+
+  // CRC16
+  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
+  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
+
+  // pack_outer_size include PACK_INDEX_SIZE
+//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + packet->size + PACK_CRC_SIZE;
+  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
 
   return PACK_OK;
 }
@@ -1268,27 +1279,27 @@ pack_size _pack_word_size(pack_word *word)
 
   pack_type tmp_word_type = word->type;
 
-//  switch (tmp_word_type)
-//  {
-//  case PACK_WORD_NONE:
-//    break;
-//  case PACK_WORD_INT:
-//    tmp_size += sizeof(int);
-//    break;
-//  case PACK_WORD_FLOAT:
-//    tmp_size += sizeof(float);
-//    break;
-//  case PACK_WORD_STRING:
-//    tmp_size += PACK_SIZE_SIZE;
-////    tmp_size += word->size;
-//    break;
-//  case PACK_WORD_BYTES:
-//    tmp_size += PACK_SIZE_SIZE;
-////    tmp_size += word->size;
-//    break;
-//  default:
-//    break;
-//  }
+  switch (tmp_word_type)
+  {
+  case PACK_WORD_NONE:
+    break;
+  case PACK_WORD_INT:
+    tmp_size += sizeof(int);
+    break;
+  case PACK_WORD_FLOAT:
+    tmp_size += sizeof(float);
+    break;
+  case PACK_WORD_STRING:
+    tmp_size += PACK_SIZE_SIZE;
+//    tmp_size += word->size;
+    break;
+  case PACK_WORD_BYTES:
+    tmp_size += PACK_SIZE_SIZE;
+//    tmp_size += word->size;
+    break;
+  default:
+    break;
+  }
 
   return tmp_size;
 }

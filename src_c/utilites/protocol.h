@@ -15,8 +15,8 @@
 #define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_WORDS_COUNT         20
-#define PACK_OUT_PACKETS_COUNT   8 //(1 * 60 * 10) // 1 minute
-#define PACK_IN_PACKETS_COUNT    8 //(    10 * 10) // 10 seconds
+#define PACK_OUT_PACKETS_COUNT   1 //(1 * 60 * 10) // 1 minute
+#define PACK_IN_PACKETS_COUNT    1 //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0

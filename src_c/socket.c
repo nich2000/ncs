@@ -44,8 +44,8 @@ int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker);
 //==============================================================================
 int sock_stream_print(sock_worker *worker, pack_type out, int clear, int buffer, int pack, int csv);
-int sock_route_datacc(sock_worker *worker);
-int sock_exec_cmdcccc(sock_worker *worker);
+int sock_route_data(sock_worker *worker);
+int sock_exec_cmd(sock_worker *worker);
 //==============================================================================
 int sock_version(char *version)
 {
