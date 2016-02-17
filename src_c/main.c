@@ -10,21 +10,38 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
-int port   = 5700;
-char *host = "127.0.0.1";
+#define DEFAULT_SERVER_PORT      5700
+#define DEFAULT_WS_SERVER_PORT   5800
+#define DEFAULT_WEB_SERVER_PORT  8080
+#define DEFAULT_SERVER_IP        "127.0.0.1"
 //==============================================================================
-//extern "C" __declspec(dllexport) void __cdecl CreateServer(int ID, char* Port, char* RootLocation, HWND SendMsgHandler, bool UseSSL);
-//extern "C" __declspec(dllexport) void __cdecl StopServer(int ID);
+int   web_server_port    = DEFAULT_WEB_SERVER_PORT;
+int   ws_server_port     = DEFAULT_WS_SERVER_PORT;
+int   server_port        = DEFAULT_SERVER_PORT;
+char *server_ip          = DEFAULT_SERVER_IP;
 //==============================================================================
-typedef void (*_func)(int, char*, char*, int, short);
+sock_worker *_web_server = 0;
+sock_worker *_ws_server  = 0;
+sock_worker *_server     = 0;
+sock_worker *_client     = 0;
 //==============================================================================
-int web_server()
+typedef void (*_CreateServer)(int, char*, char*, int, short);
+typedef void (*_StopServer)(int);
+//==============================================================================
+int web_server(int create)
 {
   HMODULE handle = LoadLibrary("libWebServer.dll");
   if (handle != 0)
   {
-    _func CreateServer = GetProcAddress(handle, "CreateServer");
-    CreateServer(0, "8080", "../www/", 0, 0);
+    if(create)
+    {
+      _CreateServer CreateServer = (_CreateServer)GetProcAddress(handle, "CreateServer");
+      CreateServer(0, "8080", "../www/", 0, 0);
+    }
+    {
+      _StopServer StopServer = (_StopServer)GetProcAddress(handle, "StopServer");
+      StopServer(0);
+    }
   }
 }
 //==============================================================================
@@ -75,7 +92,7 @@ int handle_command(char *command)
 {
 //  printf("echo: %s\n", command);
 
-  char token[128];
+  char token [128];
   char param1[128];
   char param2[128];
   char param3[128];
@@ -88,21 +105,27 @@ int handle_command(char *command)
   {
     if(strcmp(token, "exit") == 0)
     {
-      sock_exit();
+//      sock_exit(_worker);
       return 0;
-    }
-    else if(strcmp(token, "webserver") == 0)
-    {
-      web_server();
     }
     else if(strcmp(token, "server") == 0)
     {
-      sock_server(port);
+      sock_server(server_port, _server, SOCK_MODE_SERVER);
+      return 1;
+    }
+    else if(strcmp(token, "wsserver") == 0)
+    {
+      sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
+      return 1;
+    }
+    else if(strcmp(token, "webserver") == 0)
+    {
+      sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
       return 1;
     }
     else if(strcmp(token, "client") == 0)
     {
-      sock_client(port, host);
+      sock_client(server_port, server_ip, _client);
       return 1;
     }
     else if(strcmp(token, "test") == 0)
@@ -125,6 +148,13 @@ int handle_command(char *command)
     if(strcmp(token, "send") == 0)
     {
       sock_send_cmd(1, param1);
+    }
+    else if(strcmp(token, "webserver") == 0)
+    {
+      if(strcmp(param1, "on") == 0)
+        web_server(1);
+      if(strcmp(param1, "off") == 0)
+        web_server(0);
     }
     return 1;
   }
@@ -169,22 +199,24 @@ int main(int argc, char *argv[])
   if(argc > 1)
   {
     // 0     1  2 3     4 5
-    // name -c -p 5600 -h 127.0.0.1
+    // name -c -p 5700 -h 127.0.0.1
     if(argc > 3)
       if(strcmp(argv[2], "-p") == 0)
-        port = atoi(argv[3]);
+        server_port = atoi(argv[3]);
 
     if(argc > 5)
       if(strcmp(argv[4], "-h") == 0)
-        host = argv[5];
+        server_ip = argv[5];
 
     if(strcmp(argv[1], "-s") == 0)
     {
-      sock_server(port);
+      sock_server(ws_server_port,  _ws_server,  SOCK_MODE_WS_SERVER);
+      sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
+      sock_server(server_port,     _server,     SOCK_MODE_SERVER);
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
-      sock_client(port, host);
+      sock_client(server_port, server_ip, _client);
     }
   }
   else
@@ -206,8 +238,6 @@ int main(int argc, char *argv[])
           printf("unknown command: %s\n", command);
           break;
       }
-
-//      printf(">");
     }
   };
 

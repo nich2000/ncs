@@ -31,22 +31,26 @@
 //==============================================================================
 //#define SOCK_EXTRA_LOGS
 //==============================================================================
-#define SOCK_VERSION        "SOCK001"
-#define SOCK_VERSION_SIZE   7
+#define SOCK_MODE_UNKNOWN       -1
+#define SOCK_MODE_CLIENT         0
+#define SOCK_MODE_SERVER         1
+#define SOCK_MODE_WS_SERVER      2
+#define SOCK_MODE_WEB_SERVER     3
+#define SOCK_MODE_REMOTE_CLIENT  4
 //==============================================================================
-#define SOCK_OK              0
-#define SOCK_ERROR          -1
+#define SOCK_VERSION             "SOCK001"
+#define SOCK_VERSION_SIZE        7
 //==============================================================================
-#define SOCK_MODE_UNKNOWN   -1
-#define SOCK_MODE_SERVER     0
-#define SOCK_MODE_CLIENT     1
-#define SOCK_SERVER_STREAMER 0
-#define SOCK_BUFFER_SIZE     100
-#define SOCK_WORKERS_COUNT   32
-#define SOCK_ERRORS_COUNT    10
+#define SOCK_OK                  0
+#define SOCK_ERROR              -1
 //==============================================================================
-#define SOCK_WAIT_SELECT     5
-#define SOCK_WAIT_CONNECT    5
+#define SOCK_SERVER_STREAMER     0
+#define SOCK_BUFFER_SIZE         100
+#define SOCK_WORKERS_COUNT       64
+#define SOCK_ERRORS_COUNT        10
+//==============================================================================
+#define SOCK_WAIT_SELECT         5
+#define SOCK_WAIT_CONNECT        5
 //==============================================================================
 typedef unsigned short sock_mode;
 typedef unsigned short sock_id;
@@ -80,9 +84,9 @@ typedef struct
 //==============================================================================
 int sock_version(char *version);
 //==============================================================================
-int sock_server(int port);
-int sock_client(int port, char *host);
-int sock_exit();
+int sock_server(int port, sock_worker *worker, sock_mode mode);
+int sock_client(int port, char *host, sock_worker *worker);
+int sock_exit(sock_worker *worker);
 //==============================================================================
 int sock_send_cmd(int argc, ...);
 //==============================================================================
