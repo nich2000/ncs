@@ -590,8 +590,13 @@ void *sock_send_worker(void *arg)
 
   while(!tmp_worker->sender_kill_flag)
   {
+    sleep(1);
+    continue;
+
     while(pack_queue_next(buffer, &size, &tmp_worker->protocol))
     {
+      log_add("pack_queue_next", LOG_DEBUG);
+
       int res = pack_validate(buffer, size, 1, &tmp_worker->protocol);
       if(res == PACK_OK)
       {
@@ -706,7 +711,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker *worker)
   int res = pack_validate(buffer, (pack_size)size, 0, &worker->protocol);
   if(res == PACK_OK)
   {
-    sock_stream_print(worker, PACK_IN, 0, 0, 1, 0);
+    sock_stream_print(worker, PACK_IN, 1, 0, 1, 0);
 
     sock_route_data(worker);
 
