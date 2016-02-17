@@ -56,7 +56,6 @@
 //==============================================================================
 static pack_number pack_last_error    = PACK_OK;
 static pack_number pack_global_number = PACK_GLOBAL_INIT_NUMBER;
-static int         pack_is_init       = PACK_FALSE;
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 pack_protocol *protocol;
@@ -162,16 +161,11 @@ int unlock(pack_type out, pack_protocol *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_init()
+int pack_protocol_init()
 #else
-int pack_init(pack_protocol *protocol)
+int pack_protocol_init(pack_protocol *protocol)
 #endif
 {
-  if(pack_is_init)
-    return PACK_ERROR;
-
-  pack_global_number = PACK_GLOBAL_INIT_NUMBER;
-
   #ifdef PACK_USE_OWN_BUFFER
   protocol = malloc(sizeof(pack_protocol));
   #endif
@@ -189,8 +183,6 @@ int pack_init(pack_protocol *protocol)
   queue.start  = PACK_QUEUE_INIT_INDEX;
   queue.finish = PACK_QUEUE_INIT_INDEX;
   #endif
-
-  pack_is_init = PACK_TRUE;
 
   return PACK_OK;
 }

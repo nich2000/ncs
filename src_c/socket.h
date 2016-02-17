@@ -13,8 +13,10 @@
 #endif
 //==============================================================================
 #include <pthread.h>
+
 #include "defines.h"
 #include "protocol.h"
+#include "streamer.h"
 #include "exec.h"
 //==============================================================================
 #ifdef __linux__
@@ -52,44 +54,56 @@
 #define SOCK_WAIT_SELECT         5
 #define SOCK_WAIT_CONNECT        5
 //==============================================================================
-typedef unsigned short sock_mode;
-typedef unsigned short sock_id;
-typedef unsigned short sock_index;
+typedef unsigned short sock_mode_t;
+typedef unsigned short sock_id_t;
+typedef unsigned short sock_index_t;
 //==============================================================================
 typedef struct
 {
-  sock_id                id;
-  sock_mode              mode;
+  sock_id_t              id;
+  sock_mode_t            mode;
   int                    port;
   char                   host[15];
   SOCKET                 sock;
   int                    worker_kill_flag;
   int                    sender_kill_flag;
   int                    receiver_kill_flag;
-  pthread_t              worker;
-  pthread_t              sender;
-  pthread_t              receiver;
+  pthread_t              work_thread;
+  pthread_t              send_thread;
+  pthread_t              receive_thread;
   pack_protocol          protocol;
   exec_func              exec_cmd;
-}sock_worker;
+}sock_worker_t;
 //==============================================================================
-typedef sock_worker sock_workers[SOCK_WORKERS_COUNT];
+typedef sock_worker_t sock_workers_t[SOCK_WORKERS_COUNT];
 //==============================================================================
 typedef struct
 {
-  sock_id      last_id;
-  sock_index   index;
-  sock_workers items;
-}sock_worker_list;
+  sock_id_t      last_id;
+  sock_index_t   index;
+  sock_workers_t items;
+}sock_worker_list_t;
+//==============================================================================
+typedef struct
+{
+  sock_worker_t      worker;
+  sock_worker_list_t clients;
+}sock_server_t;
+//==============================================================================
+typedef struct
+{
+  sock_worker_t      worker;
+  streamer_worker  streamer;
+}sock_client_t;
 //==============================================================================
 int sock_version(char *version);
 //==============================================================================
-int sock_server(int port, sock_worker *worker, sock_mode mode);
-int sock_client(int port, char *host, sock_worker *worker);
-int sock_exit(sock_worker *worker);
+int sock_server(int port, sock_server_t *server, sock_mode_t mode);
+int sock_client(int port, char *host, sock_client_t *client);
+//==============================================================================
+int sock_exit(sock_worker_t *worker);
 //==============================================================================
 int sock_send_cmd(int argc, ...);
-//==============================================================================
 int soch_exec_cmd(int argc, ...);
 //==============================================================================
 #endif //SOCKET_H

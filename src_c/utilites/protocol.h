@@ -139,7 +139,7 @@ pack_number _pack_global_number        ();
 int          pack_version              (pack_ver version);
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-  int pack_init();
+  int pack_protocol_init();
   int pack_begin();
   int pack_end();
   pack_packet *_pack_pack_current(pack_type out);
@@ -159,7 +159,7 @@ int          pack_version              (pack_ver version);
   int pack_add_param_as_string(pack_string param);
   int pack_add_param_as_bytes(pack_bytes param, pack_size size);
 #else
-  int pack_init (pack_protocol *protocol);
+  int pack_protocol_init (pack_protocol *protocol);
   int pack_begin(pack_protocol *protocol);
   int pack_end  (pack_protocol *protocol);
   pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "streamer.h"
 #include "log.h"
 #include "socket.h"
 #include "test.h"
@@ -20,10 +21,10 @@ int   ws_server_port     = DEFAULT_WS_SERVER_PORT;
 int   server_port        = DEFAULT_SERVER_PORT;
 char *server_ip          = DEFAULT_SERVER_IP;
 //==============================================================================
-sock_worker *_web_server = 0;
-sock_worker *_ws_server  = 0;
-sock_worker *_server     = 0;
-sock_worker *_client     = 0;
+sock_server_t *_web_server = 0;
+sock_server_t *_ws_server  = 0;
+sock_server_t *_server     = 0;
+sock_client_t *_client     = 0;
 //==============================================================================
 typedef void (*_CreateServer)(int, char*, char*, int, short);
 typedef void (*_StopServer)(int);
@@ -82,8 +83,8 @@ void print_types_info()
     "\r\n" \
     "sock_worker: %d, \r\n" \
     "sock_worker_list: %d",
-    sizeof(sock_worker),
-    sizeof(sock_worker_list)
+    sizeof(sock_worker_t),
+    sizeof(sock_worker_list_t)
   );
   log_add(tmp, LOG_INFO);
 }
