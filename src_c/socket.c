@@ -109,6 +109,7 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
   server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
   server->worker.id   = 0;
+  server->worker.type = SOCK_TYPE_SERVER;
   server->worker.mode = mode;
   server->worker.port = port;
 
@@ -160,6 +161,7 @@ int sock_client(int port, char *host, sock_client_t *client)
   client = (sock_client_t*)malloc(sizeof(sock_client_t));
 
   client->worker.id   = 0;
+  client->worker.type = SOCK_TYPE_CLIENT;
   client->worker.mode = SOCK_MODE_CLIENT;
   client->worker.port = port;
 
@@ -176,13 +178,14 @@ void *sock_client_worker(void *arg)
 
   sock_init();
 
-  while(!tmp_client->worker.worker_kill_flag)
+  do
   {
     sock_client_init (tmp_client);
     sock_client_start(&tmp_client->worker);
     sock_client_work (&tmp_client->worker);
     sock_client_stop (&tmp_client->worker);
-  };
+  }
+  while(!tmp_client->worker.worker_kill_flag);
 
   sock_deinit();
 
@@ -333,7 +336,8 @@ int sock_server_work(sock_server_t *server)
       sock_worker_t *tmp_worker = &server->clients.items[server->clients.index];
 
       tmp_worker->id   = server->clients.last_id;
-      tmp_worker->mode = SOCK_MODE_REMOTE_CLIENT;
+      tmp_worker->type = SOCK_TYPE_REMOTE_CLIENT;
+      tmp_worker->mode = server->worker.type;
       tmp_worker->port = server->worker.port;
 
       strcpy(tmp_worker->host, server->worker.host);
@@ -737,22 +741,38 @@ void *sock_recv_worker(void *arg)
 //==============================================================================
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker)
 {
-  int res = pack_validate(buffer, (pack_size)size, 0, &worker->protocol);
-  if(res == PACK_OK)
+  switch(worker->mode)
   {
-    sock_stream_print(worker, PACK_IN, 1, 0, 1, 0);
-
-    sock_route_data(worker);
-
-    sock_exec_cmd(worker);
-  }
-  else
-  {
-    #ifdef SOCK_EXTRA_LOGS
-    char tmp[128];
-    sprintf(tmp, "sock_recv_worker, pack_validate, Place: %d", res);
-    log_add(tmp, LOG_WARNING);
-    #endif
+    case SOCK_MODE_CLIENT:
+    case SOCK_MODE_SERVER:
+    {
+      int res = pack_validate(buffer, (pack_size)size, 0, &worker->protocol);
+      if(res == PACK_OK)
+      {
+        sock_stream_print(worker, PACK_IN, 1, 0, 1, 0);
+        sock_route_data(worker);
+        sock_exec_cmd(worker);
+      }
+      else
+      {
+        #ifdef SOCK_EXTRA_LOGS
+        char tmp[128];
+        sprintf(tmp, "sock_recv_worker, pack_validate, Place: %d", res);
+        log_add(tmp, LOG_WARNING);
+        #endif
+      }
+      break;
+    }
+    case SOCK_MODE_WEB_SERVER:
+    {
+      log_add(buffer, LOG_DEBUG);
+      break;
+    }
+    case SOCK_MODE_WS_SERVER:
+    {
+      log_add(buffer, LOG_DEBUG);
+      break;
+    }
   }
 }
 //==============================================================================
