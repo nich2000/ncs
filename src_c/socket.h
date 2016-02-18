@@ -31,8 +31,6 @@
 #else
 #endif
 //==============================================================================
-//#define SOCK_EXTRA_LOGS
-//==============================================================================
 #define SOCK_TYPE_UNKNOWN       -1
 #define SOCK_TYPE_CLIENT         0
 #define SOCK_TYPE_SERVER         1
@@ -44,8 +42,8 @@
 #define SOCK_MODE_WS_SERVER      2
 #define SOCK_MODE_WEB_SERVER     3
 //==============================================================================
-#define SOCK_VERSION             "SOCK001"
-#define SOCK_VERSION_SIZE        7
+#define SOCK_VERSION             "SOCK001\0"
+#define SOCK_VERSION_SIZE        8
 //==============================================================================
 #define SOCK_OK                  0
 #define SOCK_ERROR              -1
@@ -105,11 +103,13 @@ typedef struct
 int sock_version(char *version);
 //==============================================================================
 int sock_server(int port, sock_server_t *server, sock_mode_t mode);
+int sock_server_send_cmd(sock_server_t *server, int argc, ...);
+int soch_server_exec_cmd(sock_server_t *server, int argc, ...);
+//==============================================================================
 int sock_client(int port, char *host, sock_client_t *client);
+int sock_client_send_cmd(sock_client_t *client, int argc, ...);
+int soch_client_exec_cmd(sock_client_t *client, int argc, ...);
 //==============================================================================
 int sock_exit(sock_worker_t *worker);
-//==============================================================================
-int sock_send_cmd(int argc, ...);
-int soch_exec_cmd(int argc, ...);
 //==============================================================================
 #endif //SOCKET_H

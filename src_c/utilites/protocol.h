@@ -9,7 +9,7 @@
 #include "protocol_utils.h"
 //#include "exec.h"
 //==============================================================================
-#define PACK_BUFFER_SIZE         256
+#define PACK_BUFFER_SIZE         1024
 #define PACK_VALUE_SIZE          12
 #define PACK_KEY_SIZE            4
 #define PACK_VERSION_SIZE        4
@@ -99,20 +99,24 @@ typedef struct
 //==============================================================================
 typedef struct
 {
+  pack_type        empty;      // 1
+  char            _align1[3];  // 3
   pack_index       index;      // 2
-  char            _align1[2];  // 2
-  pack_count       lock_count; // 2
   char            _align2[2];  // 2
+  pack_count       lock_count; // 2
+  char            _align3[2];  // 2
   pack_out_packets items;      // 488 * 8
 } pack_out_packets_list;       // 3912
 //==============================================================================
 typedef struct
 {
-  pack_index      index;      // 2
-  char           _align1[2];  // 2
-  pack_count      lock_count; // 2
-  char           _align2[2];  // 2
-  pack_in_packets items;      // 488 * 8
+  pack_type        empty;      // 1
+  char            _align1[3];  // 3
+  pack_index       index;      // 2
+  char            _align2[2];  // 2
+  pack_count       lock_count; // 2
+  char            _align3[2];  // 2
+  pack_in_packets  items;      // 488 * 8
 } pack_in_packets_list;       // 3912
 //==============================================================================
 typedef struct

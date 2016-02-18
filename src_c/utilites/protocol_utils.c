@@ -7,7 +7,7 @@
 * si = (b[0] << 8) | b[1];
 */
 //==============================================================================
-int bytes_to_int  (unsigned char *bytes, int size, int   *value)
+int bytes_to_int(unsigned char *bytes, int size, int   *value)
 {
   intUnion tmp_value;
   for(unsigned int j = 0; j < sizeof(int); j++)

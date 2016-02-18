@@ -16,15 +16,15 @@
 #define DEFAULT_WEB_SERVER_PORT  8080
 #define DEFAULT_SERVER_IP        "127.0.0.1"
 //==============================================================================
-int   web_server_port    = DEFAULT_WEB_SERVER_PORT;
-int   ws_server_port     = DEFAULT_WS_SERVER_PORT;
-int   server_port        = DEFAULT_SERVER_PORT;
-char *server_ip          = DEFAULT_SERVER_IP;
+int   web_server_port      = DEFAULT_WEB_SERVER_PORT;
+int   ws_server_port       = DEFAULT_WS_SERVER_PORT;
+int   server_port          = DEFAULT_SERVER_PORT;
+char *server_ip            = DEFAULT_SERVER_IP;
 //==============================================================================
-sock_server_t *_web_server = 0;
-sock_server_t *_ws_server  = 0;
-sock_server_t *_server     = 0;
-sock_client_t *_client     = 0;
+sock_server_t *_web_server = NULL;
+sock_server_t *_ws_server  = NULL;
+sock_server_t *_server     = NULL;
+sock_client_t *_client     = NULL;
 //==============================================================================
 typedef void (*_CreateServer)(int, char*, char*, int, short);
 typedef void (*_StopServer)(int);
@@ -111,6 +111,9 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "server") == 0)
     {
+      if(_server != 0)
+        free(_server);
+      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
       sock_server(server_port, _server, SOCK_MODE_SERVER);
       return 1;
     }
@@ -126,6 +129,9 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "client") == 0)
     {
+      if(_client != 0)
+        free(_client);
+      _client = (sock_client_t*)malloc(sizeof(sock_client_t));
       sock_client(server_port, server_ip, _client);
       return 1;
     }
@@ -146,11 +152,7 @@ int handle_command(char *command)
   }
   else if(res == 2)
   {
-    if(strcmp(token, "send") == 0)
-    {
-      sock_send_cmd(1, param1);
-    }
-    else if(strcmp(token, "webserver") == 0)
+    if(strcmp(token, "webserver") == 0)
     {
       if(strcmp(param1, "on") == 0)
         web_server(1);
@@ -161,35 +163,27 @@ int handle_command(char *command)
   }
   else if(res == 3)
   {
-    if(strcmp(token, "send") == 0)
+    if(strcmp(token, "sndtocl") == 0)
     {
-      sock_send_cmd(2, param1, param2);
+      sock_server_send_cmd(_server, 2, param1, param2);
+    }
+    else if(strcmp(token, "sndtosr") == 0)
+    {
+      sock_client_send_cmd(_client, 2, param1, param2);
     }
     return 1;
   }
   else if(res == 4)
   {
-    if(strcmp(token, "send") == 0)
-    {
-      sock_send_cmd(3, param1, param2, param3);
-    }
-    return 1;
+    return -1;
   }
   else if(res == 5)
   {
-    if(strcmp(token, "send") == 0)
-    {
-      sock_send_cmd(4, param1, param2, param3, param4);
-    }
-    return 1;
+    return -1;
   }
   else if(res == 6)
   {
-    if(strcmp(token, "send") == 0)
-    {
-      sock_send_cmd(5, param1, param2, param3, param4, param5);
-    }
-    return 1;
+    return -1;
   }
   else
     return -1;
