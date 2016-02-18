@@ -632,7 +632,7 @@ void *sock_send_worker(void *arg)
 
   int tmp_errors = 0;
 
-  int tmp_counter = 0;
+//  int tmp_counter = 0;
 
   while(!tmp_worker->sender_kill_flag)
   {

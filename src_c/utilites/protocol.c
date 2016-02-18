@@ -24,8 +24,8 @@
 * POW\0   1   25
 * -----
 * OneWordStrBytes(example)
-* 4       1   2      4      TOTAL = 4 + 1 + 2 + 4 = 11
-* NAM\0   3   0x04   IVAN
+* 4       1   2      3      TOTAL = 4 + 1 + 2 + 3 = 10
+* NAM\0   3   0x03   IVA
 * -----
 * FullPack(example)
 * 6         2(9+11)   2      9          11               2    TOTAL = 32
@@ -96,7 +96,7 @@ int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words w
 //==============================================================================
 int pack_word_to_buffer  (pack_word *word,     pack_buffer buffer, pack_size *start_index);
 int pack_words_to_buffer (pack_packet *pack,   pack_buffer buffer, pack_size start_index);
-int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
+int pack_packet_to_buffer(pack_packet *packet, pack_buffer buf, pack_size *size);
 //==============================================================================
 int pack_word_as_int    (pack_word *word, int   *value);
 int pack_word_as_float  (pack_word *word, float *value);
@@ -146,15 +146,13 @@ int unlock(pack_type out, pack_protocol *protocol)
 {
   if(out)
   {
-    protocol->out_packets_list.lock_count--;
-    if(protocol->out_packets_list.lock_count < 0)
-      protocol->out_packets_list.lock_count = 0;
+    if(protocol->out_packets_list.lock_count > 0)
+      protocol->out_packets_list.lock_count--;
   }
   else
   {
-    protocol->in_packets_list.lock_count--;
-    if(protocol->in_packets_list.lock_count < 0)
-      protocol->in_packets_list.lock_count = 0;
+    if(protocol->in_packets_list.lock_count > 0)
+      protocol->in_packets_list.lock_count--;
   }
 
   return PACK_OK;
@@ -347,9 +345,17 @@ pack_packet *_pack_pack_current(pack_type out)
   pack_index tmp_index = _pack_current_index(out);
 
   if(out)
+  {
+    if(protocol->out_packets_list.empty)
+      return NULL;
     return &protocol->out_packets_list.items[tmp_index];
+  }
   else
+  {
+    if(protocol->in_packets_list.empty)
+      return NULL;
     return &protocol->in_packets_list.items[tmp_index];
+  }
 }
 #else
 pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol)
@@ -567,8 +573,9 @@ int pack_keys_to_csv(pack_packet *pack, unsigned char delimeter, pack_buffer buf
 
   for(pack_size i = 0; i < pack->words_count; i++)
   {
-    for(pack_size j = 0; j < strlen((char *)pack->words[i].key); j++)
+    for(pack_size j = 0; j < PACK_KEY_SIZE; j++)
       buffer[tmp_pos++] = pack->words[i].key[j];
+
     buffer[tmp_pos++] = delimeter;
   }
 
@@ -592,7 +599,7 @@ int pack_values_to_csv(pack_packet *pack, unsigned char delimeter, pack_buffer b
   {
     pack_word_as_string(&pack->words[i], valueS);
 
-    for(pack_size j = 0; j < strlen((char *)valueS); j++)
+    for(pack_size j = 0; j < pack->words[i].size; j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
@@ -811,8 +818,7 @@ int pack_add_as_float(pack_key key, float value, pack_protocol *protocol)
   // Value
   floatUnion tmp_value;
   tmp_value.f = value;
-  for(pack_size i = 0; i < sizeof(float); i++)
-    tmp_word->value[i] = tmp_value.buff[i];
+  memcpy(tmp_word->value, tmp_value.buff, sizeof(float));
 
   // Words counter
   tmp_pack->words_count++;
@@ -852,8 +858,7 @@ int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol)
   tmp_word->size = tmp_size;
 
   // Value
-  for(pack_size i = 0; i < tmp_size; i++)
-    tmp_word->value[i] = value[i];
+  memcpy(tmp_word->value, value, tmp_size);
 
   // Words counter
   tmp_pack->words_count++;
@@ -891,8 +896,7 @@ int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size, pack_prot
   tmp_word->size = size;
 
   // Value
-  for(pack_size i = 0; i < size; i++)
-    tmp_word->value[i] = value[i];
+  memcpy(tmp_word->value, value, tmp_word->size);
 
   // Words counter
   tmp_pack->words_count++;
@@ -987,26 +991,26 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 {
 //  log_add("pack_validate", LOG_INFO);
 
-  if((protocol->validation_buffer.size + size) > PACK_BUFFER_SIZE)
+  pack_validation_buffer *vbuffer = &protocol->validation_buffer;
+
+  if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
     char tmp[256];
-    sprintf(tmp, "pack_validate, buffer to big(%d/%d)", (protocol->validation_buffer.size + size), PACK_BUFFER_SIZE);
+    sprintf(tmp, "pack_validate, buffer to big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
     log_add(tmp, LOG_CRITICAL_ERROR);
     return PACK_ERROR;
   }
 
-  pack_size i = protocol->validation_buffer.size;
-  for(pack_size j = 0; j < size; j++)
-    protocol->validation_buffer.buffer[i++] = buffer[j];
-  protocol->validation_buffer.size = i;
+  memcpy(&protocol->validation_buffer.buffer[vbuffer->size], buffer, size);
+  vbuffer->size += size;
 
-  pack_size tmp_validation_size = protocol->validation_buffer.size;
+  pack_size tmp_validation_size = vbuffer->size;
 
   int tmp_valid_count = 0;
 
   while(1)
   {
-    if(protocol->validation_buffer.size <= 0)
+    if(vbuffer->size <= 0)
       return tmp_valid_count;
 
     pack_size tmp_pack_pos = 0;
@@ -1014,7 +1018,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     // Get version
     for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
     {
-      if(protocol->validation_buffer.buffer[tmp_pack_pos++] != PACK_VERSION[i])
+      if(vbuffer->buffer[tmp_pack_pos++] != PACK_VERSION[i])
         return tmp_valid_count;
 
       tmp_validation_size--;
@@ -1026,14 +1030,14 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     if(tmp_validation_size < 2)
       return tmp_valid_count;
 
-    pack_size tmp_size = protocol->validation_buffer.buffer[tmp_pack_pos++] << 8;
-    tmp_size          |= protocol->validation_buffer.buffer[tmp_pack_pos++];
+    pack_size tmp_size = vbuffer->buffer[tmp_pack_pos++] << 8;
+    tmp_size          |= vbuffer->buffer[tmp_pack_pos++];
 
     // Get value
     pack_buffer tmp_value_buffer;
     for(pack_size i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
     {
-      tmp_value_buffer[i] = protocol->validation_buffer.buffer[tmp_pack_pos++];
+      tmp_value_buffer[i] = vbuffer->buffer[tmp_pack_pos++];
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
@@ -1048,8 +1052,8 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     if(tmp_validation_size < 2)
       return tmp_valid_count;
 
-    pack_crc16 tmp_crc16_1 = protocol->validation_buffer.buffer[tmp_pack_pos++] << 8;
-    tmp_crc16_1           |= protocol->validation_buffer.buffer[tmp_pack_pos++];
+    pack_crc16 tmp_crc16_1 = vbuffer->buffer[tmp_pack_pos++] << 8;
+    tmp_crc16_1           |= vbuffer->buffer[tmp_pack_pos++];
 
     // Get crc16 2
     pack_crc16 tmp_crc16_2 = getCRC16((char *)tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
@@ -1058,10 +1062,10 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
     if(tmp_crc16_1 != tmp_crc16_2)
       return tmp_valid_count;
 
-    pack_size tmp_remain_count = protocol->validation_buffer.size - tmp_pack_pos;
+    pack_size tmp_remain_count = vbuffer->size - tmp_pack_pos;
     for(pack_size j = 0; j < tmp_remain_count; j++)
-      protocol->validation_buffer.buffer[j] = protocol->validation_buffer.buffer[j + tmp_pack_pos];
-    protocol->validation_buffer.size = tmp_remain_count;
+      vbuffer->buffer[j] = vbuffer->buffer[j + tmp_pack_pos];
+    vbuffer->size = tmp_remain_count;
 
     tmp_valid_count++;
 
@@ -1104,8 +1108,8 @@ int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words w
     pack_word *tmp_word = &words[tmp_count];
 
     // Read Key
-    for(pack_size j = 0; j < PACK_KEY_SIZE; j++)
-      tmp_word->key[j] = buffer[i++];
+    memcpy(tmp_word->key, &buffer[i], PACK_KEY_SIZE);
+    i += PACK_KEY_SIZE;
 
     // Read Type
     tmp_word->type = buffer[i++];
@@ -1139,8 +1143,8 @@ int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words w
     }
 
     // Read Value
-    for(pack_size j = 0; j < tmp_word->size; j++)
-      tmp_word->value[j] = buffer[i++];
+    memcpy(tmp_word->value, &buffer[i], tmp_word->size);
+    i += tmp_word->size;
 
     // Words count
     tmp_count++;
@@ -1156,8 +1160,8 @@ int pack_word_to_buffer(pack_word *word, pack_buffer buffer, pack_size *start_in
 {
   pack_size tmp_index = *start_index;
 
-  for(pack_size i = 0; i < PACK_KEY_SIZE; i++)
-    buffer[tmp_index++] = word->key[i];
+  memcpy(&buffer[tmp_index], word->key, PACK_KEY_SIZE);
+  tmp_index += PACK_KEY_SIZE;
 
   buffer[tmp_index++] = word->type;
 
@@ -1185,8 +1189,8 @@ int pack_word_to_buffer(pack_word *word, pack_buffer buffer, pack_size *start_in
     break;
   }
 
-  for(pack_size i = 0; i < word->size; i++)
-    buffer[tmp_index++] = word->value[i];
+  memcpy(&buffer[tmp_index], word->value, word->size);
+  tmp_index += word->size;
 
   *start_index = tmp_index;
 
@@ -1205,7 +1209,14 @@ int pack_words_to_buffer(pack_packet *pack, pack_buffer buffer, pack_size start_
 int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size)
 {
   pack_packet *tmp_pack = _pack_pack_current(out);
-  return pack_packet_to_buffer(tmp_pack, buffer, size);
+
+  if(tmp_pack == NULL)
+    return PACK_QUEUE_EMPTY;
+
+  if(pack_packet_to_buffer(tmp_pack, buffer, size) == PACK_OK)
+    return PACK_QUEUE_FULL;
+  else
+    return PACK_QUEUE_EMPTY;
 }
 #else
 int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol)
@@ -1222,47 +1233,43 @@ int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *
 }
 #endif
 //==============================================================================
-int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size)
+int pack_packet_to_buffer(pack_packet *packet, pack_buffer buf, pack_size *size)
 {
-  pack_size tmp_pack_pos = 0;
+  char *buffer = (char*)malloc(PACK_VERSION_SIZE);
 
   // Version
-  for(pack_size i = 0; i < PACK_VERSION_SIZE; i++)
-    buffer[tmp_pack_pos++] = PACK_VERSION[i];
+  memcpy(buffer, (const void*)PACK_VERSION, PACK_VERSION_SIZE);
+  pack_size tmp_pack_pos = PACK_VERSION_SIZE;
 
   pack_size tmp_packet_size = _pack_words_size(packet);
 
-  // Size(IndexSize + DataSize)
-//  buffer[tmp_pack_pos++] = (packet->size >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (packet->size     ) & 0xff;
+  // Size
   buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
   buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
 
-  // Index
-  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
-  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
-
-  // Buffer for calc crc
-  pack_buffer tmp_buffer;
-  tmp_buffer[0] = (packet->number >> 8) & 0xff;
-  tmp_buffer[1] = (packet->number     ) & 0xff;
-  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
-
-//  pack_size tmp_total_size = (PACK_INDEX_SIZE + packet->size);
-  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
-
-  // Words to buffer
-  for(pack_size i = PACK_INDEX_SIZE; i < tmp_total_size; i++)
-    buffer[tmp_pack_pos++] = tmp_buffer[i];
-
-  // CRC16
-  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
-  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
-  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
-
-  // pack_outer_size include PACK_INDEX_SIZE
-//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + packet->size + PACK_CRC_SIZE;
-  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
+//  // Index
+//  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
+//  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
+//
+//  // Buffer for calc crc
+//  pack_buffer tmp_buffer;
+//  tmp_buffer[0] = (packet->number >> 8) & 0xff;
+//  tmp_buffer[1] = (packet->number     ) & 0xff;
+//  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
+//
+//  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
+//
+//  // Words to buffer
+//  memcpy(&buffer[tmp_pack_pos], &tmp_buffer[2], tmp_packet_size);
+//  tmp_pack_pos += tmp_packet_size;
+//
+//  // CRC16
+//  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
+//  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
+//  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
+//
+//  // pack_outer_size include PACK_INDEX_SIZE
+//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
 
   return PACK_OK;
 }
@@ -1335,7 +1342,7 @@ int pack_command(pack_packet *pack, pack_value command)
     if(res == PACK_OK)
       if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
       {
-        strcpy(command, valueS);
+        strcpy((char*)command, (const char*)valueS);
         return PACK_OK;
       };
   };
