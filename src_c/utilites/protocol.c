@@ -36,13 +36,8 @@
  * ----
  * todo
  * ----
- * 1. Побайтный парсинг входного буфера и добавление в список полученных пакетов
- * 2. !Очередь пакетов на отправку
- * 3. !Список созданных пакетов(на случай переотправки)
- * 4. !Список полученных пакетов
  * 5. Команда переотправить, получает индекс и добавляет пакет в очередь
- * 6. !Отправка идет только из очереди
- * 7. Списки в клиенте по одному, в сервере на каждого клиента
+ * 6. Критические ошибки выводить в лог
 */
 //==============================================================================
 #include <string.h>
@@ -96,7 +91,7 @@ int pack_buffer_to_words(pack_buffer buffer, pack_size buffer_size, pack_words w
 //==============================================================================
 int pack_word_to_buffer  (pack_word *word,     pack_buffer buffer, pack_size *start_index);
 int pack_words_to_buffer (pack_packet *pack,   pack_buffer buffer, pack_size start_index);
-int pack_packet_to_buffer(pack_packet *packet, pack_buffer buf, pack_size *size);
+int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
 //==============================================================================
 int pack_word_as_int    (pack_word *word, int   *value);
 int pack_word_as_float  (pack_word *word, float *value);
@@ -835,7 +830,12 @@ int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol)
   pack_size tmp_size = strlen((char *)value);
 
   if(tmp_size >= PACK_VALUE_SIZE)
+  {
+    char tmp[256];
+    sprintf(tmp, "pack_add_as_string, value too big, value: %s", value);
+    log_add(tmp, LOG_CRITICAL_ERROR);
     return PACK_ERROR;
+  };
 
   #ifdef PACK_USE_OWN_BUFFER
   pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
@@ -873,7 +873,12 @@ int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size, pack_prot
 #endif
 {
   if(size >= PACK_VALUE_SIZE)
+  {
+    char tmp[256];
+    sprintf(tmp, "pack_add_as_bytes, value too big, value: %s", value);
+    log_add(tmp, LOG_CRITICAL_ERROR);
     return PACK_ERROR;
+  };
 
   #ifdef PACK_USE_OWN_BUFFER
   pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
@@ -996,7 +1001,7 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
     char tmp[256];
-    sprintf(tmp, "pack_validate, buffer to big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
+    sprintf(tmp, "pack_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
     log_add(tmp, LOG_CRITICAL_ERROR);
     return PACK_ERROR;
   }
@@ -1069,7 +1074,6 @@ int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, p
 
     tmp_valid_count++;
 
-    // TODO 3
     if(only_validate)
       continue;
 
@@ -1233,9 +1237,9 @@ int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *
 }
 #endif
 //==============================================================================
-int pack_packet_to_buffer(pack_packet *packet, pack_buffer buf, pack_size *size)
+int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size)
 {
-  char *buffer = (char*)malloc(PACK_VERSION_SIZE);
+//  char *buffer = (char*)malloc(PACK_VERSION_SIZE);
 
   // Version
   memcpy(buffer, (const void*)PACK_VERSION, PACK_VERSION_SIZE);
@@ -1247,29 +1251,30 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buf, pack_size *size)
   buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
   buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
 
-//  // Index
-//  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
-//
-//  // Buffer for calc crc
-//  pack_buffer tmp_buffer;
-//  tmp_buffer[0] = (packet->number >> 8) & 0xff;
-//  tmp_buffer[1] = (packet->number     ) & 0xff;
-//  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
-//
-//  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
-//
-//  // Words to buffer
-//  memcpy(&buffer[tmp_pack_pos], &tmp_buffer[2], tmp_packet_size);
-//  tmp_pack_pos += tmp_packet_size;
-//
-//  // CRC16
-//  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
-//  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
-//  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
-//
-//  // pack_outer_size include PACK_INDEX_SIZE
-//  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
+  // TODO From here continue test iar
+  // Index
+  buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
+
+  // Buffer for calc crc
+  pack_buffer tmp_buffer;
+  tmp_buffer[0] = (packet->number >> 8) & 0xff;
+  tmp_buffer[1] = (packet->number     ) & 0xff;
+  pack_words_to_buffer(packet, tmp_buffer, PACK_INDEX_SIZE);
+
+  pack_size tmp_total_size = (PACK_INDEX_SIZE + tmp_packet_size);
+
+  // Words to buffer
+  memcpy(&buffer[tmp_pack_pos], &tmp_buffer[2], tmp_packet_size);
+  tmp_pack_pos += tmp_packet_size;
+
+  // CRC16
+  pack_crc16 tmp_crc16 = getCRC16((char *)tmp_buffer, tmp_total_size);
+  buffer[tmp_pack_pos++] = (tmp_crc16 >> 8) & 0xff;
+  buffer[tmp_pack_pos++] = (tmp_crc16     ) & 0xff;
+
+  // pack_outer_size include PACK_INDEX_SIZE
+  *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
 
   return PACK_OK;
 }

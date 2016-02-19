@@ -42,8 +42,9 @@ int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
 //==============================================================================
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker);
 //==============================================================================
-int sock_stream_print(sock_worker_t *worker, pack_type out, int clear, int buffer, int pack, int csv);
+int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv);
 int sock_route_data  (sock_worker_t *worker);
+int sock_send_cmd    (sock_worker_t *worker, int argc, ...);
 int sock_exec_cmd    (sock_worker_t *worker);
 //==============================================================================
 int sock_version(char *version)
@@ -527,8 +528,7 @@ int sock_stream_prepare()
 ////    usleep(10000000);
 }
 //==============================================================================
-// sock_stream_print(worker, PACK_OUT, 0, 0, 0, 0)
-int sock_stream_print(sock_worker_t *worker, pack_type out, int clear, int buffer, int pack, int csv)
+int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv)
 {
   if(clear)
     clrscr();
@@ -559,20 +559,16 @@ int sock_stream_print(sock_worker_t *worker, pack_type out, int clear, int buffe
 
     if(pack)
     {
-      sprintf(tmp, "Number: %d", tmp_pack->number);
-      log_add(tmp, LOG_INFO);
-
+      sprintf(tmp, "%s\n", prefix);
+      sprintf(tmp, "%sNumber: %d\n", tmp, tmp_pack->number);
       pack_key     key;
       pack_value   valueS;
       pack_size tmp_words_count = _pack_words_count(tmp_pack);
+      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
       for(pack_size i = 0; i < tmp_words_count; i++)
-      {
         if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
-        {
-          sprintf(tmp, "%s: %s", key, valueS);
-          log_add(tmp, LOG_INFO);
-        }
-      };
+          sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
+      log_add(tmp, LOG_INFO);
     };
 
     if(csv)
@@ -591,13 +587,44 @@ int sock_route_data(sock_worker_t *worker)
   return SOCK_ERROR;
 }
 //==============================================================================
+int sock_send_cmd(sock_worker_t *worker, int argc, ...)
+{
+  if(worker == NULL)
+    return SOCK_ERROR;
+
+  pack_protocol *protocol = &worker->protocol;
+
+  pack_begin(protocol);
+
+  va_list params;
+  va_start(params, argc);
+
+  char *cmd = va_arg(params, char*);
+  pack_add_cmd(cmd, protocol);
+
+  for(int i = 1; i < argc; i++)
+  {
+    char *param = va_arg(params, char*);
+    pack_add_param_as_string(param, protocol);
+  };
+
+  va_end(params);
+
+  pack_end(protocol);
+
+  return SOCK_OK;
+}
+//==============================================================================
 int sock_exec_cmd(sock_worker_t *worker)
 {
-//  pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &worker->protocol);
-//  pack_value tmp_cmd;
+  pack_packet *tmp_pack = _pack_pack_current(PACK_IN, &worker->protocol);
+  pack_value tmp_cmd;
 
-//  if(pack_command(tmp_pack, tmp_cmd) == PACK_OK)
-//  {
+  if(pack_command(tmp_pack, tmp_cmd) == PACK_OK)
+  {
+    if(strcmp(tmp_cmd, "hui") == 0)
+      sock_send_cmd(worker, 2, "answer", "huipizdadjigurda");
+
 //    if(worker->mode == SOCK_MODE_CLIENT)
 //    {
 //      if(strcmp(tmp_cmd, "stream") == 0)
@@ -613,7 +640,7 @@ int sock_exec_cmd(sock_worker_t *worker)
 //        };
 //      };
 //    };
-//  };
+  };
 
   return SOCK_ERROR;
 }
@@ -667,7 +694,7 @@ void *sock_send_worker(void *arg)
 
       if(cnt > 0)
       {
-        sock_stream_print(tmp_worker, PACK_OUT, 0, 0, 1, 0);
+        sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
 
         if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
           tmp_errors++;
@@ -760,7 +787,7 @@ void *sock_recv_worker(void *arg)
       else if(size > PACK_BUFFER_SIZE)
       {
         char tmp[256];
-        sprintf(tmp, "sock_recv_worker, recv, buffer to big(%d/%d)", size, PACK_BUFFER_SIZE);
+        sprintf(tmp, "sock_recv_worker, recv, buffer too big(%d/%d)", size, PACK_BUFFER_SIZE);
         log_add(tmp, LOG_CRITICAL_ERROR);
         break;
       }
@@ -808,9 +835,9 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
 
       if(cnt > 0)
       {
-        sock_stream_print(worker, PACK_IN, 1, 0, 1, 0);
-        sock_route_data(worker);
+        sock_stream_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
         sock_exec_cmd(worker);
+        sock_route_data(worker);
       };
       break;
     }

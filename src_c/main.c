@@ -11,6 +11,10 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
+#define RESULT_UNKNOWN -1
+#define RESULT_NONE     0
+#define RESULT_DONE     1
+//==============================================================================
 #define DEFAULT_SERVER_PORT      5700
 #define DEFAULT_WS_SERVER_PORT   5800
 #define DEFAULT_WEB_SERVER_PORT  8080
@@ -107,7 +111,7 @@ int handle_command(char *command)
     if(strcmp(token, "exit") == 0)
     {
 //      sock_exit(_worker);
-      return 0;
+      return RESULT_NONE;
     }
     else if(strcmp(token, "server") == 0)
     {
@@ -115,17 +119,17 @@ int handle_command(char *command)
         free(_server);
       _server = (sock_server_t*)malloc(sizeof(sock_server_t));
       sock_server(server_port, _server, SOCK_MODE_SERVER);
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "wsserver") == 0)
     {
       sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "webserver") == 0)
     {
       sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "client") == 0)
     {
@@ -133,22 +137,23 @@ int handle_command(char *command)
         free(_client);
       _client = (sock_client_t*)malloc(sizeof(sock_client_t));
       sock_client(server_port, server_ip, _client);
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "test") == 0)
     {
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "clear") == 0)
     {
       clrscr();
-      return 1;
+      return RESULT_DONE;
     }
     else if(strcmp(token, "typeinfo") == 0)
     {
       print_types_info();
-      return 1;
+      return RESULT_DONE;
     }
+    return RESULT_UNKNOWN;
   }
   else if(res == 2)
   {
@@ -158,35 +163,50 @@ int handle_command(char *command)
         web_server(1);
       if(strcmp(param1, "off") == 0)
         web_server(0);
+      return RESULT_DONE;
     }
-    return 1;
+    else if(strcmp(token, "sndtocl") == 0)
+    {
+      sock_server_send_cmd(_server, 1, param1);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "sndtosr") == 0)
+    {
+      sock_client_send_cmd(_client, 1, param1);
+      return RESULT_DONE;
+    }
+
+    return RESULT_UNKNOWN;
   }
   else if(res == 3)
   {
     if(strcmp(token, "sndtocl") == 0)
     {
       sock_server_send_cmd(_server, 2, param1, param2);
+      return RESULT_DONE;
     }
     else if(strcmp(token, "sndtosr") == 0)
     {
       sock_client_send_cmd(_client, 2, param1, param2);
+      return RESULT_DONE;
     }
-    return 1;
+
+    return RESULT_UNKNOWN;
   }
   else if(res == 4)
   {
-    return -1;
+    return RESULT_UNKNOWN;
   }
   else if(res == 5)
   {
-    return -1;
+    return RESULT_UNKNOWN;
   }
   else if(res == 6)
   {
-    return -1;
+    return RESULT_UNKNOWN;
   }
   else
-    return -1;
+    return RESULT_UNKNOWN;
 }
 //==============================================================================
 int main(int argc, char *argv[])
@@ -226,16 +246,17 @@ int main(int argc, char *argv[])
 
       switch(handle_command(command))
       {
-        case 0:
+        case RESULT_NONE:
           return 0;
-          break;
-        case -1:
+        case RESULT_UNKNOWN:
           printf("unknown command: %s\n", command);
+          break;
+        case RESULT_DONE:
+          printf("done command: %s\n", command);
           break;
       }
     }
   };
-
   return 0;
 }
 //==============================================================================

@@ -9,15 +9,23 @@
 #include "protocol_utils.h"
 //#include "exec.h"
 //==============================================================================
+#ifdef DEMS_DEVICE
 #define PACK_BUFFER_SIZE         1024
 #define PACK_VALUE_SIZE          12
-#define PACK_KEY_SIZE            4
-#define PACK_VERSION_SIZE        4
-//==============================================================================
 #define PACK_WORDS_COUNT         20
 #define PACK_OUT_PACKETS_COUNT   1 //(1 * 60 * 10) // 1 minute
 #define PACK_IN_PACKETS_COUNT    1 //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
+#else
+#define PACK_BUFFER_SIZE         10240
+#define PACK_VALUE_SIZE          128
+#define PACK_WORDS_COUNT         20
+#define PACK_OUT_PACKETS_COUNT   1
+#define PACK_IN_PACKETS_COUNT    1
+#define PACK_QUEUE_COUNT         1
+#endif
+#define PACK_KEY_SIZE            4
+#define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0
 #define PACK_QUEUE_INIT_INDEX    0

@@ -11,7 +11,6 @@
 #if defined(__linux__) || defined(_WIN32)
   time_t rawtime;
   struct tm *timeinfo;
-#else
 #endif
 //==============================================================================
 char log_name[64]    = "log.txt";
@@ -41,6 +40,12 @@ void report_set_name(char *name)
 void log_add(char *message, int log_type)
 {
 #if defined(__linux__) || defined(_WIN32)
+
+  #ifndef DEBUG_MODE
+  if(log_type == LOG_DEBUG)
+    return;
+  #endif
+
 //   time(&rawtime);
 //   timeinfo = localtime(&rawtime);
 
@@ -66,14 +71,18 @@ void log_add(char *message, int log_type)
     break;
   };
 
-  if((log_type == LOG_INFO) || (log_type == LOG_CRITICAL_ERROR))
+  if(
+     (log_type == LOG_INFO)
+     #ifndef SILENT_MODE
+     || (log_type == LOG_CRITICAL_ERROR)
+     #endif
+    )
     printf("%s %s\n", prefix, message);
 
   FILE *log;
   log = fopen(log_name, "a");
   fprintf(log, "%s %s %s\n", t, prefix, message);
   fclose(log);
-#else
 #endif
 }
 //==============================================================================
@@ -84,7 +93,6 @@ void report_add(char *message)
   log = fopen(report_name, "a");
   fprintf(log, "%s\n", message);
   fclose(log);
-#else
 #endif
 }
 //==============================================================================
