@@ -10,11 +10,11 @@
 //#include "exec.h"
 //==============================================================================
 #ifdef DEMS_DEVICE
-#define PACK_BUFFER_SIZE         1024
+#define PACK_BUFFER_SIZE         256
 #define PACK_VALUE_SIZE          12
 #define PACK_WORDS_COUNT         20
-#define PACK_OUT_PACKETS_COUNT   1 //(1 * 60 * 10) // 1 minute
-#define PACK_IN_PACKETS_COUNT    1 //(    10 * 10) // 10 seconds
+#define PACK_OUT_PACKETS_COUNT   1  //(1 * 60 * 10) // 1 minute
+#define PACK_IN_PACKETS_COUNT    1  //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 #else
 #define PACK_BUFFER_SIZE         10240

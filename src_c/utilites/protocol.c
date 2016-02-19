@@ -1251,7 +1251,6 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
   buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
   buffer[tmp_pack_pos++] = (tmp_packet_size     ) & 0xff;
 
-  // TODO From here continue test iar
   // Index
   buffer[tmp_pack_pos++] = (packet->number >> 8) & 0xff;
   buffer[tmp_pack_pos++] = (packet->number     ) & 0xff;
