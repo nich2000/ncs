@@ -160,7 +160,7 @@ int pack_protocol_init(pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  protocol = malloc(sizeof(pack_protocol));
+    protocol = malloc(sizeof(pack_protocol));
   #endif
 
   protocol->validation_buffer.size      = 0;
@@ -174,9 +174,9 @@ int pack_protocol_init(pack_protocol *protocol)
   protocol->out_packets_list.lock_count = 0;
 
   #ifdef PACK_USE_OWN_QUEUE
-  queue.empty  = PACK_TRUE;
-  queue.start  = PACK_QUEUE_INIT_INDEX;
-  queue.finish = PACK_QUEUE_INIT_INDEX;
+    queue.empty  = PACK_TRUE;
+    queue.start  = PACK_QUEUE_INIT_INDEX;
+    queue.finish = PACK_QUEUE_INIT_INDEX;
   #endif
 
   return PACK_OK;
@@ -612,13 +612,13 @@ int pack_begin(pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  if(is_locked(PACK_OUT))
-    return PACK_ERROR;
-  lock(PACK_OUT);
+    if(is_locked(PACK_OUT))
+      return PACK_ERROR;
+    lock(PACK_OUT);
   #else
-  if(is_locked(PACK_OUT, protocol))
-    return PACK_ERROR;
-  lock(PACK_OUT, protocol);
+    if(is_locked(PACK_OUT, protocol))
+      return PACK_ERROR;
+    lock(PACK_OUT, protocol);
   #endif
 
   pack_global_number++;
@@ -632,9 +632,9 @@ int pack_begin(pack_protocol *protocol)
   protocol->out_packets_list.empty = PACK_FALSE;
 
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
   tmp_pack->number      = pack_global_number;
@@ -650,27 +650,27 @@ int pack_end(pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  if(!is_locked(PACK_OUT))
-    return PACK_ERROR;
+    if(!is_locked(PACK_OUT))
+      return PACK_ERROR;
   #else
-  if(!is_locked(PACK_OUT, protocol))
-    return PACK_ERROR;
+    if(!is_locked(PACK_OUT, protocol))
+      return PACK_ERROR;
   #endif
 
   #ifdef PACK_USE_OWN_QUEUE
-  #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
-  pack_queue_add(tmp_pack->number);
-  #else
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
-  pack_queue_add(tmp_pack->number, protocol);
-  #endif
+    #ifdef PACK_USE_OWN_BUFFER
+      pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+      pack_queue_add(tmp_pack->number);
+    #else
+      pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+      pack_queue_add(tmp_pack->number, protocol);
+    #endif
   #endif
 
   #ifdef PACK_USE_OWN_BUFFER
-  unlock(PACK_OUT);
+    unlock(PACK_OUT);
   #else
-  unlock(PACK_OUT, protocol);
+    unlock(PACK_OUT, protocol);
   #endif
 
   return PACK_OK;
@@ -684,9 +684,9 @@ int pack_queue_add(pack_number number, pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT);
+    pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT);
   #else
-  pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT, protocol);
+    pack_packet *tmp_pack = _pack_pack_by_number(number, PACK_OUT, protocol);
   #endif
 
   if(tmp_pack == NULL)
@@ -704,45 +704,66 @@ int pack_queue_add(pack_number number, pack_protocol *protocol)
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_queue_next(pack_buffer buffer, pack_size *size)
+int pack_next(pack_packet *pack)
 #else
-int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol)
+int pack_next(pack_packet *pack, pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  if(is_locked(PACK_OUT))
-    return PACK_QUEUE_EMPTY;
+    if(is_locked(PACK_OUT))
+      return PACK_QUEUE_EMPTY;
   #else
-  if(is_locked(PACK_OUT, protocol))
-    return PACK_QUEUE_EMPTY;
+    if(is_locked(PACK_OUT, protocol))
+      return PACK_QUEUE_EMPTY;
   #endif
 
   #ifdef PACK_USE_OWN_QUEUE
-  if(queue.empty)
-    return PACK_QUEUE_EMPTY;
+    if(queue.empty)
+      return PACK_QUEUE_EMPTY;
 
-  if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
-    return PACK_QUEUE_EMPTY;
+    if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
+      return PACK_QUEUE_EMPTY;
 
-  pack_index tmp_start = queue.start;
-  pack_packet *tmp_pack = queue.packets[tmp_start];
-  pack_packet_to_buffer(tmp_pack, buffer, size);
+    pack = queue.packets[queue.start];
 
-  queue.start++;
-  if(queue.start > PACK_QUEUE_COUNT)
-    queue.start = 0;
+    queue.start++;
+    if(queue.start > PACK_QUEUE_COUNT)
+      queue.start = 0;
 
-  if(queue.start == queue.finish)
-    queue.empty = PACK_TRUE;
+    if(queue.start == queue.finish)
+      queue.empty = PACK_TRUE;
 
-  return PACK_QUEUE_FULL;
+    return PACK_QUEUE_FULL;
   #else
-  #ifdef PACK_USE_OWN_BUFFER
-  return pack_current_packet_to_buffer(PACK_OUT, buffer, size);
-  #else
-  return pack_current_packet_to_buffer(PACK_OUT, buffer, size, protocol);
+    #ifdef PACK_USE_OWN_BUFFER
+      return pack_current_packet_to_buffer(PACK_OUT, buffer, size);
+    #else
+      return pack_current_packet_to_buffer(PACK_OUT, buffer, size, protocol);
+    #endif
   #endif
-  #endif
+}
+//==============================================================================
+#ifdef PACK_USE_OWN_BUFFER
+int pack_next_buffer(pack_buffer buffer, pack_size *size)
+{
+  int tmp_res = pack_next(tmp_pack);
+
+  if(tmp_res == PACK_QUEUE_FULL)
+    pack_packet_to_buffer(tmp_pack, buffer, size);
+
+  return tmp_res;
+}
+#else
+int pack_next_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol)
+#endif
+{
+  pack_packet *tmp_pack;
+  int tmp_res = pack_next(tmp_pack, protocol);
+
+  if(tmp_res == PACK_QUEUE_FULL)
+    pack_packet_to_buffer(tmp_pack, buffer, size);
+
+  return tmp_res;
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
@@ -752,9 +773,9 @@ int pack_add_as_int(pack_key key, int value, pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
   if(tmp_pack->words_count >= PACK_WORDS_COUNT)
@@ -791,9 +812,9 @@ int pack_add_as_float(pack_key key, float value, pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
   if(tmp_pack->words_count >= PACK_WORDS_COUNT)
@@ -881,9 +902,9 @@ int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size, pack_prot
   };
 
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
   if(tmp_pack->words_count >= PACK_WORDS_COUNT)
@@ -989,7 +1010,7 @@ int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *pr
 */
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
+int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 #else
 int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol)
 #endif
@@ -1084,10 +1105,11 @@ int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_vali
     protocol->in_packets_list.empty = PACK_FALSE;
 
     #ifdef PACK_USE_OWN_BUFFER
-    pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
+      pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
     #else
-    pack_packet *tmp_pack = _pack_pack_current(PACK_IN, protocol);
+      pack_packet *tmp_pack = _pack_pack_current(PACK_IN, protocol);
     #endif
+
     if(tmp_pack == NULL)
       return PACK_ERROR;
 

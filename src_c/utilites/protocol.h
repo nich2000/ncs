@@ -48,6 +48,9 @@
 #define PACK_OUT                 1
 #define PACK_IN                  0
 //==============================================================================
+#define PACK_VALIDATE_ONLY       1
+#define PACK_VALIDATE_ADD        0
+//==============================================================================
 #define PACK_WORD_NONE           0
 #define PACK_WORD_INT            1
 #define PACK_WORD_FLOAT          2
@@ -156,10 +159,12 @@ int          pack_version              (pack_ver version);
   int pack_begin();
   int pack_end();
   pack_packet *_pack_pack_current(pack_type out);
-  int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
+  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
   int pack_pack_current(pack_type out, pack_packet *pack);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
-  int pack_queue_next(pack_buffer buffer, pack_size *size);
+  //------------------------------------------------------------------------------
+  int pack_next(pack_packet *pack);
+  int pack_next_buffer(pack_buffer buffer, pack_size *size);
   //------------------------------------------------------------------------------
   int pack_add_as_int(pack_key key, int value);
   int pack_add_as_float(pack_key key, float value);
@@ -179,7 +184,9 @@ int          pack_version              (pack_ver version);
   int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
   int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
-  int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+  //------------------------------------------------------------------------------
+  int pack_next(pack_packet *pack, pack_protocol *protocol);
+  int pack_next_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
   //------------------------------------------------------------------------------
   int pack_add_as_int   (pack_key key, int         value, pack_protocol *protocol);
   int pack_add_as_float (pack_key key, float       value, pack_protocol *protocol);

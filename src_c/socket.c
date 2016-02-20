@@ -660,23 +660,12 @@ void *sock_send_worker(void *arg)
   pack_size   size = 0;
 
   int tmp_errors = 0;
-  int tmp_cnt = 0;
 
   while(!tmp_worker->sender_kill_flag)
   {
-    tmp_cnt = 0;
-
-    switch(tmp_worker->mode)
+    while(pack_next_buffer(buffer, &size, &tmp_worker->protocol) != PACK_QUEUE_EMPTY)
     {
-      case SOCK_MODE_CLIENT:;
-      case SOCK_MODE_SERVER:;
-      case SOCK_MODE_WEB_SERVER:;
-      case SOCK_MODE_WS_SERVER:;
-    };
-
-    while(pack_queue_next(buffer, &size, &tmp_worker->protocol) != PACK_QUEUE_EMPTY)
-    {
-      tmp_cnt = pack_buffer_validate(buffer, size, 1, &tmp_worker->protocol);
+      int tmp_cnt = pack_buffer_validate(buffer, size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
 
       #ifdef DEBUG_MODE
       if(tmp_cnt != PACK_ERROR)
@@ -693,6 +682,20 @@ void *sock_send_worker(void *arg)
       if(tmp_cnt > 0)
       {
         sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
+
+        switch(tmp_worker->mode)
+        {
+          case SOCK_MODE_CLIENT:;
+          case SOCK_MODE_SERVER:;
+            break;
+          case SOCK_MODE_WEB_SERVER:;
+          case SOCK_MODE_WS_SERVER:;
+          {
+//            pack_packet *tmp_pack = _pack_pack_current(out, &tmp_worker->protocol);
+//            pack_to_json(tmp_pack, buffer, size);
+            break;
+          };
+        };
 
         if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
           tmp_errors++;
@@ -817,7 +820,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
     case SOCK_MODE_CLIENT:
     case SOCK_MODE_SERVER:
     {
-      int cnt = pack_buffer_validate(buffer, (pack_size)size, 0, &worker->protocol);
+      int cnt = pack_buffer_validate(buffer, (pack_size)size, PACK_VALIDATE_ADD, &worker->protocol);
 
       #ifdef DEBUG_MODE
       if(cnt != PACK_ERROR)
