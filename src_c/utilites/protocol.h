@@ -17,13 +17,14 @@
 #define PACK_IN_PACKETS_COUNT    1  //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 #else
-#define PACK_BUFFER_SIZE         10240
+#define PACK_BUFFER_SIZE         102400
 #define PACK_VALUE_SIZE          128
 #define PACK_WORDS_COUNT         20
 #define PACK_OUT_PACKETS_COUNT   1
 #define PACK_IN_PACKETS_COUNT    1
 #define PACK_QUEUE_COUNT         1
 #endif
+//==============================================================================
 #define PACK_KEY_SIZE            4
 #define PACK_VERSION_SIZE        4
 //==============================================================================
@@ -175,7 +176,7 @@ int          pack_version              (pack_ver version);
   int pack_begin(pack_protocol *protocol);
   int pack_end  (pack_protocol *protocol);
   pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);
-  int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
+  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
   int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
   int pack_queue_next(pack_buffer buffer, pack_size *size, pack_protocol *protocol);

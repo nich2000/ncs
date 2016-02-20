@@ -7,6 +7,8 @@
 #include "protocol_utils.h"
 
 #include "socket.h"
+#include "wsworker.h"
+#include "webworker.h"
 #include "test.h"
 //==============================================================================
 #ifdef DEBUG_MODE
@@ -43,7 +45,7 @@ int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker);
 //==============================================================================
 int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv);
-int sock_route_data  (sock_worker_t *worker);
+int sock_route_to_ws  (sock_worker_t *worker);
 int sock_send_cmd    (sock_worker_t *worker, int argc, ...);
 int sock_exec_cmd    (sock_worker_t *worker);
 //==============================================================================
@@ -93,7 +95,7 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
   switch(mode)
   {
     case SOCK_MODE_SERVER:
-    sprintf(tmp, "%s", "MODE_SERVER");
+    sprintf(tmp, "%s", "SERVER");
     break;
     case SOCK_MODE_WS_SERVER:
     sprintf(tmp, "%s", "WS_SERVER");
@@ -343,7 +345,7 @@ int sock_server_work(sock_server_t *server)
 
       tmp_worker->id   = server->clients.last_id;
       tmp_worker->type = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_worker->mode = server->worker.type;
+      tmp_worker->mode = server->worker.mode;
       tmp_worker->port = server->worker.port;
 
       strcpy(tmp_worker->host, server->worker.host);
@@ -582,7 +584,7 @@ int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int cl
   return PACK_OK;
 }
 //==============================================================================
-int sock_route_data(sock_worker_t *worker)
+int sock_route_to_ws(sock_worker_t *worker)
 {
   return SOCK_ERROR;
 }
@@ -658,32 +660,28 @@ void *sock_send_worker(void *arg)
   pack_size   size = 0;
 
   int tmp_errors = 0;
-
-//  int tmp_counter = 0;
+  int tmp_cnt = 0;
 
   while(!tmp_worker->sender_kill_flag)
   {
-//    if(tmp_worker->mode == SOCK_MODE_CLIENT)
-//    {
-//      sleep(1);
-//      continue;
-//    }
+    tmp_cnt = 0;
+
+    switch(tmp_worker->mode)
+    {
+      case SOCK_MODE_CLIENT:;
+      case SOCK_MODE_SERVER:;
+      case SOCK_MODE_WEB_SERVER:;
+      case SOCK_MODE_WS_SERVER:;
+    };
 
     while(pack_queue_next(buffer, &size, &tmp_worker->protocol) != PACK_QUEUE_EMPTY)
     {
-//      tmp_counter++;
-//      if(tmp_counter > 10)
-//      {
-//        sleep(1);
-//        continue;
-//      };
-
-      int cnt = pack_validate(buffer, size, 1, &tmp_worker->protocol);
+      tmp_cnt = pack_buffer_validate(buffer, size, 1, &tmp_worker->protocol);
 
       #ifdef DEBUG_MODE
-      if(cnt != PACK_ERROR)
+      if(tmp_cnt != PACK_ERROR)
       {
-        out_packets_count += cnt;
+        out_packets_count += tmp_cnt;
         #ifdef SOCK_EXTRA_LOGS
         char tmp[32];
         sprintf(tmp, "out_packets_count: %d", out_packets_count);
@@ -692,22 +690,22 @@ void *sock_send_worker(void *arg)
       };
       #endif
 
-      if(cnt > 0)
+      if(tmp_cnt > 0)
       {
         sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
 
         if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
           tmp_errors++;
-      }
 
-      if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
-        break;
+        if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+          break;
+      }
     }
 
     if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
       break;
-    else
-      continue;
+
+    usleep(1000);
   }
 
   sprintf(tmp, "END sock_send_worker, socket: %d", sock);
@@ -819,7 +817,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
     case SOCK_MODE_CLIENT:
     case SOCK_MODE_SERVER:
     {
-      int cnt = pack_validate(buffer, (pack_size)size, 0, &worker->protocol);
+      int cnt = pack_buffer_validate(buffer, (pack_size)size, 0, &worker->protocol);
 
       #ifdef DEBUG_MODE
       if(cnt != PACK_ERROR)
@@ -837,18 +835,20 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
       {
         sock_stream_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
         sock_exec_cmd(worker);
-        sock_route_data(worker);
+        sock_route_to_ws(worker);
       };
       break;
     }
     case SOCK_MODE_WEB_SERVER:
     {
-      log_add(buffer, LOG_DEBUG);
+      log_add(buffer, LOG_INFO);
+      web_handle_buffer(buffer);
       break;
     }
     case SOCK_MODE_WS_SERVER:
     {
-      log_add(buffer, LOG_DEBUG);
+      log_add(buffer, LOG_INFO);
+      ws_handle_buffer(buffer);
       break;
     }
   }

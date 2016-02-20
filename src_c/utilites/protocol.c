@@ -991,7 +991,7 @@ int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *pr
 #ifdef PACK_USE_OWN_BUFFER
 int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
 #else
-int pack_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol)
+int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol)
 #endif
 {
 //  log_add("pack_validate", LOG_INFO);

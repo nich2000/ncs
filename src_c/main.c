@@ -118,17 +118,29 @@ int handle_command(char *command)
       if(_server != 0)
         free(_server);
       _server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
       sock_server(server_port, _server, SOCK_MODE_SERVER);
+
       return RESULT_DONE;
     }
     else if(strcmp(token, "wsserver") == 0)
     {
+      if(_ws_server != 0)
+        free(_ws_server);
+      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
       sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
+
       return RESULT_DONE;
     }
     else if(strcmp(token, "webserver") == 0)
     {
+      if(_web_server != 0)
+        free(_web_server);
+      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
       sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
+
       return RESULT_DONE;
     }
     else if(strcmp(token, "client") == 0)
@@ -136,7 +148,9 @@ int handle_command(char *command)
       if(_client != 0)
         free(_client);
       _client = (sock_client_t*)malloc(sizeof(sock_client_t));
+
       sock_client(server_port, server_ip, _client);
+
       return RESULT_DONE;
     }
     else if(strcmp(token, "test") == 0)
@@ -225,6 +239,18 @@ int main(int argc, char *argv[])
 
     if(strcmp(argv[1], "-s") == 0)
     {
+      if(_ws_server != 0)
+        free(_ws_server);
+      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
+      if(_web_server != 0)
+        free(_web_server);
+      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
+      if(_server != 0)
+        free(_server);
+      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
+
       sock_server(ws_server_port,  _ws_server,  SOCK_MODE_WS_SERVER);
       sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
       sock_server(server_port,     _server,     SOCK_MODE_SERVER);
