@@ -704,9 +704,9 @@ int pack_queue_add(pack_number number, pack_protocol *protocol)
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_next(pack_packet *pack)
+pack_packet *_pack_next()
 #else
-int pack_next(pack_packet *pack, pack_protocol *protocol)
+pack_packet *_pack_next(pack_protocol *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
@@ -724,7 +724,7 @@ int pack_next(pack_packet *pack, pack_protocol *protocol)
     if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
       return PACK_QUEUE_EMPTY;
 
-    pack = queue.packets[queue.start];
+    pack_index tmp_index = queue.start;
 
     queue.start++;
     if(queue.start > PACK_QUEUE_COUNT)
@@ -733,12 +733,12 @@ int pack_next(pack_packet *pack, pack_protocol *protocol)
     if(queue.start == queue.finish)
       queue.empty = PACK_TRUE;
 
-    return PACK_QUEUE_FULL;
+    return queue.packets[tmp_index];
   #else
     #ifdef PACK_USE_OWN_BUFFER
-      return pack_current_packet_to_buffer(PACK_OUT, buffer, size);
+      return _pack_pack_current(PACK_OUT);
     #else
-      return pack_current_packet_to_buffer(PACK_OUT, buffer, size, protocol);
+      return _pack_pack_current(PACK_OUT, protocol);
     #endif
   #endif
 }
@@ -746,24 +746,19 @@ int pack_next(pack_packet *pack, pack_protocol *protocol)
 #ifdef PACK_USE_OWN_BUFFER
 int pack_next_buffer(pack_buffer buffer, pack_size *size)
 {
-  int tmp_res = pack_next(tmp_pack);
-
-  if(tmp_res == PACK_QUEUE_FULL)
-    pack_packet_to_buffer(tmp_pack, buffer, size);
-
-  return tmp_res;
-}
+  pack_packet *tmp_pack = _pack_next(protocol);
 #else
 int pack_next_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol)
-#endif
 {
-  pack_packet *tmp_pack;
-  int tmp_res = pack_next(tmp_pack, protocol);
-
-  if(tmp_res == PACK_QUEUE_FULL)
+  pack_packet *tmp_pack = _pack_next(protocol);
+#endif
+  if(tmp_pack != NULL)
+  {
     pack_packet_to_buffer(tmp_pack, buffer, size);
-
-  return tmp_res;
+    return PACK_QUEUE_FULL;
+  }
+  else
+    return PACK_QUEUE_EMPTY;
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
@@ -1297,6 +1292,11 @@ int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *si
   // pack_outer_size include PACK_INDEX_SIZE
   *size = PACK_VERSION_SIZE + PACK_SIZE_SIZE + PACK_INDEX_SIZE + tmp_packet_size + PACK_CRC_SIZE;
 
+  return PACK_OK;
+}
+//==============================================================================
+int pack_packet_to_json(pack_packet *packet, pack_buffer buffer, pack_size *size)
+{
   return PACK_OK;
 }
 //==============================================================================

@@ -33,7 +33,8 @@ typedef struct
 {
   // 1
   unsigned char time_gps[10];
-  double        time;
+  int           time;
+  int           time_s;
   // 2
   unsigned char data_valid[1];
   //3

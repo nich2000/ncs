@@ -129,7 +129,18 @@ int gps_parse_str(unsigned char *str)
 
 GPRMC_t *gps_data()
 {
-  gprms_data.time   = atof(gprms_data.time_gps);
+  char tmp_time[6];
+  char tmp_time_s[2];
+  char * pch;
+
+  pch = strtok (gprms_data.time_gps, ".");
+  strncpy(tmp_time, pch, 6);
+
+  pch = strtok (NULL, ".");
+  strncpy(tmp_time_s, pch, 2);
+
+  gprms_data.time   = atoi(tmp_time);
+  gprms_data.time_s = atoi(tmp_time_s);
   gprms_data.lat    = atof(gprms_data.lat_gps);
   gprms_data.lon    = atof(gprms_data.long_gps);
   gprms_data.speed  = atof(gprms_data.speed_knots);

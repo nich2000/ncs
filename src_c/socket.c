@@ -45,7 +45,7 @@ int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker);
 //==============================================================================
 int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv);
-int sock_route_to_ws  (sock_worker_t *worker);
+int sock_route_to_ws (sock_worker_t *worker);
 int sock_send_cmd    (sock_worker_t *worker, int argc, ...);
 int sock_exec_cmd    (sock_worker_t *worker);
 //==============================================================================
@@ -650,22 +650,26 @@ int sock_exec_cmd(sock_worker_t *worker)
 void *sock_send_worker(void *arg)
 {
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
-  SOCKET sock = tmp_worker->sock;
+  SOCKET         tmp_sock = tmp_worker->sock;
 
   char tmp[1024];
-  sprintf(tmp, "BEGIN sock_send_worker, socket: %d", sock);
+  sprintf(tmp, "BEGIN sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_INFO);
 
-  pack_buffer buffer;
-  pack_size   size = 0;
-
-  int tmp_errors = 0;
+  pack_buffer    tmp_buffer;
+  pack_size      tmp_size = 0;
+  pack_packet   *tmp_pack = 0;
+  int            tmp_errors = 0;
 
   while(!tmp_worker->sender_kill_flag)
   {
-    while(pack_next_buffer(buffer, &size, &tmp_worker->protocol) != PACK_QUEUE_EMPTY)
+    tmp_pack = _pack_next(&tmp_worker->protocol);
+    while(tmp_pack != NULL)
     {
-      int tmp_cnt = pack_buffer_validate(buffer, size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
+      // TODO Думаю, нужно перенести это куда то под switch(tmp_worker->mode)
+      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
+        continue;
+      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
 
       #ifdef DEBUG_MODE
       if(tmp_cnt != PACK_ERROR)
@@ -687,22 +691,30 @@ void *sock_send_worker(void *arg)
         {
           case SOCK_MODE_CLIENT:;
           case SOCK_MODE_SERVER:;
-            break;
-          case SOCK_MODE_WEB_SERVER:;
-          case SOCK_MODE_WS_SERVER:;
           {
-//            pack_packet *tmp_pack = _pack_pack_current(out, &tmp_worker->protocol);
-//            pack_to_json(tmp_pack, buffer, size);
+            break;
+          };
+          case SOCK_MODE_WEB_SERVER:
+          {
+            break;
+          };
+          case SOCK_MODE_WS_SERVER:
+          {
+            if(pack_packet_to_json(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
+              continue;
             break;
           };
         };
 
-        if(sock_do_send(sock, buffer, (int)size) == SOCK_ERROR)
+        if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
           tmp_errors++;
 
         if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
           break;
       }
+
+      // TODO двойной вызов этой функции: до и в цикле
+      tmp_pack = _pack_next(&tmp_worker->protocol);
     }
 
     if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
@@ -711,7 +723,7 @@ void *sock_send_worker(void *arg)
     usleep(1000);
   }
 
-  sprintf(tmp, "END sock_send_worker, socket: %d", sock);
+  sprintf(tmp, "END sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_INFO);
 
   tmp_worker->sender_kill_flag = 1;
@@ -731,10 +743,10 @@ void *sock_recv_worker(void *arg)
 
   pack_buffer buffer;
   int         size = 0;
+  int         retval = 0;
 
   fd_set rfds;
   struct timeval tv;
-  int retval;
 
   tv.tv_sec  = SOCK_WAIT_SELECT;
   tv.tv_usec = 0;

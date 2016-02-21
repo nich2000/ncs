@@ -18,7 +18,7 @@
 #define PACK_QUEUE_COUNT         1
 #else
 #define PACK_BUFFER_SIZE         102400
-#define PACK_VALUE_SIZE          128
+#define PACK_VALUE_SIZE          256
 #define PACK_WORDS_COUNT         20
 #define PACK_OUT_PACKETS_COUNT   1
 #define PACK_IN_PACKETS_COUNT    1
@@ -163,7 +163,7 @@ int          pack_version              (pack_ver version);
   int pack_pack_current(pack_type out, pack_packet *pack);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
   //------------------------------------------------------------------------------
-  int pack_next(pack_packet *pack);
+  pack_packet *_pack_next();
   int pack_next_buffer(pack_buffer buffer, pack_size *size);
   //------------------------------------------------------------------------------
   int pack_add_as_int(pack_key key, int value);
@@ -185,7 +185,10 @@ int          pack_version              (pack_ver version);
   int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
   //------------------------------------------------------------------------------
-  int pack_next(pack_packet *pack, pack_protocol *protocol);
+  int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
+  int pack_packet_to_json  (pack_packet *packet, pack_buffer buffer, pack_size *size);
+  //------------------------------------------------------------------------------
+  pack_packet *_pack_next(pack_protocol *protocol);
   int pack_next_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
   //------------------------------------------------------------------------------
   int pack_add_as_int   (pack_key key, int         value, pack_protocol *protocol);
