@@ -1,6 +1,11 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#if defined(__linux__) || defined(_WIN32)
+#else
+  #define DEMS_DEVICE
+#endif
+
 #define DEBUG_MODE
 //#DEFINE SILENT_MODE
 

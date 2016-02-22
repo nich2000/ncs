@@ -133,10 +133,10 @@ GPRMC_t *gps_data()
   char tmp_time_s[2];
   char * pch;
 
-  pch = strtok (gprms_data.time_gps, ".");
+  pch = strtok(gprms_data.time_gps, ".");
   strncpy(tmp_time, pch, 6);
 
-  pch = strtok (NULL, ".");
+  pch = strtok(NULL, ".");
   strncpy(tmp_time_s, pch, 2);
 
   gprms_data.time   = atoi(tmp_time);

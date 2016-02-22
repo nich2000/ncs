@@ -3,14 +3,19 @@
 //==============================================================================
 #include <stdio.h>
 #include <time.h>
+
+#include "defines.h"
 //==============================================================================
-#define LOG_CRITICAL_ERROR 0
-#define LOG_ERROR          1
-#define LOG_WARNING        2
-#define LOG_DEBUG          3
-#define LOG_INFO           4
-#define LOG_DATA           5
-#define LOG_RAW_DATA       6
+#define LOG_INITIAL_PATH    "../logs"
+#define REPORT_INITIAL_PATH "../reports"
+//==============================================================================
+#define LOG_CRITICAL_ERROR  0
+#define LOG_ERROR           1
+#define LOG_WARNING         2
+#define LOG_DEBUG           3
+#define LOG_INFO            4
+#define LOG_DATA            5
+#define LOG_RAW_DATA        6
 //==============================================================================
 int clrscr();
 void skip_lines(size_t count);

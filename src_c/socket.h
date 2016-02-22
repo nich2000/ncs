@@ -63,6 +63,26 @@ typedef unsigned short sock_index_t;
 //==============================================================================
 typedef struct
 {
+
+}ext_data_t;
+//==============================================================================
+typedef struct
+{
+
+}web_ext_data_t;
+//==============================================================================
+typedef struct
+{
+
+}ws_ext_data_t;
+//==============================================================================
+/*
+* TODO добавить некий указатель на ExtData или ExtParam,
+* чтобы добавить функционал различным видами воркеров,
+* например для WS нужен параметр handshake
+*/
+typedef struct
+{
   sock_id_t              id;
   sock_type_t            type;
   sock_mode_t            mode;
@@ -77,6 +97,11 @@ typedef struct
   pthread_t              receive_thread;
   pack_protocol          protocol;
   exec_func              exec_cmd;
+
+  int                    handshake;
+  int                    is_locked;
+  char                   *in_massage;
+  char                   *out_message;
 }sock_worker_t;
 //==============================================================================
 typedef sock_worker_t sock_workers_t[SOCK_WORKERS_COUNT];

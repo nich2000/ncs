@@ -709,6 +709,7 @@ pack_packet *_pack_next()
 pack_packet *_pack_next(pack_protocol *protocol)
 #endif
 {
+  // TODO Тут нужно вставить ожидание свободности очереди
   #ifdef PACK_USE_OWN_BUFFER
     if(is_locked(PACK_OUT))
       return PACK_QUEUE_EMPTY;

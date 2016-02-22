@@ -67,12 +67,14 @@ int sock_worker_init(sock_worker_t *worker)
 
   pack_protocol_init(&worker->protocol);
 
-  worker->worker_kill_flag   =  0;
-  worker->sender_kill_flag   =  0;
-  worker->receiver_kill_flag =  0;
-  worker->send_thread        =  0;
-  worker->receive_thread     =  0;
-  worker->exec_cmd           =  0;
+  worker->worker_kill_flag   = 0;
+  worker->sender_kill_flag   = 0;
+  worker->receiver_kill_flag = 0;
+  worker->send_thread        = 0;
+  worker->receive_thread     = 0;
+  worker->exec_cmd           = 0;
+  worker->handshake          = 0;
+  worker->is_locked               = 0;
 }
 //==============================================================================
 int sock_exit(sock_worker_t *worker)
@@ -83,7 +85,6 @@ int sock_exit(sock_worker_t *worker)
 int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 {
   char tmp[128];
-  log_set_name("server_log.txt");
 
   log_add("----------", LOG_INFO);
   char tmp_pack_version[32];
@@ -147,7 +148,6 @@ void *sock_server_worker(void *arg)
 int sock_client(int port, char *host, sock_client_t *client)
 {
   char tmp[128];
-  log_set_name("client_log.txt");
 
   log_add("----------", LOG_INFO);
   char tmp_pack_version[32];
@@ -562,11 +562,11 @@ int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int cl
     if(pack)
     {
       sprintf(tmp, "%s\n", prefix);
-      sprintf(tmp, "%sNumber: %d\n", tmp, tmp_pack->number);
+//      sprintf(tmp, "%sNumber: %d\n", tmp, tmp_pack->number);
       pack_key     key;
       pack_value   valueS;
       pack_size tmp_words_count = _pack_words_count(tmp_pack);
-      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
+//      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
       for(pack_size i = 0; i < tmp_words_count; i++)
         if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
           sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
@@ -625,7 +625,7 @@ int sock_exec_cmd(sock_worker_t *worker)
   if(pack_command(tmp_pack, tmp_cmd) == PACK_OK)
   {
     if(strcmp(tmp_cmd, "hui") == 0)
-      sock_send_cmd(worker, 2, "answer", "huipizdadjigurda");
+      sock_send_cmd(worker, 1, "huipizdadjigurda");
 
 //    if(worker->mode == SOCK_MODE_CLIENT)
 //    {
@@ -661,61 +661,87 @@ void *sock_send_worker(void *arg)
   pack_packet   *tmp_pack = 0;
   int            tmp_errors = 0;
 
+  // TODO sock_do_send вызывается из разных мест
   while(!tmp_worker->sender_kill_flag)
   {
-    tmp_pack = _pack_next(&tmp_worker->protocol);
-    while(tmp_pack != NULL)
+    switch(tmp_worker->mode)
     {
-      // TODO Думаю, нужно перенести это куда то под switch(tmp_worker->mode)
-      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
-        continue;
-      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
-
-      #ifdef DEBUG_MODE
-      if(tmp_cnt != PACK_ERROR)
+      case SOCK_MODE_CLIENT:;
+      case SOCK_MODE_SERVER:;
       {
-        out_packets_count += tmp_cnt;
-        #ifdef SOCK_EXTRA_LOGS
-        char tmp[32];
-        sprintf(tmp, "out_packets_count: %d", out_packets_count);
-        log_add(tmp, LOG_DEBUG);
-        #endif
-      };
-      #endif
-
-      if(tmp_cnt > 0)
-      {
-        sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
-
-        switch(tmp_worker->mode)
+        tmp_pack = _pack_next(&tmp_worker->protocol);
+        while(tmp_pack != NULL)
         {
-          case SOCK_MODE_CLIENT:;
-          case SOCK_MODE_SERVER:;
+          // TODO Думаю, нужно перенести это куда то под switch(tmp_worker->mode)
+          if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
+            continue;
+          int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
+          #ifdef DEBUG_MODE
+          if(tmp_cnt != PACK_ERROR)
           {
-            break;
+            out_packets_count += tmp_cnt;
+            #ifdef SOCK_EXTRA_LOGS
+            char tmp[32];
+            sprintf(tmp, "out_packets_count: %d", out_packets_count);
+            log_add(tmp, LOG_DEBUG);
+            #endif
           };
-          case SOCK_MODE_WEB_SERVER:
+          #endif
+          if(tmp_cnt > 0)
           {
-            break;
-          };
-          case SOCK_MODE_WS_SERVER:
+            sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
+            if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
+              tmp_errors++;
+            if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+              break;
+          }
+          // TODO двойной вызов этой функции: до и в цикле
+          tmp_pack = _pack_next(&tmp_worker->protocol);
+        }
+        break;
+      };
+      case SOCK_MODE_WEB_SERVER:
+      {
+        if(!tmp_worker->is_locked)
+          if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
           {
-            if(pack_packet_to_json(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
-              continue;
-            break;
-          };
-        };
+//            log_add(tmp_worker->out_message, LOG_DEBUG);
 
-        if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
-          tmp_errors++;
+            if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+              tmp_errors++;
+            // TODO утечка
+//            free(tmp_worker->out_message);
+            tmp_worker->out_message = NULL;
+            if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+              break;
+          }
+        break;
+      };
+      case SOCK_MODE_WS_SERVER:
+      {
+        if(tmp_worker->handshake)
+        {
+        }
+        else
+        {
+          if(!tmp_worker->is_locked)
+            if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
+            {
+              log_add(tmp_worker->out_message, LOG_DEBUG);
 
-        if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
-          break;
-      }
-
-      // TODO двойной вызов этой функции: до и в цикле
-      tmp_pack = _pack_next(&tmp_worker->protocol);
-    }
+              if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+                tmp_errors++;
+              // TODO утечка
+//              free(tmp_worker->out_message);
+              tmp_worker->out_message = NULL;
+              tmp_worker->handshake = 1;
+              if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+                break;
+            }
+        }
+        break;
+      };
+    };
 
     if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
       break;
@@ -856,14 +882,69 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
     }
     case SOCK_MODE_WEB_SERVER:
     {
-      log_add(buffer, LOG_INFO);
-      web_handle_buffer(buffer);
+//      log_add(buffer, LOG_INFO);
+
+      char *tmp_message = (char*)malloc(10000);
+      web_handle_buffer((char*)buffer, tmp_message);
+
+      worker->is_locked++;
+
+      worker->out_message = (char*)malloc(10000);
+
+      strcpy(worker->out_message, "HTTP/1.0 200 OK\r\n");
+      strcat(worker->out_message, "Content-Type: text/html\r\n");
+      char tmp[10240];
+      sprintf(tmp, "Content-Length: %d\r\n\r\n", strlen(tmp_message));
+      strcat(worker->out_message, tmp);
+      sprintf(tmp, "%s\r\n\r\n", tmp_message);
+      strcat(worker->out_message, tmp);
+
+      worker->out_message[strlen(worker->out_message)+1] = '\0';
+
+      worker->is_locked--;
+
+      // TODO утечка
+//      free(tmp_message);
+
+      log_add(worker->out_message, LOG_DEBUG);
+
       break;
     }
     case SOCK_MODE_WS_SERVER:
     {
-      log_add(buffer, LOG_INFO);
-      ws_handle_buffer(buffer);
+//      log_add(buffer, LOG_INFO);
+
+      if(worker->handshake)
+      {
+        ws_handle_buffer(buffer);
+      }
+      else
+      {
+        log_add(buffer, LOG_DEBUG);
+
+        char *tmp_message = (char*)malloc(10000);
+        ws_hand_shake((char*)buffer, tmp_message);
+
+        worker->is_locked++;
+
+        worker->out_message = (char*)malloc(10000);
+
+        strcpy(worker->out_message, "HTTP/1.1 101 Switching Protocols\r\n");
+        strcat(worker->out_message, "Upgrade: websocket\r\n");
+        strcat(worker->out_message, "Connection: Upgrade\r\n");
+        char tmp[10240];
+        sprintf(tmp, "Sec-WebSocket-Accept: %s\r\n\r\n", tmp_message);
+        strcat(worker->out_message, tmp);
+
+        worker->out_message[strlen(worker->out_message)+1] = '\0';
+
+        worker->is_locked--;
+
+        // TODO утечка
+//        free(tmp_message);
+
+        log_add(worker->out_message, LOG_DEBUG);
+      };
       break;
     }
   }

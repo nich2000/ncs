@@ -115,6 +115,8 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "server") == 0)
     {
+      log_set_name("server_log.txt");
+
       if(_server != 0)
         free(_server);
       _server = (sock_server_t*)malloc(sizeof(sock_server_t));
@@ -125,6 +127,8 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "wsserver") == 0)
     {
+      log_set_name("ws_server_log.txt");
+
       if(_ws_server != 0)
         free(_ws_server);
       _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
@@ -135,16 +139,24 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "webserver") == 0)
     {
+      log_set_name("web_server_log.txt");
+
+//      if(_ws_server != 0)
+//        free(_ws_server);
+//      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
+
       if(_web_server != 0)
         free(_web_server);
       _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
-
       sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
 
       return RESULT_DONE;
     }
     else if(strcmp(token, "client") == 0)
     {
+      log_set_name("client_log.txt");
+
       if(_client != 0)
         free(_client);
       _client = (sock_client_t*)malloc(sizeof(sock_client_t));

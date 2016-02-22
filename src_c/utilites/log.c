@@ -80,7 +80,9 @@ void log_add(char *message, int log_type)
     printf("%s %s\n", prefix, message);
 
   FILE *log;
-  log = fopen(log_name, "a");
+  char log_full_name[128];
+  sprintf(log_full_name, "%s/%s", LOG_INITIAL_PATH, log_name);
+  log = fopen(log_full_name, "a");
   fprintf(log, "%s %s %s\n", t, prefix, message);
   fclose(log);
 #endif
@@ -89,10 +91,12 @@ void log_add(char *message, int log_type)
 void report_add(char *message)
 {
 #if defined(__linux__) || defined(_WIN32)
-  FILE *log;
-  log = fopen(report_name, "a");
-  fprintf(log, "%s\n", message);
-  fclose(log);
+  FILE *report;
+  char report_full_name[128];
+  sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
+  report = fopen(report_full_name, "a");
+  fprintf(report, "%s\n", message);
+  fclose(report);
 #endif
 }
 //==============================================================================
