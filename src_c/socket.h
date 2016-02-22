@@ -128,8 +128,9 @@ typedef struct
 int sock_version(char *version);
 //==============================================================================
 int sock_server(int port, sock_server_t *server, sock_mode_t mode);
-int sock_server_send_cmd(sock_server_t *server, int argc, ...);
-int soch_server_exec_cmd(sock_server_t *server, int argc, ...);
+int sock_server_send_cmd  (sock_server_t *server, int argc, ...);
+int soch_server_exec_cmd  (sock_server_t *server, int argc, ...);
+int sock_server_send_to_ws(sock_server_t *server, int argc, ...);
 //==============================================================================
 int sock_client(int port, char *host, sock_client_t *client);
 int sock_client_send_cmd(sock_client_t *client, int argc, ...);

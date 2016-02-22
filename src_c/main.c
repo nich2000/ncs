@@ -196,6 +196,11 @@ int handle_command(char *command)
       sock_server_send_cmd(_server, 1, param1);
       return RESULT_DONE;
     }
+    else if(strcmp(token, "sndtowscl") == 0)
+    {
+      sock_server_send_to_ws(_ws_server, 1, param1);
+      return RESULT_DONE;
+    }
     else if(strcmp(token, "sndtosr") == 0)
     {
       sock_client_send_cmd(_client, 1, param1);

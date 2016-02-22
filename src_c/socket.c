@@ -721,13 +721,26 @@ void *sock_send_worker(void *arg)
       {
         if(tmp_worker->handshake)
         {
+          if(!tmp_worker->is_locked)
+            if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
+            {
+//              log_add(tmp_worker->out_message, LOG_DEBUG);
+
+              if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+                tmp_errors++;
+              // TODO утечка
+//              free(tmp_worker->out_message);
+              tmp_worker->out_message = NULL;
+              if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+                break;
+            }
         }
         else
         {
           if(!tmp_worker->is_locked)
             if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
             {
-              log_add(tmp_worker->out_message, LOG_DEBUG);
+//              log_add(tmp_worker->out_message, LOG_DEBUG);
 
               if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
                 tmp_errors++;
@@ -920,7 +933,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
       }
       else
       {
-        log_add(buffer, LOG_DEBUG);
+//        log_add(buffer, LOG_DEBUG);
 
         char *tmp_message = (char*)malloc(10000);
         ws_hand_shake((char*)buffer, tmp_message);
@@ -943,7 +956,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
         // TODO утечка
 //        free(tmp_message);
 
-        log_add(worker->out_message, LOG_DEBUG);
+//        log_add(worker->out_message, LOG_DEBUG);
       };
       break;
     }
@@ -1075,6 +1088,35 @@ int sock_client_send_cmd(sock_client_t *client, int argc, ...)
 //==============================================================================
 int soch_client_exec_cmd(sock_client_t *client, int argc, ...)
 {
+  return SOCK_OK;
+}
+//==============================================================================
+// TODO correct ws frame
+// http://stackoverflow.com/questions/8125507/how-can-i-send-and-receive-websocket-messages-on-the-server-side
+int sock_server_send_to_ws(sock_server_t *server, int argc, ...)
+{
+  if(server == NULL)
+    return SOCK_ERROR;
+
+  va_list params;
+  va_start(params, argc);
+
+  char *cmd = va_arg(params, char*);
+
+  for(int i = 0; i < server->clients.index; i++)
+  {
+    sock_worker_t *tmp_worker = &server->clients.items[i];
+
+    tmp_worker->is_locked++;
+
+    tmp_worker->out_message = (char*)malloc(1024);
+    ws_make_frame(TEXT_FRAME, cmd, strlen(cmd), tmp_worker->out_message, 1024);
+
+    tmp_worker->is_locked--;
+  };
+
+  va_end(params);
+
   return SOCK_OK;
 }
 //==============================================================================
