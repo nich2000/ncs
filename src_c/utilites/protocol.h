@@ -68,8 +68,8 @@ typedef unsigned short           pack_count;
 typedef unsigned short           pack_size;
 typedef unsigned short           pack_index;
 typedef unsigned short           pack_number;
-typedef unsigned char            pack_type;
 typedef unsigned short           pack_crc16;
+typedef unsigned char            pack_type;
 //==============================================================================
 #define PACK_SIZE_SIZE           sizeof(pack_size)
 #define PACK_INDEX_SIZE          sizeof(pack_index)
@@ -85,7 +85,7 @@ typedef struct
   char       _align1[3];       // 3
   pack_size  size;             // 2
   char       _align2[2];       // 2
-} pack_word;                   // 24
+} pack_word;
 //==============================================================================
 typedef pack_word pack_words[PACK_WORDS_COUNT];
 //==============================================================================
@@ -96,7 +96,7 @@ typedef struct
   pack_size   words_count;     // 2
   char       _align2[2];       // 2
   pack_words  words;           // 24 * 20
-} pack_packet;                 // 488
+} pack_packet;
 //==============================================================================
 typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
 typedef pack_packet  pack_in_packets   [PACK_IN_PACKETS_COUNT];
@@ -107,7 +107,7 @@ typedef struct
   pack_size   size;            // 2
   char        _align1[2];      // 2
   pack_buffer buffer;          // 256
-} pack_validation_buffer;      // 260
+} pack_validation_buffer;
 //==============================================================================
 typedef struct
 {
@@ -115,10 +115,12 @@ typedef struct
   char            _align1[3];  // 3
   pack_index       index;      // 2
   char            _align2[2];  // 2
-  pack_count       lock_count; // 2
+  pack_count       count;      // 2
   char            _align3[2];  // 2
+  pack_count       lock_count; // 2
+  char            _align4[2];  // 2
   pack_out_packets items;      // 488 * 8
-} pack_out_packets_list;       // 3912
+} pack_out_packets_list;
 //==============================================================================
 typedef struct
 {
@@ -126,17 +128,11 @@ typedef struct
   char            _align1[3];  // 3
   pack_index       index;      // 2
   char            _align2[2];  // 2
-  pack_count       lock_count; // 2
+  pack_count       count;      // 2
   char            _align3[2];  // 2
+  pack_count       lock_count; // 2
   pack_in_packets  items;      // 488 * 8
-} pack_in_packets_list;       // 3912
-//==============================================================================
-typedef struct
-{
-  pack_validation_buffer validation_buffer; // 260
-  pack_out_packets_list  out_packets_list;  // 3912
-  pack_in_packets_list   in_packets_list;   // 3912
-} pack_protocol;                            // 8084
+} pack_in_packets_list;
 //==============================================================================
 typedef struct
 {
@@ -147,7 +143,17 @@ typedef struct
   pack_index         finish;     // 2
   char               _align3[2]; // 2
   pack_queue_packets packets;    // 4
-} pack_queue;                    // 16
+} pack_queue;
+//==============================================================================
+typedef struct
+{
+  pack_validation_buffer validation_buffer;
+  pack_out_packets_list  out_packets_list;
+  pack_in_packets_list   in_packets_list;
+  #ifdef PACK_USE_OWN_QUEUE
+  pack_queue             queue;
+  #endif
+} pack_protocol;
 //==============================================================================
 //==============================================================================
 int         _pack_get_last_error       ();

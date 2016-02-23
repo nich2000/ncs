@@ -57,7 +57,6 @@ pack_protocol *protocol;
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_QUEUE
-pack_queue queue;
 #ifdef PACK_USE_OWN_BUFFER
 int pack_queue_add(pack_number number);
 #else
@@ -167,16 +166,18 @@ int pack_protocol_init(pack_protocol *protocol)
 
   protocol->in_packets_list.empty       = PACK_TRUE;
   protocol->in_packets_list.index       = PACK_PACKETS_INIT_INDEX;
+  protocol->in_packets_list.count       = PACK_GLOBAL_INIT_NUMBER;
   protocol->in_packets_list.lock_count  = 0;
 
   protocol->out_packets_list.empty      = PACK_TRUE;
   protocol->out_packets_list.index      = PACK_PACKETS_INIT_INDEX;
+  protocol->out_packets_list.count      = PACK_GLOBAL_INIT_NUMBER;
   protocol->out_packets_list.lock_count = 0;
 
   #ifdef PACK_USE_OWN_QUEUE
-    queue.empty  = PACK_TRUE;
-    queue.start  = PACK_QUEUE_INIT_INDEX;
-    queue.finish = PACK_QUEUE_INIT_INDEX;
+    protocol->queue.empty  = PACK_TRUE;
+    protocol->queue.start  = PACK_QUEUE_INIT_INDEX;
+    protocol->queue.finish = PACK_QUEUE_INIT_INDEX;
   #endif
 
   return PACK_OK;
@@ -625,6 +626,10 @@ int pack_begin(pack_protocol *protocol)
   if(pack_global_number >= USHRT_MAX)
     pack_global_number = PACK_GLOBAL_INIT_NUMBER;
 
+  protocol->out_packets_list.count++;
+  if(protocol->out_packets_list.count >= USHRT_MAX)
+    protocol->out_packets_list.count = PACK_GLOBAL_INIT_NUMBER;
+
   protocol->out_packets_list.index++;
   if(protocol->out_packets_list.index >= PACK_OUT_PACKETS_COUNT)
     protocol->out_packets_list.index = PACK_PACKETS_INIT_INDEX;
@@ -692,12 +697,17 @@ int pack_queue_add(pack_number number, pack_protocol *protocol)
   if(tmp_pack == NULL)
     return PACK_ERROR;
 
-  pack_index tmp_finish = queue.finish;
-  queue.packets[tmp_finish] = tmp_pack;
-  queue.empty = PACK_FALSE;
-  queue.finish++;
-  if(queue.finish > PACK_QUEUE_COUNT)
-    queue.finish = 0;
+  pack_queue *tmp_queue = &protocol->queue;
+
+  pack_index tmp_finish = tmp_queue->finish;
+
+  tmp_queue->packets[tmp_finish] = tmp_pack;
+
+  tmp_queue->empty = PACK_FALSE;
+
+  tmp_queue->finish++;
+  if(tmp_queue->finish > PACK_QUEUE_COUNT)
+    tmp_queue->finish = 0;
 
   return PACK_OK;
 }
@@ -719,22 +729,24 @@ pack_packet *_pack_next(pack_protocol *protocol)
   #endif
 
   #ifdef PACK_USE_OWN_QUEUE
-    if(queue.empty)
+    pack_queue *tmp_queue = &protocol->queue;
+
+    if(tmp_queue->empty)
       return PACK_QUEUE_EMPTY;
 
-    if((queue.start > PACK_QUEUE_COUNT) || (queue.finish > PACK_QUEUE_COUNT))
+    if((tmp_queue->start > PACK_QUEUE_COUNT) || (tmp_queue->finish > PACK_QUEUE_COUNT))
       return PACK_QUEUE_EMPTY;
 
-    pack_index tmp_index = queue.start;
+    pack_index tmp_index = tmp_queue->start;
 
-    queue.start++;
-    if(queue.start > PACK_QUEUE_COUNT)
-      queue.start = 0;
+    tmp_queue->start++;
+    if(tmp_queue->start > PACK_QUEUE_COUNT)
+      tmp_queue->start = 0;
 
-    if(queue.start == queue.finish)
-      queue.empty = PACK_TRUE;
+    if(tmp_queue->start == tmp_queue->finish)
+      tmp_queue->empty = PACK_TRUE;
 
-    return queue.packets[tmp_index];
+    return tmp_queue->packets[tmp_index];
   #else
     #ifdef PACK_USE_OWN_BUFFER
       return _pack_pack_current(PACK_OUT);
@@ -1093,6 +1105,10 @@ int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_vali
 
     if(only_validate)
       continue;
+
+    protocol->in_packets_list.count++;
+    if(protocol->in_packets_list.count >= USHRT_MAX)
+      protocol->in_packets_list.count = PACK_GLOBAL_INIT_NUMBER;
 
     protocol->in_packets_list.index++;
     if(protocol->in_packets_list.index >= PACK_IN_PACKETS_COUNT)

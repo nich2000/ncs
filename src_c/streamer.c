@@ -1,11 +1,13 @@
 //==============================================================================
 //==============================================================================
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "log.h"
 #include "streamer.h"
 //==============================================================================
 void *streamer_worker_func(void *arg);
+int streamer_prepare(pack_protocol *protocol);
 //==============================================================================
 int streamer_init(streamer_worker *worker, pack_protocol *protocol)
 {
@@ -51,9 +53,7 @@ void *streamer_worker_func(void *arg)
       continue;
     }
 
-    pack_begin(tmp_protocol);
-    pack_add_as_int("TST", 100, tmp_protocol);
-    pack_end(tmp_protocol);
+    streamer_prepare(tmp_protocol);
 
     if(tmp_worker->is_test)
     {
@@ -62,8 +62,58 @@ void *streamer_worker_func(void *arg)
     {
     }
 
-    sleep(1);
-//    usleep(100000);
+//    sleep(1);
+    usleep(100 * 1000);
+  }
+}
+//==============================================================================
+int streamer_prepare(pack_protocol *protocol)
+{
+  #define TEST_SEND_COUNT  1
+  #define TEST_PACK_COUNT  1
+  #define TEST_WORD_COUNT  5
+  #define TEST_STRING_SIZE 5
+
+  pack_key tmp_key;
+  pack_value tmp_value;
+
+  for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
+  {
+    pack_begin(protocol);
+    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    {
+      if(i > 9)
+        sprintf(tmp_key, "I%d", i);
+      else
+        sprintf(tmp_key, "IN%d", i);
+
+      pack_add_as_int(tmp_key, rand(), protocol);
+    };
+    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    {
+      if(i > 9)
+        sprintf(tmp_key, "S%d", i);
+      else
+        sprintf(tmp_key, "ST%d", i);
+
+      pack_size j = 0;
+      for(j = 0; j < TEST_STRING_SIZE; j++)
+        tmp_value[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
+      tmp_value[j] = '\0';
+
+      pack_add_as_string(tmp_key, tmp_value, protocol);
+    };
+    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    {
+      if(i > 9)
+        sprintf(tmp_key, "F%d", i);
+      else
+        sprintf(tmp_key, "FL%d", i);
+
+      float rnd = (float)rand()/(float)(RAND_MAX/1000);
+      pack_add_as_float(tmp_key, rnd, protocol);
+    };
+    pack_end(protocol);
   }
 }
 //==============================================================================

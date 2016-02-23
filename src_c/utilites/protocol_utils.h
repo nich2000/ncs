@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef PROTOCOL_UTILS_H
+#define PROTOCOL_UTILS_H
 //==============================================================================
 typedef union
 {
@@ -22,4 +22,4 @@ int bytes_to_hex  (unsigned char *bytes, int size, unsigned char *hex);
 //==============================================================================
 unsigned short getCRC16(char *data_p, unsigned short length);
 //==============================================================================
-#endif //UTILS_H
+#endif //PROTOCOL_UTILS_H

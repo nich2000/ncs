@@ -97,7 +97,7 @@ typedef struct
   pthread_t              receive_thread;
   pack_protocol          protocol;
   exec_func              exec_cmd;
-
+  streamer_worker        streamer;
   int                    handshake;
   int                    is_locked;
   char                   *in_massage;
@@ -119,12 +119,6 @@ typedef struct
   sock_worker_list_t clients;
 }sock_server_t;
 //==============================================================================
-typedef struct
-{
-  sock_worker_t      worker;
-  streamer_worker  streamer;
-}sock_client_t;
-//==============================================================================
 int sock_version(char *version);
 //==============================================================================
 int sock_server(int port, sock_server_t *server, sock_mode_t mode);
@@ -132,9 +126,9 @@ int sock_server_send_cmd  (sock_server_t *server, int argc, ...);
 int soch_server_exec_cmd  (sock_server_t *server, int argc, ...);
 int sock_server_send_to_ws(sock_server_t *server, int argc, ...);
 //==============================================================================
-int sock_client(int port, char *host, sock_client_t *client);
-int sock_client_send_cmd(sock_client_t *client, int argc, ...);
-int soch_client_exec_cmd(sock_client_t *client, int argc, ...);
+int sock_client(int port, char *host, sock_worker_t *worker);
+int sock_client_send_cmd(sock_worker_t *worker, int argc, ...);
+int soch_client_exec_cmd(sock_worker_t *worker, int argc, ...);
 //==============================================================================
 int sock_exit(sock_worker_t *worker);
 //==============================================================================
