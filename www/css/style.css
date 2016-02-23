@@ -1,0 +1,116 @@
+html
+{
+    height: 100%; 
+    width: 100%;
+}
+
+body
+{
+    height: 95%; 
+    width: 100%; 
+    margin: auto;
+    background-image: url(img/back.png);
+    background-size: cover; 
+}
+
+.header
+{
+    height: 128px;
+    width: 100%; 
+}
+
+.footer
+{
+    height: 96px;
+    width: 100%; 
+}
+
+.infoBlock
+{
+    height: 85%;
+    width: 100%; 
+}
+
+.ourLogo
+{
+    height: 96px;
+    width: 288px;
+    float: right;
+}
+
+.theirLogo
+{
+    height: 128px;
+    width: 480px;
+}
+
+.infoBlockFirst
+{ 
+    height: 95%;
+    width: 90%;
+    margin-left: 5%;  
+    margin-top: 2%; 
+    float: left;
+    background-color: white; 
+    opacity: 0.7;
+}
+
+.chartSpeed
+{ 
+    height: 25%;
+    width: 45%;
+    margin-left: 5%;  
+    margin-top: 2%; 
+    float: left;
+    background-color: white; 
+    opacity: 0.7;
+}
+
+.chartAngle
+{ 
+    height: 25%;
+    width: 45%;
+    margin-left: 5%;  
+    margin-top: 2%; 
+    float: left;
+    background-color: white; 
+    opacity: 0.7;
+}
+            
+.infoLabel
+{
+    margin-left: 10px;
+    margin-top: 3px;
+    font-weight: 900;
+    font-size: 250%; 
+    color: black;
+    text-align: left;
+    display: block;
+}
+
+.cnvSpeed
+{
+    height: 250px; 
+    width: 96%; 
+    margin-top: 1%; 
+    margin-left: 2%; 
+    background-color: maroon;
+}
+
+.cnvAngle
+{
+    height: 250px;  
+    width: 96%; 
+    margin-top: 1%; 
+    margin-left: 2%; 
+    background-color: maroon;
+}
+
+.cnvPos
+{
+    height: 500px;  
+    width: 96%; 
+    margin-top: 1%; 
+    margin-left: 2%; 
+    background-color: maroon;
+}

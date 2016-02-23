@@ -40,7 +40,7 @@ int sock_do_work(sock_worker_t * worker, int wait);
 void *sock_recv_worker(void *arg);
 void *sock_send_worker(void *arg);
 //==============================================================================
-int sock_do_send(SOCKET sock, pack_buffer buffer, int  size);
+int sock_do_send(SOCKET sock, char *buffer, int  size);
 //==============================================================================
 int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker);
 //==============================================================================
@@ -82,25 +82,24 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
   char tmp[128];
 
   log_add("----------", LOG_INFO);
-  char tmp_pack_version[32];
+  char tmp_pack_version[PACK_VALUE_SIZE];
   pack_version(tmp_pack_version);
-  char tmp_sock_version[32];
+  char tmp_sock_version[SOCK_VERSION_SIZE];
   sock_version(tmp_sock_version);
   sprintf(tmp, "Sock version: %s, Pack version: %s", tmp_sock_version, tmp_pack_version);
   log_add(tmp, LOG_INFO);
   switch(mode)
   {
     case SOCK_MODE_SERVER:
-    sprintf(tmp, "%s", "SERVER");
+    sprintf(tmp, "Server(SERVER), port: %d", port);
     break;
     case SOCK_MODE_WS_SERVER:
-    sprintf(tmp, "%s", "WS_SERVER");
+    sprintf(tmp, "Server(WS_SERVER), port: %d", port);
     break;
     case SOCK_MODE_WEB_SERVER:
-    sprintf(tmp, "%s", "WEB_SERVER");
+    sprintf(tmp, "Server(WEB_SERVER), port: %d", port);
     break;
   }
-  sprintf(tmp, "Server(%s), port: %d", tmp, port);
   log_add(tmp, LOG_INFO);
   log_add("----------", LOG_INFO);
 
@@ -145,9 +144,9 @@ int sock_client(int port, char *host, sock_worker_t *worker)
   char tmp[128];
 
   log_add("----------", LOG_INFO);
-  char tmp_pack_version[32];
+  char tmp_pack_version[PACK_VERSION_SIZE];
   pack_version(tmp_pack_version);
-  char tmp_sock_version[32];
+  char tmp_sock_version[SOCK_VERSION_SIZE];
   sock_version(tmp_sock_version);
   sprintf(tmp, "Sock version: %s, Pack version: %s", tmp_sock_version, tmp_pack_version);
   log_add(tmp, LOG_INFO);
@@ -306,7 +305,7 @@ int sock_server_start(sock_worker_t *worker)
 //==============================================================================
 int sock_server_work(sock_server_t *server)
 {
-  log_add("BEGIN sock_server_work", LOG_INFO);
+  log_add("BEGIN sock_server_work", LOG_DEBUG);
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -361,7 +360,7 @@ int sock_server_work(sock_server_t *server)
       return SOCK_ERROR;
   };
 
-  log_add("END sock_server_work", LOG_INFO);
+  log_add("END sock_server_work", LOG_DEBUG);
 
   return SOCK_OK;
 }
@@ -586,7 +585,7 @@ void *sock_send_worker(void *arg)
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
   SOCKET         tmp_sock = tmp_worker->sock;
 
-  char tmp[1024];
+  char tmp[128];
   sprintf(tmp, "BEGIN sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
@@ -626,9 +625,8 @@ void *sock_send_worker(void *arg)
 
           if(tmp_cnt > 0)
           {
-            char tmp[32];
-            sprintf(tmp, "sock_send_worker, sock_do_send, sock: %d", tmp_sock);
-            log_add(tmp, LOG_INFO);
+//            sprintf(tmp, "sock_send_worker, sock_do_send, sock: %d", tmp_sock);
+//            log_add(tmp, LOG_INFO);
 
 //            sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
 
@@ -652,9 +650,11 @@ void *sock_send_worker(void *arg)
 
             if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
               tmp_errors++;
+
             // TODO утечка
 //            free(tmp_worker->out_message);
             tmp_worker->out_message = NULL;
+
             if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
               break;
           }
@@ -717,28 +717,26 @@ void *sock_send_worker(void *arg)
 void *sock_recv_worker(void *arg)
 {
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
-  SOCKET sock = tmp_worker->sock;
+  SOCKET tmp_sock = tmp_worker->sock;
 
   char tmp[1024];
-  sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", sock);
+  sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   pack_buffer buffer;
   int         size = 0;
   int         retval = 0;
-
-  fd_set rfds;
-  struct timeval tv;
-
-  tv.tv_sec  = SOCK_WAIT_SELECT;
-  tv.tv_usec = 0;
-
-  int tmp_errors = 0;
+  int         tmp_errors = 0;
 
   while(!tmp_worker->receiver_kill_flag)
   {
+    struct timeval tv;
+    tv.tv_sec  = SOCK_WAIT_SELECT;
+    tv.tv_usec = 0;
+
+    fd_set rfds;
     FD_ZERO(&rfds);
-    FD_SET(sock, &rfds);
+    FD_SET(tmp_sock, &rfds);
 
     retval = select(1, &rfds, NULL, NULL, &tv);
     if (retval == SOCKET_ERROR)
@@ -762,7 +760,7 @@ void *sock_recv_worker(void *arg)
     }
     else
     {
-      size = recv(sock, buffer, PACK_BUFFER_SIZE, 0);
+      size = recv(tmp_sock, buffer, PACK_BUFFER_SIZE, 0);
       if(size == SOCKET_ERROR)
       {
         char tmp[128];
@@ -798,7 +796,7 @@ void *sock_recv_worker(void *arg)
     };
   }
 
-  sprintf(tmp, "END sock_recv_worker, socket: %d", sock);
+  sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   tmp_worker->sender_kill_flag = 1;
@@ -830,7 +828,8 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
 
       if(cnt > 0)
       {
-        sock_stream_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
+        if(worker->mode == SOCK_MODE_CLIENT)
+          sock_stream_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
         sock_exec_cmd(worker);
         sock_route_to_ws(worker);
       };
@@ -838,31 +837,12 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
     }
     case SOCK_MODE_WEB_SERVER:
     {
-//      log_add(buffer, LOG_INFO);
-
-      char *tmp_message = (char*)malloc(10000);
-      web_handle_buffer((char*)buffer, tmp_message);
-
       worker->is_locked++;
 
-      worker->out_message = (char*)malloc(10000);
-
-      strcpy(worker->out_message, "HTTP/1.0 200 OK\r\n");
-      strcat(worker->out_message, "Content-Type: text/html\r\n");
-      char tmp[10240];
-      sprintf(tmp, "Content-Length: %d\r\n\r\n", strlen(tmp_message));
-      strcat(worker->out_message, tmp);
-      sprintf(tmp, "%s\r\n\r\n", tmp_message);
-      strcat(worker->out_message, tmp);
-
-      worker->out_message[strlen(worker->out_message)+1] = '\0';
+      worker->out_message = (char*)malloc(1024 * 1024);
+      web_handle_buffer((char*)buffer, worker->out_message);
 
       worker->is_locked--;
-
-      // TODO утечка
-//      free(tmp_message);
-
-      log_add(worker->out_message, LOG_DEBUG);
 
       break;
     }
@@ -906,7 +886,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
   }
 }
 //==============================================================================
-int sock_do_send(SOCKET sock, pack_buffer buffer, int size)
+int sock_do_send(SOCKET sock, char *buffer, int size)
 {
   #ifdef SOCK_RANDOM_BUFFER
   int tmp_index = 0;

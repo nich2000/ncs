@@ -27,39 +27,56 @@
 
 int web_handle_buffer(char *request, char *response)
 {
-  char *tmp_request;
-  char tmp_method[WEB_LINE_SIZE];
-  char tmp_uri[WEB_LINE_SIZE];
-  char tmp_version[WEB_LINE_SIZE];
+  char *tmp_header;
+  char  tmp_method[WEB_LINE_SIZE];
+  char  tmp_uri[WEB_LINE_SIZE];
+  char  tmp_version[WEB_LINE_SIZE];
+  char *tmp_file;
+  long  tmp_size;
 
-  tmp_request = strtok(request, "\r\n");
-  log_add(tmp_request, LOG_INFO);
+  tmp_header = strtok(request, "\r\n");
 
-  if(sscanf(tmp_request, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
+  if(sscanf(tmp_header, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
   {
     if(strcmp("/", tmp_uri) == 0)
+      strcpy(tmp_uri, "/index.html");
+
+    char tmp_full_name[128];
+    sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
+    log_add(tmp_full_name, LOG_INFO);
+
+    FILE *f = fopen(tmp_full_name, "r");
+    if(f != NULL)
     {
-      strcpy(tmp_uri, "index.html");
+      fseek(f, 0, SEEK_END);
+      tmp_size = ftell(f);
+      tmp_file = (void*)malloc(tmp_size);
+      fseek(f, 0, SEEK_SET);
+      fread(tmp_file, tmp_size, 1, f);
+      fclose(f);
+      tmp_file[tmp_size] = '\0';
+    }
 
-      char tmp_full_name[128];
-      sprintf(tmp_full_name, "%s/%s", WEB_INITIAL_PATH, tmp_uri);
+    strcpy(response, "HTTP/1.0 200 OK\r\n");
 
-//      log_add(tmp_full_name, LOG_INFO);
+    if(strstr(tmp_full_name, "html") != NULL)
+      strcat(response, "Content-Type: text/html\r\n");
+    else if(strstr(tmp_full_name, "js") != NULL)
+      strcat(response, "Content-Type: text/javascript\r\n");
+    else if(strstr(tmp_full_name, "css") != NULL)
+      strcat(response, "Content-Type: text/css\r\n");
+    else if(strstr(tmp_full_name, "ico") != NULL)
+      strcat(response, "Content-Type: image/x-icon\r\n");
+    else if(strstr(tmp_full_name, "png") != NULL)
+      strcat(response, "Content-Type: image/png\r\n");
 
-      FILE *f = fopen(tmp_full_name, "r");
-      if (f != NULL)
-      {
-        fseek(f, 0, SEEK_END);
-        long fsize = ftell(f);
-        fseek(f, 0, SEEK_SET);
+    char tmp[128];
+    sprintf(tmp, "Content-Length: %d\r\n\r\n", strlen(tmp_file));
+    strcat(response, tmp);
 
-//        response = (char *)malloc(fsize + 1);
-        fread(response, fsize, 1, f);
-        fclose(f);
+    strcat(response, tmp_file);
 
-        response[fsize] = '\0';
-      }
-    };
+    response[strlen(response)+1] = '\0';
   }
 
   return 0;
