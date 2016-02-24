@@ -53,7 +53,9 @@ void *streamer_worker_func(void *arg)
       continue;
     }
 
-    streamer_prepare(tmp_protocol);
+//    streamer_prepare(tmp_protocol);
+
+//    sock_server_send_to_ws(sock_server_t *server, int argc, ...);
 
     if(tmp_worker->is_test)
     {
@@ -62,8 +64,7 @@ void *streamer_worker_func(void *arg)
     {
     }
 
-//    sleep(1);
-    usleep(100 * 1000);
+    usleep(100000);
   }
 }
 //==============================================================================

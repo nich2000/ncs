@@ -353,7 +353,7 @@ int sock_server_work(sock_server_t *server)
       log_add(tmp, LOG_INFO);
     };
 
-    sock_find_free_index
+//    sock_find_free_index
 
     if(server->clients.index < SOCK_WORKERS_COUNT)
     {
@@ -670,7 +670,7 @@ void *sock_send_worker(void *arg)
               tmp_errors++;
 
             // TODO утечка
-//            free(tmp_worker->out_message);
+            free(tmp_worker->out_message);
             tmp_worker->out_message = NULL;
             tmp_worker->out_message_size = 0;
 

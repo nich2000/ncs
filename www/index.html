@@ -1,23 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html class="full">
   <meta charset="utf-8" />
 
   <title>DEMS</title>
   
   <head>
     <link type="image/x-icon" rel="icon" href="img/favicon.ico">
-    <script src="js/script.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- <script src="js/script.js"></script> -->
+    <script src="js/jquery-1.12.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
   </head>
   
   <body>
-    <div class="header">
-      <img class="ourLogo" src="img/our.png" alt="no logo">
-      <img class="theirLogo" src="img/their.png" alt="no logo">
+
+    <div class="page-header">
+
+      <div class="row">
+        <div class="col-md-6">
+          <img class="img-responsive pull-left" src="img/our.jpg" alt="no our logo">
+        </div>
+        <div class="col-md-6">
+          <img class="img-responsive pull-right" src="img/their.jpg" alt="no their logo">
+        </div>
+      </div> 
+
     </div>
 
-    <div class="infoBlock">
-      <div id="output"></div>
-    </div>
   </body>
 </html>

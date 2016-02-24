@@ -33,7 +33,8 @@ int web_handle_buffer(char *request, char *response, int *size)
   char    tmp_uri[WEB_LINE_SIZE];
   char    tmp_version[WEB_LINE_SIZE];
   char    tmp_full_name[256];
-  char   *tmp_file;
+
+  unsigned char *tmp_buffer;
   size_t  tmp_file_size = 0;
 
   *size = 0;
@@ -53,9 +54,9 @@ int web_handle_buffer(char *request, char *response, int *size)
     {
       fseek(f, 0, SEEK_END);
       tmp_file_size = ftell(f);
-      tmp_file = (void*)malloc(tmp_file_size);
+      tmp_buffer = (unsigned char *)malloc(tmp_file_size);
       fseek(f, 0, SEEK_SET);
-      fread(tmp_file, tmp_file_size, 1, f);
+      fread(tmp_buffer, tmp_file_size, 1, f);
       fclose(f);
 
       strcpy(response, "HTTP/1.0 200 OK\r\n");
@@ -69,15 +70,25 @@ int web_handle_buffer(char *request, char *response, int *size)
       else if(strstr(tmp_full_name, "ico") != NULL)
         strcat(response, "Content-Type: image/x-icon\r\n");
       else if(strstr(tmp_full_name, "png") != NULL)
+      {
         strcat(response, "Content-Type: image/png\r\n");
+        strcat(response, "Content-Transfer-Encoding: binary\r\n");
+      }
+      else if(strstr(tmp_full_name, "jpg") != NULL)
+      {
+        strcat(response, "Content-Type: image/jpg\r\n");
+        strcat(response, "Content-Transfer-Encoding: binary\r\n");
+      };
 
       sprintf(tmp, "Content-Length: %d\r\n\r\n", tmp_file_size);
       strcat(response, tmp);
 
       *size = strlen(response);
 
-      memcpy(&response[*size], tmp_file, tmp_file_size);
+      memcpy(&response[*size], tmp_buffer, tmp_file_size);
       *size += tmp_file_size;
+
+      free(tmp_buffer);
     }
     else
     {

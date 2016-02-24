@@ -1,5 +1,9 @@
+//=============================================================================
+// http://getskeleton.com/
+// http://getbootstrap.com/
+//=============================================================================
 var wsUri = "ws://127.0.0.1:5800";
-var output;
+// var output;
 
 // var input = document.createElement("input");
 // input.type = "text";
@@ -14,7 +18,7 @@ var output;
 
 function init()
 {
-  output = document.getElementById("output");
+  // output = document.getElementById("output");
 
   // document.body.appendChild(button);
   // document.body.appendChild(input);
@@ -34,41 +38,41 @@ function createWebSocket()
 function onOpen(evt)
 {
   console.log("onOpen");
-  writeToScreen("onOpen");
+  // writeToScreen("onOpen");
   doSend("WS_CONNECTED");
 }
 
 function onClose(evt)
 {
   console.log("onClose");
-  writeToScreen("onClose");
+  // writeToScreen("onClose");
 }
 
 function onMessage(evt)
 {
   console.log(evt.data);
-  writeToScreen('<span style="color: blue;">onMessage: ' + evt.data + '</span>');
+  // writeToScreen('<span style="color: blue;">onMessage: ' + evt.data + '</span>');
 }
 
 function onError(evt)
 {
   console.log(evt.data);
-  writeToScreen('<span style="color: red;">onError: ' + evt.data + '</span>');
+  // writeToScreen('<span style="color: red;">onError: ' + evt.data + '</span>');
 }
 
 function doSend(message)
 {
   console.log("doSend: " + message);
-  writeToScreen("doSend: " + message);
+  // writeToScreen("doSend: " + message);
   websocket.send(message);
 }
 
 function writeToScreen(message)
 {
-  var pre = document.createElement("p");
-  pre.style.wordWrap = "break-word";
-  pre.innerHTML = message;
-  output.appendChild(pre);
+  // var pre = document.createElement("p");
+  // pre.style.wordWrap = "break-word";
+  // pre.innerHTML = message;
+  // output.appendChild(pre);
 }
 
 window.addEventListener("load", init, false);

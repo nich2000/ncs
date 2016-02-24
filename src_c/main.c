@@ -31,26 +31,6 @@ sock_server_t *_ws_server  = NULL;
 sock_server_t *_server     = NULL;
 sock_worker_t *_client     = NULL;
 //==============================================================================
-typedef void (*_CreateServer)(int, char*, char*, int, short);
-typedef void (*_StopServer)(int);
-//==============================================================================
-int web_server(int create)
-{
-  HMODULE handle = LoadLibrary("libWebServer.dll");
-  if (handle != 0)
-  {
-    if(create)
-    {
-      _CreateServer CreateServer = (_CreateServer)GetProcAddress(handle, "CreateServer");
-      CreateServer(0, "8080", "../www/", 0, 0);
-    }
-    {
-      _StopServer StopServer = (_StopServer)GetProcAddress(handle, "StopServer");
-      StopServer(0);
-    }
-  }
-}
-//==============================================================================
 int handle_command(char *command)
 {
 //  printf("echo: %s\n", command);
