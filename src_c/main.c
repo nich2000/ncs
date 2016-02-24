@@ -18,7 +18,7 @@
 //==============================================================================
 #define DEFAULT_SERVER_PORT      5700
 #define DEFAULT_WS_SERVER_PORT   5800
-#define DEFAULT_WEB_SERVER_PORT  8080
+#define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_IP        "127.0.0.1"
 //==============================================================================
 int   web_server_port      = DEFAULT_WEB_SERVER_PORT;
@@ -174,7 +174,7 @@ int print_server_info(sock_server_t *server)
   if(server == 0)
     return 1;
 
-  clrscr();
+  clr_scr();
 
   print_worker_info(&server->worker, "server");
 
@@ -265,7 +265,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "clear") == 0)
     {
-      clrscr();
+      clr_scr();
       return RESULT_DONE;
     }
     else if(strcmp(token, "typesinfo") == 0)

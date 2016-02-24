@@ -9,7 +9,7 @@ body
     height: 95%; 
     width: 100%; 
     margin: auto;
-    background-image: url(img/back.png);
+    background-image: url(../img/back.png);
     background-size: cover; 
 }
 

@@ -17,7 +17,7 @@
 #define LOG_DATA            5
 #define LOG_RAW_DATA        6
 //==============================================================================
-int clrscr();
+int clr_scr();
 void skip_lines(size_t count);
 //==============================================================================
 void log_set_name(char *name);

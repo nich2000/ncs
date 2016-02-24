@@ -11,6 +11,6 @@ typedef struct
   char *host;
 }web_header;
 
-int web_handle_buffer(char *request, char *response);
+int web_handle_buffer(char *request, char *response, int *size);
 
 #endif //WEBWORKER_H

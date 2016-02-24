@@ -70,6 +70,12 @@ int sock_worker_init(sock_worker_t *worker)
   worker->exec_cmd           = 0;
   worker->handshake          = 0;
   worker->is_locked          = 0;
+
+  worker->in_massage         = NULL;
+  worker->in_message_size    = 0;
+
+  worker->out_message        = NULL;
+  worker->out_message_size   = 0;
 }
 //==============================================================================
 int sock_exit(sock_worker_t *worker)
@@ -467,7 +473,7 @@ int sock_do_work(sock_worker_t *worker, int wait)
 int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv)
 {
   if(clear)
-    clrscr();
+    clr_scr();
 
   if(!buffer && !pack && !csv)
     return PACK_OK;
@@ -644,16 +650,17 @@ void *sock_send_worker(void *arg)
       case SOCK_MODE_WEB_SERVER:
       {
         if(!tmp_worker->is_locked)
-          if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
+          if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
           {
 //            log_add(tmp_worker->out_message, LOG_DEBUG);
 
-            if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+            if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
               tmp_errors++;
 
             // TODO утечка
 //            free(tmp_worker->out_message);
             tmp_worker->out_message = NULL;
+            tmp_worker->out_message_size = 0;
 
             if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
               break;
@@ -665,15 +672,18 @@ void *sock_send_worker(void *arg)
         if(tmp_worker->handshake)
         {
           if(!tmp_worker->is_locked)
-            if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
+            if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
             {
 //              log_add(tmp_worker->out_message, LOG_DEBUG);
 
-              if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+              if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
                 tmp_errors++;
+
               // TODO утечка
 //              free(tmp_worker->out_message);
               tmp_worker->out_message = NULL;
+              tmp_worker->out_message_size = 0;
+
               if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
                 break;
             }
@@ -687,10 +697,14 @@ void *sock_send_worker(void *arg)
 
               if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
                 tmp_errors++;
+
               // TODO утечка
 //              free(tmp_worker->out_message);
               tmp_worker->out_message = NULL;
+              tmp_worker->out_message_size = 0;
+
               tmp_worker->handshake = 1;
+
               if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
                 break;
             }
@@ -840,7 +854,7 @@ int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker
       worker->is_locked++;
 
       worker->out_message = (char*)malloc(1024 * 1024);
-      web_handle_buffer((char*)buffer, worker->out_message);
+      web_handle_buffer((char*)buffer, worker->out_message, &worker->out_message_size);
 
       worker->is_locked--;
 

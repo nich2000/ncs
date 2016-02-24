@@ -25,14 +25,18 @@
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
 
-int web_handle_buffer(char *request, char *response)
+int web_handle_buffer(char *request, char *response, int *size)
 {
-  char *tmp_header;
-  char  tmp_method[WEB_LINE_SIZE];
-  char  tmp_uri[WEB_LINE_SIZE];
-  char  tmp_version[WEB_LINE_SIZE];
-  char *tmp_file;
-  long  tmp_size;
+  char    tmp[128];
+  char   *tmp_header;
+  char    tmp_method[WEB_LINE_SIZE];
+  char    tmp_uri[WEB_LINE_SIZE];
+  char    tmp_version[WEB_LINE_SIZE];
+  char    tmp_full_name[256];
+  char   *tmp_file;
+  size_t  tmp_file_size = 0;
+
+  *size = 0;
 
   tmp_header = strtok(request, "\r\n");
 
@@ -41,7 +45,6 @@ int web_handle_buffer(char *request, char *response)
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "/index.html");
 
-    char tmp_full_name[128];
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
     log_add(tmp_full_name, LOG_INFO);
 
@@ -49,34 +52,38 @@ int web_handle_buffer(char *request, char *response)
     if(f != NULL)
     {
       fseek(f, 0, SEEK_END);
-      tmp_size = ftell(f);
-      tmp_file = (void*)malloc(tmp_size);
+      tmp_file_size = ftell(f);
+      tmp_file = (void*)malloc(tmp_file_size);
       fseek(f, 0, SEEK_SET);
-      fread(tmp_file, tmp_size, 1, f);
+      fread(tmp_file, tmp_file_size, 1, f);
       fclose(f);
-      tmp_file[tmp_size] = '\0';
+
+      strcpy(response, "HTTP/1.0 200 OK\r\n");
+
+      if(strstr(tmp_full_name, "html") != NULL)
+        strcat(response, "Content-Type: text/html\r\n");
+      else if(strstr(tmp_full_name, "js") != NULL)
+        strcat(response, "Content-Type: text/javascript\r\n");
+      else if(strstr(tmp_full_name, "css") != NULL)
+        strcat(response, "Content-Type: text/css\r\n");
+      else if(strstr(tmp_full_name, "ico") != NULL)
+        strcat(response, "Content-Type: image/x-icon\r\n");
+      else if(strstr(tmp_full_name, "png") != NULL)
+        strcat(response, "Content-Type: image/png\r\n");
+
+      sprintf(tmp, "Content-Length: %d\r\n\r\n", tmp_file_size);
+      strcat(response, tmp);
+
+      *size = strlen(response);
+
+      memcpy(&response[*size], tmp_file, tmp_file_size);
+      *size += tmp_file_size;
     }
-
-    strcpy(response, "HTTP/1.0 200 OK\r\n");
-
-    if(strstr(tmp_full_name, "html") != NULL)
-      strcat(response, "Content-Type: text/html\r\n");
-    else if(strstr(tmp_full_name, "js") != NULL)
-      strcat(response, "Content-Type: text/javascript\r\n");
-    else if(strstr(tmp_full_name, "css") != NULL)
-      strcat(response, "Content-Type: text/css\r\n");
-    else if(strstr(tmp_full_name, "ico") != NULL)
-      strcat(response, "Content-Type: image/x-icon\r\n");
-    else if(strstr(tmp_full_name, "png") != NULL)
-      strcat(response, "Content-Type: image/png\r\n");
-
-    char tmp[128];
-    sprintf(tmp, "Content-Length: %d\r\n\r\n", strlen(tmp_file));
-    strcat(response, tmp);
-
-    strcat(response, tmp_file);
-
-    response[strlen(response)+1] = '\0';
+    else
+    {
+      strcpy(response, "HTTP/1.0 404 Not Found\r\n");
+      *size = strlen(response);
+    }
   }
 
   return 0;

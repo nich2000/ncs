@@ -101,7 +101,9 @@ typedef struct
   int                    handshake;
   int                    is_locked;
   char                   *in_massage;
+  int                    in_message_size;
   char                   *out_message;
+  int                    out_message_size;
 }sock_worker_t;
 //==============================================================================
 typedef sock_worker_t sock_workers_t[SOCK_WORKERS_COUNT];

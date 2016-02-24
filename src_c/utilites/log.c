@@ -4,6 +4,14 @@
 #include <unistd.h>
 #endif
 
+#ifdef __linux__
+#include <sys/stat.h>
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <string.h>
 
 #include "log.h"
@@ -16,14 +24,25 @@
 char log_name[64]    = "log.txt";
 char report_name[64] = "report.txt";
 //==============================================================================
-int clrscr()
+int clr_scr()
 {
-#ifdef __linux__
-  system("clear");
-#elif _WIN32
-  system("cls");
-#else
-#endif
+  #ifdef __linux__
+    system("clear");
+  #elif _WIN32
+    system("cls");
+  #endif
+
+  return 0;
+}
+//==============================================================================
+int make_log_dir()
+{
+  #ifdef __linux__
+  mkdir(LOG_INITIAL_PATH, 0777);
+  #elif _WIN32
+  CreateDirectory(LOG_INITIAL_PATH, NULL);
+  #endif
+
   return 0;
 }
 //==============================================================================
@@ -45,6 +64,8 @@ void log_add(char *message, int log_type)
   if(log_type == LOG_DEBUG)
     return;
   #endif
+
+  make_log_dir();
 
 //   time(&rawtime);
 //   timeinfo = localtime(&rawtime);
@@ -83,8 +104,13 @@ void log_add(char *message, int log_type)
   char log_full_name[128];
   sprintf(log_full_name, "%s/%s", LOG_INITIAL_PATH, log_name);
   log = fopen(log_full_name, "a");
-  fprintf(log, "%s %s %s\n", t, prefix, message);
-  fclose(log);
+  if(log != NULL)
+  {
+    fprintf(log, "%s %s %s\n", t, prefix, message);
+    fclose(log);
+  }
+  else
+    printf("[WARNING] Can not open log file, %s\n", log_full_name);
 #endif
 }
 //==============================================================================
