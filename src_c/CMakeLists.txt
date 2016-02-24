@@ -27,7 +27,7 @@ add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log)
 #-------------------------------------------------------------------------------
-set(_SOCKET defines.h socket.c socket_utils.c streamer.c cmdworker.c webworker.c wsworker.c base64.c sha1.c)
+set(_SOCKET defines.h utils.c socket.c socket_utils.c streamer.c cmdworker.c webworker.c wsworker.c base64.c sha1.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
 target_link_libraries(socket protocol log)
@@ -35,7 +35,7 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
-set(_PROG main.c defines.h exec.c streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
+set(_PROG main.c defines.h utils.c socket_utils.c exec.c streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

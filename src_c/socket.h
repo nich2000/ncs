@@ -50,7 +50,7 @@
 //==============================================================================
 #define SOCK_SERVER_STREAMER     0
 #define SOCK_BUFFER_SIZE         100
-#define SOCK_WORKERS_COUNT       64
+#define SOCK_WORKERS_COUNT       128
 #define SOCK_ERRORS_COUNT        10
 //==============================================================================
 #define SOCK_WAIT_SELECT         5
@@ -89,6 +89,7 @@ typedef struct
   int                    port;
   char                   host[15];
   SOCKET                 sock;
+  int                    is_active;
   int                    worker_kill_flag;
   int                    sender_kill_flag;
   int                    receiver_kill_flag;

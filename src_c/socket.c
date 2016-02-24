@@ -60,6 +60,7 @@ int sock_worker_init(sock_worker_t *worker)
 {
   pack_protocol_init(&worker->protocol);
 
+  worker->is_active          = 1;
   worker->worker_kill_flag   = 0;
   worker->sender_kill_flag   = 0;
   worker->receiver_kill_flag = 0;
@@ -117,6 +118,9 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 //    free(server);
 //  server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
+//  sprintf(tmp, "sock_server, server.addr: %u", server);
+//  log_add(tmp, LOG_INFO);
+
   server->worker.id   = 0;
   server->worker.type = SOCK_TYPE_SERVER;
   server->worker.mode = mode;
@@ -132,6 +136,10 @@ void *sock_server_worker(void *arg)
   log_add("BEGIN sock_server_worker", LOG_DEBUG);
 
   sock_server_t *tmp_server = (sock_server_t*)arg;
+
+//  char tmp[128];
+//  sprintf(tmp, "sock_server_worker, server.addr: %u", tmp_server);
+//  log_add(tmp, LOG_INFO);
 
   sock_init();
 
@@ -317,6 +325,9 @@ int sock_server_work(sock_server_t *server)
   struct sockaddr_in addr;
   int addrlen = sizeof(struct sockaddr_in);
 
+//  sprintf(tmp, "sock_server_work, server.addr: %u", server);
+//  log_add(tmp, LOG_INFO);
+
   while(!server->worker.worker_kill_flag)
   {
     SOCKET tmp_client;
@@ -342,6 +353,8 @@ int sock_server_work(sock_server_t *server)
       log_add(tmp, LOG_INFO);
     };
 
+    sock_find_free_index
+
     if(server->clients.index < SOCK_WORKERS_COUNT)
     {
       sock_worker_t *tmp_worker = &server->clients.items[server->clients.index];
@@ -358,8 +371,7 @@ int sock_server_work(sock_server_t *server)
 
       sock_do_work(tmp_worker, 0);
 
-      if(server->clients.index < SOCK_WORKERS_COUNT)
-        server->clients.index++;
+      server->clients.index++;
       server->clients.last_id++;
     }
     else
@@ -591,7 +603,7 @@ void *sock_send_worker(void *arg)
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
   SOCKET         tmp_sock = tmp_worker->sock;
 
-  char tmp[128];
+  char tmp[1024];
   sprintf(tmp, "BEGIN sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
@@ -755,8 +767,7 @@ void *sock_recv_worker(void *arg)
     retval = select(1, &rfds, NULL, NULL, &tv);
     if (retval == SOCKET_ERROR)
     {
-      char tmp[128];
-      sprintf(tmp, "sock_recv_worker, select, Error: %d", sock_get_error());
+      sprintf(tmp, "sock_recv_worker, select, socket: %d, Error: %d", tmp_sock, sock_get_error());
       log_add(tmp, LOG_ERROR);
       tmp_errors++;
       if(tmp_errors > SOCK_ERRORS_COUNT)
@@ -767,7 +778,7 @@ void *sock_recv_worker(void *arg)
     else if(!retval)
     {
       #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "sock_recv_worker, select, empty for %d seconds", SOCK_WAIT_SELECT);
+      sprintf(tmp, "sock_recv_worker, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
       log_add(tmp, LOG_WARNING);
       #endif
       continue;
@@ -777,8 +788,7 @@ void *sock_recv_worker(void *arg)
       size = recv(tmp_sock, buffer, PACK_BUFFER_SIZE, 0);
       if(size == SOCKET_ERROR)
       {
-        char tmp[128];
-        sprintf(tmp, "sock_recv_worker, recv, Error: %d", sock_get_error());
+        sprintf(tmp, "sock_recv_worker, recv, socket: %d, Error: %d", tmp_sock, sock_get_error());
         log_add(tmp, LOG_ERROR);
         tmp_errors++;
         if(tmp_errors > SOCK_ERRORS_COUNT)
@@ -788,19 +798,19 @@ void *sock_recv_worker(void *arg)
       }
       else if(!size)
       {
-        log_add("sock_recv_worker, recv, socket closed", LOG_WARNING);
+        sprintf(tmp, "sock_recv_worker, recv, socket: %d, socket closed", tmp_sock);
+        log_add(tmp, LOG_WARNING);
         break;
       }
       else if(size > PACK_BUFFER_SIZE)
       {
-        char tmp[256];
-        sprintf(tmp, "sock_recv_worker, recv, buffer too big(%d/%d)", size, PACK_BUFFER_SIZE);
+        sprintf(tmp, "sock_recv_worker, recv, socket: %d, buffer too big(%d/%d)", tmp_sock, size, PACK_BUFFER_SIZE);
         log_add(tmp, LOG_CRITICAL_ERROR);
         break;
       }
 
       #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "sock_recv_worker, recv size: %d", size);
+      sprintf(tmp, "sock_recv_worker, socket: %d, recv size: %d", tmp_sock, size);
       log_add(tmp, LOG_INFO);
       bytes_to_hex(buffer, (pack_size)size, tmp);
       log_add(tmp, LOG_INFO);
