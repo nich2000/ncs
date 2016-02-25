@@ -58,17 +58,24 @@ int sock_version(char *version)
 //==============================================================================
 int sock_worker_init(sock_worker_t *worker)
 {
-  pack_protocol_init(&worker->protocol);
+  worker->id                 = 0;
+  worker->type               = SOCK_TYPE_UNKNOWN;
+  worker->mode               = SOCK_MODE_UNKNOWN;
+  worker->port               = 0;
+  memset(worker->host, 0, SOCK_HOST_SIZE);
+  worker->sock               = INVALID_SOCKET;
 
   worker->is_active          = 1;
   worker->worker_kill_flag   = 0;
   worker->sender_kill_flag   = 0;
   worker->receiver_kill_flag = 0;
 
+  worker->work_thread        = 0;
   worker->send_thread        = 0;
   worker->receive_thread     = 0;
 
   worker->exec_cmd           = 0;
+
   worker->handshake          = 0;
   worker->is_locked          = 0;
 
@@ -77,6 +84,9 @@ int sock_worker_init(sock_worker_t *worker)
 
   worker->out_message        = NULL;
   worker->out_message_size   = 0;
+
+  pack_protocol_init(&worker->protocol);
+  streamer_init(&worker->streamer, &worker->protocol);
 }
 //==============================================================================
 int sock_exit(sock_worker_t *worker)
@@ -121,12 +131,12 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 //  sprintf(tmp, "sock_server, server.addr: %u", server);
 //  log_add(tmp, LOG_INFO);
 
+  sock_worker_init(&server->worker);
+
   server->worker.id   = 0;
   server->worker.type = SOCK_TYPE_SERVER;
   server->worker.mode = mode;
   server->worker.port = port;
-
-  memset(server->worker.host, '0', sizeof(server->worker.host));
 
   return pthread_create(&server->worker.work_thread, &tmp_attr, sock_server_worker, (void*)server);
 }
@@ -176,11 +186,12 @@ int sock_client(int port, char *host, sock_worker_t *worker)
 //    free(worker);
 //  worker = (sock_worker_t*)malloc(sizeof(sock_worker_t));
 
+  sock_worker_init(worker);
+
   worker->id   = 0;
   worker->type = SOCK_TYPE_CLIENT;
   worker->mode = SOCK_MODE_CLIENT;
   worker->port = port;
-
   strcpy(worker->host, host);
 
   return pthread_create(&worker->work_thread, &tmp_attr, sock_client_worker, (void*)worker);
@@ -353,21 +364,21 @@ int sock_server_work(sock_server_t *server)
       log_add(tmp, LOG_INFO);
     };
 
-//    sock_find_free_index
+//    if(sock_find_free_index(server, &tmp_index))
+//    {
 
     if(server->clients.index < SOCK_WORKERS_COUNT)
     {
       sock_worker_t *tmp_worker = &server->clients.items[server->clients.index];
 
+      sock_worker_init(tmp_worker);
+
       tmp_worker->id   = server->clients.last_id;
       tmp_worker->type = SOCK_TYPE_REMOTE_CLIENT;
       tmp_worker->mode = server->worker.mode;
       tmp_worker->port = server->worker.port;
-      tmp_worker->sock = tmp_client;
-
       strcpy(tmp_worker->host, tmp_host);
-
-      sock_worker_init(tmp_worker);
+      tmp_worker->sock = tmp_client;
 
       sock_do_work(tmp_worker, 0);
 

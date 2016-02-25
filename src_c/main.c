@@ -150,15 +150,7 @@ int handle_command(char *command)
   }
   else if(res == 2)
   {
-    if(strcmp(token, "webserver") == 0)
-    {
-      if(strcmp(param1, "on") == 0)
-        web_server(1);
-      if(strcmp(param1, "off") == 0)
-        web_server(0);
-      return RESULT_DONE;
-    }
-    else if(strcmp(token, "sndtocl") == 0)
+    if(strcmp(token, "sndtocl") == 0)
     {
       sock_server_send_cmd(_server, 1, param1);
       return RESULT_DONE;

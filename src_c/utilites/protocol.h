@@ -98,9 +98,11 @@ typedef struct
   pack_words  words;           // 24 * 20
 } pack_packet;
 //==============================================================================
+typedef pack_packet  *ppack_packet;
+//==============================================================================
 typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
 typedef pack_packet  pack_in_packets   [PACK_IN_PACKETS_COUNT];
-typedef pack_packet *pack_queue_packets[PACK_QUEUE_COUNT];
+typedef ppack_packet pack_queue_packets[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {

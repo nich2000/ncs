@@ -31,26 +31,27 @@
 #else
 #endif
 //==============================================================================
-#define SOCK_TYPE_UNKNOWN       -1
-#define SOCK_TYPE_CLIENT         0
-#define SOCK_TYPE_SERVER         1
-#define SOCK_TYPE_REMOTE_CLIENT  2
+#define SOCK_TYPE_UNKNOWN        0
+#define SOCK_TYPE_CLIENT         1
+#define SOCK_TYPE_SERVER         2
+#define SOCK_TYPE_REMOTE_CLIENT  3
 //==============================================================================
-#define SOCK_MODE_UNKNOWN       -1
-#define SOCK_MODE_CLIENT         0
-#define SOCK_MODE_SERVER         1
-#define SOCK_MODE_WS_SERVER      2
-#define SOCK_MODE_WEB_SERVER     3
+#define SOCK_MODE_UNKNOWN        0
+#define SOCK_MODE_CLIENT         1
+#define SOCK_MODE_SERVER         2
+#define SOCK_MODE_WS_SERVER      3
+#define SOCK_MODE_WEB_SERVER     4
 //==============================================================================
 #define SOCK_VERSION             "SOCK001\0"
 #define SOCK_VERSION_SIZE        8
+#define SOCK_HOST_SIZE           15  // 255.255.255.255
 //==============================================================================
 #define SOCK_OK                  0
 #define SOCK_ERROR              -1
 //==============================================================================
 #define SOCK_SERVER_STREAMER     0
 #define SOCK_BUFFER_SIZE         100
-#define SOCK_WORKERS_COUNT       128
+#define SOCK_WORKERS_COUNT       2
 #define SOCK_ERRORS_COUNT        10
 //==============================================================================
 #define SOCK_WAIT_SELECT         5
@@ -87,7 +88,7 @@ typedef struct
   sock_type_t            type;
   sock_mode_t            mode;
   int                    port;
-  char                   host[15];
+  char                   host[SOCK_HOST_SIZE];
   SOCKET                 sock;
   int                    is_active;
   int                    worker_kill_flag;

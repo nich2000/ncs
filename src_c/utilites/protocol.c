@@ -162,12 +162,18 @@ int pack_protocol_init(pack_protocol *protocol)
     protocol = malloc(sizeof(pack_protocol));
   #endif
 
+  pack_validation_buffer_init
+
   protocol->validation_buffer.size      = 0;
+
+  pack_packets_list_init
 
   protocol->in_packets_list.empty       = PACK_TRUE;
   protocol->in_packets_list.index       = PACK_PACKETS_INIT_INDEX;
   protocol->in_packets_list.count       = PACK_GLOBAL_INIT_NUMBER;
   protocol->in_packets_list.lock_count  = 0;
+
+  pack_packets_list_init
 
   protocol->out_packets_list.empty      = PACK_TRUE;
   protocol->out_packets_list.index      = PACK_PACKETS_INIT_INDEX;
@@ -175,9 +181,11 @@ int pack_protocol_init(pack_protocol *protocol)
   protocol->out_packets_list.lock_count = 0;
 
   #ifdef PACK_USE_OWN_QUEUE
-    protocol->queue.empty  = PACK_TRUE;
-    protocol->queue.start  = PACK_QUEUE_INIT_INDEX;
-    protocol->queue.finish = PACK_QUEUE_INIT_INDEX;
+    protocol->queue.empty               = PACK_TRUE;
+    protocol->queue.start               = PACK_QUEUE_INIT_INDEX;
+    protocol->queue.finish              = PACK_QUEUE_INIT_INDEX;
+    for(int i = 0; i < PACK_QUEUE_COUNT; i++)
+      protocol->queue.packets[i] = NULL;
   #endif
 
   return PACK_OK;
