@@ -30,6 +30,10 @@ sock_server_t *_web_server = NULL;
 sock_server_t *_ws_server  = NULL;
 sock_server_t *_server     = NULL;
 sock_worker_t *_client     = NULL;
+sock_server_t __web_server;
+sock_server_t __ws_server;
+sock_server_t __server;
+sock_worker_t __client;
 //==============================================================================
 int handle_command(char *command)
 {
@@ -55,15 +59,11 @@ int handle_command(char *command)
     {
       log_set_name("server_log.txt");
 
-      if(_server != 0)
-        free(_server);
-      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      if(_server != 0)
+//        free(_server);
+//      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-//      char tmp[128];
-//      sprintf(tmp, "handle_command, server.addr: %u", _server);
-//      log_add(tmp, LOG_INFO);
-
-      sock_server(server_port, _server, SOCK_MODE_SERVER);
+      sock_server(server_port, &__server, SOCK_MODE_SERVER);
 
       return RESULT_DONE;
     }
@@ -71,11 +71,11 @@ int handle_command(char *command)
     {
       log_set_name("ws_server_log.txt");
 
-      if(_ws_server != 0)
-        free(_ws_server);
-      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      if(_ws_server != 0)
+//        free(_ws_server);
+//      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-      sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
+      sock_server(ws_server_port, &__ws_server, SOCK_MODE_WS_SERVER);
 
       return RESULT_DONE;
     }
@@ -83,15 +83,11 @@ int handle_command(char *command)
     {
       log_set_name("web_server_log.txt");
 
-//      if(_ws_server != 0)
-//        free(_ws_server);
-//      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
-//      sock_server(ws_server_port, _ws_server, SOCK_MODE_WS_SERVER);
+//      if(_web_server != 0)
+//        free(_web_server);
+//      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-      if(_web_server != 0)
-        free(_web_server);
-      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
-      sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
+      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
 
       return RESULT_DONE;
     }
@@ -99,11 +95,11 @@ int handle_command(char *command)
     {
       log_set_name("client_log.txt");
 
-      if(_client != 0)
-        free(_client);
-      _client = (sock_worker_t*)malloc(sizeof(sock_worker_t));
+//      if(_client != 0)
+//        free(_client);
+//      _client = (sock_worker_t*)malloc(sizeof(sock_worker_t));
 
-      sock_client(server_port, server_ip, _client);
+      sock_client(server_port, server_ip, &__client);
 
       return RESULT_DONE;
     }

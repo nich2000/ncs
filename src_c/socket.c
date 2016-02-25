@@ -65,10 +65,7 @@ int sock_worker_init(sock_worker_t *worker)
   memset(worker->host, 0, SOCK_HOST_SIZE);
   worker->sock               = INVALID_SOCKET;
 
-  worker->is_active          = 1;
-  worker->worker_kill_flag   = 0;
-  worker->sender_kill_flag   = 0;
-  worker->receiver_kill_flag = 0;
+  worker->is_active          = SOCK_FALSE;
 
   worker->work_thread        = 0;
   worker->send_thread        = 0;
@@ -86,12 +83,13 @@ int sock_worker_init(sock_worker_t *worker)
   worker->out_message_size   = 0;
 
   pack_protocol_init(&worker->protocol);
-  streamer_init(&worker->streamer, &worker->protocol);
+
+//  streamer_init(&worker->streamer, &worker->protocol);
 }
 //==============================================================================
 int sock_exit(sock_worker_t *worker)
 {
-  worker->worker_kill_flag = 1;
+  worker->is_active = SOCK_FALSE;
 }
 //==============================================================================
 int sock_server(int port, sock_server_t *server, sock_mode_t mode)
@@ -118,7 +116,6 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
     break;
   }
   log_add(tmp, LOG_INFO);
-  log_add("----------", LOG_INFO);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -131,12 +128,13 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 //  sprintf(tmp, "sock_server, server.addr: %u", server);
 //  log_add(tmp, LOG_INFO);
 
-  sock_worker_init(&server->worker);
+  sock_server_init(server);
 
-  server->worker.id   = 0;
-  server->worker.type = SOCK_TYPE_SERVER;
-  server->worker.mode = mode;
-  server->worker.port = port;
+  server->worker.id        = 0;
+  server->worker.type      = SOCK_TYPE_SERVER;
+  server->worker.mode      = mode;
+  server->worker.port      = port;
+  server->worker.is_active = SOCK_TRUE;
 
   return pthread_create(&server->worker.work_thread, &tmp_attr, sock_server_worker, (void*)server);
 }
@@ -153,7 +151,6 @@ void *sock_server_worker(void *arg)
 
   sock_init();
 
-  sock_server_init (tmp_server);
   sock_server_start(&tmp_server->worker);
   sock_server_work (tmp_server);
   sock_server_stop (&tmp_server->worker);
@@ -188,10 +185,11 @@ int sock_client(int port, char *host, sock_worker_t *worker)
 
   sock_worker_init(worker);
 
-  worker->id   = 0;
-  worker->type = SOCK_TYPE_CLIENT;
-  worker->mode = SOCK_MODE_CLIENT;
-  worker->port = port;
+  worker->id         = 0;
+  worker->type       = SOCK_TYPE_CLIENT;
+  worker->mode       = SOCK_MODE_CLIENT;
+  worker->port       = port;
+  worker->is_active = SOCK_TRUE;
   strcpy(worker->host, host);
 
   return pthread_create(&worker->work_thread, &tmp_attr, sock_client_worker, (void*)worker);
@@ -212,7 +210,7 @@ void *sock_client_worker(void *arg)
     sock_client_work (tmp_worker);
     sock_client_stop (tmp_worker);
   }
-  while(!tmp_worker->worker_kill_flag);
+  while(tmp_worker->is_active);
 
   sock_deinit();
 
@@ -278,6 +276,9 @@ int sock_server_init(sock_server_t *server)
 
   server->clients.last_id  = 0;
   server->clients.index    = 0;
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    sock_worker_init(&server->clients.items[i]);
 }
 //==============================================================================
 int sock_server_start(sock_worker_t *worker)
@@ -328,9 +329,22 @@ int sock_server_start(sock_worker_t *worker)
   return SOCK_OK;
 }
 //==============================================================================
+int sock_find_free_index(sock_server_t *server, int *index)
+{
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(!server->clients.items[i].is_active)
+    {
+      *index = i;
+      return SOCK_TRUE;
+    }
+  return SOCK_FALSE;
+}
+//==============================================================================
 int sock_server_work(sock_server_t *server)
 {
   log_add("BEGIN sock_server_work", LOG_DEBUG);
+  log_add("Server started", LOG_INFO);
+  log_add("----------", LOG_INFO);
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -339,18 +353,19 @@ int sock_server_work(sock_server_t *server)
 //  sprintf(tmp, "sock_server_work, server.addr: %u", server);
 //  log_add(tmp, LOG_INFO);
 
-  while(!server->worker.worker_kill_flag)
+  while(server->worker.is_active)
   {
     SOCKET tmp_client;
 
     char tmp_host[20];
 
-    log_add("sock_server_work, accept", LOG_DEBUG);
+    log_add("sock_server_work, accepting...", LOG_DEBUG);
     tmp_client = accept(server->worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
       sprintf(tmp, "sock_server_work, accept, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
+      server->worker.is_active = SOCK_FALSE;
       return SOCK_ERROR;
     }
     else
@@ -364,29 +379,37 @@ int sock_server_work(sock_server_t *server)
       log_add(tmp, LOG_INFO);
     };
 
-//    if(sock_find_free_index(server, &tmp_index))
-//    {
-
+    #ifdef SOCK_USE_FREE_INDEX
+    int tmp_index;
+    if(sock_find_free_index(server, &tmp_index))
+    {
+      sock_worker_t *tmp_worker = &server->clients.items[tmp_index];
+    #else
     if(server->clients.index < SOCK_WORKERS_COUNT)
     {
       sock_worker_t *tmp_worker = &server->clients.items[server->clients.index];
+      server->clients.index++;
+    #endif
+      server->clients.last_id++;
 
       sock_worker_init(tmp_worker);
 
-      tmp_worker->id   = server->clients.last_id;
-      tmp_worker->type = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_worker->mode = server->worker.mode;
-      tmp_worker->port = server->worker.port;
+      tmp_worker->id        = server->clients.last_id;
+      tmp_worker->type      = SOCK_TYPE_REMOTE_CLIENT;
+      tmp_worker->mode      = server->worker.mode;
+      tmp_worker->port      = server->worker.port;
+      tmp_worker->sock      = tmp_client;
+      tmp_worker->is_active = SOCK_TRUE;
       strcpy(tmp_worker->host, tmp_host);
-      tmp_worker->sock = tmp_client;
 
       sock_do_work(tmp_worker, 0);
-
-      server->clients.index++;
-      server->clients.last_id++;
     }
     else
+    {
+      log_add("sock_server_work, no available workers", LOG_CRITICAL_ERROR);
+      server->worker.is_active = SOCK_FALSE;
       return SOCK_ERROR;
+    };
   };
 
   log_add("END sock_server_work", LOG_DEBUG);
@@ -396,7 +419,7 @@ int sock_server_work(sock_server_t *server)
 //==============================================================================
 int sock_server_stop(sock_worker_t *worker)
 {
-  log_add("sock_server_stop", LOG_INFO);
+  log_add("sock_server_stop", LOG_DEBUG);
   closesocket(worker->sock);
   return SOCK_OK;
 }
@@ -404,8 +427,6 @@ int sock_server_stop(sock_worker_t *worker)
 int sock_client_init(sock_worker_t *worker)
 {
   sock_worker_init(worker);
-
-  streamer_init(&worker->streamer, &worker->protocol);
 }
 //==============================================================================
 int sock_client_start(sock_worker_t *worker)
@@ -445,8 +466,8 @@ int sock_client_work(sock_worker_t *worker)
   addr.sin_port = htons(worker->port);
   addr.sin_addr.s_addr = inet_addr(worker->host);
 
-  log_add("sock_client_work, connect", LOG_INFO);
-  while(!worker->worker_kill_flag)
+  log_add("sock_client_work, connecting...", LOG_INFO);
+  while(worker->is_active)
   {
     if(connect(worker->sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
@@ -594,15 +615,15 @@ int sock_exec_cmd(sock_worker_t *worker)
     }
     else if(strcmp(tmp_cmd, "stream") == 0)
     {
-      pack_key   tmp_key;
-      pack_value tmp_param;
-      if(pack_param_by_index_as_string(tmp_pack, 1, tmp_key, tmp_param) == PACK_OK)
-      {
-        if(strcmp(tmp_param, "on") == 0)
-          streamer_start(&worker->streamer);
-        else
-          streamer_stop(&worker->streamer);
-      };
+//      pack_key   tmp_key;
+//      pack_value tmp_param;
+//      if(pack_param_by_index_as_string(tmp_pack, 1, tmp_key, tmp_param) == PACK_OK)
+//      {
+//        if(strcmp(tmp_param, "on") == 0)
+//          streamer_start(&worker->streamer);
+//        else
+//          streamer_stop(&worker->streamer);
+//      };
     };
   };
 
@@ -624,7 +645,7 @@ void *sock_send_worker(void *arg)
   int            tmp_errors = 0;
 
   // TODO sock_do_send вызывается из разных мест
-  while(!tmp_worker->sender_kill_flag)
+  while(tmp_worker->is_active)
   {
     switch(tmp_worker->mode)
     {
@@ -662,7 +683,7 @@ void *sock_send_worker(void *arg)
             if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
               tmp_errors++;
 
-            if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+            if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
               break;
           }
           // TODO двойной вызов этой функции: до и в цикле
@@ -675,18 +696,14 @@ void *sock_send_worker(void *arg)
         if(!tmp_worker->is_locked)
           if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
           {
-//            log_add(tmp_worker->out_message, LOG_DEBUG);
+            sprintf(tmp, "sock_send_worker, sock_do_send, size: %d, socket: %d", tmp_worker->out_message_size, tmp_sock);
+            log_add(tmp, LOG_INFO);
 
-            if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
-              tmp_errors++;
+            sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size);
 
-            // TODO утечка
             free(tmp_worker->out_message);
-            tmp_worker->out_message = NULL;
-            tmp_worker->out_message_size = 0;
 
-            if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
-              break;
+            tmp_worker->is_active = SOCK_FALSE;
           }
         break;
       };
@@ -707,7 +724,7 @@ void *sock_send_worker(void *arg)
               tmp_worker->out_message = NULL;
               tmp_worker->out_message_size = 0;
 
-              if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
                 break;
             }
         }
@@ -728,7 +745,7 @@ void *sock_send_worker(void *arg)
 
               tmp_worker->handshake = 1;
 
-              if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
+              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
                 break;
             }
         }
@@ -736,17 +753,14 @@ void *sock_send_worker(void *arg)
       };
     };
 
-    if((tmp_errors > SOCK_ERRORS_COUNT) || tmp_worker->sender_kill_flag)
-      break;
+    if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
+      tmp_worker->is_active = SOCK_FALSE;
 
     usleep(1000);
   }
 
   sprintf(tmp, "END sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
-
-  tmp_worker->sender_kill_flag = 1;
-  tmp_worker->receiver_kill_flag = 1;
 
   return NULL;
 }
@@ -765,7 +779,7 @@ void *sock_recv_worker(void *arg)
   int         retval = 0;
   int         tmp_errors = 0;
 
-  while(!tmp_worker->receiver_kill_flag)
+  while(tmp_worker->is_active)
   {
     struct timeval tv;
     tv.tv_sec  = SOCK_WAIT_SELECT;
@@ -834,8 +848,7 @@ void *sock_recv_worker(void *arg)
   sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  tmp_worker->sender_kill_flag = 1;
-  tmp_worker->receiver_kill_flag = 1;
+  tmp_worker->is_active = SOCK_FALSE;
 
   return NULL;
 }

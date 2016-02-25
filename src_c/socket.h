@@ -49,9 +49,12 @@
 #define SOCK_OK                  0
 #define SOCK_ERROR              -1
 //==============================================================================
+#define SOCK_TRUE                1
+#define SOCK_FALSE               0
+//==============================================================================
 #define SOCK_SERVER_STREAMER     0
 #define SOCK_BUFFER_SIZE         100
-#define SOCK_WORKERS_COUNT       2
+#define SOCK_WORKERS_COUNT       256
 #define SOCK_ERRORS_COUNT        10
 //==============================================================================
 #define SOCK_WAIT_SELECT         5
@@ -91,15 +94,12 @@ typedef struct
   char                   host[SOCK_HOST_SIZE];
   SOCKET                 sock;
   int                    is_active;
-  int                    worker_kill_flag;
-  int                    sender_kill_flag;
-  int                    receiver_kill_flag;
   pthread_t              work_thread;
   pthread_t              send_thread;
   pthread_t              receive_thread;
   pack_protocol          protocol;
   exec_func              exec_cmd;
-  streamer_worker        streamer;
+//  streamer_worker        streamer;
   int                    handshake;
   int                    is_locked;
   char                   *in_massage;

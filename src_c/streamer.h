@@ -12,7 +12,7 @@ typedef struct
   int            is_pause;
   int            last_number;
   pack_protocol *protocol;
-  pthread_t      worker;
+  pthread_t      work_thread;
 }streamer_worker;
 //==============================================================================
 int streamer_init (streamer_worker *worker, pack_protocol *protocol);

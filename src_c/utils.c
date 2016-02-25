@@ -103,9 +103,7 @@ int print_worker_info(sock_worker_t *worker, char *prefix)
           "port:                            %d\n" \
           "host:                            %s\n" \
           "sock:                            %d\n" \
-          "worker_kill_flag:                %d\n" \
-          "sender_kill_flag:                %d\n" \
-          "receiver_kill_flag:              %d\n" \
+          "is_active:                       %d\n" \
           "protocol.in_packets_list.index:  %d\n" \
           "protocol.in_packets_list.count:  %d\n" \
           "protocol.out_packets_list.index: %d\n" \
@@ -118,9 +116,7 @@ int print_worker_info(sock_worker_t *worker, char *prefix)
           worker->port,
           worker->host,
           worker->sock,
-          worker->worker_kill_flag,
-          worker->sender_kill_flag,
-          worker->receiver_kill_flag,
+          worker->is_active,
           worker->protocol.in_packets_list.index,
           worker->protocol.in_packets_list.count,
           worker->protocol.out_packets_list.index,

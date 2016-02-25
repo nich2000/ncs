@@ -49,7 +49,7 @@ int web_handle_buffer(char *request, char *response, int *size)
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
     log_add(tmp_full_name, LOG_INFO);
 
-    FILE *f = fopen(tmp_full_name, "r");
+    FILE *f = fopen(tmp_full_name, "rb");
     if(f != NULL)
     {
       fseek(f, 0, SEEK_END);

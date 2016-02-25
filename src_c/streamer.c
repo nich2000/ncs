@@ -16,9 +16,9 @@ int streamer_init(streamer_worker *worker, pack_protocol *protocol)
   worker->is_pause    =  1;
   worker->last_number = -1;
   worker->protocol    =  protocol;
-  worker->worker      =  0;
+  worker->work_thread =  0;
 
-  pthread_create(&worker->worker, NULL, streamer_worker_func, (void*)worker);
+  pthread_create(&worker->work_thread, NULL, streamer_worker_func, (void*)worker);
 }
 //==============================================================================
 int streamer_start(streamer_worker *worker)

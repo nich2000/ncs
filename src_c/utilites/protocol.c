@@ -152,6 +152,64 @@ int unlock(pack_type out, pack_protocol *protocol)
   return PACK_OK;
 }
 //==============================================================================
+int pack_validation_buffer_init(pack_validation_buffer *validation_buffer)
+{
+  validation_buffer->size = 0;
+
+  memset(validation_buffer->buffer, 0, PACK_BUFFER_SIZE);
+}
+//==============================================================================
+int pack_word_init(pack_word *word)
+{
+  memset(word->key, 0, PACK_KEY_SIZE);
+  memset(word->value, 0, PACK_VALUE_SIZE);
+  word->type = PACK_WORD_NONE;
+  word->size = 0;
+}
+//==============================================================================
+int pack_packet_init(pack_packet *packet)
+{
+  packet->number      = pack_global_number;
+  packet->words_count = 0;
+
+  for(int i = 0; i < PACK_WORDS_COUNT; i++)
+    pack_word_init(&packet->words[i]);
+}
+//==============================================================================
+int pack_in_packets_list_init(pack_in_packets_list *in_packets_list)
+{
+  in_packets_list->empty       = PACK_TRUE;
+  in_packets_list->index       = PACK_PACKETS_INIT_INDEX;
+  in_packets_list->count       = PACK_GLOBAL_INIT_NUMBER;
+  in_packets_list->lock_count  = 0;
+
+  for(int i = 0; i < PACK_IN_PACKETS_COUNT; i++)
+    pack_packet_init(&in_packets_list->items[i]);
+}
+//==============================================================================
+int pack_out_packets_list_init(pack_out_packets_list *out_packets_list)
+{
+  out_packets_list->empty      = PACK_TRUE;
+  out_packets_list->index      = PACK_PACKETS_INIT_INDEX;
+  out_packets_list->count      = PACK_GLOBAL_INIT_NUMBER;
+  out_packets_list->lock_count = 0;
+
+  for(int i = 0; i < PACK_OUT_PACKETS_COUNT; i++)
+    pack_packet_init(&out_packets_list->items[i]);
+}
+//==============================================================================
+#ifdef PACK_USE_OWN_QUEUE
+int pack_queue_init(pack_queue *queue)
+{
+  queue->empty  = PACK_TRUE;
+  queue->start  = PACK_QUEUE_INIT_INDEX;
+  queue->finish = PACK_QUEUE_INIT_INDEX;
+
+  for(int i = 0; i < PACK_QUEUE_COUNT; i++)
+    queue->packets[i] = NULL;
+}
+#endif
+//==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 int pack_protocol_init()
 #else
@@ -162,30 +220,14 @@ int pack_protocol_init(pack_protocol *protocol)
     protocol = malloc(sizeof(pack_protocol));
   #endif
 
-  pack_validation_buffer_init
+  pack_validation_buffer_init(&protocol->validation_buffer);
 
-  protocol->validation_buffer.size      = 0;
+  pack_in_packets_list_init(&protocol->in_packets_list);
 
-  pack_packets_list_init
-
-  protocol->in_packets_list.empty       = PACK_TRUE;
-  protocol->in_packets_list.index       = PACK_PACKETS_INIT_INDEX;
-  protocol->in_packets_list.count       = PACK_GLOBAL_INIT_NUMBER;
-  protocol->in_packets_list.lock_count  = 0;
-
-  pack_packets_list_init
-
-  protocol->out_packets_list.empty      = PACK_TRUE;
-  protocol->out_packets_list.index      = PACK_PACKETS_INIT_INDEX;
-  protocol->out_packets_list.count      = PACK_GLOBAL_INIT_NUMBER;
-  protocol->out_packets_list.lock_count = 0;
+  pack_out_packets_list_init(&protocol->out_packets_list);
 
   #ifdef PACK_USE_OWN_QUEUE
-    protocol->queue.empty               = PACK_TRUE;
-    protocol->queue.start               = PACK_QUEUE_INIT_INDEX;
-    protocol->queue.finish              = PACK_QUEUE_INIT_INDEX;
-    for(int i = 0; i < PACK_QUEUE_COUNT; i++)
-      protocol->queue.packets[i] = NULL;
+  pack_queue_init(&protocol->queue);
   #endif
 
   return PACK_OK;
@@ -650,8 +692,7 @@ int pack_begin(pack_protocol *protocol)
     pack_packet *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
-  tmp_pack->number      = pack_global_number;
-  tmp_pack->words_count = 0;
+  pack_packet_init(tmp_pack);
 
   return PACK_OK;
 }

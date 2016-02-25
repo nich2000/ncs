@@ -15,6 +15,7 @@
 //#define SOCK_EXTRA_LOGS
 #define SOCK_PACK_MODE
 //#define SOCK_RANDOM_BUFFER
+//#define SOCK_USE_FREE_INDEX
 
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
