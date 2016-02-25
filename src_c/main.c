@@ -1,3 +1,5 @@
+//==============================================================================
+//==============================================================================
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,9 +14,9 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
-#define RESULT_UNKNOWN -1
-#define RESULT_NONE     0
-#define RESULT_DONE     1
+#define RESULT_UNKNOWN          -1
+#define RESULT_NONE              0
+#define RESULT_DONE              1
 //==============================================================================
 #define DEFAULT_SERVER_PORT      5700
 #define DEFAULT_WS_SERVER_PORT   5800
@@ -37,8 +39,6 @@ sock_worker_t __client;
 //==============================================================================
 int handle_command(char *command)
 {
-//  printf("echo: %s\n", command);
-
   char token [128];
   char param1[128];
   char param2[128];
@@ -55,6 +55,19 @@ int handle_command(char *command)
 //      sock_exit(_worker);
       return RESULT_NONE;
     }
+    else if(strcmp(token, "client") == 0)
+    {
+      log_set_name("client_log.txt");
+
+//      if(_client != 0)
+//        free(_client);
+//      _client = (sock_worker_t*)malloc(sizeof(sock_worker_t));
+//      sock_client(server_port, server_ip, &__client);
+
+//      cmd_client();
+
+      return RESULT_DONE;
+    }
     else if(strcmp(token, "server") == 0)
     {
       log_set_name("server_log.txt");
@@ -62,8 +75,9 @@ int handle_command(char *command)
 //      if(_server != 0)
 //        free(_server);
 //      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      sock_server(server_port, &__server, SOCK_MODE_SERVER);
 
-      sock_server(server_port, &__server, SOCK_MODE_SERVER);
+//      cmd_server();
 
       return RESULT_DONE;
     }
@@ -74,8 +88,9 @@ int handle_command(char *command)
 //      if(_ws_server != 0)
 //        free(_ws_server);
 //      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      sock_server(ws_server_port, &__ws_server, SOCK_MODE_WS_SERVER);
 
-      sock_server(ws_server_port, &__ws_server, SOCK_MODE_WS_SERVER);
+//      ws_server();
 
       return RESULT_DONE;
     }
@@ -86,20 +101,9 @@ int handle_command(char *command)
 //      if(_web_server != 0)
 //        free(_web_server);
 //      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
 
-      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
-
-      return RESULT_DONE;
-    }
-    else if(strcmp(token, "client") == 0)
-    {
-      log_set_name("client_log.txt");
-
-//      if(_client != 0)
-//        free(_client);
-//      _client = (sock_worker_t*)malloc(sizeof(sock_worker_t));
-
-      sock_client(server_port, server_ip, &__client);
+//      web_server();
 
       return RESULT_DONE;
     }
@@ -211,25 +215,25 @@ int main(int argc, char *argv[])
 
     if(strcmp(argv[1], "-s") == 0)
     {
-      if(_ws_server != 0)
-        free(_ws_server);
-      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      if(_ws_server != 0)
+//        free(_ws_server);
+//      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-      if(_web_server != 0)
-        free(_web_server);
-      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      if(_web_server != 0)
+//        free(_web_server);
+//      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-      if(_server != 0)
-        free(_server);
-      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
+//      if(_server != 0)
+//        free(_server);
+//      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
 
-      sock_server(ws_server_port,  _ws_server,  SOCK_MODE_WS_SERVER);
-      sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
-      sock_server(server_port,     _server,     SOCK_MODE_SERVER);
+//      sock_server(ws_server_port,  _ws_server,  SOCK_MODE_WS_SERVER);
+//      sock_server(web_server_port, _web_server, SOCK_MODE_WEB_SERVER);
+//      sock_server(server_port,     _server,     SOCK_MODE_SERVER);
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
-      sock_client(server_port, server_ip, _client);
+//      sock_client(server_port, server_ip, _client);
     }
   }
   else
@@ -247,10 +251,10 @@ int main(int argc, char *argv[])
         case RESULT_NONE:
           return 0;
         case RESULT_UNKNOWN:
-          printf("unknown command: %s\n", command);
+          printf("unknown: %s\n", command);
           break;
         case RESULT_DONE:
-          printf("done command: %s\n", command);
+          printf("done: %s\n", command);
           break;
       }
     }

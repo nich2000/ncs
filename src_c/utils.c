@@ -61,7 +61,6 @@ int print_defines_info()
     "PACK_IN_PACKETS_COUNT:  %d\n" \
     "PACK_QUEUE_COUNT:       %d\n" \
     "SOCK_VERSION:           %s\n" \
-    "SOCK_SERVER_STREAMER:   %d\n" \
     "SOCK_BUFFER_SIZE:       %d\n" \
     "SOCK_WORKERS_COUNT:     %d\n" \
     "SOCK_ERRORS_COUNT:      %d\n" \
@@ -75,7 +74,6 @@ int print_defines_info()
     PACK_IN_PACKETS_COUNT,
     PACK_QUEUE_COUNT,
     SOCK_VERSION,
-    SOCK_SERVER_STREAMER,
     SOCK_BUFFER_SIZE,
     SOCK_WORKERS_COUNT,
     SOCK_ERRORS_COUNT,

@@ -5,16 +5,11 @@
 
 #include "log.h"
 #include "protocol_utils.h"
-
 #include "socket.h"
+#include "cmdworker.h"
 #include "wsworker.h"
 #include "webworker.h"
 #include "test.h"
-//==============================================================================
-#ifdef DEBUG_MODE
-static int in_packets_count  = 0;
-static int out_packets_count = 0;
-#endif
 //==============================================================================
 int sock_init();
 int sock_deinit();
@@ -22,13 +17,12 @@ int sock_deinit();
 int sock_worker_init(sock_worker_t *worker);
 //==============================================================================
 void *sock_server_worker(void *arg);
+void *sock_client_worker(void *arg);
 //==============================================================================
 int sock_server_init (sock_server_t *server);
 int sock_server_start(sock_worker_t *worker);
 int sock_server_work (sock_server_t *server);
 int sock_server_stop (sock_worker_t *worker);
-//==============================================================================
-void *sock_client_worker(void *arg);
 //==============================================================================
 int sock_client_init (sock_worker_t *worker);
 int sock_client_start(sock_worker_t *worker);
@@ -42,12 +36,10 @@ void *sock_send_worker(void *arg);
 //==============================================================================
 int sock_do_send(SOCKET sock, char *buffer, int  size);
 //==============================================================================
-int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker);
-//==============================================================================
-int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv);
 int sock_route_to_ws (sock_worker_t *worker);
 int sock_send_cmd    (sock_worker_t *worker, int argc, ...);
 int sock_exec_cmd    (sock_worker_t *worker);
+//==============================================================================
 //==============================================================================
 int sock_version(char *version)
 {
@@ -124,9 +116,6 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 //  if(server != 0)
 //    free(server);
 //  server = (sock_server_t*)malloc(sizeof(sock_server_t));
-
-//  sprintf(tmp, "sock_server, server.addr: %u", server);
-//  log_add(tmp, LOG_INFO);
 
   sock_server_init(server);
 
@@ -286,10 +275,7 @@ int sock_server_start(sock_worker_t *worker)
   log_add("BEGIN sock_server_start", LOG_DEBUG);
 
   char tmp[128];
-  if(SOCK_SERVER_STREAMER)
-    sprintf(tmp, "sock_server_start(SERVER_STREAMER), Port: %d", worker->port);
-  else
-    sprintf(tmp, "sock_server_start(CLIENT_STREAMER), Port: %d", worker->port);
+  sprintf(tmp, "sock_server_start, Port: %d", worker->port);
   log_add(tmp, LOG_DEBUG);
 
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -434,11 +420,7 @@ int sock_client_start(sock_worker_t *worker)
   log_add("BEGIN sock_client_start", LOG_INFO);
 
   char tmp[128];
-
-  if(SOCK_SERVER_STREAMER)
-    sprintf(tmp, "sock_client_start(SERVER_STREAMER), Port: %d, Host: %s", worker->port, worker->host);
-  else
-    sprintf(tmp, "sock_client_start(CLIENT_STREAMER), Port: %d, Host: %s", worker->port, worker->host);
+  sprintf(tmp, "sock_client_start, Port: %d, Host: %s", worker->port, worker->host);
   log_add(tmp, LOG_INFO);
 
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
@@ -512,60 +494,6 @@ int sock_do_work(sock_worker_t *worker, int wait)
     int status_recv;
     pthread_join(worker->receive_thread, (void**)&status_recv);
   };
-}
-//==============================================================================
-int sock_stream_print(sock_worker_t *worker, pack_type out, char *prefix, int clear, int buffer, int pack, int csv)
-{
-  if(clear)
-    clr_scr();
-
-  if(!buffer && !pack && !csv)
-    return PACK_OK;
-
-  char tmp[1024];
-
-  if(buffer)
-  {
-    pack_buffer  buffer;
-    pack_size    size;
-
-    pack_current_packet_to_buffer(out, buffer, &size, &worker->protocol);
-
-    #ifdef SOCK_PACK_MODE
-    bytes_to_hex(buffer, (pack_size)size, tmp);
-    log_add(tmp, LOG_DEBUG);
-    #else
-    add_to_log(buffer, LOG_DEBUG);
-    #endif
-  };
-
-  if(pack || csv)
-  {
-    pack_packet *tmp_pack = _pack_pack_current(out, &worker->protocol);
-
-    if(pack)
-    {
-      sprintf(tmp, "%s\n", prefix);
-//      sprintf(tmp, "%sNumber: %d\n", tmp, tmp_pack->number);
-      pack_key     key;
-      pack_value   valueS;
-      pack_size tmp_words_count = _pack_words_count(tmp_pack);
-//      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
-      for(pack_size i = 0; i < tmp_words_count; i++)
-        if(pack_val_by_index_as_string(tmp_pack, i, key, valueS) == PACK_OK)
-          sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
-      log_add(tmp, LOG_INFO);
-    };
-
-    if(csv)
-    {
-      pack_buffer csv;
-      pack_values_to_csv(tmp_pack, ';', csv);
-      log_add(csv, LOG_DATA);
-    };
-  };
-
-  return PACK_OK;
 }
 //==============================================================================
 int sock_route_to_ws(sock_worker_t *worker)
@@ -661,24 +589,12 @@ void *sock_send_worker(void *arg)
 
           int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
 
-          #ifdef DEBUG_MODE
-          if(tmp_cnt != PACK_ERROR)
-          {
-            out_packets_count += tmp_cnt;
-            #ifdef SOCK_EXTRA_LOGS
-            char tmp[32];
-            sprintf(tmp, "out_packets_count: %d", out_packets_count);
-            log_add(tmp, LOG_DEBUG);
-            #endif
-          };
-          #endif
-
           if(tmp_cnt > 0)
           {
 //            sprintf(tmp, "sock_send_worker, sock_do_send, sock: %d", tmp_sock);
 //            log_add(tmp, LOG_INFO);
 
-//            sock_stream_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
+//            pack_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
 
             if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
               tmp_errors++;
@@ -714,13 +630,10 @@ void *sock_send_worker(void *arg)
           if(!tmp_worker->is_locked)
             if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
             {
-//              log_add(tmp_worker->out_message, LOG_DEBUG);
-
               if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
                 tmp_errors++;
 
-              // TODO утечка
-//              free(tmp_worker->out_message);
+              free(tmp_worker->out_message);
               tmp_worker->out_message = NULL;
               tmp_worker->out_message_size = 0;
 
@@ -733,13 +646,10 @@ void *sock_send_worker(void *arg)
           if(!tmp_worker->is_locked)
             if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
             {
-//              log_add(tmp_worker->out_message, LOG_DEBUG);
-
               if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
                 tmp_errors++;
 
-              // TODO утечка
-//              free(tmp_worker->out_message);
+              free(tmp_worker->out_message);
               tmp_worker->out_message = NULL;
               tmp_worker->out_message_size = 0;
 
@@ -841,8 +751,32 @@ void *sock_recv_worker(void *arg)
       log_add(tmp, LOG_INFO);
       #endif
 
-      sock_handle_buffer(buffer, (pack_size)size, tmp_worker);
-    };
+      switch(tmp_worker->mode)
+      {
+        case SOCK_MODE_CLIENT:
+        case SOCK_MODE_SERVER:
+        {
+//          cmd_handle_connection();
+          break;
+        }
+        case SOCK_MODE_WEB_SERVER:
+        {
+//          tmp_worker->is_locked++;
+//          tmp_worker->out_message = (char*)malloc(1024 * 1024);
+//          web_handle_connection((char*)buffer, tmp_worker->out_message, &tmp_worker->out_message_size);
+//          tmp_worker->is_locked--;
+          break;
+        }
+        case SOCK_MODE_WS_SERVER:
+        {
+//          tmp_worker->is_locked++;
+//          tmp_worker->out_message = (char*)malloc(1024 * 1024);
+//          ws_handle_connection((char*)buffer, tmp_worker->out_message, &tmp_worker->out_message_size);
+//          tmp_worker->is_locked--;
+          break;
+        }
+      }
+    }
   }
 
   sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
@@ -851,87 +785,6 @@ void *sock_recv_worker(void *arg)
   tmp_worker->is_active = SOCK_FALSE;
 
   return NULL;
-}
-//==============================================================================
-int sock_handle_buffer(pack_buffer buffer, pack_size size, sock_worker_t *worker)
-{
-  switch(worker->mode)
-  {
-    case SOCK_MODE_CLIENT:
-    case SOCK_MODE_SERVER:
-    {
-      int cnt = pack_buffer_validate(buffer, (pack_size)size, PACK_VALIDATE_ADD, &worker->protocol);
-
-      #ifdef DEBUG_MODE
-      if(cnt != PACK_ERROR)
-      {
-        in_packets_count += cnt;
-        #ifdef SOCK_EXTRA_LOGS
-        char tmp[32];
-        sprintf(tmp, "in_packets_count: %d", in_packets_count);
-        log_add(tmp, LOG_DEBUG);
-        #endif
-      };
-      #endif
-
-      if(cnt > 0)
-      {
-        if(worker->mode == SOCK_MODE_CLIENT)
-          sock_stream_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
-        sock_exec_cmd(worker);
-        sock_route_to_ws(worker);
-      };
-      break;
-    }
-    case SOCK_MODE_WEB_SERVER:
-    {
-      worker->is_locked++;
-
-      worker->out_message = (char*)malloc(1024 * 1024);
-      web_handle_buffer((char*)buffer, worker->out_message, &worker->out_message_size);
-
-      worker->is_locked--;
-
-      break;
-    }
-    case SOCK_MODE_WS_SERVER:
-    {
-//      log_add(buffer, LOG_INFO);
-
-      if(worker->handshake)
-      {
-        ws_handle_buffer(buffer);
-      }
-      else
-      {
-//        log_add(buffer, LOG_DEBUG);
-
-        char *tmp_message = (char*)malloc(10000);
-        ws_hand_shake((char*)buffer, tmp_message);
-
-        worker->is_locked++;
-
-        worker->out_message = (char*)malloc(10000);
-
-        strcpy(worker->out_message, "HTTP/1.1 101 Switching Protocols\r\n");
-        strcat(worker->out_message, "Upgrade: websocket\r\n");
-        strcat(worker->out_message, "Connection: Upgrade\r\n");
-        char tmp[10240];
-        sprintf(tmp, "Sec-WebSocket-Accept: %s\r\n\r\n", tmp_message);
-        strcat(worker->out_message, tmp);
-
-        worker->out_message[strlen(worker->out_message)+1] = '\0';
-
-        worker->is_locked--;
-
-        // TODO утечка
-//        free(tmp_message);
-
-//        log_add(worker->out_message, LOG_DEBUG);
-      };
-      break;
-    }
-  }
 }
 //==============================================================================
 int sock_do_send(SOCKET sock, char *buffer, int size)
@@ -1062,7 +915,6 @@ int soch_client_exec_cmd(sock_worker_t *worker, int argc, ...)
   return SOCK_OK;
 }
 //==============================================================================
-// TODO correct ws frame
 // http://stackoverflow.com/questions/8125507/how-can-i-send-and-receive-websocket-messages-on-the-server-side
 int sock_server_send_to_ws(sock_server_t *server, int argc, ...)
 {

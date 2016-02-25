@@ -52,7 +52,6 @@
 #define SOCK_TRUE                1
 #define SOCK_FALSE               0
 //==============================================================================
-#define SOCK_SERVER_STREAMER     0
 #define SOCK_BUFFER_SIZE         100
 #define SOCK_WORKERS_COUNT       256
 #define SOCK_ERRORS_COUNT        10
@@ -67,17 +66,14 @@ typedef unsigned short sock_index_t;
 //==============================================================================
 typedef struct
 {
-
 }ext_data_t;
 //==============================================================================
 typedef struct
 {
-
 }web_ext_data_t;
 //==============================================================================
 typedef struct
 {
-
 }ws_ext_data_t;
 //==============================================================================
 /*

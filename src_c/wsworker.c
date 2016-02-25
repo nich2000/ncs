@@ -64,14 +64,36 @@ int ws_hand_shake(char *request, char *response)
 
 int ws_handle_buffer(pack_buffer buffer)
 {
-  char tmp[1024];
-  int tmp_size;
+//  if(worker->handshake)
+//  {
+//    char tmp[1024];
+//    int tmp_size;
+//    ws_get_frame(buffer, strlen(buffer), tmp, 1024, &tmp_size);
+//    log_add(tmp, LOG_INFO);
+//  }
+//  else
+//  {
+//    char *tmp_message = (char*)malloc(10000);
+//    ws_hand_shake((char*)buffer, tmp_message);
 
-//  bytes_to_hex(buffer, strlen(buffer), tmp);
-//  log_add(tmp, LOG_INFO);
+//    worker->is_locked++;
 
-  ws_get_frame(buffer, strlen(buffer), tmp, 1024, &tmp_size);
-  log_add(tmp, LOG_INFO);
+//    worker->out_message = (char*)malloc(10000);
+
+//    strcpy(worker->out_message, "HTTP/1.1 101 Switching Protocols\r\n");
+//    strcat(worker->out_message, "Upgrade: websocket\r\n");
+//    strcat(worker->out_message, "Connection: Upgrade\r\n");
+//    char tmp[10240];
+//    sprintf(tmp, "Sec-WebSocket-Accept: %s\r\n\r\n", tmp_message);
+//    strcat(worker->out_message, tmp);
+
+//    worker->out_message[strlen(worker->out_message)+1] = '\0';
+
+//    worker->is_locked--;
+
+//    // TODO утечка
+////        free(tmp_message);
+//  };
 
   return 0;
 }

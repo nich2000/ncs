@@ -1,11 +1,11 @@
+//==============================================================================
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "string.h"
+#include <string.h>
 
 #include "webworker.h"
 #include "log.h"
-
+//==============================================================================
 /*
 * GET /index.html HTTP/1.0 \r\n
 * Host: www.paulgriffiths.net \r\n
@@ -13,19 +13,30 @@
 * Accept-Encoding: gzip, compress \r\n
 * Accept-Language: en \r\n\r\n
 */
-
 /*
 * HTTP/1.0 200 OK \r\n
 * Server: PGWebServ v0.1 \r\n
 * Content-Type: text/html \r\n\r\n
 * <DATA> \r\n
 */
-
-// example
+//==============================================================================
+// examples
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
-
-int web_handle_buffer(char *request, char *response, int *size)
+//==============================================================================
+int web_create()
+{
+}
+//==============================================================================
+int web_work()
+{
+}
+//==============================================================================
+int web_close()
+{
+}
+//==============================================================================
+int web_handle_connection(char *request, char *response, int *size)
 {
   char    tmp[128];
   char   *tmp_header;
@@ -99,3 +110,4 @@ int web_handle_buffer(char *request, char *response, int *size)
 
   return 0;
 }
+//==============================================================================
