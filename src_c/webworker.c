@@ -20,20 +20,20 @@
 * <DATA> \r\n
 */
 //==============================================================================
-// examples
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
 //==============================================================================
-int web_create()
+int web_server_start(web_worker_t *worker, sock_port_t port)
 {
 }
 //==============================================================================
-int web_work()
+int web_server_work()
 {
 }
 //==============================================================================
-int web_close()
+int web_server_stop(web_worker_t *worker)
 {
+  worker->custom.is_active = SOCK_FALSE;
 }
 //==============================================================================
 int web_handle_connection(char *request, char *response, int *size)

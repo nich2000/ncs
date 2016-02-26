@@ -1,80 +1,12 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 //==============================================================================
-#ifdef __linux__
-  #include <sys/types.h>
-  #include <sys/socket.h>
-  #include <netinet/ip.h>
-  #include <arpa/inet.h>
-  #include <errno.h>
-#elif _WIN32
-  #include <winsock.h>
-#else
-#endif
-//==============================================================================
 #include <pthread.h>
 
 #include "defines.h"
-#include "protocol.h"
-#include "streamer.h"
-#include "exec.h"
-//==============================================================================
-#ifdef __linux__
-  #define INVALID_SOCKET -1
-  #define SOCKET_ERROR   -1
-
-  typedef int SOCKET;
-
-  #define closesocket close
-#elif _WIN32
-  #define WINSOCK_VERSION 0x0101
-#else
-#endif
-//==============================================================================
-#define SOCK_TYPE_UNKNOWN        0
-#define SOCK_TYPE_CLIENT         1
-#define SOCK_TYPE_SERVER         2
-#define SOCK_TYPE_REMOTE_CLIENT  3
-//==============================================================================
-#define SOCK_MODE_UNKNOWN        0
-#define SOCK_MODE_CLIENT         1
-#define SOCK_MODE_SERVER         2
-#define SOCK_MODE_WS_SERVER      3
-#define SOCK_MODE_WEB_SERVER     4
-//==============================================================================
-#define SOCK_VERSION             "SOCK001\0"
-#define SOCK_VERSION_SIZE        8
-#define SOCK_HOST_SIZE           15  // 255.255.255.255
-//==============================================================================
-#define SOCK_OK                  0
-#define SOCK_ERROR              -1
-//==============================================================================
-#define SOCK_TRUE                1
-#define SOCK_FALSE               0
-//==============================================================================
-#define SOCK_BUFFER_SIZE         100
-#define SOCK_WORKERS_COUNT       256
-#define SOCK_ERRORS_COUNT        10
-//==============================================================================
-#define SOCK_WAIT_SELECT         5
-#define SOCK_WAIT_CONNECT        5
-//==============================================================================
-typedef unsigned short sock_mode_t;
-typedef unsigned short sock_type_t;
-typedef unsigned short sock_id_t;
-typedef unsigned short sock_index_t;
-//==============================================================================
-typedef struct
-{
-}ext_data_t;
-//==============================================================================
-typedef struct
-{
-}web_ext_data_t;
-//==============================================================================
-typedef struct
-{
-}ws_ext_data_t;
+#include "protocol_types.h"
+#include "customworker.h"
+#include "socket_types.h"
 //==============================================================================
 /*
 * TODO добавить некий указатель на ExtData или ExtParam,
@@ -83,21 +15,14 @@ typedef struct
 */
 typedef struct
 {
-  sock_id_t              id;
-  sock_type_t            type;
-  sock_mode_t            mode;
-  int                    port;
-  char                   host[SOCK_HOST_SIZE];
-  SOCKET                 sock;
-  int                    is_active;
+  custom_worker_t        custom;
   pthread_t              work_thread;
   pthread_t              send_thread;
   pthread_t              receive_thread;
   pack_protocol          protocol;
-  exec_func              exec_cmd;
+//  exec_func              exec_cmd;
 //  streamer_worker        streamer;
   int                    handshake;
-  int                    is_locked;
   char                   *in_massage;
   int                    in_message_size;
   char                   *out_message;
@@ -121,7 +46,7 @@ typedef struct
 //==============================================================================
 int sock_version(char *version);
 //==============================================================================
-int sock_server(int port, sock_server_t *server, sock_mode_t mode);
+int sock_server(sock_server_t *server, sock_port_t port, sock_mode_t mode);
 int sock_server_send_cmd  (sock_server_t *server, int argc, ...);
 int soch_server_exec_cmd  (sock_server_t *server, int argc, ...);
 int sock_server_send_to_ws(sock_server_t *server, int argc, ...);

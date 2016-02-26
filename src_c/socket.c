@@ -10,6 +10,7 @@
 #include "wsworker.h"
 #include "webworker.h"
 #include "test.h"
+#include "socket_utils.h"
 //==============================================================================
 int sock_init();
 int sock_deinit();
@@ -50,27 +51,22 @@ int sock_version(char *version)
 //==============================================================================
 int sock_worker_init(sock_worker_t *worker)
 {
-  worker->id                 = 0;
-  worker->type               = SOCK_TYPE_UNKNOWN;
-  worker->mode               = SOCK_MODE_UNKNOWN;
-  worker->port               = 0;
-  memset(worker->host, 0, SOCK_HOST_SIZE);
-  worker->sock               = INVALID_SOCKET;
-
-  worker->is_active          = SOCK_FALSE;
+  worker->custom.id                 = 0;
+  worker->custom.type               = SOCK_TYPE_UNKNOWN;
+  worker->custom.mode               = SOCK_MODE_UNKNOWN;
+  worker->custom.port               = 0;
+  memset(worker->custom.host, 0, SOCK_HOST_SIZE);
+  worker->custom.sock               = INVALID_SOCKET;
+  worker->custom.is_active          = SOCK_FALSE;
+  worker->custom.is_locked          = 0;
 
   worker->work_thread        = 0;
   worker->send_thread        = 0;
   worker->receive_thread     = 0;
-
-  worker->exec_cmd           = 0;
-
+//  worker->exec_cmd           = 0;
   worker->handshake          = 0;
-  worker->is_locked          = 0;
-
   worker->in_massage         = NULL;
   worker->in_message_size    = 0;
-
   worker->out_message        = NULL;
   worker->out_message_size   = 0;
 
@@ -81,33 +77,12 @@ int sock_worker_init(sock_worker_t *worker)
 //==============================================================================
 int sock_exit(sock_worker_t *worker)
 {
-  worker->is_active = SOCK_FALSE;
+  worker->custom.is_active = SOCK_FALSE;
 }
 //==============================================================================
-int sock_server(int port, sock_server_t *server, sock_mode_t mode)
+int sock_server(sock_server_t *server, sock_port_t port, sock_mode_t mode)
 {
-  char tmp[128];
-
-  log_add("----------", LOG_INFO);
-  char tmp_pack_version[PACK_VALUE_SIZE];
-  pack_version(tmp_pack_version);
-  char tmp_sock_version[SOCK_VERSION_SIZE];
-  sock_version(tmp_sock_version);
-  sprintf(tmp, "Sock version: %s, Pack version: %s", tmp_sock_version, tmp_pack_version);
-  log_add(tmp, LOG_INFO);
-  switch(mode)
-  {
-    case SOCK_MODE_SERVER:
-    sprintf(tmp, "Server(SERVER), port: %d", port);
-    break;
-    case SOCK_MODE_WS_SERVER:
-    sprintf(tmp, "Server(WS_SERVER), port: %d", port);
-    break;
-    case SOCK_MODE_WEB_SERVER:
-    sprintf(tmp, "Server(WEB_SERVER), port: %d", port);
-    break;
-  }
-  log_add(tmp, LOG_INFO);
+  sock_print_server_header(mode, port);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -119,11 +94,11 @@ int sock_server(int port, sock_server_t *server, sock_mode_t mode)
 
   sock_server_init(server);
 
-  server->worker.id        = 0;
-  server->worker.type      = SOCK_TYPE_SERVER;
-  server->worker.mode      = mode;
-  server->worker.port      = port;
-  server->worker.is_active = SOCK_TRUE;
+  server->worker.custom.id        = 0;
+  server->worker.custom.type      = SOCK_TYPE_SERVER;
+  server->worker.custom.mode      = mode;
+  server->worker.custom.port      = port;
+  server->worker.custom.is_active = SOCK_TRUE;
 
   return pthread_create(&server->worker.work_thread, &tmp_attr, sock_server_worker, (void*)server);
 }
@@ -151,18 +126,7 @@ void *sock_server_worker(void *arg)
 //==============================================================================
 int sock_client(int port, char *host, sock_worker_t *worker)
 {
-  char tmp[128];
-
-  log_add("----------", LOG_INFO);
-  char tmp_pack_version[PACK_VERSION_SIZE];
-  pack_version(tmp_pack_version);
-  char tmp_sock_version[SOCK_VERSION_SIZE];
-  sock_version(tmp_sock_version);
-  sprintf(tmp, "Sock version: %s, Pack version: %s", tmp_sock_version, tmp_pack_version);
-  log_add(tmp, LOG_INFO);
-  sprintf(tmp, "Client, port: %d, host: %s", port, host);
-  log_add(tmp, LOG_INFO);
-  log_add("----------", LOG_INFO);
+  sock_print_client_header(port, host);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -174,12 +138,12 @@ int sock_client(int port, char *host, sock_worker_t *worker)
 
   sock_worker_init(worker);
 
-  worker->id         = 0;
-  worker->type       = SOCK_TYPE_CLIENT;
-  worker->mode       = SOCK_MODE_CLIENT;
-  worker->port       = port;
-  worker->is_active = SOCK_TRUE;
-  strcpy(worker->host, host);
+  worker->custom.id         = 0;
+  worker->custom.type       = SOCK_TYPE_CLIENT;
+  worker->custom.mode       = SOCK_MODE_CMD_CLIENT;
+  worker->custom.port       = port;
+  worker->custom.is_active = SOCK_TRUE;
+  strcpy(worker->custom.host, host);
 
   return pthread_create(&worker->work_thread, &tmp_attr, sock_client_worker, (void*)worker);
 }
@@ -199,7 +163,7 @@ void *sock_client_worker(void *arg)
     sock_client_work (tmp_worker);
     sock_client_stop (tmp_worker);
   }
-  while(tmp_worker->is_active);
+  while(tmp_worker->custom.is_active);
 
   sock_deinit();
 
@@ -275,11 +239,11 @@ int sock_server_start(sock_worker_t *worker)
   log_add("BEGIN sock_server_start", LOG_DEBUG);
 
   char tmp[128];
-  sprintf(tmp, "sock_server_start, Port: %d", worker->port);
+  sprintf(tmp, "sock_server_start, Port: %d", worker->custom.port);
   log_add(tmp, LOG_DEBUG);
 
-  worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-  if (worker->sock == INVALID_SOCKET)
+  worker->custom.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if (worker->custom.sock == INVALID_SOCKET)
   {
     sprintf(tmp, "sock_server_start, socket, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
@@ -290,9 +254,9 @@ int sock_server_start(sock_worker_t *worker)
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(worker->port);
+  addr.sin_port = htons(worker->custom.port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
+  if(bind(worker->custom.sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_server_start, bind, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
@@ -301,7 +265,7 @@ int sock_server_start(sock_worker_t *worker)
   else
     log_add("sock_server_start, bind", LOG_DEBUG);
 
-  if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
+  if (listen(worker->custom.sock, SOMAXCONN) == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_start_server, listen, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
@@ -318,7 +282,7 @@ int sock_server_start(sock_worker_t *worker)
 int sock_find_free_index(sock_server_t *server, int *index)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(!server->clients.items[i].is_active)
+    if(!server->clients.items[i].custom.is_active)
     {
       *index = i;
       return SOCK_TRUE;
@@ -339,19 +303,19 @@ int sock_server_work(sock_server_t *server)
 //  sprintf(tmp, "sock_server_work, server.addr: %u", server);
 //  log_add(tmp, LOG_INFO);
 
-  while(server->worker.is_active)
+  while(server->worker.custom.is_active)
   {
     SOCKET tmp_client;
 
     char tmp_host[20];
 
     log_add("sock_server_work, accepting...", LOG_DEBUG);
-    tmp_client = accept(server->worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
+    tmp_client = accept(server->worker.custom.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
       sprintf(tmp, "sock_server_work, accept, Error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
-      server->worker.is_active = SOCK_FALSE;
+      server->worker.custom.is_active = SOCK_FALSE;
       return SOCK_ERROR;
     }
     else
@@ -380,20 +344,20 @@ int sock_server_work(sock_server_t *server)
 
       sock_worker_init(tmp_worker);
 
-      tmp_worker->id        = server->clients.last_id;
-      tmp_worker->type      = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_worker->mode      = server->worker.mode;
-      tmp_worker->port      = server->worker.port;
-      tmp_worker->sock      = tmp_client;
-      tmp_worker->is_active = SOCK_TRUE;
-      strcpy(tmp_worker->host, tmp_host);
+      tmp_worker->custom.id        = server->clients.last_id;
+      tmp_worker->custom.type      = SOCK_TYPE_REMOTE_CLIENT;
+      tmp_worker->custom.mode      = server->worker.custom.mode;
+      tmp_worker->custom.port      = server->worker.custom.port;
+      tmp_worker->custom.sock      = tmp_client;
+      tmp_worker->custom.is_active = SOCK_TRUE;
+      strcpy(tmp_worker->custom.host, tmp_host);
 
       sock_do_work(tmp_worker, 0);
     }
     else
     {
       log_add("sock_server_work, no available workers", LOG_CRITICAL_ERROR);
-      server->worker.is_active = SOCK_FALSE;
+      server->worker.custom.is_active = SOCK_FALSE;
       return SOCK_ERROR;
     };
   };
@@ -406,7 +370,7 @@ int sock_server_work(sock_server_t *server)
 int sock_server_stop(sock_worker_t *worker)
 {
   log_add("sock_server_stop", LOG_DEBUG);
-  closesocket(worker->sock);
+  closesocket(worker->custom.sock);
   return SOCK_OK;
 }
 //==============================================================================
@@ -420,11 +384,11 @@ int sock_client_start(sock_worker_t *worker)
   log_add("BEGIN sock_client_start", LOG_INFO);
 
   char tmp[128];
-  sprintf(tmp, "sock_client_start, Port: %d, Host: %s", worker->port, worker->host);
+  sprintf(tmp, "sock_client_start, Port: %d, Host: %s", worker->custom.port, worker->custom.host);
   log_add(tmp, LOG_INFO);
 
-  worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-  if (worker->sock == INVALID_SOCKET)
+  worker->custom.sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  if (worker->custom.sock == INVALID_SOCKET)
   {
     sprintf(tmp, "sock_client_start, socket, Error: %d", sock_get_error());
     log_add(tmp, LOG_ERROR);
@@ -432,7 +396,7 @@ int sock_client_start(sock_worker_t *worker)
   }
   else
   {
-    sprintf(tmp, "sock_client_start, socket: %d", worker->sock);
+    sprintf(tmp, "sock_client_start, socket: %d", worker->custom.sock);
     log_add(tmp, LOG_DEBUG);
   };
 
@@ -445,13 +409,13 @@ int sock_client_work(sock_worker_t *worker)
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(worker->port);
-  addr.sin_addr.s_addr = inet_addr(worker->host);
+  addr.sin_port = htons(worker->custom.port);
+  addr.sin_addr.s_addr = inet_addr(worker->custom.host);
 
   log_add("sock_client_work, connecting...", LOG_INFO);
-  while(worker->is_active)
+  while(worker->custom.is_active)
   {
-    if(connect(worker->sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
+    if(connect(worker->custom.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
       #ifdef SOCK_EXTRA_LOGS
       char tmp[128];
@@ -474,7 +438,7 @@ int sock_client_work(sock_worker_t *worker)
 int sock_client_stop(sock_worker_t *worker)
 {
   log_add("sock_client_stop", LOG_INFO);
-  closesocket(worker->sock);
+  closesocket(worker->custom.sock);
   return SOCK_OK;
 }
 //==============================================================================
@@ -561,7 +525,7 @@ int sock_exec_cmd(sock_worker_t *worker)
 void *sock_send_worker(void *arg)
 {
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
-  SOCKET         tmp_sock = tmp_worker->sock;
+  SOCKET         tmp_sock = tmp_worker->custom.sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN sock_send_worker, socket: %d", tmp_sock);
@@ -573,12 +537,12 @@ void *sock_send_worker(void *arg)
   int            tmp_errors = 0;
 
   // TODO sock_do_send вызывается из разных мест
-  while(tmp_worker->is_active)
+  while(tmp_worker->custom.is_active)
   {
-    switch(tmp_worker->mode)
+    switch(tmp_worker->custom.mode)
     {
-      case SOCK_MODE_CLIENT:;
-      case SOCK_MODE_SERVER:;
+      case SOCK_MODE_CMD_CLIENT:;
+      case SOCK_MODE_CMD_SERVER:;
       {
         tmp_pack = _pack_next(&tmp_worker->protocol);
         while(tmp_pack != NULL)
@@ -599,7 +563,7 @@ void *sock_send_worker(void *arg)
             if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
               tmp_errors++;
 
-            if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
+            if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->custom.is_active))
               break;
           }
           // TODO двойной вызов этой функции: до и в цикле
@@ -609,7 +573,7 @@ void *sock_send_worker(void *arg)
       };
       case SOCK_MODE_WEB_SERVER:
       {
-        if(!tmp_worker->is_locked)
+        if(!tmp_worker->custom.is_locked)
           if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
           {
             sprintf(tmp, "sock_send_worker, sock_do_send, size: %d, socket: %d", tmp_worker->out_message_size, tmp_sock);
@@ -619,7 +583,7 @@ void *sock_send_worker(void *arg)
 
             free(tmp_worker->out_message);
 
-            tmp_worker->is_active = SOCK_FALSE;
+            tmp_worker->custom.is_active = SOCK_FALSE;
           }
         break;
       };
@@ -627,7 +591,7 @@ void *sock_send_worker(void *arg)
       {
         if(tmp_worker->handshake)
         {
-          if(!tmp_worker->is_locked)
+          if(!tmp_worker->custom.is_locked)
             if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
             {
               if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
@@ -637,13 +601,13 @@ void *sock_send_worker(void *arg)
               tmp_worker->out_message = NULL;
               tmp_worker->out_message_size = 0;
 
-              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
+              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->custom.is_active))
                 break;
             }
         }
         else
         {
-          if(!tmp_worker->is_locked)
+          if(!tmp_worker->custom.is_locked)
             if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
             {
               if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
@@ -655,7 +619,7 @@ void *sock_send_worker(void *arg)
 
               tmp_worker->handshake = 1;
 
-              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
+              if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->custom.is_active))
                 break;
             }
         }
@@ -663,8 +627,8 @@ void *sock_send_worker(void *arg)
       };
     };
 
-    if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->is_active))
-      tmp_worker->is_active = SOCK_FALSE;
+    if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->custom.is_active))
+      tmp_worker->custom.is_active = SOCK_FALSE;
 
     usleep(1000);
   }
@@ -678,7 +642,7 @@ void *sock_send_worker(void *arg)
 void *sock_recv_worker(void *arg)
 {
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
-  SOCKET tmp_sock = tmp_worker->sock;
+  SOCKET tmp_sock = tmp_worker->custom.sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", tmp_sock);
@@ -689,7 +653,7 @@ void *sock_recv_worker(void *arg)
   int         retval = 0;
   int         tmp_errors = 0;
 
-  while(tmp_worker->is_active)
+  while(tmp_worker->custom.is_active)
   {
     struct timeval tv;
     tv.tv_sec  = SOCK_WAIT_SELECT;
@@ -751,10 +715,10 @@ void *sock_recv_worker(void *arg)
       log_add(tmp, LOG_INFO);
       #endif
 
-      switch(tmp_worker->mode)
+      switch(tmp_worker->custom.mode)
       {
-        case SOCK_MODE_CLIENT:
-        case SOCK_MODE_SERVER:
+        case SOCK_MODE_CMD_CLIENT:
+        case SOCK_MODE_CMD_SERVER:
         {
 //          cmd_handle_connection();
           break;
@@ -782,7 +746,7 @@ void *sock_recv_worker(void *arg)
   sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  tmp_worker->is_active = SOCK_FALSE;
+  tmp_worker->custom.is_active = SOCK_FALSE;
 
   return NULL;
 }
@@ -930,12 +894,12 @@ int sock_server_send_to_ws(sock_server_t *server, int argc, ...)
   {
     sock_worker_t *tmp_worker = &server->clients.items[i];
 
-    tmp_worker->is_locked++;
+    tmp_worker->custom.is_locked++;
 
     tmp_worker->out_message = (char*)malloc(1024);
     ws_make_frame(TEXT_FRAME, cmd, strlen(cmd), tmp_worker->out_message, 1024);
 
-    tmp_worker->is_locked--;
+    tmp_worker->custom.is_locked--;
   };
 
   va_end(params);

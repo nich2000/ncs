@@ -103,7 +103,7 @@ int handle_command(char *command)
 //      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 //      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
 
-//      web_server();
+//      web_server_start();
 
       return RESULT_DONE;
     }
