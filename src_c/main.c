@@ -3,14 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "streamer.h"
 #include "log.h"
-#include "socket.h"
 #include "test.h"
-#include "socket_utils.h"
 #include "utils.h"
-#include "protocol.h"
-#include "gps_parse.h"
+#include "webworker.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
@@ -28,14 +24,14 @@ int   ws_server_port       = DEFAULT_WS_SERVER_PORT;
 int   server_port          = DEFAULT_SERVER_PORT;
 char *server_ip            = DEFAULT_SERVER_IP;
 //==============================================================================
-sock_server_t *_web_server = NULL;
-sock_server_t *_ws_server  = NULL;
-sock_server_t *_server     = NULL;
-sock_worker_t *_client     = NULL;
-sock_server_t __web_server;
-sock_server_t __ws_server;
-sock_server_t __server;
-sock_worker_t __client;
+//sock_server_t *_web_server = NULL;
+//sock_server_t *_ws_server  = NULL;
+//sock_server_t *_server     = NULL;
+//sock_worker_t *_client     = NULL;
+//sock_server_t __web_server;
+//sock_server_t __ws_server;
+//sock_server_t __server;
+//sock_worker_t __client;
 //==============================================================================
 int handle_command(char *command)
 {
@@ -103,7 +99,7 @@ int handle_command(char *command)
 //      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
 //      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
 
-//      web_server_start();
+      web_server(SOCK_STATE_START, DEFAULT_WEB_SERVER_PORT);
 
       return RESULT_DONE;
     }
@@ -128,22 +124,22 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "serverinfo") == 0)
     {
-      print_server_info(_server);
+//      print_server_info(_server);
       return RESULT_DONE;
     }
     else if(strcmp(token, "webserverinfo") == 0)
     {
-      print_server_info(_web_server);
+//      print_server_info(_web_server);
       return RESULT_DONE;
     }
     else if(strcmp(token, "wsserverinfo") == 0)
     {
-      print_server_info(_ws_server);
+//      print_server_info(_ws_server);
       return RESULT_DONE;
     }
     else if(strcmp(token, "clientinfo") == 0)
     {
-      print_worker_info(_client, "client");
+//      print_worker_info(_client, "client");
       return RESULT_DONE;
     }
     return RESULT_UNKNOWN;
@@ -152,17 +148,17 @@ int handle_command(char *command)
   {
     if(strcmp(token, "sndtocl") == 0)
     {
-      sock_server_send_cmd(_server, 1, param1);
+//      sock_server_send_cmd(_server, 1, param1);
       return RESULT_DONE;
     }
     else if(strcmp(token, "sndtowscl") == 0)
     {
-      sock_server_send_to_ws(_ws_server, 1, param1);
+//      sock_server_send_to_ws(_ws_server, 1, param1);
       return RESULT_DONE;
     }
     else if(strcmp(token, "sndtosr") == 0)
     {
-      sock_client_send_cmd(_client, 1, param1);
+//      sock_client_send_cmd(_client, 1, param1);
       return RESULT_DONE;
     }
 
@@ -172,12 +168,12 @@ int handle_command(char *command)
   {
     if(strcmp(token, "sndtocl") == 0)
     {
-      sock_server_send_cmd(_server, 2, param1, param2);
+//      sock_server_send_cmd(_server, 2, param1, param2);
       return RESULT_DONE;
     }
     else if(strcmp(token, "sndtosr") == 0)
     {
-      sock_client_send_cmd(_client, 2, param1, param2);
+//      sock_client_send_cmd(_client, 2, param1, param2);
       return RESULT_DONE;
     }
 
@@ -201,6 +197,8 @@ int handle_command(char *command)
 //==============================================================================
 int main(int argc, char *argv[])
 {
+  sock_init();
+
   if(argc > 1)
   {
     // 0     1  2 3     4 5
@@ -259,6 +257,9 @@ int main(int argc, char *argv[])
       }
     }
   };
+
+  sock_deinit();
+
   return 0;
 }
 //==============================================================================

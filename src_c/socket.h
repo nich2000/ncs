@@ -1,6 +1,7 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 //==============================================================================
+#include <unistd.h>
 #include <pthread.h>
 
 #include "defines.h"
@@ -16,7 +17,6 @@
 typedef struct
 {
   custom_worker_t        custom;
-  pthread_t              work_thread;
   pthread_t              send_thread;
   pthread_t              receive_thread;
   pack_protocol          protocol;
@@ -45,6 +45,10 @@ typedef struct
 }sock_server_t;
 //==============================================================================
 int sock_version(char *version);
+int sock_get_error();
+//==============================================================================
+int sock_init();
+int sock_deinit();
 //==============================================================================
 int sock_server(sock_server_t *server, sock_port_t port, sock_mode_t mode);
 int sock_server_send_cmd  (sock_server_t *server, int argc, ...);
@@ -54,7 +58,5 @@ int sock_server_send_to_ws(sock_server_t *server, int argc, ...);
 int sock_client(int port, char *host, sock_worker_t *worker);
 int sock_client_send_cmd(sock_worker_t *worker, int argc, ...);
 int soch_client_exec_cmd(sock_worker_t *worker, int argc, ...);
-//==============================================================================
-int sock_exit(sock_worker_t *worker);
 //==============================================================================
 #endif //SOCKET_H

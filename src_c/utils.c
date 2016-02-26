@@ -114,7 +114,7 @@ int print_worker_info(sock_worker_t *worker, char *prefix)
           worker->custom.port,
           worker->custom.host,
           worker->custom.sock,
-          worker->custom.is_active,
+          sock_state_to_string(worker->custom.state),
           worker->protocol.in_packets_list.index,
           worker->protocol.in_packets_list.count,
           worker->protocol.out_packets_list.index,

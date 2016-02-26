@@ -4,6 +4,9 @@
 #include <string.h>
 
 #include "webworker.h"
+#include "socket.h"
+#include "socket_types.h"
+#include "socket_utils.h"
 #include "log.h"
 //==============================================================================
 /*
@@ -23,20 +26,203 @@
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
 //==============================================================================
-int web_server_start(web_worker_t *worker, sock_port_t port)
+int web_server_init(web_worker_t *worker);
+int web_server_start(web_worker_t *worker, sock_port_t port);
+int web_server_work(web_worker_t *worker);
+int web_server_stop(web_worker_t *worker);
+int web_server_pause(web_worker_t *worker);
+void *web_server_worker(void *arg);
+int web_accept(SOCKET socket);
+void *web_handle_connection(void *arg);
+int web_get_response(char *request, char *response, int *size);
+//==============================================================================
+int          _web_server_id = 0;
+web_worker_t _web_server;
+//==============================================================================
+int web_server(sock_state_t state, sock_port_t port)
 {
+  sock_print_server_header(SOCK_MODE_WEB_SERVER, port);
+
+  switch(state)
+  {
+    case SOCK_STATE_NONE:
+    {
+      break;
+    }
+    case SOCK_STATE_START:
+    {
+      web_server_start(&_web_server, port);
+      break;
+    }
+    case SOCK_STATE_STOP:
+    {
+      web_server_stop(&_web_server);
+      break;
+    }
+    case SOCK_STATE_PAUSE:
+    {
+      web_server_pause(&_web_server);
+      break;
+    }
+    default:;
+  };
+
+  return SOCK_OK;
 }
 //==============================================================================
-int web_server_work()
+int web_server_init(web_worker_t *worker)
 {
+  custom_worker_init(&worker->custom_server.custom_worker);
+
+  worker->custom_server.custom_worker.id   = _web_server_id++;
+  worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
+  worker->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
+  worker->custom_server.on_accept          = &web_accept;
+}
+//==============================================================================
+int web_server_start(web_worker_t *worker, sock_port_t port)
+{
+  web_server_init(worker);
+
+  worker->custom_server.custom_worker.port  = port;
+  worker->custom_server.custom_worker.state = SOCK_STATE_START;
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  return pthread_create(&worker->custom_server.custom_worker.work_thread, &tmp_attr, web_server_worker, (void*)worker);
 }
 //==============================================================================
 int web_server_stop(web_worker_t *worker)
 {
-  worker->custom.is_active = SOCK_FALSE;
+  worker->custom_server.custom_worker.state = SOCK_STATE_STOP;
 }
 //==============================================================================
-int web_handle_connection(char *request, char *response, int *size)
+int web_server_pause(web_worker_t *worker)
+{
+  worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+}
+//==============================================================================
+void *web_server_worker(void *arg)
+{
+  log_add("BEGIN web_server_worker", LOG_DEBUG);
+
+  web_worker_t *tmp_server = (web_worker_t*)arg;
+
+  custom_server_start(&tmp_server->custom_server.custom_worker);
+  custom_server_work (&tmp_server->custom_server);
+  custom_worker_stop (&tmp_server->custom_server.custom_worker);
+
+  log_add("END web_server_worker", LOG_DEBUG);
+}
+//==============================================================================
+int web_accept(SOCKET socket)
+{
+  char tmp[1024];
+  sprintf(tmp, "web_accept, socket: %d", socket);
+  log_add(tmp, LOG_DEBUG);
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  SOCKET *s = malloc(sizeof(SOCKET));
+  memcpy(s, &socket, sizeof(SOCKET));
+
+  pthread_create(NULL, &tmp_attr, web_handle_connection, (void*)s);
+}
+//==============================================================================
+void *web_handle_connection(void *arg)
+{
+  SOCKET tmp_sock = *(SOCKET*)arg;
+  free(arg);
+
+  char tmp[1024];
+  sprintf(tmp, "BEGIN web_handle_connection, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  char request[2048];
+  char response[1024*1024];
+  int  size = 0;
+  int  retval = 0;
+
+  struct timeval tv;
+  tv.tv_sec  = SOCK_WAIT_SELECT;
+  tv.tv_usec = 0;
+
+  fd_set rfds;
+  FD_ZERO(&rfds);
+  FD_SET(tmp_sock, &rfds);
+
+  while(1)
+  {
+    retval = select(1, &rfds, NULL, NULL, &tv);
+    if (retval == SOCKET_ERROR)
+    {
+      sprintf(tmp, "web_handle_connection, select, socket: %d, Error: %d", tmp_sock, sock_get_error());
+      log_add(tmp, LOG_ERROR);
+      return NULL;
+    }
+    else if(!retval)
+    {
+      #ifdef SOCK_EXTRA_LOGS
+      sprintf(tmp, "web_handle_connection, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
+      log_add(tmp, LOG_WARNING);
+      #endif
+      continue;
+    }
+    else
+    {
+      size = recv(tmp_sock, request, 2048, 0);
+      if(size == SOCKET_ERROR)
+      {
+        sprintf(tmp, "web_handle_connection, recv, socket: %d, Error: %d", tmp_sock, sock_get_error());
+        log_add(tmp, LOG_ERROR);
+        return NULL;
+      }
+      else if(!size)
+      {
+        sprintf(tmp, "web_handle_connection, recv, socket: %d, socket closed", tmp_sock);
+        log_add(tmp, LOG_WARNING);
+        return NULL;
+      }
+
+      #ifdef SOCK_EXTRA_LOGS
+      sprintf(tmp, "sock_recv_worker, socket: %d, recv size: %d", tmp_sock, size);
+      log_add(tmp, LOG_INFO);
+      bytes_to_hex(buffer, (pack_size)size, tmp);
+      log_add(tmp, LOG_INFO);
+      #endif
+
+      web_get_response(request, response, &size);
+
+      int res = send(tmp_sock, response, size, 0);
+      if(res == SOCKET_ERROR)
+      {
+        char tmp[128];
+        sprintf(tmp, "web_handle_connection, send, Error: %u", sock_get_error());
+        log_add(tmp, LOG_ERROR);
+      }
+      else
+      {
+        #ifdef SOCK_EXTRA_LOGS
+        char tmp[256];
+        sprintf(tmp, "web_handle_connection, send size: %d", res);
+        log_add(tmp, LOG_INFO);
+        bytes_to_hex(buffer, (pack_size)size, tmp);
+        log_add(tmp, LOG_INFO);
+        #endif
+      }
+
+      return NULL;
+    }
+  }
+
+  return NULL;
+}
+//==============================================================================
+int web_get_response(char *request, char *response, int *size)
 {
   char    tmp[128];
   char   *tmp_header;

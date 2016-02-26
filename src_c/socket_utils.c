@@ -48,6 +48,35 @@ const char *sock_type_to_string(sock_type_t type)
   }
 }
 //==============================================================================
+const char *sock_state_to_string(sock_state_t state)
+{
+  switch (state) {
+  case SOCK_STATE_NONE:
+    return "SOCK_STATE_NONE";
+    break;
+  case SOCK_STATE_START:
+    return "SOCK_STATE_START";
+    break;
+    case SOCK_STATE_STARTING:
+      return "SOCK_STATE_STARTING";
+      break;
+  case SOCK_STATE_STOP:
+    return "SOCK_STATE_STOP";
+    break;
+    case SOCK_STATE_STOPPING:
+      return "SOCK_STATE_STOPPING";
+      break;
+  case SOCK_STATE_PAUSE:
+    return "SOCK_STATE_PAUSE";
+    break;
+    case SOCK_STATE_PAUSING:
+      return "SOCK_STATE_PAUSING";
+      break;
+  default:
+    break;
+  }
+}
+//==============================================================================
 int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 {
   char tmp[128];
