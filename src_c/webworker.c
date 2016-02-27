@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utils.h"
 #include "webworker.h"
 #include "socket.h"
 #include "socket_types.h"
@@ -31,6 +32,7 @@ int web_server_start(web_worker_t *worker, sock_port_t port);
 int web_server_work(web_worker_t *worker);
 int web_server_stop(web_worker_t *worker);
 int web_server_pause(web_worker_t *worker);
+//==============================================================================
 void *web_server_worker(void *arg);
 int web_accept(SOCKET socket);
 void *web_handle_connection(void *arg);
@@ -195,6 +197,10 @@ void *web_handle_connection(void *arg)
       log_add(tmp, LOG_INFO);
       #endif
 
+//      char *buffer = malloc(size);
+//      memcpy(buffer, request, size);
+//      on_recv(request);
+
       web_get_response(request, response, &size);
 
       int res = send(tmp_sock, response, size, 0);
@@ -295,5 +301,10 @@ int web_get_response(char *request, char *response, int *size)
   }
 
   return 0;
+}
+//==============================================================================
+int web_server_status()
+{
+  print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 }
 //==============================================================================

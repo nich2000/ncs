@@ -1,13 +1,17 @@
+//==============================================================================
+//==============================================================================
 #include <string.h>
 
 #include "wsworker.h"
 #include "log.h"
-
 #include "sha1.h"
 #include "base64.h"
-
+#include "protocol.h"
+#include "utils.h"
+#include "socket_utils.h"
+//==============================================================================
 // http://learn.javascript.ru/websockets#описание-фрейма
-
+//==============================================================================
 /*
 * GET /chat HTTP/1.1
 * Host: example.com:8000
@@ -16,14 +20,124 @@
 * Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
 * Sec-WebSocket-Version: 13
 */
-
 /*
 * HTTP/1.1 101 Switching Protocols
 * Upgrade: websocket
 * Connection: Upgrade
 * Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
 */
+//==============================================================================
+int ws_server_init (ws_worker_t *worker);
+int ws_server_start(ws_worker_t *worker, sock_port_t port);
+int ws_server_work (ws_worker_t *worker);
+int ws_server_stop (ws_worker_t *worker);
+int ws_server_pause(ws_worker_t *worker);
+//==============================================================================
+int ws_accept(SOCKET socket);
+void *ws_server_worker(void *arg);
+//==============================================================================
+int ws_hand_shake   (char *request, char *response);
+int ws_handle_buffer(pack_buffer buffer);
+//==============================================================================
+int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
+WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
+//==============================================================================
+int         _ws_server_id = 0;
+ws_worker_t _ws_server;
+//==============================================================================
+int ws_server(sock_state_t state, sock_port_t port)
+{
+  sock_print_server_header(SOCK_MODE_WS_SERVER, port);
 
+  switch(state)
+  {
+    case SOCK_STATE_NONE:
+    {
+      break;
+    }
+    case SOCK_STATE_START:
+    {
+      ws_server_start(&_ws_server, port);
+      break;
+    }
+    case SOCK_STATE_STOP:
+    {
+      ws_server_stop(&_ws_server);
+      break;
+    }
+    case SOCK_STATE_PAUSE:
+    {
+      ws_server_pause(&_ws_server);
+      break;
+    }
+    default:;
+  };
+
+  return SOCK_OK;
+}
+//==============================================================================
+int ws_server_init(ws_worker_t *worker)
+{
+  custom_worker_init(&worker->custom_server.custom_worker);
+
+  worker->custom_server.custom_worker.id   = _ws_server_id++;
+  worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
+  worker->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
+  worker->custom_server.on_accept          = &ws_accept;
+}
+//==============================================================================
+int ws_server_start(ws_worker_t *worker, sock_port_t port)
+{
+  ws_server_init(worker);
+
+  worker->custom_server.custom_worker.port  = port;
+  worker->custom_server.custom_worker.state = SOCK_STATE_START;
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  return pthread_create(&worker->custom_server.custom_worker.work_thread, &tmp_attr, ws_server_worker, (void*)worker);
+}
+//==============================================================================
+int ws_server_work(ws_worker_t *worker)
+{
+
+}
+//==============================================================================
+int ws_server_stop(ws_worker_t *worker)
+{
+  worker->custom_server.custom_worker.state = SOCK_STATE_STOP;
+}
+//==============================================================================
+int ws_server_pause(ws_worker_t *worker)
+{
+  worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+}
+//==============================================================================
+int ws_server_status()
+{
+  print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
+}
+//==============================================================================
+void *ws_server_worker(void *arg)
+{
+  log_add("BEGIN ws_server_worker", LOG_DEBUG);
+
+  ws_worker_t *tmp_server = (ws_worker_t*)arg;
+
+  custom_server_start(&tmp_server->custom_server.custom_worker);
+//  custom_server_work (&tmp_server->custom_server);
+  custom_worker_stop (&tmp_server->custom_server.custom_worker);
+
+  log_add("END ws_server_worker", LOG_DEBUG);
+}
+//==============================================================================
+int ws_accept(SOCKET socket)
+{
+
+}
+//==============================================================================
 int ws_hand_shake(char *request, char *response)
 {
   char *tmp_request;
@@ -61,7 +175,7 @@ int ws_hand_shake(char *request, char *response)
 
   return 0;
 }
-
+//==============================================================================
 int ws_handle_buffer(pack_buffer buffer)
 {
 //  if(worker->handshake)
@@ -97,7 +211,7 @@ int ws_handle_buffer(pack_buffer buffer)
 
   return 0;
 }
-
+//==============================================================================
 int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)
 {
   int pos = 0;
@@ -136,7 +250,7 @@ int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_len
   memcpy((void*)(buffer+pos), msg, size);
   return (size+pos);
 }
-
+//==============================================================================
 WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length)
 {
   //printf("getTextFrame()\n");
@@ -214,3 +328,4 @@ WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigne
 
   return ERROR_FRAME;
 }
+//==============================================================================

@@ -7,6 +7,7 @@
 #include "test.h"
 #include "utils.h"
 #include "webworker.h"
+#include "wsworker.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
@@ -19,19 +20,10 @@
 #define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_IP        "127.0.0.1"
 //==============================================================================
-int   web_server_port      = DEFAULT_WEB_SERVER_PORT;
-int   ws_server_port       = DEFAULT_WS_SERVER_PORT;
-int   server_port          = DEFAULT_SERVER_PORT;
-char *server_ip            = DEFAULT_SERVER_IP;
-//==============================================================================
-//sock_server_t *_web_server = NULL;
-//sock_server_t *_ws_server  = NULL;
-//sock_server_t *_server     = NULL;
-//sock_worker_t *_client     = NULL;
-//sock_server_t __web_server;
-//sock_server_t __ws_server;
-//sock_server_t __server;
-//sock_worker_t __client;
+int   web_server_port = DEFAULT_WEB_SERVER_PORT;
+int   ws_server_port  = DEFAULT_WS_SERVER_PORT;
+int   server_port     = DEFAULT_SERVER_PORT;
+char *server_ip       = DEFAULT_SERVER_IP;
 //==============================================================================
 int handle_command(char *command)
 {
@@ -81,23 +73,13 @@ int handle_command(char *command)
     {
       log_set_name("ws_server_log.txt");
 
-//      if(_ws_server != 0)
-//        free(_ws_server);
-//      _ws_server = (sock_server_t*)malloc(sizeof(sock_server_t));
-//      sock_server(ws_server_port, &__ws_server, SOCK_MODE_WS_SERVER);
-
-//      ws_server();
+      ws_server(SOCK_STATE_START, DEFAULT_WS_SERVER_PORT);
 
       return RESULT_DONE;
     }
     else if(strcmp(token, "webserver") == 0)
     {
       log_set_name("web_server_log.txt");
-
-//      if(_web_server != 0)
-//        free(_web_server);
-//      _web_server = (sock_server_t*)malloc(sizeof(sock_server_t));
-//      sock_server(web_server_port, &__web_server, SOCK_MODE_WEB_SERVER);
 
       web_server(SOCK_STATE_START, DEFAULT_WEB_SERVER_PORT);
 
@@ -129,12 +111,12 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "webserverinfo") == 0)
     {
-//      print_server_info(_web_server);
+      web_server_status();
       return RESULT_DONE;
     }
     else if(strcmp(token, "wsserverinfo") == 0)
     {
-//      print_server_info(_ws_server);
+      ws_server_status();
       return RESULT_DONE;
     }
     else if(strcmp(token, "clientinfo") == 0)

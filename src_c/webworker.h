@@ -12,5 +12,6 @@ typedef struct
 }web_worker_t;
 //==============================================================================
 int web_server(sock_state_t state, sock_port_t port);
+int web_server_status();
 //==============================================================================
 #endif //WEBWORKER_H

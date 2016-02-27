@@ -1,11 +1,9 @@
 #ifndef WSWORKER_H
 #define WSWORKER_H
-
-#include "sha1.h"
-#include "base64.h"
-
-#include "protocol.h"
-
+//==============================================================================
+#include "socket_types.h"
+#include "customworker.h"
+//==============================================================================
 typedef enum
 {
   ERROR_FRAME=0xFF00,
@@ -23,11 +21,13 @@ typedef enum
   PING_FRAME=0x19,
   PONG_FRAME=0x1A
 } WebSocketFrameType;
-
-int ws_hand_shake   (char *request, char *response);
-int ws_handle_buffer(pack_buffer buffer);
-
-int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
-WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
-
+//==============================================================================
+typedef struct
+{
+  custom_server_t custom_server;
+}ws_worker_t;
+//==============================================================================
+int ws_server(sock_state_t state, sock_port_t port);
+int ws_server_status();
+//==============================================================================
 #endif //WSWORKER_H

@@ -16,7 +16,7 @@
 */
 typedef struct
 {
-  custom_worker_t        custom;
+  custom_worker_t        custom_worker;
   pthread_t              send_thread;
   pthread_t              receive_thread;
   pack_protocol          protocol;

@@ -8,6 +8,9 @@
 typedef int (*on_error_t)(int, ...);
 typedef int (*on_accept_t)(SOCKET socket);
 typedef int (*on_connect_t)(int, ...);
+typedef int (*on_disconnect_t)(int, ...);
+typedef int (*on_send_t)(int, ...);
+typedef int (*on_recv_t)(int, ...);
 //==============================================================================
 typedef struct
 {
@@ -22,6 +25,8 @@ typedef struct
   pthread_t       work_thread;
 
   on_error_t      on_error;
+  on_send_t       on_send;
+  on_recv_t       on_recv;
 }custom_worker_t;
 //==============================================================================
 typedef struct
@@ -36,6 +41,7 @@ typedef struct
   custom_worker_t custom_worker;
 
   on_connect_t    on_connect;
+  on_disconnect_t on_disconnect;
 }custom_client_t;
 //==============================================================================
 int custom_worker_init (custom_worker_t *worker);
@@ -45,5 +51,8 @@ int custom_server_start(custom_worker_t *worker);
 int custom_client_start(custom_worker_t *worker);
 
 int custom_server_work (custom_server_t *worker);
+
+int custom_recv();
+int custom_send();
 //==============================================================================
 #endif //CUSTOMWORKER_H
