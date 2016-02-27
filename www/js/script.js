@@ -2,77 +2,75 @@
 // http://getskeleton.com/
 // http://getbootstrap.com/
 //=============================================================================
-var wsUri = "ws://127.0.0.1:5800";
-// var output;
+var 
+  ws,
+  wsUri = 'ws://' + location.hostname + ':5800';
+  wsConnected = false;
 
-// var input = document.createElement("input");
-// input.type = "text";
-// input.value = "qwerty";
-
-// var button = document.createElement("button");
-// button.innerText = "send";
-// button.onclick = function () 
-// {
-//   doSend(input.value);
-// }
-
-function init()
+function init() 
 {
-  // output = document.getElementById("output");
+  console.log("init");
 
-  // document.body.appendChild(button);
-  // document.body.appendChild(input);
-
-  createWebSocket();
+  var timerConnect = setInterval(function() 
+  {
+    createWebSocket();
+  }, 
+  5000);
 }
 
-function createWebSocket()
+function createWebSocket() 
 {
-  websocket = new WebSocket(wsUri);
-  websocket.onopen = function(evt) { onOpen(evt) };
-  websocket.onclose = function(evt) { onClose(evt) };
-  websocket.onmessage = function(evt) { onMessage(evt) };
-  websocket.onerror = function(evt) { onError(evt) };
+  if(wsConnected)
+    return;
+
+  console.log("createWebSocket");
+  ws = new WebSocket(wsUri);
+  ws.onopen = function(evt) 
+  {
+    onOpen(evt)
+  };
+  ws.onclose = function(evt) 
+  {
+    onClose(evt)
+  };
+  ws.onmessage = function(evt) 
+  {
+    onMessage(evt)
+  };
+  ws.onerror = function(evt) 
+  {
+    onError(evt)
+  };
 }
 
-function onOpen(evt)
+function onOpen(evt) 
 {
+  wsConnected = true;
   console.log("onOpen");
-  // writeToScreen("onOpen");
-  doSend("WS_CONNECTED");
+  $("#connection_status").text('connected');
 }
 
-function onClose(evt)
+function onClose(evt) 
 {
+  wsConnected = false;
   console.log("onClose");
-  // writeToScreen("onClose");
+  $("#connection_status").text('disconnected');
 }
 
-function onMessage(evt)
+function onMessage(evt) 
 {
   console.log(evt.data);
-  // writeToScreen('<span style="color: blue;">onMessage: ' + evt.data + '</span>');
 }
 
-function onError(evt)
+function onError(evt) 
 {
   console.log(evt.data);
-  // writeToScreen('<span style="color: red;">onError: ' + evt.data + '</span>');
 }
 
-function doSend(message)
+function doSend(message) 
 {
   console.log("doSend: " + message);
-  // writeToScreen("doSend: " + message);
-  websocket.send(message);
-}
-
-function writeToScreen(message)
-{
-  // var pre = document.createElement("p");
-  // pre.style.wordWrap = "break-word";
-  // pre.innerHTML = message;
-  // output.appendChild(pre);
+  ws.send(message);
 }
 
 window.addEventListener("load", init, false);

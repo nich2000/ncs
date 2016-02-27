@@ -35,12 +35,13 @@ int ws_server_pause(ws_worker_t *worker);
 //==============================================================================
 int ws_accept(SOCKET socket);
 void *ws_server_worker(void *arg);
+void *ws_recv_worker(void *arg);
+void *ws_send_worker(void *arg);
 //==============================================================================
-int ws_hand_shake   (char *request, char *response);
-int ws_handle_buffer(pack_buffer buffer);
+int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
-int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
-WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
+int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
+WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
 int         _ws_server_id = 0;
 ws_worker_t _ws_server;
@@ -84,6 +85,8 @@ int ws_server_init(ws_worker_t *worker)
   worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   worker->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
   worker->custom_server.on_accept          = &ws_accept;
+
+  worker->hand_shake                       = SOCK_FALSE;
 }
 //==============================================================================
 int ws_server_start(ws_worker_t *worker, sock_port_t port)
@@ -127,7 +130,7 @@ void *ws_server_worker(void *arg)
   ws_worker_t *tmp_server = (ws_worker_t*)arg;
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
-//  custom_server_work (&tmp_server->custom_server);
+  custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
   log_add("END ws_server_worker", LOG_DEBUG);
@@ -135,12 +138,77 @@ void *ws_server_worker(void *arg)
 //==============================================================================
 int ws_accept(SOCKET socket)
 {
+  char tmp[1024];
+  sprintf(tmp, "ws_accept, socket: %d", socket);
+  log_add(tmp, LOG_DEBUG);
 
+  SOCKET *s = malloc(sizeof(SOCKET));
+  memcpy(s, &socket, sizeof(SOCKET));
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  pthread_create(NULL, &tmp_attr, ws_recv_worker, (void*)s);
+//  pthread_create(NULL, &tmp_attr, ws_send_worker, (void*)s);
 }
 //==============================================================================
-int ws_hand_shake(char *request, char *response)
+void *ws_recv_worker(void *arg)
+{
+  SOCKET tmp_sock = *(SOCKET*)arg;
+  free(arg);
+
+  char tmp[1024];
+  sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  char request[2048];
+  char response[1024*1024];
+  int  size = 0;
+
+  while(1)
+  {
+    if(sock_recv(tmp_sock, request, &size))
+    {
+      ws_hand_shake(request, response, &size);
+
+      sock_send(tmp_sock, response, size);
+
+      return NULL;
+    }
+  }
+
+  sprintf(tmp, "END ws_recv_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  return NULL;
+}
+//==============================================================================
+void *ws_send_worker(void *arg)
+{
+  SOCKET tmp_sock = *(SOCKET*)arg;
+  free(arg);
+
+  char tmp[1024];
+  sprintf(tmp, "BEGIN ws_send_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  while(1)
+  {
+    sleep(1);
+  }
+
+  sprintf(tmp, "END ws_send_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  return NULL;
+}
+//==============================================================================
+int ws_hand_shake(char *request, char *response, int *size)
 {
   char *tmp_request;
+
+  char tmp_accept_key[64];
 
   tmp_request = strtok(request, "\r\n");
   while(tmp_request != NULL)
@@ -156,63 +224,33 @@ int ws_hand_shake(char *request, char *response)
       // взять строковое значение из заголовка Sec-WebSocket-Key
       // и объединить со строкой 258EAFA5-E914-47DA-95CA-C5AB0DC85B11
       strcat(token_value, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
-//      log_add(token_value, LOG_DEBUG);
 
       // вычислить бинарный хеш SHA-1 полученной строки
       char tmp_sha1[20];
       memset(tmp_sha1, 0, 20);
       sha1(tmp_sha1, token_value, strlen(token_value) * 8);
-//      log_add(tmp_sha1, LOG_DEBUG);
 
       // закодировать хеш в Base64
-      base64enc(response, tmp_sha1, 20);
-//      log_add(response, LOG_DEBUG);
+      base64enc(tmp_accept_key, tmp_sha1, 20);
 
       break;
     };
     tmp_request = strtok(NULL, "\r\n");
   }
 
-  return 0;
-}
-//==============================================================================
-int ws_handle_buffer(pack_buffer buffer)
-{
-//  if(worker->handshake)
-//  {
-//    char tmp[1024];
-//    int tmp_size;
-//    ws_get_frame(buffer, strlen(buffer), tmp, 1024, &tmp_size);
-//    log_add(tmp, LOG_INFO);
-//  }
-//  else
-//  {
-//    char *tmp_message = (char*)malloc(10000);
-//    ws_hand_shake((char*)buffer, tmp_message);
+  strcpy(response, "HTTP/1.1 101 Switching Protocols\r\n");
+  strcat(response, "Upgrade: websocket\r\n");
+  strcat(response, "Connection: Upgrade\r\n");
+  char tmp[128];
+  sprintf(tmp, "Sec-WebSocket-Accept: %s\r\n\r\n", tmp_accept_key);
+  strcat(response, tmp);
 
-//    worker->is_locked++;
-
-//    worker->out_message = (char*)malloc(10000);
-
-//    strcpy(worker->out_message, "HTTP/1.1 101 Switching Protocols\r\n");
-//    strcat(worker->out_message, "Upgrade: websocket\r\n");
-//    strcat(worker->out_message, "Connection: Upgrade\r\n");
-//    char tmp[10240];
-//    sprintf(tmp, "Sec-WebSocket-Accept: %s\r\n\r\n", tmp_message);
-//    strcat(worker->out_message, tmp);
-
-//    worker->out_message[strlen(worker->out_message)+1] = '\0';
-
-//    worker->is_locked--;
-
-//    // TODO утечка
-////        free(tmp_message);
-//  };
+  *size = strlen(response);
 
   return 0;
 }
 //==============================================================================
-int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)
+int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)
 {
   int pos = 0;
   int size = msg_length;
@@ -251,7 +289,7 @@ int ws_make_frame(WebSocketFrameType frame_type, unsigned char* msg, int msg_len
   return (size+pos);
 }
 //==============================================================================
-WebSocketFrameType ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length)
+WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length)
 {
   //printf("getTextFrame()\n");
   if(in_length < 3)

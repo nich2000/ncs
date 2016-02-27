@@ -134,7 +134,7 @@ int custom_server_work(custom_server_t *worker)
       strcpy(tmp_host, inet_ntoa(sin.sin_addr));
       sprintf(tmp, "custom_server_work, accepted, socket: %d, ip: %s, port: %d",
               tmp_client, tmp_host, ntohs(sin.sin_port));
-      log_add(tmp, LOG_INFO);
+      log_add(tmp, LOG_DEBUG);
     };
 
     worker->on_accept(tmp_client);

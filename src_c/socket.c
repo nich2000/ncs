@@ -29,8 +29,6 @@ int sock_do_work(sock_worker_t * worker, int wait);
 void *sock_recv_worker(void *arg);
 void *sock_send_worker(void *arg);
 //==============================================================================
-int sock_do_send(SOCKET sock, char *buffer, int  size);
-//==============================================================================
 int sock_route_to_ws (sock_worker_t *worker);
 int sock_send_cmd    (sock_worker_t *worker, int argc, ...);
 int sock_exec_cmd    (sock_worker_t *worker);
@@ -427,7 +425,7 @@ int sock_do_work(sock_worker_t *worker, int wait)
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
   pthread_create(&worker->send_thread,    &tmp_attr, sock_send_worker, (void*)worker);
-  pthread_create(&worker->receive_thread, &tmp_attr, sock_recv_worker, (void*)worker);
+  pthread_create(&worker->receive_thread, &tmp_attr, sock_recv_worker, (void*)&worker->custom_worker);
 
   if(wait)
   {
@@ -514,7 +512,7 @@ void *sock_send_worker(void *arg)
   pack_packet   *tmp_pack = 0;
   int            tmp_errors = 0;
 
-  // TODO sock_do_send вызывается из разных мест
+  // TODO sock_send вызывается из разных мест
   while(tmp_worker->custom_worker.state == SOCK_STATE_START)
   {
     switch(tmp_worker->custom_worker.mode)
@@ -533,12 +531,12 @@ void *sock_send_worker(void *arg)
 
           if(tmp_cnt > 0)
           {
-//            sprintf(tmp, "sock_send_worker, sock_do_send, sock: %d", tmp_sock);
+//            sprintf(tmp, "sock_send_worker, sock_send, sock: %d", tmp_sock);
 //            log_add(tmp, LOG_INFO);
 
 //            pack_print(tmp_worker, PACK_OUT, "send", 0, 0, 1, 0);
 
-            if(sock_do_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
+            if(sock_send(tmp_sock, tmp_buffer, (int)tmp_size) == SOCK_ERROR)
               tmp_errors++;
 
             if((tmp_errors > SOCK_ERRORS_COUNT) || (!tmp_worker->custom_worker.state == SOCK_STATE_START))
@@ -554,10 +552,10 @@ void *sock_send_worker(void *arg)
         if(!tmp_worker->custom_worker.is_locked)
           if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
           {
-            sprintf(tmp, "sock_send_worker, sock_do_send, size: %d, socket: %d", tmp_worker->out_message_size, tmp_sock);
+            sprintf(tmp, "sock_send_worker, sock_send, size: %d, socket: %d", tmp_worker->out_message_size, tmp_sock);
             log_add(tmp, LOG_INFO);
 
-            sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size);
+            sock_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size);
 
             free(tmp_worker->out_message);
 
@@ -572,7 +570,7 @@ void *sock_send_worker(void *arg)
           if(!tmp_worker->custom_worker.is_locked)
             if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
             {
-              if(sock_do_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
+              if(sock_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) == SOCK_ERROR)
                 tmp_errors++;
 
               free(tmp_worker->out_message);
@@ -588,7 +586,7 @@ void *sock_send_worker(void *arg)
           if(!tmp_worker->custom_worker.is_locked)
             if((tmp_worker->out_message != NULL) && (strlen(tmp_worker->out_message) != 0))
             {
-              if(sock_do_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
+              if(sock_send(tmp_sock, tmp_worker->out_message, strlen(tmp_worker->out_message)) == SOCK_ERROR)
                 tmp_errors++;
 
               free(tmp_worker->out_message);
@@ -619,85 +617,33 @@ void *sock_send_worker(void *arg)
 //==============================================================================
 void *sock_recv_worker(void *arg)
 {
-  sock_worker_t *tmp_worker = (sock_worker_t*)arg;
-  SOCKET tmp_sock = tmp_worker->custom_worker.sock;
+  custom_worker_t *tmp_worker = (custom_worker_t*)arg;
+  SOCKET tmp_sock = tmp_worker->sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  pack_buffer buffer;
-  int         size = 0;
-  int         retval = 0;
-  int         tmp_errors = 0;
+  pack_buffer tmp_buffer;
+  int         tmp_size;
 
-  while(tmp_worker->custom_worker.state == SOCK_STATE_START)
+  while(tmp_worker->state == SOCK_STATE_START)
   {
-    struct timeval tv;
-    tv.tv_sec  = SOCK_WAIT_SELECT;
-    tv.tv_usec = 0;
-
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(tmp_sock, &rfds);
-
-    retval = select(1, &rfds, NULL, NULL, &tv);
-    if (retval == SOCKET_ERROR)
+    if(sock_recv(tmp_sock, tmp_buffer, &tmp_size))
     {
-      sprintf(tmp, "sock_recv_worker, select, socket: %d, Error: %d", tmp_sock, sock_get_error());
-      log_add(tmp, LOG_ERROR);
-      tmp_errors++;
-      if(tmp_errors > SOCK_ERRORS_COUNT)
-        break;
-      else
-        continue;
-    }
-    else if(!retval)
-    {
-      #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "sock_recv_worker, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
-      log_add(tmp, LOG_WARNING);
-      #endif
-      continue;
-    }
-    else
-    {
-      size = recv(tmp_sock, buffer, PACK_BUFFER_SIZE, 0);
-      if(size == SOCKET_ERROR)
-      {
-        sprintf(tmp, "sock_recv_worker, recv, socket: %d, Error: %d", tmp_sock, sock_get_error());
-        log_add(tmp, LOG_ERROR);
-        tmp_errors++;
-        if(tmp_errors > SOCK_ERRORS_COUNT)
-          break;
-        else
-          continue;
-      }
-      else if(!size)
-      {
-        sprintf(tmp, "sock_recv_worker, recv, socket: %d, socket closed", tmp_sock);
-        log_add(tmp, LOG_WARNING);
-        break;
-      }
-      else if(size > PACK_BUFFER_SIZE)
-      {
-        sprintf(tmp, "sock_recv_worker, recv, socket: %d, buffer too big(%d/%d)", tmp_sock, size, PACK_BUFFER_SIZE);
-        log_add(tmp, LOG_CRITICAL_ERROR);
-        break;
-      }
+//      tmp_worker->on_recv();
 
-      #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "sock_recv_worker, socket: %d, recv size: %d", tmp_sock, size);
-      log_add(tmp, LOG_INFO);
-      bytes_to_hex(buffer, (pack_size)size, tmp);
-      log_add(tmp, LOG_INFO);
-      #endif
-
-      switch(tmp_worker->custom_worker.mode)
+      switch(tmp_worker->mode)
       {
         case SOCK_MODE_CMD_CLIENT:
         case SOCK_MODE_CMD_SERVER:
         {
+//          if(tmp_size > PACK_BUFFER_SIZE)
+//          {
+//            sprintf(tmp, "sock_recv_worker, recv, socket: %d, buffer too big(%d/%d)", tmp_sock, tmp_size, PACK_BUFFER_SIZE);
+//            log_add(tmp, LOG_CRITICAL_ERROR);
+//            break;
+//          }
 //          cmd_handle_connection();
           break;
         }
@@ -724,12 +670,64 @@ void *sock_recv_worker(void *arg)
   sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  tmp_worker->custom_worker.state = SOCK_STATE_STOP;
+  tmp_worker->state = SOCK_STATE_STOP;
 
   return NULL;
 }
 //==============================================================================
-int sock_do_send(SOCKET sock, char *buffer, int size)
+int sock_recv(SOCKET sock, char *buffer, int *size)
+{
+  char tmp[1024];
+
+  struct timeval tv;
+  tv.tv_sec  = SOCK_WAIT_SELECT;
+  tv.tv_usec = 0;
+
+  fd_set rfds;
+  FD_ZERO(&rfds);
+  FD_SET(sock, &rfds);
+
+  int retval = select(1, &rfds, NULL, NULL, &tv);
+  if (retval == SOCKET_ERROR)
+  {
+    sprintf(tmp, "sock_recv, select, socket: %d, Error: %d", sock, sock_get_error());
+    log_add(tmp, LOG_ERROR);
+    return SOCK_ERROR;
+  }
+  else if(!retval)
+  {
+    #ifdef SOCK_EXTRA_LOGS
+    sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
+    log_add(tmp, LOG_WARNING);
+    #endif
+    return SOCK_OK;
+  }
+  else
+  {
+    *size = recv(sock, buffer, PACK_BUFFER_SIZE, 0);
+    if(*size == SOCKET_ERROR)
+    {
+      sprintf(tmp, "sock_recv, recv, socket: %d, Error: %d", sock, sock_get_error());
+      log_add(tmp, LOG_ERROR);
+      return SOCK_ERROR;
+    }
+    else if(*size == 0)
+    {
+      sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
+      log_add(tmp, LOG_WARNING);
+      return SOCK_ERROR;
+    }
+
+    #ifdef SOCK_EXTRA_LOGS
+    sprintf(tmp, "sock_recv, socket: %d, recv size: %d", tmp_sock, size);
+    log_add(tmp, LOG_INFO);
+    bytes_to_hex(buffer, (pack_size)size, tmp);
+    log_add(tmp, LOG_INFO);
+    #endif
+  }
+}
+//==============================================================================
+int sock_send(SOCKET sock, char *buffer, int size)
 {
   #ifdef SOCK_RANDOM_BUFFER
   int tmp_index = 0;
@@ -750,14 +748,14 @@ int sock_do_send(SOCKET sock, char *buffer, int size)
     if(res == SOCKET_ERROR)
     {
       char tmp[128];
-      sprintf(tmp, "sock_do_send, send, Error: %u", sock_get_error());
+      sprintf(tmp, "sock_send, send, Error: %u", sock_get_error());
       log_add(tmp, LOG_ERROR);
     }
     else
     {
       #ifdef SOCK_EXTRA_LOGS
       char tmp[256];
-      sprintf(tmp, "sock_do_send, send size: %d", res);
+      sprintf(tmp, "sock_send, send size: %d", res);
       log_add(tmp, LOG_INFO);
       bytes_to_hex(buffer, (pack_size)size, tmp);
       log_add(tmp, LOG_INFO);
@@ -769,7 +767,7 @@ int sock_do_send(SOCKET sock, char *buffer, int size)
   if(res == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "sock_do_send, send, Error: %u", sock_get_error());
+    sprintf(tmp, "sock_send, send, Error: %u", sock_get_error());
     log_add(tmp, LOG_ERROR);
     return SOCK_ERROR;
   }
@@ -777,7 +775,7 @@ int sock_do_send(SOCKET sock, char *buffer, int size)
   {
     #ifdef SOCK_EXTRA_LOGS
     char tmp[256];
-    sprintf(tmp, "sock_do_send, send size: %d", res);
+    sprintf(tmp, "sock_send, send size: %d", res);
     log_add(tmp, LOG_INFO);
     bytes_to_hex(buffer, (pack_size)size, tmp);
     log_add(tmp, LOG_INFO);

@@ -20,11 +20,13 @@ typedef enum
 
   PING_FRAME=0x19,
   PONG_FRAME=0x1A
-} WebSocketFrameType;
+} WSFrame_t;
 //==============================================================================
 typedef struct
 {
   custom_server_t custom_server;
+
+  int             hand_shake;
 }ws_worker_t;
 //==============================================================================
 int ws_server(sock_state_t state, sock_port_t port);

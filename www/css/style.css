@@ -6,3 +6,19 @@
   -o-background-size: cover;
   background-size: cover;
 }
+
+.footer 
+{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background-color: #f5f5f5;
+}
+
+.dems-header
+{
+  margin: 0px;
+  padding-bottom: 0px;
+}

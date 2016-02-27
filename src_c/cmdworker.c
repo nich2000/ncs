@@ -1,14 +1,73 @@
+//==============================================================================
+//==============================================================================
 #include "cmdworker.h"
-
-int cmd_handle_connection()
+//==============================================================================
+int cmd_server_init (cmd_worker_t *worker);
+int cmd_server_start(cmd_worker_t *worker, sock_port_t port);
+int cmd_server_work (cmd_worker_t *worker);
+int cmd_server_stop (cmd_worker_t *worker);
+int cmd_server_pause(cmd_worker_t *worker);
+//==============================================================================
+int cmd_accept(SOCKET socket);
+void *cmd_server_worker(void *arg);
+void *cmd_recv_worker(void *arg);
+void *cmd_send_worker(void *arg);
+//==============================================================================
+int         _cmd_server_id = 0;
+cmd_worker_t _cmd_server;
+//==============================================================================
+int cmd_server(sock_state_t state, sock_port_t port)
 {
-//  int cnt = pack_buffer_validate(buffer, (pack_size)size, PACK_VALIDATE_ADD, &worker->protocol);
 
-//  if(cnt > 0)
-//  {
-////        if(worker->mode == SOCK_MODE_CLIENT)
-////          pack_print(worker, PACK_IN, "receive", 0, 0, 1, 0);
-//    sock_exec_cmd(worker);
-//    sock_route_to_ws(worker);
-//  };
 }
+//==============================================================================
+int cmd_server_status()
+{
+
+}
+//==============================================================================
+int cmd_server_init (cmd_worker_t *worker)
+{
+
+}
+//==============================================================================
+int cmd_server_start(cmd_worker_t *worker, sock_port_t port)
+{
+
+}
+//==============================================================================
+int cmd_server_work (cmd_worker_t *worker)
+{
+
+}
+//==============================================================================
+int cmd_server_stop (cmd_worker_t *worker)
+{
+
+}
+//==============================================================================
+int cmd_server_pause(cmd_worker_t *worker)
+{
+
+}
+//==============================================================================
+int cmd_accept(SOCKET socket)
+{
+
+}
+//==============================================================================
+void *cmd_server_worker(void *arg)
+{
+
+}
+//==============================================================================
+void *cmd_recv_worker(void *arg)
+{
+
+}
+//==============================================================================
+void *cmd_send_worker(void *arg)
+{
+
+}
+//==============================================================================

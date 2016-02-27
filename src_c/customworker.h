@@ -51,8 +51,5 @@ int custom_server_start(custom_worker_t *worker);
 int custom_client_start(custom_worker_t *worker);
 
 int custom_server_work (custom_server_t *worker);
-
-int custom_recv();
-int custom_send();
 //==============================================================================
 #endif //CUSTOMWORKER_H

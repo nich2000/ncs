@@ -50,6 +50,9 @@ int sock_get_error();
 int sock_init();
 int sock_deinit();
 //==============================================================================
+int sock_send(SOCKET sock, char *buffer, int  size);
+int sock_recv(SOCKET sock, char *buffer, int *size);
+//==============================================================================
 int sock_server(sock_server_t *server, sock_port_t port, sock_mode_t mode);
 int sock_server_send_cmd  (sock_server_t *server, int argc, ...);
 int soch_server_exec_cmd  (sock_server_t *server, int argc, ...);

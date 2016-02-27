@@ -79,6 +79,7 @@ int web_server_init(web_worker_t *worker)
   worker->custom_server.custom_worker.id   = _web_server_id++;
   worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   worker->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
+
   worker->custom_server.on_accept          = &web_accept;
 }
 //==============================================================================
@@ -125,12 +126,12 @@ int web_accept(SOCKET socket)
   sprintf(tmp, "web_accept, socket: %d", socket);
   log_add(tmp, LOG_DEBUG);
 
+  SOCKET *s = malloc(sizeof(SOCKET));
+  memcpy(s, &socket, sizeof(SOCKET));
+
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
-
-  SOCKET *s = malloc(sizeof(SOCKET));
-  memcpy(s, &socket, sizeof(SOCKET));
 
   pthread_create(NULL, &tmp_attr, web_handle_connection, (void*)s);
 }
@@ -147,83 +148,21 @@ void *web_handle_connection(void *arg)
   char request[2048];
   char response[1024*1024];
   int  size = 0;
-  int  retval = 0;
-
-  struct timeval tv;
-  tv.tv_sec  = SOCK_WAIT_SELECT;
-  tv.tv_usec = 0;
-
-  fd_set rfds;
-  FD_ZERO(&rfds);
-  FD_SET(tmp_sock, &rfds);
 
   while(1)
   {
-    retval = select(1, &rfds, NULL, NULL, &tv);
-    if (retval == SOCKET_ERROR)
+    if(sock_recv(tmp_sock, request, &size))
     {
-      sprintf(tmp, "web_handle_connection, select, socket: %d, Error: %d", tmp_sock, sock_get_error());
-      log_add(tmp, LOG_ERROR);
-      return NULL;
-    }
-    else if(!retval)
-    {
-      #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "web_handle_connection, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
-      log_add(tmp, LOG_WARNING);
-      #endif
-      continue;
-    }
-    else
-    {
-      size = recv(tmp_sock, request, 2048, 0);
-      if(size == SOCKET_ERROR)
-      {
-        sprintf(tmp, "web_handle_connection, recv, socket: %d, Error: %d", tmp_sock, sock_get_error());
-        log_add(tmp, LOG_ERROR);
-        return NULL;
-      }
-      else if(!size)
-      {
-        sprintf(tmp, "web_handle_connection, recv, socket: %d, socket closed", tmp_sock);
-        log_add(tmp, LOG_WARNING);
-        return NULL;
-      }
-
-      #ifdef SOCK_EXTRA_LOGS
-      sprintf(tmp, "sock_recv_worker, socket: %d, recv size: %d", tmp_sock, size);
-      log_add(tmp, LOG_INFO);
-      bytes_to_hex(buffer, (pack_size)size, tmp);
-      log_add(tmp, LOG_INFO);
-      #endif
-
-//      char *buffer = malloc(size);
-//      memcpy(buffer, request, size);
-//      on_recv(request);
-
       web_get_response(request, response, &size);
 
-      int res = send(tmp_sock, response, size, 0);
-      if(res == SOCKET_ERROR)
-      {
-        char tmp[128];
-        sprintf(tmp, "web_handle_connection, send, Error: %u", sock_get_error());
-        log_add(tmp, LOG_ERROR);
-      }
-      else
-      {
-        #ifdef SOCK_EXTRA_LOGS
-        char tmp[256];
-        sprintf(tmp, "web_handle_connection, send size: %d", res);
-        log_add(tmp, LOG_INFO);
-        bytes_to_hex(buffer, (pack_size)size, tmp);
-        log_add(tmp, LOG_INFO);
-        #endif
-      }
+      sock_send(tmp_sock, response, size);
 
       return NULL;
     }
   }
+
+  sprintf(tmp, "END web_handle_connection, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
 
   return NULL;
 }
@@ -250,7 +189,7 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-    log_add(tmp_full_name, LOG_INFO);
+//    log_add(tmp_full_name, LOG_INFO);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f != NULL)
