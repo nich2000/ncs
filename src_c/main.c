@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "webworker.h"
 #include "wsworker.h"
+#include "cmdworker.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
@@ -15,14 +16,14 @@
 #define RESULT_NONE              0
 #define RESULT_DONE              1
 //==============================================================================
-#define DEFAULT_SERVER_PORT      5700
+#define DEFAULT_CMD_SERVER_PORT  5700
 #define DEFAULT_WS_SERVER_PORT   5800
 #define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_IP        "127.0.0.1"
 //==============================================================================
 int   web_server_port = DEFAULT_WEB_SERVER_PORT;
 int   ws_server_port  = DEFAULT_WS_SERVER_PORT;
-int   server_port     = DEFAULT_SERVER_PORT;
+int   cmd_server_port = DEFAULT_CMD_SERVER_PORT;
 char *server_ip       = DEFAULT_SERVER_IP;
 //==============================================================================
 int handle_command(char *command)
@@ -60,12 +61,7 @@ int handle_command(char *command)
     {
       log_set_name("server_log.txt");
 
-//      if(_server != 0)
-//        free(_server);
-//      _server = (sock_server_t*)malloc(sizeof(sock_server_t));
-//      sock_server(server_port, &__server, SOCK_MODE_SERVER);
-
-//      cmd_server();
+      cmd_server(SOCK_STATE_START, DEFAULT_CMD_SERVER_PORT);
 
       return RESULT_DONE;
     }
@@ -106,7 +102,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "serverinfo") == 0)
     {
-//      print_server_info(_server);
+      cmd_server_status();
       return RESULT_DONE;
     }
     else if(strcmp(token, "webserverinfo") == 0)
@@ -121,7 +117,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "clientinfo") == 0)
     {
-//      print_worker_info(_client, "client");
+//      client_status();
       return RESULT_DONE;
     }
     return RESULT_UNKNOWN;
@@ -187,7 +183,7 @@ int main(int argc, char *argv[])
     // name -c -p 5700 -h 127.0.0.1
     if(argc > 3)
       if(strcmp(argv[2], "-p") == 0)
-        server_port = atoi(argv[3]);
+        cmd_server_port = atoi(argv[3]);
 
     if(argc > 5)
       if(strcmp(argv[4], "-h") == 0)

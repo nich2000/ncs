@@ -105,7 +105,6 @@ int ws_server_start(ws_worker_t *worker, sock_port_t port)
 //==============================================================================
 int ws_server_work(ws_worker_t *worker)
 {
-
 }
 //==============================================================================
 int ws_server_stop(ws_worker_t *worker)
