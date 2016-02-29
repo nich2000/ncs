@@ -14,20 +14,20 @@ int print_types_info()
 
   sprintf(
     tmp,
-    "\n"                           \
-    "pack_word:              %d\n" \
-    "pack_words:             %d\n" \
-    "pack_packet:            %d\n" \
-    "pack_out_packets:       %d\n" \
-    "pack_in_packets:        %d\n" \
-    "pack_queue_packets:     %d\n" \
-    "pack_validation_buffer: %d\n" \
-    "pack_out_packets_list:  %d\n" \
-    "pack_in_packets_list:   %d\n" \
-    "pack_protocol:          %d\n" \
-    "pack_queue:             %d\n" \
-    "custom_worker:          %d\n" \
-    "custom_workers_list:    %d",
+    "\n"                               \
+    "pack_word:                  %d\n" \
+    "pack_words:                 %d\n" \
+    "pack_packet:                %d\n" \
+    "pack_out_packets:           %d\n" \
+    "pack_in_packets:            %d\n" \
+    "pack_queue_packets:         %d\n" \
+    "pack_validation_buffer:     %d\n" \
+    "pack_out_packets_list:      %d\n" \
+    "pack_in_packets_list:       %d\n" \
+    "pack_protocol:              %d\n" \
+    "pack_queue:                 %d\n" \
+    "custom_worker:              %d\n" \
+    "custom_remote_clients_list: %d",
     sizeof(pack_word),
     sizeof(pack_words),
     sizeof(pack_packet),
@@ -40,7 +40,7 @@ int print_types_info()
     sizeof(pack_protocol),
     sizeof(pack_queue),
     sizeof(custom_worker_t),
-    sizeof(custom_workers_list_t)
+    sizeof(custom_remote_clients_list_t)
   );
   log_add(tmp, LOG_INFO);
 

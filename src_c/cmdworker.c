@@ -15,6 +15,8 @@ void *cmd_server_worker(void *arg);
 //==============================================================================
 int cmd_accept(void *sender, SOCKET socket);
 //==============================================================================
+custom_remote_client_t *cmd_server_next_client();
+//==============================================================================
 int cmd_client_init (cmd_client_t *client);
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host);
 int cmd_client_stop (cmd_client_t *client);
@@ -108,9 +110,9 @@ int cmd_client_status()
 //==============================================================================
 int cmd_server_init(cmd_server_t *server)
 {
-  server->custom_workers_list.index    = 0;
+  server->custom_remote_clients_list.index    = 0;
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    custom_worker_init(&server->custom_workers_list.items[i]);
+    custom_worker_init(&server->custom_remote_clients_list.items[i].custom_worker);
 
   custom_worker_init(&server->custom_server.custom_worker);
 
@@ -132,7 +134,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&server->custom_server.custom_worker.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
+  return pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
 }
 //==============================================================================
 int cmd_server_stop(cmd_server_t *server)
@@ -143,6 +145,10 @@ int cmd_server_stop(cmd_server_t *server)
 int cmd_server_pause(cmd_server_t *worker)
 {
   worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+}
+//==============================================================================
+custom_remote_client_t *cmd_server_next_client()
+{
 }
 //==============================================================================
 int cmd_accept(void *sender, SOCKET socket)

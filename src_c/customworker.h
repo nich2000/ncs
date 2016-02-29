@@ -22,24 +22,30 @@ typedef struct
   SOCKET          sock;
   sock_state_t    state;
   int             is_locked;
-  pthread_t       work_thread;
 
   on_error_t      on_error;
   on_send_t       on_send;
   on_recv_t       on_recv;
 }custom_worker_t;
 //==============================================================================
-typedef custom_worker_t custom_workers_t[SOCK_WORKERS_COUNT];
+typedef struct
+{
+  custom_worker_t custom_worker;
+}custom_remote_client_t;
+//==============================================================================
+typedef custom_remote_client_t custom_remote_clients_t[SOCK_WORKERS_COUNT];
 //==============================================================================
 typedef struct
 {
-  sock_index_t     index;
-  custom_workers_t items;
-} custom_workers_list_t;
+  sock_index_t            index;
+  custom_remote_clients_t items;
+} custom_remote_clients_list_t;
 //==============================================================================
 typedef struct
 {
   custom_worker_t custom_worker;
+
+  pthread_t       work_thread;
 
   on_accept_t     on_accept;
 }custom_server_t;
@@ -47,6 +53,8 @@ typedef struct
 typedef struct
 {
   custom_worker_t custom_worker;
+
+  pthread_t       work_thread;
 
   on_connect_t    on_connect;
   on_disconnect_t on_disconnect;

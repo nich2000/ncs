@@ -133,8 +133,7 @@ int sock_print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "host:                            %s\n" \
           "sock:                            %d\n" \
           "state:                           %s\n" \
-          "is_locked:                       %d\n" \
-          "work_thread:                     %d",
+          "is_locked:                       %d\n",
           prefix,
           &worker,
           worker->id,
@@ -144,8 +143,7 @@ int sock_print_custom_worker_info(custom_worker_t *worker, char *prefix)
           worker->host,
           worker->sock,
           sock_state_to_string(worker->state),
-          worker->is_locked,
-          worker->work_thread);
+          worker->is_locked);
 
   log_add(tmp_info, LOG_INFO);
 

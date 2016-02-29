@@ -15,7 +15,6 @@ int custom_worker_init(custom_worker_t *worker)
   worker->sock               = INVALID_SOCKET;
   worker->state              = SOCK_STATE_STOP;
   worker->is_locked          = 0;
-  worker->work_thread        = 0;
 
   memset(worker->host, 0, SOCK_HOST_SIZE);
 }

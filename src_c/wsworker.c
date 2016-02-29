@@ -104,7 +104,7 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&server->custom_server.custom_worker.work_thread, &tmp_attr, ws_server_worker, (void*)server);
+  return pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
 }
 //==============================================================================
 int ws_server_work(ws_server_t *server)
