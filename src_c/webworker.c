@@ -27,19 +27,21 @@
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
 //==============================================================================
-int web_server_init(web_worker_t *worker);
-int web_server_start(web_worker_t *worker, sock_port_t port);
-int web_server_work(web_worker_t *worker);
-int web_server_stop(web_worker_t *worker);
-int web_server_pause(web_worker_t *worker);
+int web_server_init(web_server_t *server);
+int web_server_start(web_server_t *server, sock_port_t port);
+int web_server_work(web_server_t *server);
+int web_server_stop(web_server_t *server);
+int web_server_pause(web_server_t *server);
 //==============================================================================
 void *web_server_worker(void *arg);
+//==============================================================================
 int web_accept(SOCKET socket);
+//==============================================================================
 void *web_handle_connection(void *arg);
 int web_get_response(char *request, char *response, int *size);
 //==============================================================================
 int          _web_server_id = 0;
-web_worker_t _web_server;
+web_server_t _web_server;
 //==============================================================================
 int web_server(sock_state_t state, sock_port_t port)
 {
@@ -72,46 +74,46 @@ int web_server(sock_state_t state, sock_port_t port)
   return SOCK_OK;
 }
 //==============================================================================
-int web_server_init(web_worker_t *worker)
+int web_server_init(web_server_t *server)
 {
-  custom_worker_init(&worker->custom_server.custom_worker);
+  custom_worker_init(&server->custom_server.custom_worker);
 
-  worker->custom_server.custom_worker.id   = _web_server_id++;
-  worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
-  worker->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
+  server->custom_server.custom_worker.id   = _web_server_id++;
+  server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
+  server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
 
-  worker->custom_server.on_accept          = &web_accept;
+  server->custom_server.on_accept          = &web_accept;
 }
 //==============================================================================
-int web_server_start(web_worker_t *worker, sock_port_t port)
+int web_server_start(web_server_t *server, sock_port_t port)
 {
-  web_server_init(worker);
+  web_server_init(server);
 
-  worker->custom_server.custom_worker.port  = port;
-  worker->custom_server.custom_worker.state = SOCK_STATE_START;
+  server->custom_server.custom_worker.port  = port;
+  server->custom_server.custom_worker.state = SOCK_STATE_START;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&worker->custom_server.custom_worker.work_thread, &tmp_attr, web_server_worker, (void*)worker);
+  return pthread_create(&server->custom_server.custom_worker.work_thread, &tmp_attr, web_server_worker, (void*)server);
 }
 //==============================================================================
-int web_server_stop(web_worker_t *worker)
+int web_server_stop(web_server_t *server)
 {
-  worker->custom_server.custom_worker.state = SOCK_STATE_STOP;
+  server->custom_server.custom_worker.state = SOCK_STATE_STOP;
 }
 //==============================================================================
-int web_server_pause(web_worker_t *worker)
+int web_server_pause(web_server_t *server)
 {
-  worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+  server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
 }
 //==============================================================================
 void *web_server_worker(void *arg)
 {
   log_add("BEGIN web_server_worker", LOG_DEBUG);
 
-  web_worker_t *tmp_server = (web_worker_t*)arg;
+  web_server_t *tmp_server = (web_server_t*)arg;
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);
@@ -244,6 +246,6 @@ int web_get_response(char *request, char *response, int *size)
 //==============================================================================
 int web_server_status()
 {
-  print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
+  sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 }
 //==============================================================================

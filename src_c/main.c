@@ -19,12 +19,12 @@
 #define DEFAULT_CMD_SERVER_PORT  5700
 #define DEFAULT_WS_SERVER_PORT   5800
 #define DEFAULT_WEB_SERVER_PORT  5900
-#define DEFAULT_SERVER_IP        "127.0.0.1"
+#define DEFAULT_SERVER_HOST      "127.0.0.1"
 //==============================================================================
 int   web_server_port = DEFAULT_WEB_SERVER_PORT;
 int   ws_server_port  = DEFAULT_WS_SERVER_PORT;
 int   cmd_server_port = DEFAULT_CMD_SERVER_PORT;
-char *server_ip       = DEFAULT_SERVER_IP;
+char *cmd_server_host = DEFAULT_SERVER_HOST;
 //==============================================================================
 int handle_command(char *command)
 {
@@ -48,12 +48,7 @@ int handle_command(char *command)
     {
       log_set_name("client_log.txt");
 
-//      if(_client != 0)
-//        free(_client);
-//      _client = (sock_worker_t*)malloc(sizeof(sock_worker_t));
-//      sock_client(server_port, server_ip, &__client);
-
-//      cmd_client();
+      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host);
 
       return RESULT_DONE;
     }
@@ -61,7 +56,7 @@ int handle_command(char *command)
     {
       log_set_name("server_log.txt");
 
-      cmd_server(SOCK_STATE_START, DEFAULT_CMD_SERVER_PORT);
+      cmd_server(SOCK_STATE_START, cmd_server_port);
 
       return RESULT_DONE;
     }
@@ -69,7 +64,7 @@ int handle_command(char *command)
     {
       log_set_name("ws_server_log.txt");
 
-      ws_server(SOCK_STATE_START, DEFAULT_WS_SERVER_PORT);
+      ws_server(SOCK_STATE_START, ws_server_port);
 
       return RESULT_DONE;
     }
@@ -77,7 +72,7 @@ int handle_command(char *command)
     {
       log_set_name("web_server_log.txt");
 
-      web_server(SOCK_STATE_START, DEFAULT_WEB_SERVER_PORT);
+      web_server(SOCK_STATE_START, web_server_port);
 
       return RESULT_DONE;
     }
@@ -117,7 +112,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "clientinfo") == 0)
     {
-//      client_status();
+      cmd_client_status();
       return RESULT_DONE;
     }
     return RESULT_UNKNOWN;
@@ -187,7 +182,7 @@ int main(int argc, char *argv[])
 
     if(argc > 5)
       if(strcmp(argv[4], "-h") == 0)
-        server_ip = argv[5];
+        cmd_server_host = argv[5];
 
     if(strcmp(argv[1], "-s") == 0)
     {

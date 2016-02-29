@@ -27,7 +27,7 @@ typedef struct
   custom_server_t custom_server;
 
   int             hand_shake;
-}ws_worker_t;
+}ws_server_t;
 //==============================================================================
 int ws_server(sock_state_t state, sock_port_t port);
 int ws_server_status();

@@ -6,9 +6,17 @@
 typedef struct
 {
   custom_server_t custom_server;
-}cmd_worker_t;
+}cmd_server_t;
+//==============================================================================
+typedef struct
+{
+  custom_client_t custom_client;
+}cmd_client_t;
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port);
 int cmd_server_status();
+//==============================================================================
+int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host);
+int cmd_client_status();
 //==============================================================================
 #endif //CMDWORKER_H

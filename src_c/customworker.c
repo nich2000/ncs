@@ -27,7 +27,7 @@ int custom_worker_start(custom_worker_t *worker)
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (worker->sock == INVALID_SOCKET)
   {
-    sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_get_error());
+    sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;
   }
@@ -57,7 +57,7 @@ int custom_server_start(custom_worker_t *worker)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
-    sprintf(tmp, "custom_server_start, bind, Error: %d", sock_get_error());
+    sprintf(tmp, "custom_server_start, bind, Error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;;
   }
@@ -66,7 +66,7 @@ int custom_server_start(custom_worker_t *worker)
 
   if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
   {
-    sprintf(tmp, "custom_server_start, listen, Error: %d", sock_get_error());
+    sprintf(tmp, "custom_server_start, listen, Error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;;
   }
@@ -103,7 +103,7 @@ int custom_worker_stop(custom_worker_t *worker)
   return SOCK_OK;
 }
 //==============================================================================
-int custom_server_work(custom_server_t *worker)
+int custom_server_work(custom_server_t *server)
 {
   log_add("BEGIN custom_server_work", LOG_DEBUG);
   log_add("Server started", LOG_INFO);
@@ -113,16 +113,16 @@ int custom_server_work(custom_server_t *worker)
   struct sockaddr_in addr;
   int addrlen = sizeof(struct sockaddr_in);
 
-  while(worker->custom_worker.state == SOCK_STATE_START)
+  while(server->custom_worker.state == SOCK_STATE_START)
   {
     log_add("custom_server_work, accepting...", LOG_DEBUG);
 
-    SOCKET tmp_client = accept(worker->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
+    SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
-      sprintf(tmp, "custom_server_work, accept, Error: %d", sock_get_error());
+      sprintf(tmp, "custom_server_work, accept, Error: %d", sock_error());
       log_add(tmp, LOG_ERROR);
-      worker->custom_worker.state == SOCK_STATE_STOP;
+      server->custom_worker.state == SOCK_STATE_STOP;
       return SOCK_ERROR;
     }
     else
@@ -137,11 +137,44 @@ int custom_server_work(custom_server_t *worker)
       log_add(tmp, LOG_DEBUG);
     };
 
-    worker->on_accept(tmp_client);
+    server->on_accept(tmp_client);
   };
 
   log_add("END custom_server_work", LOG_DEBUG);
 
   return SOCK_OK;
+}
+//==============================================================================
+int custom_client_work(custom_client_t *client)
+{
+  log_add("BEGIN custom_client_work", LOG_INFO);
+
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(client->custom_worker.port);
+  addr.sin_addr.s_addr = inet_addr(client->custom_worker.host);
+
+  log_add("custom_client_work, connecting...", LOG_INFO);
+  while(client->custom_worker.state == SOCK_STATE_START)
+  {
+    if(connect(client->custom_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
+    {
+      #ifdef SOCK_EXTRA_LOGS
+      char tmp[128];
+      sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_get_error());
+      log_add(tmp, LOG_ERROR);
+      #endif
+      sleep(SOCK_WAIT_CONNECT);
+      continue;
+    }
+    else
+    {
+      log_add("custom_client_work, connected", LOG_INFO);
+
+      client->on_connect(1, "");
+    }
+  }
+
+  log_add("END custom_client_work", LOG_INFO);
 }
 //==============================================================================

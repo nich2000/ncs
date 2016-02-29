@@ -9,6 +9,7 @@
 #include "protocol.h"
 #include "utils.h"
 #include "socket_utils.h"
+#include "socket.h"
 //==============================================================================
 // http://learn.javascript.ru/websockets#описание-фрейма
 //==============================================================================
@@ -27,14 +28,16 @@
 * Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
 */
 //==============================================================================
-int ws_server_init (ws_worker_t *worker);
-int ws_server_start(ws_worker_t *worker, sock_port_t port);
-int ws_server_work (ws_worker_t *worker);
-int ws_server_stop (ws_worker_t *worker);
-int ws_server_pause(ws_worker_t *worker);
+int ws_server_init (ws_server_t *server);
+int ws_server_start(ws_server_t *server, sock_port_t port);
+int ws_server_work (ws_server_t *server);
+int ws_server_stop (ws_server_t *server);
+int ws_server_pause(ws_server_t *server);
+//==============================================================================
+void *ws_server_worker(void *arg);
 //==============================================================================
 int ws_accept(SOCKET socket);
-void *ws_server_worker(void *arg);
+//==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
 //==============================================================================
@@ -44,7 +47,7 @@ int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsi
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
 int         _ws_server_id = 0;
-ws_worker_t _ws_server;
+ws_server_t _ws_server;
 //==============================================================================
 int ws_server(sock_state_t state, sock_port_t port)
 {
@@ -77,56 +80,56 @@ int ws_server(sock_state_t state, sock_port_t port)
   return SOCK_OK;
 }
 //==============================================================================
-int ws_server_init(ws_worker_t *worker)
+int ws_server_init(ws_server_t *server)
 {
-  custom_worker_init(&worker->custom_server.custom_worker);
+  custom_worker_init(&server->custom_server.custom_worker);
 
-  worker->custom_server.custom_worker.id   = _ws_server_id++;
-  worker->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
-  worker->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
-  worker->custom_server.on_accept          = &ws_accept;
+  server->custom_server.custom_worker.id   = _ws_server_id++;
+  server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
+  server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
+  server->custom_server.on_accept          = &ws_accept;
 
-  worker->hand_shake                       = SOCK_FALSE;
+  server->hand_shake                       = SOCK_FALSE;
 }
 //==============================================================================
-int ws_server_start(ws_worker_t *worker, sock_port_t port)
+int ws_server_start(ws_server_t *server, sock_port_t port)
 {
-  ws_server_init(worker);
+  ws_server_init(server);
 
-  worker->custom_server.custom_worker.port  = port;
-  worker->custom_server.custom_worker.state = SOCK_STATE_START;
+  server->custom_server.custom_worker.port  = port;
+  server->custom_server.custom_worker.state = SOCK_STATE_START;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&worker->custom_server.custom_worker.work_thread, &tmp_attr, ws_server_worker, (void*)worker);
+  return pthread_create(&server->custom_server.custom_worker.work_thread, &tmp_attr, ws_server_worker, (void*)server);
 }
 //==============================================================================
-int ws_server_work(ws_worker_t *worker)
+int ws_server_work(ws_server_t *server)
 {
 }
 //==============================================================================
-int ws_server_stop(ws_worker_t *worker)
+int ws_server_stop(ws_server_t *server)
 {
-  worker->custom_server.custom_worker.state = SOCK_STATE_STOP;
+  server->custom_server.custom_worker.state = SOCK_STATE_STOP;
 }
 //==============================================================================
-int ws_server_pause(ws_worker_t *worker)
+int ws_server_pause(ws_server_t *server)
 {
-  worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+  server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
 }
 //==============================================================================
 int ws_server_status()
 {
-  print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
+  sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
 }
 //==============================================================================
 void *ws_server_worker(void *arg)
 {
   log_add("BEGIN ws_server_worker", LOG_DEBUG);
 
-  ws_worker_t *tmp_server = (ws_worker_t*)arg;
+  ws_server_t *tmp_server = (ws_server_t*)arg;
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);

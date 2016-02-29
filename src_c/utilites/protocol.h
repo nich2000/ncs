@@ -9,9 +9,9 @@
 #include "protocol_utils.h"
 #include "protocol_types.h"
 //==============================================================================
-int         _pack_get_last_error       ();
-pack_number _pack_global_number        ();
-int          pack_version              (pack_ver version);
+int          _pack_get_last_error       ();
+pack_number  _pack_global_number        ();
+const char  *_pack_version              ();
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
   int pack_protocol_init();

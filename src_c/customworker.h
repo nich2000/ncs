@@ -29,6 +29,14 @@ typedef struct
   on_recv_t       on_recv;
 }custom_worker_t;
 //==============================================================================
+typedef custom_worker_t custom_workers_t[SOCK_WORKERS_COUNT];
+//==============================================================================
+typedef struct
+{
+  sock_index_t     index;
+  custom_workers_t items;
+} custom_workers_list_t;
+//==============================================================================
 typedef struct
 {
   custom_worker_t custom_worker;
@@ -50,6 +58,7 @@ int custom_worker_stop (custom_worker_t *worker);
 int custom_server_start(custom_worker_t *worker);
 int custom_client_start(custom_worker_t *worker);
 
-int custom_server_work (custom_server_t *worker);
+int custom_server_work (custom_server_t *server);
+int custom_client_work (custom_client_t *client);
 //==============================================================================
 #endif //CUSTOMWORKER_H

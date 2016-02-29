@@ -233,11 +233,9 @@ int pack_protocol_init(pack_protocol *protocol)
   return PACK_OK;
 }
 //==============================================================================
-int pack_version(pack_ver version)
+const char *_pack_version()
 {
-  strncpy((char *)version, PACK_VERSION, PACK_VERSION_SIZE);
-
-  return PACK_OK;
+  return PACK_VERSION;
 }
 //==============================================================================
 pack_number _pack_global_number()
