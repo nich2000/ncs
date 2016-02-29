@@ -5,7 +5,8 @@
 //==============================================================================
 typedef struct
 {
-  custom_server_t custom_server;
+  custom_server_t       custom_server;
+  custom_workers_list_t custom_workers_list;
 }cmd_server_t;
 //==============================================================================
 typedef struct

@@ -137,7 +137,7 @@ int custom_server_work(custom_server_t *server)
       log_add(tmp, LOG_DEBUG);
     };
 
-    server->on_accept(tmp_client);
+    server->on_accept((void*)server, tmp_client);
   };
 
   log_add("END custom_server_work", LOG_DEBUG);
@@ -171,7 +171,7 @@ int custom_client_work(custom_client_t *client)
     {
       log_add("custom_client_work, connected", LOG_INFO);
 
-      client->on_connect(1, "");
+      client->on_connect((void*)client);
     }
   }
 

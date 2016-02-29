@@ -6,6 +6,7 @@
 #include "log.h"
 #include "test.h"
 #include "utils.h"
+#include "socket.h"
 #include "webworker.h"
 #include "wsworker.h"
 #include "cmdworker.h"

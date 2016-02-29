@@ -5,12 +5,12 @@
 
 #include "socket_types.h"
 //==============================================================================
-typedef int (*on_error_t)(int, ...);
-typedef int (*on_accept_t)(SOCKET socket);
-typedef int (*on_connect_t)(int, ...);
-typedef int (*on_disconnect_t)(int, ...);
-typedef int (*on_send_t)(int, ...);
-typedef int (*on_recv_t)(int, ...);
+typedef int (*on_error_t)     (void *sender);
+typedef int (*on_accept_t)    (void *sender, SOCKET socket);
+typedef int (*on_connect_t)   (void *sender);
+typedef int (*on_disconnect_t)(void *sender);
+typedef int (*on_send_t)      (void *sender);
+typedef int (*on_recv_t)      (void *sender);
 //==============================================================================
 typedef struct
 {

@@ -35,7 +35,7 @@ int web_server_pause(web_server_t *server);
 //==============================================================================
 void *web_server_worker(void *arg);
 //==============================================================================
-int web_accept(SOCKET socket);
+int web_accept(void *sender, SOCKET socket);
 //==============================================================================
 void *web_handle_connection(void *arg);
 int web_get_response(char *request, char *response, int *size);
@@ -122,7 +122,7 @@ void *web_server_worker(void *arg)
   log_add("END web_server_worker", LOG_DEBUG);
 }
 //==============================================================================
-int web_accept(SOCKET socket)
+int web_accept(void *sender, SOCKET socket)
 {
   char tmp[1024];
   sprintf(tmp, "web_accept, socket: %d", socket);

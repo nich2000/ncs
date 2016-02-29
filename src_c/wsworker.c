@@ -36,7 +36,7 @@ int ws_server_pause(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
-int ws_accept(SOCKET socket);
+int ws_accept(void *sender, SOCKET socket);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
@@ -87,6 +87,7 @@ int ws_server_init(ws_server_t *server)
   server->custom_server.custom_worker.id   = _ws_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
+
   server->custom_server.on_accept          = &ws_accept;
 
   server->hand_shake                       = SOCK_FALSE;
@@ -138,7 +139,7 @@ void *ws_server_worker(void *arg)
   log_add("END ws_server_worker", LOG_DEBUG);
 }
 //==============================================================================
-int ws_accept(SOCKET socket)
+int ws_accept(void *sender, SOCKET socket)
 {
   char tmp[1024];
   sprintf(tmp, "ws_accept, socket: %d", socket);
