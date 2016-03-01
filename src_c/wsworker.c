@@ -36,7 +36,7 @@ int ws_server_pause(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
-int ws_accept(void *sender, SOCKET socket);
+int ws_accept(void *sender, SOCKET socket, sock_host_t host);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
@@ -139,7 +139,7 @@ void *ws_server_worker(void *arg)
   log_add("END ws_server_worker", LOG_DEBUG);
 }
 //==============================================================================
-int ws_accept(void *sender, SOCKET socket)
+int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   char tmp[1024];
   sprintf(tmp, "ws_accept, socket: %d", socket);

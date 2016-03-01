@@ -20,12 +20,12 @@
 char         tmp[128];
 clock_t      start_c, end_c;
 double       total_c;
-pack_buffer  buffer;
-pack_size    size;
-pack_index   ind;
-pack_key     key;
+pack_buffer_t  buffer;
+pack_size_t    size;
+pack_index_t   ind;
+pack_key_t     key;
 int          valueI;
-pack_buffer  valueS;
+pack_buffer_t  valueS;
 float        valueF;
 //==============================================================================
 int test_create_pack();

@@ -10,7 +10,7 @@
 #include "protocol_types.h"
 //==============================================================================
 int          _pack_get_last_error       ();
-pack_number  _pack_global_number        ();
+pack_number_t  _pack_global_number        ();
 const char  *_pack_version              ();
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
@@ -36,54 +36,54 @@ const char  *_pack_version              ();
   int pack_add_param_as_string(pack_string param);
   int pack_add_param_as_bytes(pack_bytes param, pack_size size);
 #else
-  int pack_protocol_init (pack_protocol *protocol);
-  int pack_begin(pack_protocol *protocol);
-  int pack_end  (pack_protocol *protocol);
-  pack_packet *_pack_pack_current(pack_type out, pack_protocol *protocol);
-  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate, pack_protocol *protocol);
-  int pack_pack_current(pack_type out, pack_packet *pack, pack_protocol *protocol);
-  int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+  int pack_protocol_init (pack_protocol_t *protocol);
+  int pack_begin(pack_protocol_t *protocol);
+  int pack_end  (pack_protocol_t *protocol);
+  pack_packet_t *_pack_pack_current(pack_type_t out, pack_protocol_t *protocol);
+  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol);
+  int pack_pack_current(pack_type_t out, pack_packet_t *pack, pack_protocol_t *protocol);
+  int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol);
   //------------------------------------------------------------------------------
-  int pack_packet_to_buffer(pack_packet *packet, pack_buffer buffer, pack_size *size);
-  int pack_packet_to_json  (pack_packet *packet, pack_buffer buffer, pack_size *size);
+  int pack_packet_to_buffer(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
+  int pack_packet_to_json  (pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
   //------------------------------------------------------------------------------
-  pack_packet *_pack_next(pack_protocol *protocol);
-  int pack_next_buffer(pack_buffer buffer, pack_size *size, pack_protocol *protocol);
+  pack_packet_t *_pack_next(pack_protocol_t *protocol);
+  int pack_next_buffer(pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol);
   //------------------------------------------------------------------------------
-  int pack_add_as_int   (pack_key key, int         value, pack_protocol *protocol);
-  int pack_add_as_float (pack_key key, float       value, pack_protocol *protocol);
-  int pack_add_as_string(pack_key key, pack_string value, pack_protocol *protocol);
-  int pack_add_as_bytes (pack_key key, pack_bytes  value, pack_size size, pack_protocol *protocol);
+  int pack_add_as_int   (pack_key_t key, int         value, pack_protocol_t *protocol);
+  int pack_add_as_float (pack_key_t key, float       value, pack_protocol_t *protocol);
+  int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *protocol);
+  int pack_add_as_bytes (pack_key_t key, pack_bytes_t  value, pack_size_t size, pack_protocol_t *protocol);
   //------------------------------------------------------------------------------
-  int pack_add_cmd            (pack_value command, pack_protocol *protocol);
-  int pack_add_param_as_int   (int   param,        pack_protocol *protocol);
-  int pack_add_param_as_float (float param,        pack_protocol *protocol);
-  int pack_add_param_as_string(pack_string param,  pack_protocol *protocol);
-  int pack_add_param_as_bytes (pack_bytes param, pack_size size, pack_protocol *protocol);
+  int pack_add_cmd            (pack_value_t command, pack_protocol_t *protocol);
+  int pack_add_param_as_int   (int   param,        pack_protocol_t *protocol);
+  int pack_add_param_as_float (float param,        pack_protocol_t *protocol);
+  int pack_add_param_as_string(pack_string_t param,  pack_protocol_t *protocol);
+  int pack_add_param_as_bytes (pack_bytes_t param, pack_size_t size, pack_protocol_t *protocol);
 #endif
 //==============================================================================
-pack_size _pack_words_count    (pack_packet *pack);
+pack_size_t _pack_words_count    (pack_packet_t *pack);
 //==============================================================================
-int       pack_command         (pack_packet *pack, pack_value command);
-pack_size _pack_params_count   (pack_packet *pack);
+int       pack_command         (pack_packet_t *pack, pack_value_t command);
+pack_size_t _pack_params_count   (pack_packet_t *pack);
 //==============================================================================
-int pack_param_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, pack_string value);
+int pack_param_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
 //==============================================================================
-int pack_keys_to_csv           (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
-int pack_values_to_csv         (pack_packet *pack, unsigned char delimeter, pack_buffer buffer);
+int pack_keys_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
+int pack_values_to_csv         (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
 //==============================================================================
-int pack_word_by_key           (pack_packet *pack, pack_key key,     pack_index *index, pack_word *word);
-int pack_word_by_index         (pack_packet *pack, pack_index index, pack_key key,      pack_word *word);
-int pack_key_by_index          (pack_packet *pack, pack_index index, pack_key key);
+int pack_word_by_key           (pack_packet_t *pack, pack_key_t key,     pack_index_t *index, pack_word_t *word);
+int pack_word_by_index         (pack_packet_t *pack, pack_index_t index, pack_key_t key,      pack_word_t *word);
+int pack_key_by_index          (pack_packet_t *pack, pack_index_t index, pack_key_t key);
 //==============================================================================
-int pack_val_by_key_as_int     (pack_packet *pack, pack_key key, pack_index *index, int   *value);
-int pack_val_by_key_as_float   (pack_packet *pack, pack_key key, pack_index *index, float *value);
-int pack_val_by_key_as_string  (pack_packet *pack, pack_key key, pack_index *index, pack_string value);
-int pack_val_by_key_as_bytes   (pack_packet *pack, pack_key key, pack_index *index, pack_bytes value, pack_size *size);
+int pack_val_by_key_as_int     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, int   *value);
+int pack_val_by_key_as_float   (pack_packet_t *pack, pack_key_t key, pack_index_t *index, float *value);
+int pack_val_by_key_as_string  (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_string_t value);
+int pack_val_by_key_as_bytes   (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
-int pack_val_by_index_as_int   (pack_packet *pack, pack_index index, pack_key key, int   *value);
-int pack_val_by_index_as_float (pack_packet *pack, pack_index index, pack_key key, float *value);
-int pack_val_by_index_as_string(pack_packet *pack, pack_index index, pack_key key, pack_string value);
-int pack_val_by_index_as_bytes (pack_packet *pack, pack_index index, pack_key key, pack_bytes value, pack_size *size);
+int pack_val_by_index_as_int   (pack_packet_t *pack, pack_index_t index, pack_key_t key, int   *value);
+int pack_val_by_index_as_float (pack_packet_t *pack, pack_index_t index, pack_key_t key, float *value);
+int pack_val_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
+int pack_val_by_index_as_bytes (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
 #endif //PROTOCOL_H

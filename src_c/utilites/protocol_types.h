@@ -49,104 +49,104 @@
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
 //==============================================================================
-typedef unsigned char           *pack_string;
-typedef unsigned char           *pack_bytes;
-typedef unsigned char            pack_buffer[PACK_BUFFER_SIZE];
-typedef unsigned char            pack_value [PACK_VALUE_SIZE];
-typedef unsigned char            pack_ver   [PACK_VERSION_SIZE];
-typedef unsigned char            pack_key   [PACK_KEY_SIZE];
+typedef unsigned char           *pack_string_t;
+typedef unsigned char           *pack_bytes_t;
+typedef unsigned char            pack_buffer_t[PACK_BUFFER_SIZE];
+typedef unsigned char            pack_value_t [PACK_VALUE_SIZE];
+typedef unsigned char            pack_ver_t   [PACK_VERSION_SIZE];
+typedef unsigned char            pack_key_t   [PACK_KEY_SIZE];
 //==============================================================================
-typedef unsigned short           pack_count;
-typedef unsigned short           pack_size;
-typedef unsigned short           pack_index;
-typedef unsigned short           pack_number;
-typedef unsigned short           pack_crc16;
-typedef unsigned char            pack_type;
+typedef unsigned short           pack_count_t;
+typedef unsigned short           pack_size_t;
+typedef unsigned short           pack_index_t;
+typedef unsigned short           pack_number_t;
+typedef unsigned short           pack_crc16_t;
+typedef unsigned char            pack_type_t;
 //==============================================================================
-#define PACK_SIZE_SIZE           sizeof(pack_size)
-#define PACK_INDEX_SIZE          sizeof(pack_index)
-#define PACK_NUMBER_SIZE         sizeof(pack_number)
-#define PACK_TYPE_SIZE           sizeof(pack_type)
-#define PACK_CRC_SIZE            sizeof(pack_crc16)
+#define PACK_SIZE_SIZE           sizeof(pack_size_t)
+#define PACK_INDEX_SIZE          sizeof(pack_index_t)
+#define PACK_NUMBER_SIZE         sizeof(pack_number_t)
+#define PACK_TYPE_SIZE           sizeof(pack_type_t)
+#define PACK_CRC_SIZE            sizeof(pack_crc16_t)
 //==============================================================================
 typedef struct
 {
-  pack_key   key;              // 4
-  pack_value value;            // 12
-  pack_type  type;             // 1
+  pack_key_t   key;              // 4
+  pack_value_t value;            // 12
+  pack_type_t  type;             // 1
   char       _align1[3];       // 3
-  pack_size  size;             // 2
+  pack_size_t  size;             // 2
   char       _align2[2];       // 2
-} pack_word;
+} pack_word_t;
 //==============================================================================
-typedef pack_word pack_words[PACK_WORDS_COUNT];
+typedef pack_word_t pack_words_t[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_number number;          // 2
+  pack_number_t number;          // 2
   char       _align1[2];       // 2
-  pack_size   words_count;     // 2
+  pack_size_t   words_count;     // 2
   char       _align2[2];       // 2
-  pack_words  words;           // 24 * 20
-} pack_packet;
+  pack_words_t  words;           // 24 * 20
+} pack_packet_t;
 //==============================================================================
-typedef pack_packet  *ppack_packet;
+typedef pack_packet_t  *ppack_packet_t;
 //==============================================================================
-typedef pack_packet  pack_out_packets  [PACK_OUT_PACKETS_COUNT];
-typedef pack_packet  pack_in_packets   [PACK_IN_PACKETS_COUNT];
-typedef ppack_packet pack_queue_packets[PACK_QUEUE_COUNT];
+typedef pack_packet_t  pack_out_packets_t  [PACK_OUT_PACKETS_COUNT];
+typedef pack_packet_t  pack_in_packets_t   [PACK_IN_PACKETS_COUNT];
+typedef ppack_packet_t pack_queue_packets_t[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_size   size;            // 2
+  pack_size_t   size;            // 2
   char        _align1[2];      // 2
-  pack_buffer buffer;          // 256
-} pack_validation_buffer;
+  pack_buffer_t buffer;          // 256
+} pack_validation_buffer_t;
 //==============================================================================
 typedef struct
 {
-  pack_type        empty;      // 1
+  pack_type_t        empty;      // 1
   char            _align1[3];  // 3
-  pack_index       index;      // 2
+  pack_index_t       index;      // 2
   char            _align2[2];  // 2
-  pack_count       count;      // 2
+  pack_count_t       count;      // 2
   char            _align3[2];  // 2
-  pack_count       lock_count; // 2
+  pack_count_t       lock_count; // 2
   char            _align4[2];  // 2
-  pack_out_packets items;      // 488 * 8
-} pack_out_packets_list;
+  pack_out_packets_t items;      // 488 * 8
+} pack_out_packets_list_t;
 //==============================================================================
 typedef struct
 {
-  pack_type        empty;      // 1
+  pack_type_t        empty;      // 1
   char            _align1[3];  // 3
-  pack_index       index;      // 2
+  pack_index_t       index;      // 2
   char            _align2[2];  // 2
-  pack_count       count;      // 2
+  pack_count_t       count;      // 2
   char            _align3[2];  // 2
-  pack_count       lock_count; // 2
-  pack_in_packets  items;      // 488 * 8
-} pack_in_packets_list;
+  pack_count_t       lock_count; // 2
+  pack_in_packets_t  items;      // 488 * 8
+} pack_in_packets_list_t;
 //==============================================================================
 typedef struct
 {
-  pack_type          empty;      // 1
+  pack_type_t          empty;      // 1
   char               _align1[3]; // 3
-  pack_index         start;      // 2
+  pack_index_t         start;      // 2
   char               _align2[2]; // 2
-  pack_index         finish;     // 2
+  pack_index_t         finish;     // 2
   char               _align3[2]; // 2
-  pack_queue_packets packets;    // 4
-} pack_queue;
+  pack_queue_packets_t packets;    // 4
+} pack_queue_t;
 //==============================================================================
 typedef struct
 {
-  pack_validation_buffer validation_buffer;
-  pack_out_packets_list  out_packets_list;
-  pack_in_packets_list   in_packets_list;
+  pack_validation_buffer_t validation_buffer;
+  pack_out_packets_list_t  out_packets_list;
+  pack_in_packets_list_t   in_packets_list;
   #ifdef PACK_USE_OWN_QUEUE
-  pack_queue             queue;
+  pack_queue_t             queue;
   #endif
-} pack_protocol;
+} pack_protocol_t;
 //==============================================================================
 #endif // PROTOCOL_TYPES_H

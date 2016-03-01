@@ -7,9 +7,9 @@
 #include "streamer.h"
 //==============================================================================
 void *streamer_worker_func(void *arg);
-int streamer_prepare(pack_protocol *protocol);
+int streamer_prepare(pack_protocol_t *protocol);
 //==============================================================================
-int streamer_init(streamer_worker *worker, pack_protocol *protocol)
+int streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
 {
   worker->is_test     =  0;
   worker->is_work     =  1;
@@ -43,7 +43,7 @@ void *streamer_worker_func(void *arg)
 {
   streamer_worker *tmp_worker = (streamer_worker*)arg;
 
-  pack_protocol *tmp_protocol = tmp_worker->protocol;
+  pack_protocol_t *tmp_protocol = tmp_worker->protocol;
 
   while(tmp_worker->is_work)
   {
@@ -68,20 +68,20 @@ void *streamer_worker_func(void *arg)
   }
 }
 //==============================================================================
-int streamer_prepare(pack_protocol *protocol)
+int streamer_prepare(pack_protocol_t *protocol)
 {
   #define TEST_SEND_COUNT  1
   #define TEST_PACK_COUNT  1
   #define TEST_WORD_COUNT  5
   #define TEST_STRING_SIZE 5
 
-  pack_key tmp_key;
-  pack_value tmp_value;
+  pack_key_t tmp_key;
+  pack_value_t tmp_value;
 
-  for(pack_size i = 0; i < TEST_PACK_COUNT; i++)
+  for(pack_size_t i = 0; i < TEST_PACK_COUNT; i++)
   {
     pack_begin(protocol);
-    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
         sprintf(tmp_key, "I%d", i);
@@ -90,21 +90,21 @@ int streamer_prepare(pack_protocol *protocol)
 
       pack_add_as_int(tmp_key, rand(), protocol);
     };
-    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
         sprintf(tmp_key, "S%d", i);
       else
         sprintf(tmp_key, "ST%d", i);
 
-      pack_size j = 0;
+      pack_size_t j = 0;
       for(j = 0; j < TEST_STRING_SIZE; j++)
         tmp_value[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
       tmp_value[j] = '\0';
 
       pack_add_as_string(tmp_key, tmp_value, protocol);
     };
-    for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
+    for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
         sprintf(tmp_key, "F%d", i);

@@ -28,17 +28,17 @@ int print_types_info()
     "pack_queue:                 %d\n" \
     "custom_worker:              %d\n" \
     "custom_remote_clients_list: %d",
-    sizeof(pack_word),
-    sizeof(pack_words),
-    sizeof(pack_packet),
-    sizeof(pack_out_packets),
-    sizeof(pack_in_packets),
-    sizeof(pack_queue_packets),
-    sizeof(pack_validation_buffer),
-    sizeof(pack_out_packets_list),
-    sizeof(pack_in_packets_list),
-    sizeof(pack_protocol),
-    sizeof(pack_queue),
+    sizeof(pack_word_t),
+    sizeof(pack_words_t),
+    sizeof(pack_packet_t),
+    sizeof(pack_out_packets_t),
+    sizeof(pack_in_packets_t),
+    sizeof(pack_queue_packets_t),
+    sizeof(pack_validation_buffer_t),
+    sizeof(pack_out_packets_list_t),
+    sizeof(pack_in_packets_list_t),
+    sizeof(pack_protocol_t),
+    sizeof(pack_queue_t),
     sizeof(custom_worker_t),
     sizeof(custom_remote_clients_list_t)
   );

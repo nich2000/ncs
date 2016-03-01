@@ -78,7 +78,7 @@ unsigned short getCRC16(char *data_p, unsigned short length)
   return (crc);
 }
 //==============================================================================
-int pack_print(pack_packet *packet, char *prefix, int clear, int buffer, int pack, int csv)
+int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int pack, int csv)
 {
   if(clear)
     clr_scr();
@@ -90,13 +90,13 @@ int pack_print(pack_packet *packet, char *prefix, int clear, int buffer, int pac
 
   if(buffer)
   {
-    pack_buffer  tmp_buffer;
-    pack_size    tmp_size;
+    pack_buffer_t  tmp_buffer;
+    pack_size_t    tmp_size;
 
     pack_packet_to_buffer(packet, tmp_buffer, &tmp_size);
 
     #ifdef SOCK_PACK_MODE
-    bytes_to_hex(tmp_buffer, (pack_size)tmp_size, tmp);
+    bytes_to_hex(tmp_buffer, (pack_size_t)tmp_size, tmp);
     log_add(tmp, LOG_DEBUG);
     #else
     add_to_log(tmp_buffer, LOG_DEBUG);
@@ -107,11 +107,11 @@ int pack_print(pack_packet *packet, char *prefix, int clear, int buffer, int pac
   {
     sprintf(tmp, "%s\n", prefix);
 //      sprintf(tmp, "%sNumber: %d\n", tmp, tmp_pack->number);
-    pack_key     key;
-    pack_value   valueS;
-    pack_size tmp_words_count = _pack_words_count(packet);
+    pack_key_t     key;
+    pack_value_t   valueS;
+    pack_size_t tmp_words_count = _pack_words_count(packet);
 //      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
-    for(pack_size i = 0; i < tmp_words_count; i++)
+    for(pack_size_t i = 0; i < tmp_words_count; i++)
       if(pack_val_by_index_as_string(packet, i, key, valueS) == PACK_OK)
         sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
     log_add(tmp, LOG_INFO);
@@ -119,7 +119,7 @@ int pack_print(pack_packet *packet, char *prefix, int clear, int buffer, int pac
 
   if(csv)
   {
-    pack_buffer csv;
+    pack_buffer_t csv;
     pack_values_to_csv(packet, ';', csv);
     log_add(csv, LOG_DATA);
   };
