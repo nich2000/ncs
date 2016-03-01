@@ -124,7 +124,7 @@ void *web_server_worker(void *arg)
 //==============================================================================
 int web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  char tmp[1024];
+  char tmp[256];
   sprintf(tmp, "web_accept, socket: %d", socket);
   log_add(tmp, LOG_DEBUG);
 
@@ -143,13 +143,13 @@ void *web_handle_connection(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
-  char tmp[1024];
+  char tmp[256];
   sprintf(tmp, "BEGIN web_handle_connection, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  char request[2048];
-  char response[1024*1024];
-  int  size = 0;
+  char *request  = (char *)malloc(2048);
+  char *response = (char *)malloc(1024*1024);
+  int  size      = 0;
 
   while(1)
   {
@@ -159,11 +159,14 @@ void *web_handle_connection(void *arg)
 
       sock_send(tmp_sock, response, size);
 
-      return NULL;
+      break;
     }
 
     usleep(1000);
   }
+
+  free(request);
+  free(response);
 
   sprintf(tmp, "END web_handle_connection, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
@@ -173,14 +176,13 @@ void *web_handle_connection(void *arg)
 //==============================================================================
 int web_get_response(char *request, char *response, int *size)
 {
-  char    tmp[128];
+  char    tmp[256];
   char   *tmp_header;
   char    tmp_method[WEB_LINE_SIZE];
   char    tmp_uri[WEB_LINE_SIZE];
   char    tmp_version[WEB_LINE_SIZE];
   char    tmp_full_name[256];
-
-  unsigned char *tmp_buffer;
+  char   *tmp_buffer;
   size_t  tmp_file_size = 0;
 
   *size = 0;
@@ -193,14 +195,14 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-//    log_add(tmp_full_name, LOG_INFO);
+    log_add(tmp_full_name, LOG_INFO);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f != NULL)
     {
       fseek(f, 0, SEEK_END);
       tmp_file_size = ftell(f);
-      tmp_buffer = (unsigned char *)malloc(tmp_file_size);
+      tmp_buffer = (char *)malloc(tmp_file_size);
       fseek(f, 0, SEEK_SET);
       fread(tmp_buffer, tmp_file_size, 1, f);
       fclose(f);
@@ -248,6 +250,8 @@ int web_get_response(char *request, char *response, int *size)
 //==============================================================================
 int web_server_status()
 {
+  clr_scr();
+
   sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 }
 //==============================================================================

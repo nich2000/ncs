@@ -117,7 +117,7 @@ int custom_client_start(custom_worker_t *worker)
 {
   char tmp[128];
   sprintf(tmp, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
-  log_add(tmp, LOG_INFO);
+  log_add(tmp, LOG_DEBUG);
 
   if(custom_worker_start(worker) == SOCK_ERROR)
     return SOCK_ERROR;
@@ -137,7 +137,7 @@ int custom_worker_stop(custom_worker_t *worker)
 int custom_server_work(custom_server_t *server)
 {
   log_add("BEGIN custom_server_work", LOG_DEBUG);
-  log_add("Server started", LOG_INFO);
+  log_add("server started", LOG_INFO);
   log_add("----------", LOG_INFO);
 
   char tmp[128];
@@ -146,7 +146,7 @@ int custom_server_work(custom_server_t *server)
 
   while(server->custom_worker.state == SOCK_STATE_START)
   {
-    log_add("custom_server_work, accepting...", LOG_DEBUG);
+    log_add("waiting for connect...", LOG_INFO);
 
     SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
@@ -161,16 +161,20 @@ int custom_server_work(custom_server_t *server)
       if(server->on_accept != 0)
       {
         sock_host_t tmp_host;
-        struct sockaddr_in sin;
-        int len = sizeof(sin);
-        getsockname(tmp_client, (struct sockaddr *)&sin, &len);
-        strcpy(tmp_host, inet_ntoa(sin.sin_addr));
-
-        server->on_accept((void*)server, tmp_client, tmp_host);
+        struct sockaddr_in tmp_addr;
+        int tmp_len = sizeof(tmp_addr);
+        getsockname(tmp_client, (struct sockaddr *)&tmp_addr, &tmp_len);
+        strcpy(tmp_host, inet_ntoa(tmp_addr.sin_addr));
+        int tmp_port = ntohs(tmp_addr.sin_port);
 
         sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
-                tmp_client, tmp_host, ntohs(sin.sin_port));
+                tmp_client, tmp_host, tmp_port);
+        log_add(tmp, LOG_DEBUG);
+
+        sprintf(tmp, "client connected, host: %s:%d", tmp_host, tmp_port);
         log_add(tmp, LOG_INFO);
+
+        server->on_accept((void*)server, tmp_client, tmp_host);
       }
     }
 
@@ -184,14 +188,16 @@ int custom_server_work(custom_server_t *server)
 //==============================================================================
 int custom_client_work(custom_client_t *client)
 {
-  log_add("BEGIN custom_client_work", LOG_INFO);
+  log_add("BEGIN custom_client_work", LOG_DEBUG);
+  log_add("client started", LOG_INFO);
+  log_add("----------", LOG_INFO);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(client->custom_remote_client.custom_worker.port);
   addr.sin_addr.s_addr = inet_addr(client->custom_remote_client.custom_worker.host);
 
-  log_add("custom_client_work, connecting...", LOG_INFO);
+  log_add("connecting to server...", LOG_INFO);
   while(client->custom_remote_client.custom_worker.state == SOCK_STATE_START)
   {
     if(connect(client->custom_remote_client.custom_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
@@ -208,16 +214,16 @@ int custom_client_work(custom_client_t *client)
     {
       if(client->on_connect != 0)
       {
-        client->on_connect((void*)client);
+        log_add("connected to server", LOG_INFO);
 
-        log_add("custom_client_work, connected", LOG_INFO);
+        client->on_connect((void*)client);
       };
     }
 
     usleep(1000);
   }
 
-  log_add("END custom_client_work", LOG_INFO);
+  log_add("END custom_client_work", LOG_DEBUG);
 }
 //==============================================================================
 void *custom_recv_worker(void *arg)

@@ -45,6 +45,16 @@ int handle_command(char *command)
 //      sock_exit(_worker);
       return RESULT_NONE;
     }
+    else if(strcmp(token, "all") == 0)
+    {
+      log_set_name("all_log.txt");
+
+      cmd_server(SOCK_STATE_START, cmd_server_port);
+      ws_server (SOCK_STATE_START, ws_server_port);
+      web_server(SOCK_STATE_START, web_server_port);
+
+      return RESULT_DONE;
+    }
     else if(strcmp(token, "client") == 0)
     {
       log_set_name("client_log.txt");

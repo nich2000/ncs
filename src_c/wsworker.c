@@ -123,6 +123,8 @@ int ws_server_pause(ws_server_t *server)
 //==============================================================================
 int ws_server_status()
 {
+  clr_scr();
+
   sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
 }
 //==============================================================================
@@ -141,7 +143,7 @@ void *ws_server_worker(void *arg)
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  char tmp[1024];
+  char tmp[256];
   sprintf(tmp, "ws_accept, socket: %d", socket);
   log_add(tmp, LOG_DEBUG);
 
@@ -161,13 +163,13 @@ void *ws_recv_worker(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
-  char tmp[1024];
+  char tmp[256];
   sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  char request[2048];
-  char response[1024*1024];
-  int  size = 0;
+  char *request  = (char *)malloc(2048);
+  char *response = (char *)malloc(1024*1024);
+  int  size      = 0;
 
   while(1)
   {
@@ -177,11 +179,14 @@ void *ws_recv_worker(void *arg)
 
       sock_send(tmp_sock, response, size);
 
-      return NULL;
+      break;
     }
 
     usleep(1000);
   }
+
+  free(request);
+  free(response);
 
   sprintf(tmp, "END ws_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);

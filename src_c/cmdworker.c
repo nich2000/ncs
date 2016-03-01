@@ -17,6 +17,7 @@ void *cmd_server_worker(void *arg);
 int cmd_accept(void *sender, SOCKET socket, sock_host_t host);
 //==============================================================================
 custom_remote_client_t *cmd_server_remote_clients_next();
+int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list);
 //==============================================================================
 int cmd_client_init (cmd_client_t *client);
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host);
@@ -72,7 +73,11 @@ int cmd_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int cmd_server_status()
 {
+  clr_scr();
+
   sock_print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
+
+  sock_print_custom_remote_clients_list_info(&_cmd_server.custom_remote_clients_list, "cmd_server");
 }
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
@@ -108,6 +113,8 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
 //==============================================================================
 int cmd_client_status()
 {
+  clr_scr();
+
   sock_print_custom_worker_info(&_cmd_client.custom_client.custom_remote_client.custom_worker, "cmd_client");
 }
 //==============================================================================
@@ -148,12 +155,12 @@ int cmd_server_pause(cmd_server_t *worker)
   worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
 }
 //==============================================================================
-int cmd_server_remote_clients_count()
+int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
 {
   int tmp_count = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_START)
+    if(clients_list->items[i].custom_worker.state == SOCK_STATE_START)
       tmp_count++;
 
   return tmp_count;
@@ -309,7 +316,7 @@ int cmd_connect(void *sender)
 //==============================================================================
 int cmd_disconnect(void *sender)
 {
-log_add("cmd_disconnect", LOG_DEBUG);
+  log_add("cmd_disconnect", LOG_DEBUG);
 }
 //==============================================================================
 void *cmd_send_worker(void *arg)

@@ -150,65 +150,15 @@ int sock_print_custom_worker_info(custom_worker_t *worker, char *prefix)
   return 0;
 }
 //==============================================================================
-/*
-int sock_print_worker_info(sock_worker_t *worker, char *prefix)
+int sock_print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix)
 {
-  if(worker == NULL)
+  if(clients_list == 0)
     return 1;
 
-  print_custom_worker_info(&worker->custom_worker, "custom_worker");
-
-  char tmp_info[1024];
-
-  sprintf(tmp_info,
-          "%s\n"                                  \
-          "addr:                            %d\n" \
-          "protocol.in_packets_list.index:  %d\n" \
-          "protocol.in_packets_list.count:  %d\n" \
-          "protocol.out_packets_list.index: %d\n" \
-          "protocol.out_packets_list.count: %d",
-          prefix,
-          &worker,
-          worker->protocol.in_packets_list.index,
-          worker->protocol.in_packets_list.count,
-          worker->protocol.out_packets_list.index,
-          worker->protocol.out_packets_list.count);
-
-  log_add(tmp_info, LOG_INFO);
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(clients_list->items[i].custom_worker.state == SOCK_STATE_START)
+      sock_print_custom_worker_info(&clients_list->items[i].custom_worker, prefix);
 
   return 0;
 }
-*/
-//==============================================================================
-/*
-int sock_print_server_info(sock_server_t *server)
-{
-  if(server == NULL)
-    return 1;
-
-  clr_scr();
-
-  char tmp[256];
-
-  sprintf(tmp,
-          "server\n"                              \
-          "addr:                            %u\n" \
-          "clients.last_id:                 %d\n" \
-          "clients.index:                   %d",
-          server,
-          server->clients.last_id,
-          server->clients.index);
-  log_add(tmp, LOG_INFO);
-
-  print_worker_info(&server->worker, "server");
-
-  for(int i = 0; i < server->clients.index; i++)
-  {
-    sock_worker_t tmp_worker = server->clients.items[i];
-    print_worker_info(&tmp_worker, "remote client");
-  }
-
-  return 0;
-}
-*/
 //==============================================================================
