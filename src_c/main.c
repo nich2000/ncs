@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "log.h"
+#include "ncs_log.h"
 #include "test.h"
 #include "utils.h"
 #include "socket.h"

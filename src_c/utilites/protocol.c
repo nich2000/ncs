@@ -46,7 +46,7 @@
 
 #include "defines.h"
 #include "protocol.h"
-#include "log.h"
+#include "ncs_log.h"
 #include "protocol_utils.h"
 //==============================================================================
 static pack_number_t pack_last_error    = PACK_OK;

@@ -14,7 +14,7 @@
 
 #include <string.h>
 
-#include "log.h"
+#include "ncs_log.h"
 //==============================================================================
 #if defined(__linux__) || defined(_WIN32)
   time_t rawtime;

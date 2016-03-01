@@ -4,7 +4,7 @@
 
 #include "customworker.h"
 #include "socket.h"
-#include "log.h"
+#include "ncs_log.h"
 //==============================================================================
 int custom_worker_init(custom_worker_t *worker)
 {
@@ -126,19 +126,24 @@ int custom_server_work(custom_server_t *server)
     }
     else
     {
-      sock_host_t tmp_host;
-      struct sockaddr_in sin;
-      int len = sizeof(sin);
-      getsockname(tmp_client, (struct sockaddr *)&sin, &len);
-      strcpy(tmp_host, inet_ntoa(sin.sin_addr));
+      if(server->on_accept != 0)
+      {
+        sock_host_t tmp_host;
+        struct sockaddr_in sin;
+        int len = sizeof(sin);
+        getsockname(tmp_client, (struct sockaddr *)&sin, &len);
+        strcpy(tmp_host, inet_ntoa(sin.sin_addr));
 
-      server->on_accept((void*)server, tmp_client, tmp_host);
+        server->on_accept((void*)server, tmp_client, tmp_host);
 
-      sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
-              tmp_client, tmp_host, ntohs(sin.sin_port));
-      log_add(tmp, LOG_DEBUG);
-    };
-  };
+        sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
+                tmp_client, tmp_host, ntohs(sin.sin_port));
+        log_add(tmp, LOG_DEBUG);
+      }
+    }
+
+    usleep(1000);
+  }
 
   log_add("END custom_server_work", LOG_DEBUG);
 
@@ -169,12 +174,58 @@ int custom_client_work(custom_client_t *client)
     }
     else
     {
-      log_add("custom_client_work, connected", LOG_INFO);
+      if(client->on_connect != 0)
+      {
+        client->on_connect((void*)client);
 
-      client->on_connect((void*)client);
+        log_add("custom_client_work, connected", LOG_INFO);
+      };
     }
+
+    usleep(1000);
   }
 
   log_add("END custom_client_work", LOG_INFO);
+}
+//==============================================================================
+void *custom_recv_worker(void *arg)
+{
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
+  SOCKET tmp_sock = tmp_client->custom_worker.sock;
+
+  char tmp[1024];
+  sprintf(tmp, "BEGIN custom_recv_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
+
+  char tmp_buffer[2048];
+  int  tmp_size;
+
+  while(tmp_client->custom_worker.state == SOCK_STATE_START)
+  {
+    int retval = sock_recv(tmp_sock, tmp_buffer, &tmp_size);
+    if(retval == SOCK_OK)
+    {
+      if(tmp_client->on_recv != 0)
+        tmp_client->on_recv(tmp_client, tmp_buffer, tmp_size);
+    }
+    else if(retval == SOCK_ERROR)
+    {
+      if(tmp_size == SOCKET_ERROR)
+      {
+        if(tmp_client->on_error != 0)
+          tmp_client->on_error((void*)tmp_client, last_error());
+      }
+      else if(tmp_size == 0)
+      {
+        if(tmp_client->on_disconnect != 0)
+          tmp_client->on_disconnect((void*)tmp_client);
+      }
+    }
+
+    usleep(1000);
+  }
+
+  sprintf(tmp, "END custom_recv_worker, socket: %d", tmp_sock);
+  log_add(tmp, LOG_DEBUG);
 }
 //==============================================================================

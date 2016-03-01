@@ -8,7 +8,7 @@
 #include "socket.h"
 #include "socket_types.h"
 #include "socket_utils.h"
-#include "log.h"
+#include "ncs_log.h"
 //==============================================================================
 /*
 * GET /index.html HTTP/1.0 \r\n
@@ -161,6 +161,8 @@ void *web_handle_connection(void *arg)
 
       return NULL;
     }
+
+    usleep(1000);
   }
 
   sprintf(tmp, "END web_handle_connection, socket: %d", tmp_sock);

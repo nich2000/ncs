@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "wsworker.h"
-#include "log.h"
+#include "ncs_log.h"
 #include "sha1.h"
 #include "base64.h"
 #include "protocol.h"
@@ -179,6 +179,8 @@ void *ws_recv_worker(void *arg)
 
       return NULL;
     }
+
+    usleep(1000);
   }
 
   sprintf(tmp, "END ws_recv_worker, socket: %d", tmp_sock);

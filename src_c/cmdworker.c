@@ -4,7 +4,7 @@
 #include "socket_utils.h"
 #include "socket.h"
 #include "utils.h"
-#include "log.h"
+#include "ncs_log.h"
 #include "protocol_types.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
@@ -28,8 +28,10 @@ void *cmd_client_worker(void *arg);
 int cmd_connect(void *sender);
 int cmd_disconnect(void *sender);
 //==============================================================================
-void *cmd_recv_worker(void *arg);
 void *cmd_send_worker(void *arg);
+//==============================================================================
+int cmd_send(void *sender);
+int cmd_recv(void *sender, char *buffer, int size);
 //==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
@@ -190,7 +192,9 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 
   if(tmp_client == 0)
   {
-    sprintf(tmp, "no available clients, cmd_accept, socket: %d, host: %s", tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
+    sprintf(tmp,
+            "no available clients, cmd_accept, socket: %d, host: %s",
+            tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;
   };
@@ -205,8 +209,8 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&tmp_client->recv_thread, &tmp_attr, cmd_recv_worker, (void*)tmp_client);
-  pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker, (void*)tmp_client);
+  pthread_create(&tmp_client->recv_thread, &tmp_attr, custom_recv_worker, (void*)tmp_client);
+  pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker,    (void*)tmp_client);
 }
 //==============================================================================
 void *cmd_server_worker(void *arg)
@@ -226,8 +230,8 @@ int cmd_client_init(cmd_client_t *client)
 {
   custom_worker_init(&client->custom_client.custom_remote_client.custom_worker);
 
-  client->custom_client.on_connect    = cmd_connect;
-  client->custom_client.on_disconnect = cmd_disconnect;
+  client->custom_client.on_connect = cmd_connect;
+  client->custom_client.custom_remote_client.on_disconnect = cmd_disconnect;
 }
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
@@ -263,50 +267,36 @@ void *cmd_client_worker(void *arg)
 //==============================================================================
 int cmd_connect(void *sender)
 {
-  /*
+  log_add("BEGIN cmd_connect", LOG_DEBUG);
+
+  custom_client_t *tmp_client = (custom_client_t*)sender;
+
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&worker->send_thread,    &tmp_attr, sock_send_worker, (void*)worker);
-  pthread_create(&worker->receive_thread, &tmp_attr, sock_recv_worker, (void*)&worker->custom_worker);
+  pthread_create(&tmp_client->custom_remote_client.recv_thread,
+                 &tmp_attr,
+                 custom_recv_worker,
+                 (void*)&tmp_client->custom_remote_client);
 
-  if(wait)
-  {
-    int status_send;
-    pthread_join(worker->send_thread,    (void**)&status_send);
-    int status_recv;
-    pthread_join(worker->receive_thread, (void**)&status_recv);
-  };
-  */
+  pthread_create(&tmp_client->custom_remote_client.send_thread,
+                 &tmp_attr,
+                 cmd_send_worker,
+                 (void*)&tmp_client->custom_remote_client);
+
+  int status_send;
+  pthread_join(tmp_client->custom_remote_client.recv_thread, (void**)&status_send);
+
+  int status_recv;
+  pthread_join(tmp_client->custom_remote_client.send_thread, (void**)&status_recv);
+
+  log_add("END cmd_connect", LOG_DEBUG);
 }
 //==============================================================================
 int cmd_disconnect(void *sender)
 {
-}
-//==============================================================================
-void *cmd_recv_worker(void *arg)
-{
-  custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
-  SOCKET tmp_sock = tmp_client->custom_worker.sock;
-
-  char tmp[1024];
-  sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
-
-  pack_buffer_t tmp_buffer;
-  int           tmp_size;
-
-  while(tmp_client->custom_worker.state == SOCK_STATE_START)
-  {
-    if(sock_recv(tmp_sock, tmp_buffer, &tmp_size))
-    {
-
-    }
-  }
-
-  sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+log_add("cmd_disconnect", LOG_DEBUG);
 }
 //==============================================================================
 void *cmd_send_worker(void *arg)
@@ -318,7 +308,41 @@ void *cmd_send_worker(void *arg)
   sprintf(tmp, "BEGIN cmd_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
+//  pack_protocol_t *tmp_protocol;
+//  pack_packet_t   *tmp_pack;
+//  pack_buffer_t    tmp_buffer;
+//  int              tmp_size;
+
+  while(tmp_client->custom_worker.state == SOCK_STATE_START)
+  {
+//    tmp_pack = _pack_next(&tmp_worker->protocol);
+//    while(tmp_pack != NULL)
+//    {
+//      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
+//        continue;
+
+//      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
+
+//      if(tmp_cnt > 0)
+//      {
+//        sock_send(tmp_sock, tmp_buffer, tmp_size);
+//      }
+
+//      tmp_pack = _pack_next(&tmp_worker->protocol);
+//    }
+
+    usleep(1000);
+  }
+
   sprintf(tmp, "END cmd_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
+}
+//==============================================================================
+int cmd_send(void *sender)
+{
+}
+//==============================================================================
+int cmd_recv(void *sender, char *buffer, int size)
+{
 }
 //==============================================================================

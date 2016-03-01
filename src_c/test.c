@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "log.h"
+#include "ncs_log.h"
 #include "protocol.h"
 #include "gps_parse.h"
 

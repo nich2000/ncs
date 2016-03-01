@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "log.h"
+#include "ncs_log.h"
 #include "streamer.h"
 //==============================================================================
 void *streamer_worker_func(void *arg);

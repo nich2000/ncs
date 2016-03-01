@@ -4,13 +4,14 @@
 #include <pthread.h>
 
 #include "socket_types.h"
+#include "ncs_error.h"
 //==============================================================================
-typedef int (*on_error_t)     (void *sender, int error, char *message);
+typedef int (*on_error_t)     (void *sender, error_t *error);
 typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
 typedef int (*on_connect_t)   (void *sender);
 typedef int (*on_disconnect_t)(void *sender);
 typedef int (*on_send_t)      (void *sender);
-typedef int (*on_recv_t)      (void *sender);
+typedef int (*on_recv_t)      (void *sender, char *buffer, int size);
 //==============================================================================
 typedef struct
 {
@@ -34,6 +35,7 @@ typedef struct
   on_error_t      on_error;
   on_send_t       on_send;
   on_recv_t       on_recv;
+  on_disconnect_t on_disconnect;
 }custom_remote_client_t;
 //==============================================================================
 typedef custom_remote_client_t custom_remote_clients_t[SOCK_WORKERS_COUNT];
@@ -61,7 +63,6 @@ typedef struct
   pthread_t              work_thread;
 
   on_connect_t           on_connect;
-  on_disconnect_t        on_disconnect;
 }custom_client_t;
 //==============================================================================
 int custom_worker_init (custom_worker_t *worker);
@@ -72,5 +73,7 @@ int custom_client_start(custom_worker_t *worker);
 
 int custom_server_work (custom_server_t *server);
 int custom_client_work (custom_client_t *client);
+
+void *custom_recv_worker(void *arg);
 //==============================================================================
 #endif //CUSTOMWORKER_H

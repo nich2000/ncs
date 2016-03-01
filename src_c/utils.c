@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "socket_utils.h"
 #include "protocol_types.h"
-#include "log.h"
+#include "ncs_log.h"
 //==============================================================================
 int print_types_info()
 {

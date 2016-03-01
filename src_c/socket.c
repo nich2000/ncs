@@ -1,7 +1,8 @@
 //==============================================================================
 //==============================================================================
 #include "socket.h"
-#include "log.h"
+#include "ncs_log.h"
+#include "ncs_error.h"
 #include "protocol_types.h"
 //==============================================================================
 const char *sock_version()
@@ -683,30 +684,34 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   int retval = select(1, &rfds, NULL, NULL, &tv);
   if (retval == SOCKET_ERROR)
   {
-    sprintf(tmp, "sock_recv, select, socket: %d, Error: %d", sock, sock_error());
+    sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, sock_error());
+    make_error(retval, tmp);
     log_add(tmp, LOG_ERROR);
     return SOCK_ERROR;
   }
   else if(!retval)
   {
+    sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
+    make_error(retval, tmp);
     #ifdef SOCK_EXTRA_LOGS
-    sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", tmp_sock, SOCK_WAIT_SELECT);
     log_add(tmp, LOG_WARNING);
     #endif
-    return SOCK_OK;
+    return SOCK_WARNING;
   }
   else
   {
     *size = recv(sock, buffer, PACK_BUFFER_SIZE, 0);
     if(*size == SOCKET_ERROR)
     {
-      sprintf(tmp, "sock_recv, recv, socket: %d, Error: %d", sock, sock_error());
+      sprintf(tmp, "sock_recv, recv, socket: %d, error: %d", sock, sock_error());
+      make_error(*size, tmp);
       log_add(tmp, LOG_ERROR);
       return SOCK_ERROR;
     }
     else if(*size == 0)
     {
       sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
+      make_error(*size, tmp);
       log_add(tmp, LOG_WARNING);
       return SOCK_ERROR;
     }
@@ -717,6 +722,8 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     bytes_to_hex(buffer, (pack_size)size, tmp);
     log_add(tmp, LOG_INFO);
     #endif
+
+    return SOCK_OK;
   }
 }
 //==============================================================================
