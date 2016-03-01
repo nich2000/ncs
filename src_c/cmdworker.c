@@ -113,11 +113,9 @@ int cmd_client_status()
 //==============================================================================
 int cmd_server_init(cmd_server_t *server)
 {
-  server->custom_remote_clients_list.index    = 0;
-  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    custom_worker_init(&server->custom_remote_clients_list.items[i].custom_worker);
+  custom_server_init(&server->custom_server);
 
-  custom_worker_init(&server->custom_server.custom_worker);
+  custom_remote_clients_list_init(&server->custom_remote_clients_list);
 
   server->custom_server.custom_worker.id   = _cmd_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -170,7 +168,7 @@ custom_remote_client_t *cmd_server_remote_clients_next()
     {
       tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
 
-      custom_worker_init(&tmp_client->custom_worker);
+      custom_remote_client_init(tmp_client);
 
       tmp_client->custom_worker.id    = _cmd_server.custom_remote_clients_list.next_id++;
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
@@ -228,7 +226,11 @@ void *cmd_server_worker(void *arg)
 //==============================================================================
 int cmd_client_init(cmd_client_t *client)
 {
-  custom_worker_init(&client->custom_client.custom_remote_client.custom_worker);
+  custom_client_init(&client->custom_client);
+
+  client->custom_client.custom_remote_client.custom_worker.id = _cmd_client_id++;
+  client->custom_client.custom_remote_client.custom_worker.type = SOCK_TYPE_CLIENT;
+  client->custom_client.custom_remote_client.custom_worker.mode = SOCK_MODE_CMD_CLIENT;
 
   client->custom_client.on_connect = cmd_connect;
   client->custom_client.custom_remote_client.on_disconnect = cmd_disconnect;
@@ -236,6 +238,17 @@ int cmd_client_init(cmd_client_t *client)
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
+  cmd_client_init(client);
+
+  client->custom_client.custom_remote_client.custom_worker.port = port;
+  client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
+  strcpy(client->custom_client.custom_remote_client.custom_worker.host, host);
+
+  pthread_attr_t tmp_attr;
+  pthread_attr_init(&tmp_attr);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+
+  return pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
 }
 //==============================================================================
 int cmd_client_stop(cmd_client_t *client)

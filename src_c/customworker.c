@@ -19,6 +19,46 @@ int custom_worker_init(custom_worker_t *worker)
   memset(worker->host, 0, SOCK_HOST_SIZE);
 }
 //==============================================================================
+int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
+{
+  custom_worker_init(&custom_remote_client->custom_worker);
+
+  custom_remote_client->send_thread   = 0;
+  custom_remote_client->recv_thread   = 0;
+
+  custom_remote_client->on_error      = 0;
+  custom_remote_client->on_send       = 0;
+  custom_remote_client->on_recv       = 0;
+  custom_remote_client->on_disconnect = 0;
+}
+//==============================================================================
+int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list)
+{
+  custom_remote_clients_list->index   = 0;
+  custom_remote_clients_list->next_id = 0;
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    custom_remote_client_init(&custom_remote_clients_list->items[i]);
+}
+//==============================================================================
+int custom_server_init(custom_server_t *custom_server)
+{
+  custom_worker_init(&custom_server->custom_worker);
+
+  custom_server->work_thread = 0;
+
+  custom_server->on_accept   = 0;
+}
+//==============================================================================
+int custom_client_init(custom_client_t *custom_client)
+{
+  custom_remote_client_init(&custom_client->custom_remote_client);
+
+  custom_client->work_thread = 0;
+
+  custom_client->on_connect = 0;
+}
+//==============================================================================
 int custom_worker_start(custom_worker_t *worker)
 {
   char tmp[128];
@@ -41,8 +81,6 @@ int custom_worker_start(custom_worker_t *worker)
 //==============================================================================
 int custom_server_start(custom_worker_t *worker)
 {
-  log_add("BEGIN custom_server_start", LOG_DEBUG);
-
   char tmp[128];
   sprintf(tmp, "custom_server_start, Port: %d", worker->port);
   log_add(tmp, LOG_DEBUG);
@@ -56,7 +94,7 @@ int custom_server_start(custom_worker_t *worker)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
-    sprintf(tmp, "custom_server_start, bind, Error: %d", sock_error());
+    sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;;
   }
@@ -65,30 +103,24 @@ int custom_server_start(custom_worker_t *worker)
 
   if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
   {
-    sprintf(tmp, "custom_server_start, listen, Error: %d", sock_error());
+    sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
     return SOCK_ERROR;;
   }
   else
     log_add("custom_server_start, listen", LOG_DEBUG);
 
-  log_add("END custom_server_start", LOG_DEBUG);
-
   return SOCK_OK;
 }
 //==============================================================================
 int custom_client_start(custom_worker_t *worker)
 {
-  log_add("BEGIN custom_client_start", LOG_INFO);
-
   char tmp[128];
   sprintf(tmp, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
   log_add(tmp, LOG_INFO);
 
   if(custom_worker_start(worker) == SOCK_ERROR)
     return SOCK_ERROR;
-
-  log_add("END custom_client_start", LOG_INFO);
 
   return SOCK_OK;
 }
@@ -138,7 +170,7 @@ int custom_server_work(custom_server_t *server)
 
         sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
                 tmp_client, tmp_host, ntohs(sin.sin_port));
-        log_add(tmp, LOG_DEBUG);
+        log_add(tmp, LOG_INFO);
       }
     }
 
@@ -199,6 +231,7 @@ void *custom_recv_worker(void *arg)
 
   char tmp_buffer[2048];
   int  tmp_size;
+  int  tmp_errors = 0;
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
@@ -212,6 +245,10 @@ void *custom_recv_worker(void *arg)
     {
       if(tmp_size == SOCKET_ERROR)
       {
+        tmp_errors++;
+        if(tmp_errors > SOCK_ERRORS_COUNT)
+          break;
+
         if(tmp_client->on_error != 0)
           tmp_client->on_error((void*)tmp_client, last_error());
       }
