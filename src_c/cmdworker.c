@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "ncs_log.h"
 #include "protocol.h"
+#include "protocol_types.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
@@ -124,8 +125,6 @@ int cmd_server_init(cmd_server_t *server)
   custom_server_init(&server->custom_server);
 
   custom_remote_clients_list_init(&server->custom_remote_clients_list);
-
-  pack_protocol_init(&server->protocol);
 
   server->custom_server.custom_worker.id   = _cmd_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -259,7 +258,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
   cmd_client_init(client);
 
-  pack_protocol_init(&client->protocol);
+  pack_protocol_init(&client->custom_client.custom_remote_client.protocol);
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
@@ -337,14 +336,14 @@ void *cmd_send_worker(void *arg)
   sprintf(tmp, "BEGIN cmd_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-//  pack_protocol_t *tmp_protocol;
-//  pack_packet_t   *tmp_pack;
+  pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+  pack_packet_t   *tmp_pack;
 //  pack_buffer_t    tmp_buffer;
 //  int              tmp_size;
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
-//    tmp_pack = _pack_next(&tmp_worker->protocol);
+    tmp_pack = _pack_next(tmp_protocol);
 //    while(tmp_pack != NULL)
 //    {
 //      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
@@ -385,5 +384,59 @@ int cmd_send(void *sender)
 int cmd_recv(void *sender, char *buffer, int size)
 {
   log_add("cmd_recv", LOG_DEBUG);
+}
+//==============================================================================
+int cmd_server_send(int argc, ...)
+{
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    custom_remote_client_t *tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
+
+    if(tmp_client->custom_worker.state == SOCK_STATE_START)
+    {
+      pack_protocol_t *protocol = &tmp_client->protocol;
+
+      pack_begin(protocol);
+
+      va_list params;
+      va_start(params, argc);
+
+      char *cmd = va_arg(params, char*);
+      pack_add_cmd(cmd, protocol);
+
+      for(int i = 1; i < argc; i++)
+      {
+        char *param = va_arg(params, char*);
+        pack_add_param_as_string(param, protocol);
+      };
+
+      va_end(params);
+
+      pack_end(protocol);
+    }
+  }
+}
+//==============================================================================
+int cmd_client_send(int argc, ...)
+{
+  pack_protocol_t *protocol = &_cmd_client.custom_client.custom_remote_client.protocol;
+
+  pack_begin(protocol);
+
+  va_list params;
+  va_start(params, argc);
+
+  char *cmd = va_arg(params, char*);
+  pack_add_cmd(cmd, protocol);
+
+  for(int i = 1; i < argc; i++)
+  {
+    char *param = va_arg(params, char*);
+    pack_add_param_as_string(param, protocol);
+  };
+
+  va_end(params);
+
+  pack_end(protocol);
 }
 //==============================================================================

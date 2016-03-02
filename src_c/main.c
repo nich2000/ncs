@@ -42,7 +42,6 @@ int handle_command(char *command)
   {
     if(strcmp(token, "exit") == 0)
     {
-//      sock_exit(_worker);
       return RESULT_NONE;
     }
     else if(strcmp(token, "all") == 0)
@@ -132,7 +131,7 @@ int handle_command(char *command)
   {
     if(strcmp(token, "sndtocl") == 0)
     {
-//      sock_server_send_cmd(_server, 1, param1);
+      cmd_server_send(1, param1);
       return RESULT_DONE;
     }
     else if(strcmp(token, "sndtowscl") == 0)
@@ -142,7 +141,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "sndtosr") == 0)
     {
-//      sock_client_send_cmd(_client, 1, param1);
+      cmd_client_send(1, param1);
       return RESULT_DONE;
     }
 

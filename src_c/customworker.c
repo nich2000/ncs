@@ -42,7 +42,11 @@ int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_
   custom_remote_clients_list->next_id = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
     custom_remote_client_init(&custom_remote_clients_list->items[i]);
+
+    pack_protocol_init(&custom_remote_clients_list->items[i].protocol);
+  };
 
   return ERROR_NONE;
 }

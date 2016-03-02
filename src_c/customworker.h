@@ -3,6 +3,7 @@
 //==============================================================================
 #include <pthread.h>
 
+#include "protocol_types.h"
 #include "socket_types.h"
 #include "ncs_error.h"
 //==============================================================================
@@ -31,6 +32,8 @@ typedef struct
 
   pthread_t       send_thread;
   pthread_t       recv_thread;
+
+  pack_protocol_t protocol;
 
   on_error_t      on_error;
   on_send_t       on_send;
