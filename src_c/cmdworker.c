@@ -5,7 +5,7 @@
 #include "socket.h"
 #include "utils.h"
 #include "ncs_log.h"
-#include "protocol_types.h"
+#include "protocol.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
@@ -31,8 +31,9 @@ int cmd_disconnect(void *sender);
 //==============================================================================
 void *cmd_send_worker(void *arg);
 //==============================================================================
-int cmd_send(void *sender);
-int cmd_recv(void *sender, char *buffer, int size);
+int cmd_error(void *sender, error_t *error);
+int cmd_send (void *sender);
+int cmd_recv (void *sender, char *buffer, int size);
 //==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
@@ -68,7 +69,7 @@ int cmd_server(sock_state_t state, sock_port_t port)
     default:;
   };
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_status()
@@ -108,7 +109,7 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
     default:;
   };
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_status()
@@ -123,6 +124,8 @@ int cmd_server_init(cmd_server_t *server)
   custom_server_init(&server->custom_server);
 
   custom_remote_clients_list_init(&server->custom_remote_clients_list);
+
+  pack_protocol_init(&server->protocol);
 
   server->custom_server.custom_worker.id   = _cmd_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -183,6 +186,11 @@ custom_remote_client_t *cmd_server_remote_clients_next()
       tmp_client->custom_worker.port  = _cmd_server.custom_server.custom_worker.port;
       tmp_client->custom_worker.state = SOCK_STATE_START;
 
+      tmp_client->on_disconnect       = cmd_disconnect;
+      tmp_client->on_error            = cmd_error;
+      tmp_client->on_recv             = cmd_recv;
+      tmp_client->on_send             = cmd_send;
+
       break;
     };
 
@@ -201,7 +209,7 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
             "no available clients, cmd_accept, socket: %d, host: %s",
             tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
     log_add(tmp, LOG_CRITICAL_ERROR);
-    return SOCK_ERROR;
+    return ERROR_NORMAL;
   };
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
@@ -239,13 +247,19 @@ int cmd_client_init(cmd_client_t *client)
   client->custom_client.custom_remote_client.custom_worker.type = SOCK_TYPE_CLIENT;
   client->custom_client.custom_remote_client.custom_worker.mode = SOCK_MODE_CMD_CLIENT;
 
-  client->custom_client.on_connect = cmd_connect;
+  client->custom_client.on_connect                         = cmd_connect;
+
   client->custom_client.custom_remote_client.on_disconnect = cmd_disconnect;
+  client->custom_client.custom_remote_client.on_error      = cmd_error;
+  client->custom_client.custom_remote_client.on_recv       = cmd_recv;
+  client->custom_client.custom_remote_client.on_send       = cmd_send;
 }
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
   cmd_client_init(client);
+
+  pack_protocol_init(&client->protocol);
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
@@ -314,11 +328,6 @@ int cmd_connect(void *sender)
   log_add("END cmd_connect", LOG_DEBUG);
 }
 //==============================================================================
-int cmd_disconnect(void *sender)
-{
-  log_add("cmd_disconnect", LOG_DEBUG);
-}
-//==============================================================================
 void *cmd_send_worker(void *arg)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
@@ -358,11 +367,23 @@ void *cmd_send_worker(void *arg)
   log_add(tmp, LOG_DEBUG);
 }
 //==============================================================================
+int cmd_disconnect(void *sender)
+{
+  log_add("cmd_disconnect", LOG_DEBUG);
+}
+//==============================================================================
+int cmd_error(void *sender, error_t *error)
+{
+  log_add("cmd_error", LOG_DEBUG);
+}
+//==============================================================================
 int cmd_send(void *sender)
 {
+  log_add("cmd_send", LOG_DEBUG);
 }
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
 {
+  log_add("cmd_recv", LOG_DEBUG);
 }
 //==============================================================================

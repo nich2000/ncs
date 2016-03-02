@@ -68,7 +68,7 @@ int custom_worker_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
-    return SOCK_ERROR;
+    return ERROR_NORMAL;
   }
   else
   {
@@ -76,7 +76,7 @@ int custom_worker_start(custom_worker_t *worker)
     log_add(tmp, LOG_DEBUG);
   };
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_server_start(custom_worker_t *worker)
@@ -85,8 +85,8 @@ int custom_server_start(custom_worker_t *worker)
   sprintf(tmp, "custom_server_start, Port: %d", worker->port);
   log_add(tmp, LOG_DEBUG);
 
-  if(custom_worker_start(worker) == SOCK_ERROR)
-    return SOCK_ERROR;
+  if(custom_worker_start(worker) == ERROR_NORMAL)
+    return ERROR_NORMAL;
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -96,7 +96,7 @@ int custom_server_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
-    return SOCK_ERROR;;
+    return ERROR_CRITICAL;
   }
   else
     log_add("custom_server_start, bind", LOG_DEBUG);
@@ -105,12 +105,12 @@ int custom_server_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
     log_add(tmp, LOG_CRITICAL_ERROR);
-    return SOCK_ERROR;;
+    return ERROR_CRITICAL;
   }
   else
     log_add("custom_server_start, listen", LOG_DEBUG);
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_client_start(custom_worker_t *worker)
@@ -119,10 +119,10 @@ int custom_client_start(custom_worker_t *worker)
   sprintf(tmp, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
   log_add(tmp, LOG_DEBUG);
 
-  if(custom_worker_start(worker) == SOCK_ERROR)
-    return SOCK_ERROR;
+  if(custom_worker_start(worker) == ERROR_NORMAL)
+    return ERROR_NORMAL;
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_worker_stop(custom_worker_t *worker)
@@ -131,7 +131,7 @@ int custom_worker_stop(custom_worker_t *worker)
 
   closesocket(worker->sock);
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_server_work(custom_server_t *server)
@@ -154,7 +154,7 @@ int custom_server_work(custom_server_t *server)
       sprintf(tmp, "custom_server_work, accept, Error: %d", sock_error());
       log_add(tmp, LOG_ERROR);
       server->custom_worker.state == SOCK_STATE_STOP;
-      return SOCK_ERROR;
+      return ERROR_NORMAL;
     }
     else
     {
@@ -183,7 +183,7 @@ int custom_server_work(custom_server_t *server)
 
   log_add("END custom_server_work", LOG_DEBUG);
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_client_work(custom_client_t *client)
@@ -242,12 +242,12 @@ void *custom_recv_worker(void *arg)
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
     int retval = sock_recv(tmp_sock, tmp_buffer, &tmp_size);
-    if(retval == SOCK_OK)
+    if(retval == ERROR_NONE)
     {
       if(tmp_client->on_recv != 0)
         tmp_client->on_recv(tmp_client, tmp_buffer, tmp_size);
     }
-    else if(retval == SOCK_ERROR)
+    else if(retval == ERROR_NORMAL)
     {
       if(tmp_size == SOCKET_ERROR)
       {

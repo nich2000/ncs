@@ -56,6 +56,29 @@ void report_set_name(char *name)
   strncpy(report_name, name, 64);
 }
 //==============================================================================
+const char *log_type_to_string(int log_type)
+{
+  switch(log_type)
+  {
+    case LOG_INFO:           return "[INFO]";
+    break;
+    case LOG_WARNING:        return "[WARNING]";
+    break;
+    case LOG_ERROR:          return "[ERROR]";
+    break;
+    case LOG_CRITICAL_ERROR: return "[CRITICAL_ERROR]";
+    break;
+    case LOG_FATAL_ERROR:    return "[FATAL_ERROR]";
+    break;
+    case LOG_DEBUG:          return "[DEBUG]";
+    break;
+    case LOG_DATA:           return "[DATA]";
+    break;
+    case LOG_RAW_DATA:       return "[RAW_DATA]";
+    break;
+  }
+}
+//==============================================================================
 void log_add(char *message, int log_type)
 {
 #if defined(__linux__) || defined(_WIN32)
@@ -73,29 +96,12 @@ void log_add(char *message, int log_type)
   char *t = "";
 //  strftime(t, 128, "%T", timeinfo);
 
-  char *prefix = "";
-  switch(log_type)
-  {
-    case LOG_CRITICAL_ERROR: prefix = "[CRITICAL_ERROR]";
-    break;
-    case LOG_ERROR:          prefix = "[ERROR]";
-    break;
-    case LOG_WARNING:        prefix = "[WARNING]";
-    break;
-    case LOG_DEBUG:          prefix = "[DEBUG]";
-    break;
-    case LOG_INFO:           prefix = "[INFO]";
-    break;
-    case LOG_DATA:           prefix = "[DATA]";
-    break;
-    case LOG_RAW_DATA:       prefix = "[RAW_DATA]";
-    break;
-  };
+  const char *prefix = log_type_to_string(log_type);
 
   if(
      (log_type == LOG_INFO)
      #ifndef SILENT_MODE
-     || (log_type == LOG_CRITICAL_ERROR)
+     || (log_type >= LOG_CRITICAL_ERROR)
      #endif
     )
     printf("%s %s\n", prefix, message);

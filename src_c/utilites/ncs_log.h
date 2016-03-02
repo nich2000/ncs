@@ -9,13 +9,15 @@
 #define LOG_INITIAL_PATH    "../logs"
 #define REPORT_INITIAL_PATH "../reports"
 //==============================================================================
-#define LOG_CRITICAL_ERROR  0
-#define LOG_ERROR           1
-#define LOG_WARNING         2
-#define LOG_DEBUG           3
-#define LOG_INFO            4
-#define LOG_DATA            5
-#define LOG_RAW_DATA        6
+#define LOG_INFO            100
+#define LOG_WARNING         101
+#define LOG_ERROR           102
+#define LOG_CRITICAL_ERROR  103
+#define LOG_FATAL_ERROR     104
+//==============================================================================
+#define LOG_DEBUG           10
+#define LOG_DATA            11
+#define LOG_RAW_DATA        12
 //==============================================================================
 int clr_scr();
 void skip_lines(size_t count);

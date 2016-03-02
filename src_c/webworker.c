@@ -71,7 +71,7 @@ int web_server(sock_state_t state, sock_port_t port)
     default:;
   };
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int web_server_init(web_server_t *server)

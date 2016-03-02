@@ -151,7 +151,7 @@ int sock_init()
 #else
 #endif
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 int sock_deinit()
@@ -170,7 +170,7 @@ int sock_deinit()
 #else
 #endif
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 /*
@@ -685,18 +685,18 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   if (retval == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, sock_error());
-    make_error(retval, tmp);
+    make_error(ERROR_NORMAL, retval, tmp);
     log_add(tmp, LOG_ERROR);
-    return SOCK_ERROR;
+    return ERROR_NORMAL;
   }
   else if(!retval)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
-    make_error(retval, tmp);
+    make_error(ERROR_WARNING, retval, tmp);
     #ifdef SOCK_EXTRA_LOGS
     log_add(tmp, LOG_WARNING);
     #endif
-    return SOCK_WARNING;
+    return ERROR_WARNING;
   }
   else
   {
@@ -704,16 +704,16 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     if(*size == SOCKET_ERROR)
     {
       sprintf(tmp, "sock_recv, recv, socket: %d, error: %d", sock, sock_error());
-      make_error(*size, tmp);
+      make_error(ERROR_NORMAL, *size, tmp);
       log_add(tmp, LOG_ERROR);
-      return SOCK_ERROR;
+      return ERROR_NORMAL;
     }
     else if(*size == 0)
     {
       sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
-      make_error(*size, tmp);
+      make_error(ERROR_WARNING, *size, tmp);
       log_add(tmp, LOG_WARNING);
-      return SOCK_ERROR;
+      return ERROR_WARNING;
     }
 
     #ifdef SOCK_EXTRA_LOGS
@@ -723,7 +723,7 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     log_add(tmp, LOG_INFO);
     #endif
 
-    return SOCK_OK;
+    return ERROR_NONE;
   }
 }
 //==============================================================================
@@ -769,7 +769,7 @@ int sock_send(SOCKET sock, char *buffer, int size)
     char tmp[128];
     sprintf(tmp, "sock_send, send, Error: %u", sock_error());
     log_add(tmp, LOG_ERROR);
-    return SOCK_ERROR;
+    return ERROR_NORMAL;
   }
   else
   {
@@ -783,7 +783,7 @@ int sock_send(SOCKET sock, char *buffer, int size)
   }
   #endif
 
-  return SOCK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================
 /*

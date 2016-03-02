@@ -1,6 +1,7 @@
 //==============================================================================
 #include "protocol_utils.h"
 #include "ncs_log.h"
+#include "ncs_error.h"
 //==============================================================================
 /*
 * b[0] = si & 0xff;
@@ -84,7 +85,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     clr_scr();
 
   if(!buffer && !pack && !csv)
-    return PACK_OK;
+    return ERROR_NONE;
 
   char tmp[1024];
 
@@ -112,7 +113,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     pack_size_t tmp_words_count = _pack_words_count(packet);
 //      sprintf(tmp, "%sWords: %d\n", tmp, tmp_words_count);
     for(pack_size_t i = 0; i < tmp_words_count; i++)
-      if(pack_val_by_index_as_string(packet, i, key, valueS) == PACK_OK)
+      if(pack_val_by_index_as_string(packet, i, key, valueS) == ERROR_NONE)
         sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
     log_add(tmp, LOG_INFO);
   };
@@ -124,6 +125,6 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     log_add(csv, LOG_DATA);
   };
 
-  return PACK_OK;
+  return ERROR_NONE;
 }
 //==============================================================================

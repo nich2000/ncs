@@ -9,7 +9,7 @@
 #define PACK_IN_PACKETS_COUNT    1  //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 #else
-#define PACK_BUFFER_SIZE         1024
+#define PACK_BUFFER_SIZE         2048
 #define PACK_VALUE_SIZE          128
 #define PACK_WORDS_COUNT         32
 #define PACK_OUT_PACKETS_COUNT   1
@@ -27,9 +27,6 @@
 #define PACK_VERSION             "V01\0"
 #define PACK_CMD_KEY             "CMD\0"
 #define PACK_PARAM_KEY           "PAR\0"
-//==============================================================================
-#define PACK_OK                  0
-#define PACK_ERROR              -1
 //==============================================================================
 #define PACK_QUEUE_EMPTY         0
 #define PACK_QUEUE_FULL          1
@@ -71,23 +68,23 @@ typedef unsigned char            pack_type_t;
 //==============================================================================
 typedef struct
 {
-  pack_key_t   key;              // 4
-  pack_value_t value;            // 12
-  pack_type_t  type;             // 1
-  char       _align1[3];       // 3
-  pack_size_t  size;             // 2
-  char       _align2[2];       // 2
+  pack_key_t            key;
+  pack_value_t          value;
+  pack_type_t           type;
+//  char               _align1[3];
+  pack_size_t           size;
+//  char               _align2[2];
 } pack_word_t;
 //==============================================================================
 typedef pack_word_t pack_words_t[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_number_t number;          // 2
-  char       _align1[2];       // 2
-  pack_size_t   words_count;     // 2
-  char       _align2[2];       // 2
-  pack_words_t  words;           // 24 * 20
+  pack_number_t number;
+//  char               _align1[2];
+  pack_size_t           words_count;
+//  char               _align2[2];
+  pack_words_t          words;
 } pack_packet_t;
 //==============================================================================
 typedef pack_packet_t  *ppack_packet_t;
@@ -98,45 +95,45 @@ typedef ppack_packet_t pack_queue_packets_t[PACK_QUEUE_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_size_t   size;            // 2
-  char        _align1[2];      // 2
-  pack_buffer_t buffer;          // 256
+  pack_size_t           size;
+//  char               _align1[2];
+  pack_buffer_t         buffer;
 } pack_validation_buffer_t;
 //==============================================================================
 typedef struct
 {
-  pack_type_t        empty;      // 1
-  char            _align1[3];  // 3
-  pack_index_t       index;      // 2
-  char            _align2[2];  // 2
-  pack_count_t       count;      // 2
-  char            _align3[2];  // 2
-  pack_count_t       lock_count; // 2
-  char            _align4[2];  // 2
-  pack_out_packets_t items;      // 488 * 8
+  pack_type_t           empty;
+//  char                 _align1[3];
+  pack_index_t          index;
+//  char                 _align2[2];
+  pack_count_t          count;
+//  char                 _align3[2];
+  pack_count_t          lock_count;
+//  char                 _align4[2];
+  pack_out_packets_t    items;
 } pack_out_packets_list_t;
 //==============================================================================
 typedef struct
 {
-  pack_type_t        empty;      // 1
-  char            _align1[3];  // 3
-  pack_index_t       index;      // 2
-  char            _align2[2];  // 2
-  pack_count_t       count;      // 2
-  char            _align3[2];  // 2
-  pack_count_t       lock_count; // 2
-  pack_in_packets_t  items;      // 488 * 8
+  pack_type_t           empty;
+//  char                 _align1[3];
+  pack_index_t          index;
+//  char                 _align2[2];
+  pack_count_t          count;
+//  char                 _align3[2];
+  pack_count_t          lock_count;
+  pack_in_packets_t     items;
 } pack_in_packets_list_t;
 //==============================================================================
 typedef struct
 {
-  pack_type_t          empty;      // 1
-  char               _align1[3]; // 3
-  pack_index_t         start;      // 2
-  char               _align2[2]; // 2
-  pack_index_t         finish;     // 2
-  char               _align3[2]; // 2
-  pack_queue_packets_t packets;    // 4
+  pack_type_t           empty;
+//  char                 _align1[3];
+  pack_index_t          start;
+//  char                 _align2[2];
+  pack_index_t          finish;
+//  char                 _align3[2];
+  pack_queue_packets_t  packets;
 } pack_queue_t;
 //==============================================================================
 typedef struct

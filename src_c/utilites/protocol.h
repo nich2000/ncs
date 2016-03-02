@@ -9,9 +9,9 @@
 #include "protocol_utils.h"
 #include "protocol_types.h"
 //==============================================================================
-int          _pack_get_last_error       ();
+int            _pack_get_last_error       ();
 pack_number_t  _pack_global_number        ();
-const char  *_pack_version              ();
+const char  *  _pack_version              ();
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
   int pack_protocol_init();
@@ -64,26 +64,26 @@ const char  *_pack_version              ();
 //==============================================================================
 pack_size_t _pack_words_count    (pack_packet_t *pack);
 //==============================================================================
-int       pack_command         (pack_packet_t *pack, pack_value_t command);
+int       pack_command           (pack_packet_t *pack, pack_value_t command);
 pack_size_t _pack_params_count   (pack_packet_t *pack);
 //==============================================================================
 int pack_param_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
 //==============================================================================
-int pack_keys_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
-int pack_values_to_csv         (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
+int pack_keys_to_csv             (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
+int pack_values_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
 //==============================================================================
-int pack_word_by_key           (pack_packet_t *pack, pack_key_t key,     pack_index_t *index, pack_word_t *word);
-int pack_word_by_index         (pack_packet_t *pack, pack_index_t index, pack_key_t key,      pack_word_t *word);
-int pack_key_by_index          (pack_packet_t *pack, pack_index_t index, pack_key_t key);
+int pack_word_by_key             (pack_packet_t *pack, pack_key_t key,     pack_index_t *index, pack_word_t *word);
+int pack_word_by_index           (pack_packet_t *pack, pack_index_t index, pack_key_t key,      pack_word_t *word);
+int pack_key_by_index            (pack_packet_t *pack, pack_index_t index, pack_key_t key);
 //==============================================================================
-int pack_val_by_key_as_int     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, int   *value);
-int pack_val_by_key_as_float   (pack_packet_t *pack, pack_key_t key, pack_index_t *index, float *value);
-int pack_val_by_key_as_string  (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_string_t value);
-int pack_val_by_key_as_bytes   (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_bytes_t value, pack_size_t *size);
+int pack_val_by_key_as_int       (pack_packet_t *pack, pack_key_t key, pack_index_t *index, int   *value);
+int pack_val_by_key_as_float     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, float *value);
+int pack_val_by_key_as_string    (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_string_t value);
+int pack_val_by_key_as_bytes     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
-int pack_val_by_index_as_int   (pack_packet_t *pack, pack_index_t index, pack_key_t key, int   *value);
-int pack_val_by_index_as_float (pack_packet_t *pack, pack_index_t index, pack_key_t key, float *value);
-int pack_val_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
-int pack_val_by_index_as_bytes (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t value, pack_size_t *size);
+int pack_val_by_index_as_int     (pack_packet_t *pack, pack_index_t index, pack_key_t key, int   *value);
+int pack_val_by_index_as_float   (pack_packet_t *pack, pack_index_t index, pack_key_t key, float *value);
+int pack_val_by_index_as_string  (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
+int pack_val_by_index_as_bytes   (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
 #endif //PROTOCOL_H
