@@ -1,6 +1,8 @@
 #ifndef PROTOCOL_TYPES_H
 #define PROTOCOL_TYPES_H
 //==============================================================================
+#include "defines.h"
+//==============================================================================
 #ifdef DEMS_DEVICE
 #define PACK_BUFFER_SIZE         256
 #define PACK_VALUE_SIZE          12

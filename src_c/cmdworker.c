@@ -7,6 +7,7 @@
 #include "ncs_log.h"
 #include "protocol.h"
 #include "protocol_types.h"
+#include "protocol_utils.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
@@ -338,26 +339,28 @@ void *cmd_send_worker(void *arg)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
   pack_packet_t   *tmp_pack;
-//  pack_buffer_t    tmp_buffer;
-//  int              tmp_size;
+  pack_buffer_t    tmp_buffer;
+  pack_size_t      tmp_size;
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
     tmp_pack = _pack_next(tmp_protocol);
-//    while(tmp_pack != NULL)
-//    {
-//      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != PACK_OK)
-//        continue;
+    while(tmp_pack != NULL)
+    {
+      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
+        continue;
 
-//      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, &tmp_worker->protocol);
+      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, tmp_protocol);
 
-//      if(tmp_cnt > 0)
-//      {
-//        sock_send(tmp_sock, tmp_buffer, tmp_size);
-//      }
+      if(tmp_cnt > 0)
+      {
+        if(sock_send(tmp_sock, tmp_buffer, (int)tmp_size) == ERROR_NONE)
+          if(tmp_client->on_send != 0)
+            tmp_client->on_send((void*)tmp_client);
+      }
 
-//      tmp_pack = _pack_next(&tmp_worker->protocol);
-//    }
+      tmp_pack = _pack_next(tmp_protocol);
+    }
 
     usleep(1000);
   }
@@ -379,11 +382,30 @@ int cmd_error(void *sender, error_t *error)
 int cmd_send(void *sender)
 {
   log_add("cmd_send", LOG_DEBUG);
+
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
+
+  pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+
+  pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
+
+  pack_print(tmp_packet, "cmd_send", 0, 0, 1, 0);
 }
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
 {
   log_add("cmd_recv", LOG_DEBUG);
+
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
+
+  pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+
+  if(pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol) > 0)
+  {
+    pack_packet_t *tmp_packet = _pack_pack_current(PACK_IN, tmp_protocol);
+
+    pack_print(tmp_packet, "cmd_recv", 0, 0, 1, 0);
+  }
 }
 //==============================================================================
 int cmd_server_send(int argc, ...)

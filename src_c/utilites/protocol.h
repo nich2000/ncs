@@ -6,6 +6,7 @@
 // http://www.binarytides.com/code-tcp-socket-server-winsock/
 // http://www.binarytides.com/server-client-example-c-sockets-linux/
 //==============================================================================
+#include "defines.h"
 #include "protocol_utils.h"
 #include "protocol_types.h"
 //==============================================================================
@@ -18,8 +19,9 @@ const char  *  _pack_version              ();
   int pack_begin();
   int pack_end();
   pack_packet *_pack_pack_current(pack_type out);
-  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
+  // Это не очень работает...т.к. из функции возвращается неизмененный pack
   int pack_pack_current(pack_type out, pack_packet *pack);
+  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
   int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
   //------------------------------------------------------------------------------
   pack_packet *_pack_next();
@@ -40,8 +42,9 @@ const char  *  _pack_version              ();
   int pack_begin(pack_protocol_t *protocol);
   int pack_end  (pack_protocol_t *protocol);
   pack_packet_t *_pack_pack_current(pack_type_t out, pack_protocol_t *protocol);
-  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol);
+  // Это не очень работает...т.к. из функции возвращается неизмененный pack
   int pack_pack_current(pack_type_t out, pack_packet_t *pack, pack_protocol_t *protocol);
+  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol);
   int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol);
   //------------------------------------------------------------------------------
   int pack_packet_to_buffer(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);

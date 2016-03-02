@@ -1,6 +1,8 @@
 #ifndef ERROR_H
 #define ERROR_H
 //==============================================================================
+#include "defines.h"
+//==============================================================================
 #define ERROR_NONE       100
 #define ERROR_WARNING    101
 #define ERROR_NORMAL     102

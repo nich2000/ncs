@@ -24,6 +24,8 @@
 #else
 #endif
 //==============================================================================
+#include "defines.h"
+//==============================================================================
 #define SOCK_STATE_NONE          0
 #define SOCK_STATE_START         1
 #define SOCK_STATE_STARTING      2

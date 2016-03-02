@@ -2,9 +2,11 @@
 //==============================================================================
 #include <stdio.h>
 
+#include "defines.h"
 #include "customworker.h"
 #include "socket.h"
 #include "ncs_log.h"
+#include "protocol.h"
 //==============================================================================
 int custom_worker_init(custom_worker_t *worker)
 {

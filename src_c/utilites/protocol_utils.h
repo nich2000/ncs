@@ -1,7 +1,9 @@
 #ifndef PROTOCOL_UTILS_H
 #define PROTOCOL_UTILS_H
 //==============================================================================
+#include "defines.h"
 #include "protocol.h"
+#include "protocol_types.h"
 //==============================================================================
 typedef union
 {
@@ -24,6 +26,6 @@ int bytes_to_hex  (unsigned char *bytes, int size, unsigned char *hex);
 //==============================================================================
 unsigned short getCRC16(char *data_p, unsigned short length);
 //==============================================================================
-//int pack_print(pack_packet *packet, char *prefix, int clear, int buffer, int pack, int csv);
+int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int pack, int csv);
 //==============================================================================
 #endif //PROTOCOL_UTILS_H

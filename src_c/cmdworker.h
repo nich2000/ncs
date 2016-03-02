@@ -1,6 +1,7 @@
 #ifndef CMDWORKER_H
 #define CMDWORKER_H
 //==============================================================================
+#include "defines.h"
 #include "customworker.h"
 #include "protocol_types.h"
 //==============================================================================

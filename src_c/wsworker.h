@@ -1,6 +1,7 @@
 #ifndef WSWORKER_H
 #define WSWORKER_H
 //==============================================================================
+#include "defines.h"
 #include "socket_types.h"
 #include "customworker.h"
 //==============================================================================

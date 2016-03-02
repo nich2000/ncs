@@ -1,6 +1,7 @@
 #ifndef WEBWORKER_H
 #define WEBWORKER_H
 //==============================================================================
+#include "defines.h"
 #include "customworker.h"
 //==============================================================================
 #define WEB_LINE_SIZE      256

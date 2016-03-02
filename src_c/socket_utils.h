@@ -1,6 +1,7 @@
 #ifndef SOCKET_UTILS_H
 #define SOCKET_UTILS_H
 
+#include "defines.h"
 #include "socket_types.h"
 #include "customworker.h"
 
