@@ -24,6 +24,7 @@ void skip_lines(size_t count);
 //==============================================================================
 void log_set_name(char *name);
 void log_add(char *message, int log_type);
+void log_add_fmt(int log_type, char *message, ...);
 //==============================================================================
 void report_set_name(char *name);
 void report_add(char *message);

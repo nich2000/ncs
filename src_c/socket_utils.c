@@ -83,8 +83,11 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 
   log_add("----------", LOG_INFO);
 
-  sprintf(tmp, "Sock version: %s, Pack version: %s", sock_version(), _pack_version());
-  log_add(tmp, LOG_INFO);
+//  sprintf(tmp, "Sock version: %s, Pack version: %s", sock_version(), _pack_version());
+//  log_add(tmp, LOG_INFO);
+
+  log_add_fmt(LOG_INFO, "Sock version: %s, Pack version: %s", sock_version(), _pack_version());
+
   switch(mode)
   {
     case SOCK_MODE_CMD_SERVER:

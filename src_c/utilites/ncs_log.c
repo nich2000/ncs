@@ -56,6 +56,18 @@ void report_set_name(char *name)
   strncpy(report_name, name, 64);
 }
 //==============================================================================
+void log_add_fmt(int log_type, char *message, ...)
+{
+  char tmp[1024];
+
+  va_list params;
+  va_start(params, message);
+  vsprintf(tmp, message, params);
+  va_end(params);
+
+  log_add(tmp, log_type);
+}
+//==============================================================================
 const char *log_type_to_string(int log_type)
 {
   switch(log_type)
