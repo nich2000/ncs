@@ -16,9 +16,12 @@ typedef struct
   char message[2048];
 }error_t;
 //==============================================================================
-error_t make_error (int level, int number, char *message);
+typedef int (*on_error_msg_t) (void *sender, int level, int number, const char *message);
+typedef int (*on_error_t)     (void *sender, error_t *error);
 //==============================================================================
-int make_last_error(int level, int number, char *message);
+error_t make_error (int level, int number, const char *message);
+//==============================================================================
+int make_last_error(int level, int number, const char *message);
 error_t *last_error();
 //==============================================================================
 #endif //ERROR_H

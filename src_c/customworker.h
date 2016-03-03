@@ -8,7 +8,6 @@
 #include "socket_types.h"
 #include "ncs_error.h"
 //==============================================================================
-typedef int (*on_error_t)     (void *sender, error_t *error);
 typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
 typedef int (*on_connect_t)   (void *sender);
 typedef int (*on_disconnect_t)(void *sender);

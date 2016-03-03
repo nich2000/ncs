@@ -18,20 +18,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 include_directories(utilites)
 include_directories(/)
 #-------------------------------------------------------------------------------
-set(_LOG defines.h utilites/ncs_log.c)
+set(_LOG defines.h globals.h utilites/ncs_log.c)
 add_library(log SHARED ${_LOG})
 set_property(TARGET log PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
-set(_ERROR defines.h utilites/ncs_error.c)
+set(_ERROR defines.h globals.h utilites/ncs_error.c)
 add_library(error SHARED ${_ERROR})
 set_property(TARGET error PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
-set(_PROTOCOL defines.h utilites/protocol_types.h utilites/protocol.c utilites/protocol_utils.c test.c)
+set(_PROTOCOL defines.h globals.h utilites/protocol_types.h utilites/protocol.c utilites/protocol_utils.c test.c)
 add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log error)
 #-------------------------------------------------------------------------------
-set(_SOCKET defines.h utils.c socket_types.h socket.c socket_utils.c streamer.c customworker.c cmdworker.c webworker.c wsworker.c base64.c sha1.c)
+set(_SOCKET defines.h globals.h utils.c socket_types.h socket.c socket_utils.c streamer.c customworker.c cmdworker.c webworker.c wsworker.c base64.c sha1.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
 target_link_libraries(socket protocol log error)
@@ -39,7 +39,7 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
-set(_PROG main.c defines.h utils.c socket_utils.c exec.c streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
+set(_PROG main.c defines.h globals.h utils.c socket_utils.c exec.c streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

@@ -90,6 +90,8 @@ int ws_server_init(ws_server_t *server)
 
   server->custom_server.on_accept          = &ws_accept;
 
+  server->out_message                      = 0;
+  server->out_message_size                 = 0;
   server->hand_shake                       = SOCK_FALSE;
 }
 //==============================================================================
@@ -150,18 +152,21 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   SOCKET *s = malloc(sizeof(SOCKET));
   memcpy(s, &socket, sizeof(SOCKET));
 
+  _ws_server.hand_shake = SOCK_FALSE;
+  _ws_server.custom_server.custom_worker.sock = *s;
+
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(NULL, &tmp_attr, ws_recv_worker, (void*)s);
-//  pthread_create(NULL, &tmp_attr, ws_send_worker, (void*)s);
+  pthread_create(NULL, &tmp_attr, ws_recv_worker, (void*)&_ws_server);
+  pthread_create(NULL, &tmp_attr, ws_send_worker, (void*)&_ws_server);
 }
 //==============================================================================
 void *ws_recv_worker(void *arg)
 {
-  SOCKET tmp_sock = *(SOCKET*)arg;
-  free(arg);
+  ws_server_t *tmp_worker = (ws_server_t*)arg;
+  SOCKET tmp_sock = tmp_worker->custom_server.custom_worker.sock;
 
   char tmp[256];
   sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
@@ -178,6 +183,8 @@ void *ws_recv_worker(void *arg)
       ws_hand_shake(request, response, &size);
 
       sock_send(tmp_sock, response, size);
+
+      tmp_worker->hand_shake = SOCK_TRUE;
 
       break;
     }
@@ -196,16 +203,38 @@ void *ws_recv_worker(void *arg)
 //==============================================================================
 void *ws_send_worker(void *arg)
 {
-  SOCKET tmp_sock = *(SOCKET*)arg;
-  free(arg);
+  ws_server_t *tmp_worker = (ws_server_t*)arg;
+  SOCKET tmp_sock = tmp_worker->custom_server.custom_worker.sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN ws_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
+  int tmp_errors = 0;
+
   while(1)
   {
-    sleep(1);
+    if(tmp_worker->hand_shake == SOCK_TRUE)
+    {
+      if(!tmp_worker->custom_server.custom_worker.is_locked)
+        if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
+        {
+          if(sock_send(tmp_sock, "Hello!", strlen("Hello!")) >= ERROR_NORMAL)
+            tmp_errors++;
+
+//          if(sock_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) >= ERROR_NORMAL)
+//            tmp_errors++;
+
+//          free(tmp_worker->out_message);
+//          tmp_worker->out_message = NULL;
+//          tmp_worker->out_message_size = 0;
+
+          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_worker->custom_server.custom_worker.state == SOCK_STATE_STOP))
+            break;
+        }
+    }
+
+    usleep(1000);
   }
 
   sprintf(tmp, "END ws_send_worker, socket: %d", tmp_sock);

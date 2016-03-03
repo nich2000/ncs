@@ -1,6 +1,7 @@
 //==============================================================================
 //==============================================================================
 #include "cmdworker.h"
+#include "wsworker.h"
 #include "socket_utils.h"
 #include "socket.h"
 #include "utils.h"
@@ -16,8 +17,6 @@ int cmd_server_pause(cmd_server_t *server);
 //==============================================================================
 void *cmd_server_worker(void *arg);
 //==============================================================================
-int cmd_accept(void *sender, SOCKET socket, sock_host_t host);
-//==============================================================================
 custom_remote_client_t *cmd_server_remote_clients_next();
 int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list);
 //==============================================================================
@@ -28,20 +27,23 @@ int cmd_client_pause(cmd_client_t *client);
 //==============================================================================
 void *cmd_client_worker(void *arg);
 //==============================================================================
-int cmd_connect(void *sender);
-int cmd_disconnect(void *sender);
-//==============================================================================
 void *cmd_send_worker(void *arg);
 //==============================================================================
-int cmd_error(void *sender, error_t *error);
-int cmd_send (void *sender);
-int cmd_recv (void *sender, char *buffer, int size);
+int cmd_accept    (void *sender, SOCKET socket, sock_host_t host);
+int cmd_connect   (void *sender);
+int cmd_disconnect(void *sender);
+int cmd_error     (void *sender, error_t *error);
+int cmd_send      (void *sender);
+int cmd_recv      (void *sender, char *buffer, int size);
+int cmd_new_data  (void *sender, void *data);
 //==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
 //==============================================================================
 int          _cmd_client_id = 0;
 cmd_client_t _cmd_client;
+//==============================================================================
+extern ws_server_t _ws_server;
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port)
 {
@@ -126,6 +128,14 @@ int cmd_server_init(cmd_server_t *server)
   custom_server_init(&server->custom_server);
 
   custom_remote_clients_list_init(&server->custom_remote_clients_list);
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
+
+    tmp_client->protocol.on_new_in_data  = cmd_new_data;
+//    tmp_client->protocol.on_new_out_data = cmd_new_data;
+  };
 
   server->custom_server.custom_worker.id   = _cmd_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -260,6 +270,9 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
   cmd_client_init(client);
 
   pack_protocol_init(&client->custom_client.custom_remote_client.protocol);
+
+  client->custom_client.custom_remote_client.protocol.on_new_in_data  = cmd_new_data;
+//  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
@@ -400,12 +413,7 @@ int cmd_recv(void *sender, char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  if(pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol) > 0)
-  {
-    pack_packet_t *tmp_packet = _pack_pack_current(PACK_IN, tmp_protocol);
-
-    pack_print(tmp_packet, "cmd_recv", 0, 0, 1, 0);
-  }
+  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol);
 }
 //==============================================================================
 int cmd_server_send(int argc, ...)
@@ -460,5 +468,27 @@ int cmd_client_send(int argc, ...)
   va_end(params);
 
   pack_end(protocol);
+}
+//==============================================================================
+int cmd_new_data(void *sender, void *data)
+{
+  pack_packet_t *tmp_packet = (pack_packet_t*)data;
+
+  pack_print(tmp_packet, "cmd_new_data", 0, 0, 1, 0);
+
+  if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
+  {
+    _ws_server.custom_server.custom_worker.is_locked = SOCK_TRUE;
+
+    pack_buffer_t tmp_buffer;
+    pack_size_t   tmp_size;
+    pack_packet_to_buffer(tmp_packet, tmp_buffer, &tmp_size);
+
+    _ws_server.out_message_size = tmp_size;
+    _ws_server.out_message = (char*)malloc(tmp_size);
+    memcpy(_ws_server.out_message, tmp_buffer, _ws_server.out_message_size);
+
+    _ws_server.custom_server.custom_worker.is_locked = SOCK_FALSE;
+  }
 }
 //==============================================================================

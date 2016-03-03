@@ -227,6 +227,10 @@ int pack_protocol_init(pack_protocol_t *protocol)
 
   pack_out_packets_list_init(&protocol->out_packets_list);
 
+  protocol->on_error            = 0;
+  protocol->on_new_in_data      = 0;
+  protocol->on_new_out_data     = 0;
+
   #ifdef PACK_USE_OWN_QUEUE
   pack_queue_init(&protocol->queue);
   #endif
@@ -705,17 +709,19 @@ int pack_end(pack_protocol_t *protocol)
   #ifdef PACK_USE_OWN_BUFFER
     if(!is_locked(PACK_OUT))
       return ERROR_NORMAL;
+
+    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     if(!is_locked(PACK_OUT, protocol))
       return ERROR_NORMAL;
+
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
 
   #ifdef PACK_USE_OWN_QUEUE
     #ifdef PACK_USE_OWN_BUFFER
-      pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
       pack_queue_add(tmp_pack->number);
     #else
-      pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
       pack_queue_add(tmp_pack->number, protocol);
     #endif
   #endif
@@ -723,6 +729,9 @@ int pack_end(pack_protocol_t *protocol)
   #ifdef PACK_USE_OWN_BUFFER
     unlock(PACK_OUT);
   #else
+    if(protocol->on_new_out_data != 0)
+      protocol->on_new_out_data((void*)protocol, (void*)tmp_pack);
+
     unlock(PACK_OUT, protocol);
   #endif
 
@@ -1175,9 +1184,11 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t onl
 
     tmp_pack->number = tmp_index;
 
-    pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count);
-
-//    pack_parse_private_cmd(tmp_pack);
+    if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
+    {
+      if(protocol->on_new_in_data != 0)
+        protocol->on_new_in_data((void*)protocol, (void*)tmp_pack);
+    };
   };
 
   return tmp_valid_count;

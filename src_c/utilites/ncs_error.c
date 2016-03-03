@@ -23,7 +23,7 @@ const char *error_type_to_string(int error_type)
   }
 }
 //==============================================================================
-error_t make_error(int level, int number, char *message)
+error_t make_error(int level, int number, const char *message)
 {
   error_t tmp_error;
 
@@ -34,7 +34,7 @@ error_t make_error(int level, int number, char *message)
   return tmp_error;
 }
 //==============================================================================
-int make_last_error(int level, int number, char *message)
+int make_last_error(int level, int number, const char *message)
 {
   _error_.level = level;
   _error_.number = number;

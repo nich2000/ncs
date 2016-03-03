@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "defines.h"
+#include "globals.h"
 #include "ncs_log.h"
 #include "test.h"
 #include "utils.h"

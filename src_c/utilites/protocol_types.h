@@ -2,6 +2,7 @@
 #define PROTOCOL_TYPES_H
 //==============================================================================
 #include "defines.h"
+#include "ncs_error.h"
 //==============================================================================
 #ifdef DEMS_DEVICE
 #define PACK_BUFFER_SIZE         256
@@ -47,6 +48,8 @@
 #define PACK_WORD_FLOAT          2
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
+//==============================================================================
+typedef int (*on_data_t)        (void *sender, void *data);
 //==============================================================================
 typedef unsigned char           *pack_string_t;
 typedef unsigned char           *pack_bytes_t;
@@ -146,6 +149,9 @@ typedef struct
   #ifdef PACK_USE_OWN_QUEUE
   pack_queue_t             queue;
   #endif
+  on_error_msg_t           on_error;
+  on_data_t                on_new_in_data;
+  on_data_t                on_new_out_data;
 } pack_protocol_t;
 //==============================================================================
 #endif // PROTOCOL_TYPES_H

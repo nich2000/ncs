@@ -2,6 +2,7 @@
 #define WSWORKER_H
 //==============================================================================
 #include "defines.h"
+#include "globals.h"
 #include "socket_types.h"
 #include "customworker.h"
 //==============================================================================
@@ -25,9 +26,12 @@ typedef enum
 //==============================================================================
 typedef struct
 {
-  custom_server_t custom_server;
+  custom_server_t  custom_server;
 
-  int             hand_shake;
+  char            *out_message;
+  int              out_message_size;
+
+  int              hand_shake;
 }ws_server_t;
 //==============================================================================
 int ws_server(sock_state_t state, sock_port_t port);
