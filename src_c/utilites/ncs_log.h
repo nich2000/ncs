@@ -12,8 +12,8 @@
 #define LOG_INFO            100
 #define LOG_WARNING         101
 #define LOG_ERROR           102
-#define LOG_CRITICAL_ERROR  103
-#define LOG_FATAL_ERROR     104
+#define LOG_ERROR_CRITICAL  103
+#define LOG_ERROR_FATAL     104
 //==============================================================================
 #define LOG_DEBUG           10
 #define LOG_DATA            11

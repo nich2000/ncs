@@ -153,7 +153,7 @@ void *web_handle_connection(void *arg)
 
   while(1)
   {
-    if(sock_recv(tmp_sock, request, &size))
+    if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
       web_get_response(request, response, &size);
 

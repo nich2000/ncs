@@ -78,9 +78,9 @@ const char *log_type_to_string(int log_type)
     break;
     case LOG_ERROR:          return "[ERROR]";
     break;
-    case LOG_CRITICAL_ERROR: return "[CRITICAL_ERROR]";
+    case LOG_ERROR_CRITICAL: return "[ERROR_CRITICAL]";
     break;
-    case LOG_FATAL_ERROR:    return "[FATAL_ERROR]";
+    case LOG_ERROR_FATAL:    return "[ERROR_FATAL]";
     break;
     case LOG_DEBUG:          return "[DEBUG]";
     break;
@@ -113,7 +113,7 @@ void log_add(char *message, int log_type)
   if(
      (log_type == LOG_INFO)
      #ifndef SILENT_MODE
-     || (log_type >= LOG_CRITICAL_ERROR)
+     || (log_type >= LOG_ERROR_CRITICAL)
      #endif
     )
     printf("%s %s\n", prefix, message);

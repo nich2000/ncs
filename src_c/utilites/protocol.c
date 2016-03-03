@@ -919,12 +919,12 @@ int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *pro
   {
     char tmp[256];
     sprintf(tmp, "pack_add_as_string, value too big, value: %s", value);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
   };
 
   #ifdef PACK_USE_OWN_BUFFER
-  pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+  paLOG_ERROR_CRITICALk = _pack_pack_current(PACK_OUT);
   #else
   pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -962,7 +962,7 @@ int pack_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size, pac
   {
     char tmp[256];
     sprintf(tmp, "pack_add_as_bytes, value too big, value: %s", value);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
   };
 
@@ -1088,7 +1088,7 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t onl
   {
     char tmp[256];
     sprintf(tmp, "pack_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
   }
 

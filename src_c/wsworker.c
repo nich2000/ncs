@@ -153,6 +153,9 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(s, &socket, sizeof(SOCKET));
 
   _ws_server.hand_shake = SOCK_FALSE;
+
+  // Тут должен быть сокет клиента!
+  // И вообще список клиентов
   _ws_server.custom_server.custom_worker.sock = *s;
 
   pthread_attr_t tmp_attr;
@@ -165,28 +168,35 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 //==============================================================================
 void *ws_recv_worker(void *arg)
 {
-  ws_server_t *tmp_worker = (ws_server_t*)arg;
-  SOCKET tmp_sock = tmp_worker->custom_server.custom_worker.sock;
+  ws_server_t *tmp_server = (ws_server_t*)arg;
+  SOCKET tmp_sock = tmp_server->custom_server.custom_worker.sock;
 
   char tmp[256];
   sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  char *request  = (char *)malloc(2048);
-  char *response = (char *)malloc(1024*1024);
+  char *request  = (char*)malloc(2048);
+  char *response = (char*)malloc(1024*1024);
   int  size      = 0;
 
   while(1)
   {
-    if(sock_recv(tmp_sock, request, &size))
+    if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
-      ws_hand_shake(request, response, &size);
+      if(tmp_server->hand_shake != SOCK_TRUE)
+      {
+        ws_hand_shake(request, response, &size);
 
-      sock_send(tmp_sock, response, size);
+        log_add(request, LOG_DEBUG);
+        log_add(response, LOG_DEBUG);
 
-      tmp_worker->hand_shake = SOCK_TRUE;
-
-      break;
+        if(sock_send(tmp_sock, response, size) == ERROR_NONE)
+          tmp_server->hand_shake = SOCK_TRUE;
+      }
+      else
+      {
+        log_add_fmt(LOG_INFO, "ws_recv_worker, %s", request);
+      }
     }
 
     usleep(1000);
@@ -203,8 +213,8 @@ void *ws_recv_worker(void *arg)
 //==============================================================================
 void *ws_send_worker(void *arg)
 {
-  ws_server_t *tmp_worker = (ws_server_t*)arg;
-  SOCKET tmp_sock = tmp_worker->custom_server.custom_worker.sock;
+  ws_server_t *tmp_server = (ws_server_t*)arg;
+  SOCKET tmp_sock = tmp_server->custom_server.custom_worker.sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN ws_send_worker, socket: %d", tmp_sock);
@@ -214,22 +224,22 @@ void *ws_send_worker(void *arg)
 
   while(1)
   {
-    if(tmp_worker->hand_shake == SOCK_TRUE)
+    if(tmp_server->hand_shake == SOCK_TRUE)
     {
-      if(!tmp_worker->custom_server.custom_worker.is_locked)
-        if((tmp_worker->out_message != NULL) && (tmp_worker->out_message_size != 0))
+      if(!tmp_server->custom_server.custom_worker.is_locked)
+        if((tmp_server->out_message != NULL) && (tmp_server->out_message_size != 0))
         {
           if(sock_send(tmp_sock, "Hello!", strlen("Hello!")) >= ERROR_NORMAL)
             tmp_errors++;
 
-//          if(sock_send(tmp_sock, tmp_worker->out_message, tmp_worker->out_message_size) >= ERROR_NORMAL)
+//          if(sock_send(tmp_sock, tmp_server->out_message, tmp_server->out_message_size) >= ERROR_NORMAL)
 //            tmp_errors++;
 
-//          free(tmp_worker->out_message);
-//          tmp_worker->out_message = NULL;
-//          tmp_worker->out_message_size = 0;
+//          free(tmp_server->out_message);
+          tmp_server->out_message = NULL;
+          tmp_server->out_message_size = 0;
 
-          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_worker->custom_server.custom_worker.state == SOCK_STATE_STOP))
+          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_server->custom_server.custom_worker.state == SOCK_STATE_STOP))
             break;
         }
     }

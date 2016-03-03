@@ -717,10 +717,11 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     }
 
     #ifdef SOCK_EXTRA_LOGS
-    sprintf(tmp, "sock_recv, socket: %d, recv size: %d", tmp_sock, size);
+    sprintf(tmp, "sock_recv, socket: %d, recv size: %d", sock, size);
     log_add(tmp, LOG_INFO);
-    bytes_to_hex(buffer, (pack_size)size, tmp);
-    log_add(tmp, LOG_INFO);
+    log_add(buffer, LOG_INFO);
+//    bytes_to_hex(buffer, (pack_size_t)size, tmp);
+//    log_add(tmp, LOG_INFO);
     #endif
 
     return ERROR_NONE;
@@ -774,11 +775,12 @@ int sock_send(SOCKET sock, char *buffer, int size)
   else
   {
     #ifdef SOCK_EXTRA_LOGS
-    char tmp[256];
-    sprintf(tmp, "sock_send, send size: %d", res);
-    log_add(tmp, LOG_INFO);
-    bytes_to_hex(buffer, (pack_size)size, tmp);
-    log_add(tmp, LOG_INFO);
+//    char tmp[256];
+//    sprintf(tmp, "sock_send, send size: %d", res);
+//    log_add(tmp, LOG_INFO);
+//    log_add(buffer, LOG_INFO);
+//    bytes_to_hex(buffer, (pack_size_t)size, tmp);
+//    log_add(tmp, LOG_INFO);
     #endif
   }
   #endif

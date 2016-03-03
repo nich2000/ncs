@@ -84,7 +84,7 @@ int custom_worker_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_CRITICAL;
   }
 
@@ -111,7 +111,7 @@ int custom_server_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_CRITICAL;
   }
   else
@@ -121,7 +121,7 @@ int custom_server_start(custom_worker_t *worker)
   {
     sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_CRITICAL;
   }
   else
@@ -160,6 +160,7 @@ int custom_server_work(custom_server_t *server)
   char tmp[128];
   struct sockaddr_in addr;
   int addrlen = sizeof(struct sockaddr_in);
+  int errors = 0;
 
   while(server->custom_worker.state == SOCK_STATE_START)
   {
@@ -171,8 +172,14 @@ int custom_server_work(custom_server_t *server)
       sprintf(tmp, "custom_server_work, accept, Error: %d", sock_error());
       make_last_error(ERROR_NORMAL, INVALID_SOCKET, tmp);
       log_add(tmp, LOG_ERROR);
-      server->custom_worker.state == SOCK_STATE_STOP;
-      return ERROR_NORMAL;
+      errors++;
+      if(errors > SOCK_ERRORS_COUNT)
+      {
+        server->custom_worker.state == SOCK_STATE_STOP;
+        make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
+        log_add(tmp, LOG_ERROR_CRITICAL);
+        return ERROR_CRITICAL;
+      };
     }
     else
     {
@@ -220,9 +227,10 @@ int custom_client_work(custom_client_t *client)
   {
     if(connect(client->custom_remote_client.custom_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
+      char tmp[256];
+      sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
+      make_error(ERROR_WARNING, SOCKET_ERROR, tmp);
       #ifdef SOCK_EXTRA_LOGS
-      char tmp[128];
-      sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_get_error());
       log_add(tmp, LOG_ERROR);
       #endif
       sleep(SOCK_WAIT_CONNECT);

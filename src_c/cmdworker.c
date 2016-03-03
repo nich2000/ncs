@@ -218,7 +218,7 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
     sprintf(tmp,
             "no available clients, cmd_accept, socket: %d, host: %s",
             tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
-    log_add(tmp, LOG_CRITICAL_ERROR);
+    log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
   };
 
