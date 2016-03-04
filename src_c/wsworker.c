@@ -82,17 +82,21 @@ int ws_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int ws_server_init(ws_server_t *server)
 {
-  custom_worker_init(&server->custom_server.custom_worker);
+  custom_server_init(&server->custom_server);
+
+  custom_remote_clients_list_init(&server->custom_remote_clients_list);
+
+//  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+//  {
+//    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
+//    tmp_client->protocol.on_new_in_data  = ws_new_data;
+//    tmp_client->protocol.on_new_out_data = ws_new_data;
+//  };
 
   server->custom_server.custom_worker.id   = _ws_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
-
   server->custom_server.on_accept          = &ws_accept;
-
-  server->out_message                      = 0;
-  server->out_message_size                 = 0;
-  server->hand_shake                       = SOCK_FALSE;
 }
 //==============================================================================
 int ws_server_start(ws_server_t *server, sock_port_t port)
@@ -143,33 +147,69 @@ void *ws_server_worker(void *arg)
   log_add("END ws_server_worker", LOG_DEBUG);
 }
 //==============================================================================
+custom_remote_client_t *ws_server_remote_clients_next()
+{
+  custom_remote_client_t *tmp_client = 0;
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(_ws_server.custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
+    {
+      tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+
+      custom_remote_client_init(tmp_client);
+
+//      tmp_client->protocol.on_new_in_data  = ws_new_data;
+
+      tmp_client->custom_worker.id    = _ws_server.custom_remote_clients_list.next_id++;
+      tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
+      tmp_client->custom_worker.mode  = _ws_server.custom_server.custom_worker.mode;
+      tmp_client->custom_worker.port  = _ws_server.custom_server.custom_worker.port;
+      tmp_client->custom_worker.state = SOCK_STATE_START;
+
+//      tmp_client->on_disconnect       = ws_disconnect;
+//      tmp_client->on_error            = ws_error;
+//      tmp_client->on_recv             = ws_recv;
+//      tmp_client->on_send             = ws_send;
+
+      break;
+    };
+
+  return tmp_client;
+}
+//==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
+  custom_remote_client_t *tmp_client = ws_server_remote_clients_next();
+
   char tmp[256];
-  sprintf(tmp, "ws_accept, socket: %d", socket);
+
+  if(tmp_client == 0)
+  {
+    sprintf(tmp,
+            "no available clients, ws_accept, socket: %d, host: %s",
+            tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
+    log_add(tmp, LOG_ERROR_CRITICAL);
+    return ERROR_NORMAL;
+  };
+
+  memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
+  memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
+
+  sprintf(tmp, "ws_accept, socket: %d, host: %s", tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
   log_add(tmp, LOG_DEBUG);
-
-  SOCKET *s = malloc(sizeof(SOCKET));
-  memcpy(s, &socket, sizeof(SOCKET));
-
-  _ws_server.hand_shake = SOCK_FALSE;
-
-  // Тут должен быть сокет клиента!
-  // И вообще список клиентов
-  _ws_server.custom_server.custom_worker.sock = *s;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(NULL, &tmp_attr, ws_recv_worker, (void*)&_ws_server);
-  pthread_create(NULL, &tmp_attr, ws_send_worker, (void*)&_ws_server);
+  pthread_create(&tmp_client->recv_thread, &tmp_attr, ws_recv_worker, (void*)tmp_client);
+  pthread_create(&tmp_client->send_thread, &tmp_attr, ws_send_worker, (void*)tmp_client);
 }
 //==============================================================================
 void *ws_recv_worker(void *arg)
 {
-  ws_server_t *tmp_server = (ws_server_t*)arg;
-  SOCKET tmp_sock = tmp_server->custom_server.custom_worker.sock;
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
+  SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
   char tmp[256];
   sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
@@ -183,15 +223,15 @@ void *ws_recv_worker(void *arg)
   {
     if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
-      if(tmp_server->hand_shake != SOCK_TRUE)
+      if(tmp_client->hand_shake != SOCK_TRUE)
       {
         ws_hand_shake(request, response, &size);
 
-        log_add(request, LOG_DEBUG);
-        log_add(response, LOG_DEBUG);
-
         if(sock_send(tmp_sock, response, size) == ERROR_NONE)
-          tmp_server->hand_shake = SOCK_TRUE;
+        {
+          tmp_client->hand_shake = SOCK_TRUE;
+          log_add_fmt(LOG_INFO, "handshake success, socket: %d", tmp_sock);
+        }
       }
       else
       {
@@ -213,8 +253,8 @@ void *ws_recv_worker(void *arg)
 //==============================================================================
 void *ws_send_worker(void *arg)
 {
-  ws_server_t *tmp_server = (ws_server_t*)arg;
-  SOCKET tmp_sock = tmp_server->custom_server.custom_worker.sock;
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
+  SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
   char tmp[1024];
   sprintf(tmp, "BEGIN ws_send_worker, socket: %d", tmp_sock);
@@ -224,22 +264,19 @@ void *ws_send_worker(void *arg)
 
   while(1)
   {
-    if(tmp_server->hand_shake == SOCK_TRUE)
+    if(tmp_client->hand_shake == SOCK_TRUE)
     {
-      if(!tmp_server->custom_server.custom_worker.is_locked)
-        if((tmp_server->out_message != NULL) && (tmp_server->out_message_size != 0))
+      if(!tmp_client->custom_worker.is_locked)
+        if((tmp_client->out_message != NULL) && (tmp_client->out_message_size != 0))
         {
-          if(sock_send(tmp_sock, "Hello!", strlen("Hello!")) >= ERROR_NORMAL)
+          if(sock_send(tmp_sock, tmp_client->out_message, tmp_client->out_message_size) >= ERROR_NORMAL)
             tmp_errors++;
 
-//          if(sock_send(tmp_sock, tmp_server->out_message, tmp_server->out_message_size) >= ERROR_NORMAL)
-//            tmp_errors++;
+          free(tmp_client->out_message);
+          tmp_client->out_message = NULL;
+          tmp_client->out_message_size = 0;
 
-//          free(tmp_server->out_message);
-          tmp_server->out_message = NULL;
-          tmp_server->out_message_size = 0;
-
-          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_server->custom_server.custom_worker.state == SOCK_STATE_STOP))
+          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_client->custom_worker.state == SOCK_STATE_STOP))
             break;
         }
     }
@@ -251,6 +288,36 @@ void *ws_send_worker(void *arg)
   log_add(tmp, LOG_DEBUG);
 
   return NULL;
+}
+//==============================================================================
+int ws_server_route_pack(pack_packet_t *packet)
+{
+  if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
+  {
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    {
+      custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+
+      if(tmp_client->custom_worker.state == SOCK_STATE_START)
+      {
+        tmp_client->custom_worker.is_locked = SOCK_TRUE;
+
+        pack_buffer_t tmp_buffer;
+        pack_size_t   tmp_size = 0;
+//        pack_packet_to_buffer(packet, tmp_buffer, &tmp_size);
+
+        //TEXT_FRAME
+        //BINARY_FRAME
+        tmp_size = ws_make_frame(TEXT_FRAME, "Hello", 5, tmp_buffer, PACK_BUFFER_SIZE);
+
+        tmp_client->out_message_size = tmp_size;
+        tmp_client->out_message = (char*)malloc(tmp_size);
+        memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
+
+        tmp_client->custom_worker.is_locked = SOCK_FALSE;
+      }
+    }
+  }
 }
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size)

@@ -33,7 +33,13 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
+  // Временное явление 1
   pack_protocol_t protocol;
+  // Временное явление 2
+  char           *out_message;
+  int             out_message_size;
+  // Временное явление 3
+  int             hand_shake;
 
   on_error_t      on_error;
   on_send_t       on_send;

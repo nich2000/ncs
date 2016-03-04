@@ -30,6 +30,14 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
   custom_remote_client->send_thread   = 0;
   custom_remote_client->recv_thread   = 0;
 
+  // Временное явление 1
+  pack_protocol_init(&custom_remote_client->protocol);
+  // Временное явление 2
+  custom_remote_client->out_message = 0;
+  custom_remote_client->out_message_size = 0;
+  // Временное явление 3
+  custom_remote_client->hand_shake = SOCK_FALSE;
+
   custom_remote_client->on_error      = 0;
   custom_remote_client->on_send       = 0;
   custom_remote_client->on_recv       = 0;

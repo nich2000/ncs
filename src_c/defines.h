@@ -12,7 +12,7 @@
 //#define SERVER_MODE
 //#define CLIENT_MODE
 
-#define SOCK_EXTRA_LOGS
+//#define SOCK_EXTRA_LOGS
 #define SOCK_PACK_MODE
 //#define SOCK_RANDOM_BUFFER
 
