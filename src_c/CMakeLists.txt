@@ -15,7 +15,9 @@ add_definitions(-DTURN_ON_STDCALL)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
+include_directories(../libs/jansson/src)
 include_directories(utilites)
+include_directories(workers)
 include_directories(/)
 #-------------------------------------------------------------------------------
 set(_LOG defines.h globals.h utilites/ncs_log.c)
@@ -31,7 +33,7 @@ add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log error)
 #-------------------------------------------------------------------------------
-set(_SOCKET defines.h globals.h utils.c socket_types.h socket.c socket_utils.c streamer.c customworker.c cmdworker.c webworker.c wsworker.c base64.c sha1.c)
+set(_SOCKET defines.h globals.h utils.c workers/socket_types.h workers/socket.c workers/socket_utils.c workers/streamer.c workers/customworker.c workers/cmdworker.c workers/webworker.c workers/wsworker.c workers/base64.c workers/sha1.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
 target_link_libraries(socket protocol log error)
@@ -39,12 +41,16 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
-set(_PROG main.c defines.h globals.h utils.c socket_utils.c exec.c streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
+set(_JANSSON ../libs/jansson/src/dump.c ../libs/jansson/src/error.c ../libs/jansson/src/hashtable.c ../libs/jansson/src/hashtable_seed.c ../libs/jansson/src/load.c ../libs/jansson/src/memory.c ../libs/jansson/src/pack_unpack.c ../libs/jansson/src/strbuffer.c ../libs/jansson/src/strconv.c ../libs/jansson/src/utf.c ../libs/jansson/src/value.c)
+add_library(jansson SHARED ${_JANSSON})
+set_property(TARGET jansson PROPERTY C_STANDARD 99)
+#-------------------------------------------------------------------------------
+set(_PROG main.c defines.h globals.h utils.c workers/socket_utils.c workers/exec.c workers/streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log socket error Threads::Threads)
+target_link_libraries(${PROJECT_NAME} protocol log socket error jansson Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------
