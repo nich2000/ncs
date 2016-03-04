@@ -176,28 +176,63 @@ char *read_line(char *line, int max_chars) {
 /* ================================================================
  * main
  */
-
-#define MAX_CHARS 4096
-
-int main(int argc, char *argv[]) {
-    char line[MAX_CHARS];
-
-    if (argc != 1) {
-        fprintf(stderr, "Usage: %s\n", argv[0]);
-        exit(-1);
+int main(int argc, char *argv[])
+{
+    if (argc != 1)
+    {
+      fprintf(stderr, "Usage: %s\n", argv[0]);
+      exit(-1);
     }
 
-    while (read_line(line, MAX_CHARS) != (char *)NULL) {
+    FILE *file;
+    file = fopen("example.json", "r");
 
-        /* parse text into JSON structure */
-        json_t *root = load_json(line);
-
-        if (root) {
-            /* print and release the JSON structure */
-            print_json(root);
-            json_decref(root);
-        }
+    if(file == NULL)
+    {
+      fputs("Error file\n", stderr);
+      exit(1);
     }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    rewind (file);
+
+    char * buffer = (char*) malloc(sizeof(char) * size);
+    if (buffer == NULL)
+    {
+      fputs("Error memory\n", stderr);
+      exit(2);
+    }
+
+    size_t result = fread(buffer, 1, size, file);
+//    if (result != size)
+//    {
+//      fputs("Error read\n", stderr);
+//      exit (3);
+//    }
+
+    json_t *root = load_json(buffer);
+    if(root)
+    {
+      print_json(root);
+      json_decref(root);
+    }
+
+    fclose(file);
+    free (buffer);
+
+//    while (read_line(line, MAX_CHARS) != (char *)NULL)
+//    {
+//        /* parse text into JSON structure */
+//        json_t *root = load_json(line);
+
+//        if (root)
+//        {
+//            /* print and release the JSON structure */
+//            print_json(root);
+//            json_decref(root);
+//        }
+//    }
 
     return 0;
 }

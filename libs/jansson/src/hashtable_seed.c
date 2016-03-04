@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <time.h>
 
+#define HAVE_STDINT_H (1)
+
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif

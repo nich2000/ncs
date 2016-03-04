@@ -18,6 +18,8 @@
 #include <string.h>
 #include <math.h>
 
+#define HAVE_STDINT_H (1)
+
 #ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
