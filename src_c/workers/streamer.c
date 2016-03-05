@@ -3,44 +3,113 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#include "ncs_log.h"
 #include "streamer.h"
+#include "ncs_log.h"
+#include "protocol.h"
+#include "cmdworker.h"
 //==============================================================================
-void *streamer_worker_func(void *arg);
-int streamer_prepare(pack_protocol_t *protocol);
+int cmd_streamer_init  (streamer_worker *worker, pack_protocol_t *protocol);
+int cmd_streamer_start (streamer_worker *worker);
+int cmd_streamer_work  (streamer_worker *worker);
+int cmd_streamer_stop  (streamer_worker *worker);
+int cmd_streamer_pause (streamer_worker *worker);
+int cmd_streamer_resume(streamer_worker *worker);
 //==============================================================================
-int streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
+void *cmd_streamer_worker_func(void *arg);
+int cmd_streamer_make(pack_protocol_t *protocol);
+//==============================================================================
+streamer_worker _cmd_streamer;
+extern cmd_client_t _cmd_client;
+//==============================================================================
+int cmd_streamer(sock_state_t state)
+{
+  switch(state)
+  {
+    case SOCK_STATE_NONE:
+    {
+      break;
+    }
+    case SOCK_STATE_START:
+    {
+      cmd_streamer_start(&_cmd_streamer);
+      break;
+    }
+    case SOCK_STATE_STOP:
+    {
+      cmd_streamer_stop(&_cmd_streamer);
+      break;
+    }
+    case SOCK_STATE_PAUSE:
+    {
+      cmd_streamer_pause(&_cmd_streamer);
+      break;
+    }
+  case SOCK_STATE_RESUME:
+  {
+    cmd_streamer_resume(&_cmd_streamer);
+    break;
+  }
+    default:;
+  };
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_streamer_status()
+{
+}
+//==============================================================================
+int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
 {
   worker->is_test     =  0;
-  worker->is_work     =  1;
-  worker->is_pause    =  1;
+  worker->is_work     =  SOCK_FALSE;
+  worker->is_pause    =  SOCK_TRUE;
   worker->last_number = -1;
   worker->protocol    =  protocol;
   worker->work_thread =  0;
+}
+//==============================================================================
+int cmd_streamer_start(streamer_worker *worker)
+{
+  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_start");
 
-  pthread_create(&worker->work_thread, NULL, streamer_worker_func, (void*)worker);
-}
-//==============================================================================
-int streamer_start(streamer_worker *worker)
-{
-  log_add("streamer_start", LOG_INFO);
+  cmd_streamer_init(worker, &_cmd_client.custom_client.custom_remote_client.protocol);
 
-  worker->is_pause = 0;
-}
-//==============================================================================
-int streamer_work(streamer_worker *worker)
-{
-}
-//==============================================================================
-int streamer_stop(streamer_worker *worker)
-{
-  log_add("streamer_stop", LOG_INFO);
+  worker->is_work  = SOCK_TRUE;
+  worker->is_pause = SOCK_FALSE;
 
-  worker->is_pause = 1;
+  pthread_create(&worker->work_thread, NULL, cmd_streamer_worker_func, (void*)worker);
 }
 //==============================================================================
-void *streamer_worker_func(void *arg)
+int cmd_streamer_stop(streamer_worker *worker)
 {
+  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_stop");
+
+  worker->is_work = SOCK_FALSE;
+}
+//==============================================================================
+int cmd_streamer_pause(streamer_worker *worker)
+{
+  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_pause");
+
+  worker->is_pause = SOCK_TRUE;
+}
+//==============================================================================
+int cmd_streamer_resume(streamer_worker *worker)
+{
+  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_resume");
+
+  worker->is_pause = SOCK_FALSE;
+}
+//==============================================================================
+int cmd_streamer_work(streamer_worker *worker)
+{
+}
+//==============================================================================
+void *cmd_streamer_worker_func(void *arg)
+{
+  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_worker_func");
+
   streamer_worker *tmp_worker = (streamer_worker*)arg;
 
   pack_protocol_t *tmp_protocol = tmp_worker->protocol;
@@ -53,23 +122,16 @@ void *streamer_worker_func(void *arg)
       continue;
     }
 
-//    streamer_prepare(tmp_protocol);
-
-//    sock_server_send_to_ws(sock_server_t *server, int argc, ...);
-
-    if(tmp_worker->is_test)
-    {
-    }
-    else
-    {
-    }
+    cmd_streamer_make(tmp_protocol);
 
     usleep(100000);
   }
 }
 //==============================================================================
-int streamer_prepare(pack_protocol_t *protocol)
+int cmd_streamer_make(pack_protocol_t *protocol)
 {
+  log_add_fmt(LOG_INFO, "%s", "BEGIN cmd_streamer_make");
+
   #define TEST_SEND_COUNT  1
   #define TEST_PACK_COUNT  1
   #define TEST_WORD_COUNT  5
@@ -116,5 +178,7 @@ int streamer_prepare(pack_protocol_t *protocol)
     };
     pack_end(protocol);
   }
+
+  log_add_fmt(LOG_INFO, "%s", "END cmd_streamer_make");
 }
 //==============================================================================

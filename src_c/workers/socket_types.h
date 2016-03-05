@@ -33,6 +33,8 @@
 #define SOCK_STATE_STOPPING      4
 #define SOCK_STATE_PAUSE         5
 #define SOCK_STATE_PAUSING       6
+#define SOCK_STATE_RESUME        7
+#define SOCK_STATE_RESUMING      8
 //==============================================================================
 #define SOCK_TYPE_UNKNOWN        0
 #define SOCK_TYPE_CLIENT         1

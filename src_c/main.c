@@ -12,6 +12,7 @@
 #include "webworker.h"
 #include "wsworker.h"
 #include "cmdworker.h"
+#include "streamer.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
@@ -127,6 +128,7 @@ int handle_command(char *command)
       cmd_client_status();
       return RESULT_DONE;
     }
+
     return RESULT_UNKNOWN;
   }
   else if(res == 2)
@@ -139,6 +141,21 @@ int handle_command(char *command)
     else if(strcmp(token, "sndtosr") == 0)
     {
       cmd_client_send(1, param1);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "stream") == 0)
+    {
+      if(strcmp(param1, "on") == 0)
+        cmd_streamer(SOCK_STATE_START);
+      else if(strcmp(param1, "off") == 0)
+        cmd_streamer(SOCK_STATE_STOP);
+      else if(strcmp(param1, "pause") == 0)
+        cmd_streamer(SOCK_STATE_PAUSE);
+      else if(strcmp(param1, "resume") == 0)
+        cmd_streamer(SOCK_STATE_RESUME);
+      else
+        return RESULT_UNKNOWN;
+
       return RESULT_DONE;
     }
 

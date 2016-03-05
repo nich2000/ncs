@@ -4,7 +4,8 @@
 #include <pthread.h>
 
 #include "defines.h"
-#include "protocol.h"
+#include "protocol_types.h"
+#include "socket_types.h"
 //==============================================================================
 typedef struct
 {
@@ -16,9 +17,7 @@ typedef struct
   pthread_t      work_thread;
 }streamer_worker;
 //==============================================================================
-int streamer_init (streamer_worker *worker, pack_protocol_t *protocol);
-int streamer_start(streamer_worker *worker);
-int streamer_work (streamer_worker *worker);
-int streamer_stop (streamer_worker *worker);
+int cmd_streamer(sock_state_t state);
+int cmd_streamer_status();
 //==============================================================================
 #endif //STREAMER_H

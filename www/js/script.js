@@ -47,14 +47,22 @@ function onOpen(evt)
 {
   wsConnected = true;
   console.log("onOpen");
-  $("#connection_status").text('connected');
+
+  $('#connection_status').removeClass('label-danger');
+  $('#connection_status').removeClass('label-warning');
+  $('#connection_status').addClass('label-success');
+  $("#connection_status").text('Connection: open');
 }
 
 function onClose(evt) 
 {
   wsConnected = false;
   console.log("onClose");
-  $("#connection_status").text('disconnected');
+
+  $('#connection_status').removeClass('label-danger');
+  $('#connection_status').removeClass('label-success');
+  $('#connection_status').addClass('label-warning');
+  $("#connection_status").text('Connection: close');
 }
 
 function onMessage(evt) 
@@ -74,21 +82,30 @@ function onMessage(evt)
     if(commnad_mode)
     {
       if(data[i].CMD != undefined)
+      {
         console.log("Command: " + data[i].CMD);
+        $("#last_cmd").text('Command: ' + data[i].CMD);
+      }
 
       if(data[i].PAR != undefined)
         console.log("Parameter: " + data[i].PAR); 
     }
     else
     {
-
+      console.log(data[i]);
     }
   }
 }
 
 function onError(evt) 
 {
+  wsConnected = false;
   console.log(evt.data);
+
+  $('#connection_status').removeClass('label-success');
+  $('#connection_status').removeClass('label-warning');
+  $('#connection_status').addClass('label-danger');
+  $("#connection_status").text('Connection: error');
 }
 
 function doSend(message) 
