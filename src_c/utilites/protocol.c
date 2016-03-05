@@ -478,6 +478,19 @@ int pack_word_as_float(pack_word_t *word, float *value)
   return ERROR_NONE;
 }
 //==============================================================================
+const char *_pack_word_as_string(pack_word_t *word)
+{
+  pack_value_t tmp_value;
+
+  pack_word_as_string(word, tmp_value);
+
+  // TODO костыль
+  char *tmp_string = (char*)malloc(strlen(tmp_value));
+  strcpy(tmp_string, tmp_value);
+
+  return tmp_string;
+}
+//==============================================================================
 int pack_word_as_string(pack_word_t *word, pack_string_t value)
 {
   value[0] = '\0';

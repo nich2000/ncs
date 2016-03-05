@@ -70,6 +70,8 @@ pack_size_t _pack_words_count    (pack_packet_t *pack);
 int       pack_command           (pack_packet_t *pack, pack_value_t command);
 pack_size_t _pack_params_count   (pack_packet_t *pack);
 //==============================================================================
+const char *_pack_word_as_string(pack_word_t *word);
+//==============================================================================
 int pack_param_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
 //==============================================================================
 int pack_keys_to_csv             (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);

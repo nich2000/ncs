@@ -6,10 +6,12 @@
 #include "ncs_log.h"
 #include "sha1.h"
 #include "base64.h"
+#include "protocol_types.h"
 #include "protocol.h"
 #include "utils.h"
 #include "socket_utils.h"
 #include "socket.h"
+#include "jansson.h"
 //==============================================================================
 // http://learn.javascript.ru/websockets#описание-фрейма
 //==============================================================================
@@ -290,6 +292,42 @@ void *ws_send_worker(void *arg)
   return NULL;
 }
 //==============================================================================
+/*
+{
+  [
+    {"key": value},
+    {"key": value},
+    {"key": value}
+  ]
+}
+*/
+//==============================================================================
+//https://jansson.readthedocs.org/en/2.7/apiref.html
+int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size)
+{
+  json_t *tmp_words = json_array();
+
+  for(int i = 0; i < packet->words_count; i++)
+  {
+    json_t *tmp_word = json_object();
+
+    pack_key_t tmp_key;
+    strcpy(tmp_key, packet->words[i].key);
+
+    pack_value_t tmp_value;
+    strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
+
+    json_t *tmp_json_value = json_string(tmp_value);
+
+    json_object_set(tmp_word, tmp_key, tmp_json_value);
+
+    json_array_append(tmp_words, tmp_word);
+  }
+
+  strcpy(buffer, json_dumps(tmp_words, JSON_ENCODE_ANY ));
+  *size = strlen(buffer);
+}
+//==============================================================================
 int ws_server_route_pack(pack_packet_t *packet)
 {
   if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
@@ -302,13 +340,14 @@ int ws_server_route_pack(pack_packet_t *packet)
       {
         tmp_client->custom_worker.is_locked = SOCK_TRUE;
 
+        pack_buffer_t json_buffer;
+        pack_size_t   json_size = 0;
+        packet_to_json(packet, json_buffer, &json_size);
+        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-//        pack_packet_to_buffer(packet, tmp_buffer, &tmp_size);
-
-        //TEXT_FRAME
-        //BINARY_FRAME
-        tmp_size = ws_make_frame(TEXT_FRAME, "Hello", 5, tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_make_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);

@@ -59,10 +59,31 @@ function onClose(evt)
 
 function onMessage(evt) 
 {
-  console.log(evt.data);
+  var data;
+  data = JSON.parse(evt.data);
 
-  // var bytes = new Uint8Array(evt.data);
-  // var array = toNumbersArray(bytes);
+  if(data.length <= 0)
+    return;
+
+  var commnad_mode = false;
+  if(data[0].CMD != undefined)
+    commnad_mode = true;
+
+  for(var i = 0; i < data.length; i++) 
+  {
+    if(commnad_mode)
+    {
+      if(data[i].CMD != undefined)
+        console.log("Command: " + data[i].CMD);
+
+      if(data[i].PAR != undefined)
+        console.log("Parameter: " + data[i].PAR); 
+    }
+    else
+    {
+
+    }
+  }
 }
 
 function onError(evt) 

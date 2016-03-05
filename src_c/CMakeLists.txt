@@ -28,6 +28,10 @@ set(_ERROR defines.h globals.h utilites/ncs_error.c)
 add_library(error SHARED ${_ERROR})
 set_property(TARGET error PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
+set(_JANSSON ../libs/jansson/src/dump.c ../libs/jansson/src/error.c ../libs/jansson/src/hashtable.c ../libs/jansson/src/hashtable_seed.c ../libs/jansson/src/load.c ../libs/jansson/src/memory.c ../libs/jansson/src/pack_unpack.c ../libs/jansson/src/strbuffer.c ../libs/jansson/src/strconv.c ../libs/jansson/src/utf.c ../libs/jansson/src/value.c)
+add_library(jansson SHARED ${_JANSSON})
+set_property(TARGET jansson PROPERTY C_STANDARD 99)
+#-------------------------------------------------------------------------------
 set(_PROTOCOL defines.h globals.h utilites/protocol_types.h utilites/protocol.c utilites/protocol_utils.c test.c)
 add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
@@ -36,14 +40,10 @@ target_link_libraries(protocol log error)
 set(_SOCKET defines.h globals.h utils.c workers/socket_types.h workers/socket.c workers/socket_utils.c workers/streamer.c workers/customworker.c workers/cmdworker.c workers/webworker.c workers/wsworker.c workers/base64.c workers/sha1.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
-target_link_libraries(socket protocol log error)
+target_link_libraries(socket protocol jansson log error)
 IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
-#-------------------------------------------------------------------------------
-set(_JANSSON ../libs/jansson/src/dump.c ../libs/jansson/src/error.c ../libs/jansson/src/hashtable.c ../libs/jansson/src/hashtable_seed.c ../libs/jansson/src/load.c ../libs/jansson/src/memory.c ../libs/jansson/src/pack_unpack.c ../libs/jansson/src/strbuffer.c ../libs/jansson/src/strconv.c ../libs/jansson/src/utf.c ../libs/jansson/src/value.c)
-add_library(jansson SHARED ${_JANSSON})
-set_property(TARGET jansson PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
 set(_PROG main.c defines.h globals.h utils.c workers/socket_utils.c workers/exec.c workers/streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
 #-------------------------------------------------------------------------------

@@ -136,11 +136,6 @@ int handle_command(char *command)
       cmd_server_send(1, param1);
       return RESULT_DONE;
     }
-    else if(strcmp(token, "sndtowscl") == 0)
-    {
-//      sock_server_send_to_ws(_ws_server, 1, param1);
-      return RESULT_DONE;
-    }
     else if(strcmp(token, "sndtosr") == 0)
     {
       cmd_client_send(1, param1);
@@ -153,12 +148,12 @@ int handle_command(char *command)
   {
     if(strcmp(token, "sndtocl") == 0)
     {
-//      sock_server_send_cmd(_server, 2, param1, param2);
+      cmd_server_send(2, param1, param2);
       return RESULT_DONE;
     }
     else if(strcmp(token, "sndtosr") == 0)
     {
-//      sock_client_send_cmd(_client, 2, param1, param2);
+      cmd_client_send(2, param1, param2);
       return RESULT_DONE;
     }
 
@@ -166,14 +161,47 @@ int handle_command(char *command)
   }
   else if(res == 4)
   {
+    if(strcmp(token, "sndtocl") == 0)
+    {
+      cmd_server_send(3, param1, param2, param3);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "sndtosr") == 0)
+    {
+      cmd_client_send(3, param1, param2, param3);
+      return RESULT_DONE;
+    }
+
     return RESULT_UNKNOWN;
   }
   else if(res == 5)
   {
+    if(strcmp(token, "sndtocl") == 0)
+    {
+      cmd_server_send(4, param1, param2, param3, param4);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "sndtosr") == 0)
+    {
+      cmd_client_send(4, param1, param2, param3, param4);
+      return RESULT_DONE;
+    }
+
     return RESULT_UNKNOWN;
   }
   else if(res == 6)
   {
+    if(strcmp(token, "sndtocl") == 0)
+    {
+      cmd_server_send(5, param1, param2, param3, param4, param5);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "sndtosr") == 0)
+    {
+      cmd_client_send(5, param1, param2, param3, param4, param5);
+      return RESULT_DONE;
+    }
+
     return RESULT_UNKNOWN;
   }
   else
