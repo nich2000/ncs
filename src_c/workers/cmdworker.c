@@ -76,7 +76,7 @@ int cmd_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int cmd_server_status()
 {
-  log_clr_scr();
+  clr_scr();
 
   sock_print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
 
@@ -116,7 +116,7 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
 //==============================================================================
 int cmd_client_status()
 {
-  log_clr_scr();
+  clr_scr();
 
   sock_print_custom_worker_info(&_cmd_client.custom_client.custom_remote_client.custom_worker, "cmd_client");
 }
@@ -393,7 +393,7 @@ int cmd_error(void *sender, error_t *error)
 //==============================================================================
 int cmd_send(void *sender)
 {
-  log_add("cmd_send", LOG_DEBUG);
+//  log_add("cmd_send", LOG_DEBUG);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -473,7 +473,7 @@ int cmd_new_data(void *sender, void *data)
 {
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
-  pack_print(tmp_packet, "cmd_new_data", 0, 0, 1, 0);
+  pack_print(tmp_packet, "cmd_new_data", 0, 0, 0, 1);
 
   ws_server_route_pack(tmp_packet);
 }

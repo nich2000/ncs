@@ -60,6 +60,7 @@ int handle_command(char *command)
     else if(strcmp(token, "client") == 0)
     {
       log_set_name("client_log.txt");
+      report_set_name("client_data.txt");
 
       cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host);
 
@@ -68,6 +69,7 @@ int handle_command(char *command)
     else if(strcmp(token, "server") == 0)
     {
       log_set_name("server_log.txt");
+      report_set_name("server_data.txt");
 
       cmd_server(SOCK_STATE_START, cmd_server_port);
 
@@ -95,7 +97,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "clear") == 0)
     {
-      log_clr_scr();
+      clr_scr();
       return RESULT_DONE;
     }
     else if(strcmp(token, "typesinfo") == 0)

@@ -131,7 +131,7 @@ int ws_server_pause(ws_server_t *server)
 //==============================================================================
 int ws_server_status()
 {
-  log_clr_scr();
+  clr_scr();
 
   sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
 }

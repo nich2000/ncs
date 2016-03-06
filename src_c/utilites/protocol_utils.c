@@ -83,7 +83,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
 {
 #ifndef DEMS_DEVICE
   if(clear)
-    log_clr_scr();
+    clr_scr();
 
   if(!buffer && !pack && !csv)
     return ERROR_NONE;
@@ -116,14 +116,14 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     for(pack_size_t i = 0; i < tmp_words_count; i++)
       if(pack_val_by_index_as_string(packet, i, key, valueS) == ERROR_NONE)
         sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
-    log_add(tmp, LOG_DEBUG);
+    log_add(tmp, LOG_INFO);
   };
 
   if(csv)
   {
     pack_buffer_t csv;
     pack_values_to_csv(packet, ';', csv);
-    log_add(csv, LOG_DATA);
+    report_add(csv);
   };
 #endif //DEMS_DEVICE
   return ERROR_NONE;

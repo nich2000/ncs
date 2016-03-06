@@ -12,7 +12,7 @@
 #define PACK_IN_PACKETS_COUNT    1  //(    10 * 10) // 10 seconds
 #define PACK_QUEUE_COUNT         1
 #else
-#define PACK_BUFFER_SIZE         2048
+#define PACK_BUFFER_SIZE         102400
 #define PACK_VALUE_SIZE          128
 #define PACK_WORDS_COUNT         32
 #define PACK_OUT_PACKETS_COUNT   1

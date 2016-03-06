@@ -24,7 +24,7 @@
 char log_name[64]    = "log.txt";
 char report_name[64] = "report.txt";
 //==============================================================================
-void log_clr_scr()
+void clr_scr()
 {
   #ifdef __linux__
     system("clear");
@@ -39,6 +39,15 @@ void log_make_dir()
   mkdir(LOG_INITIAL_PATH, 0777);
   #elif _WIN32
   CreateDirectory(LOG_INITIAL_PATH, NULL);
+  #endif
+}
+//==============================================================================
+void report_make_dir()
+{
+  #ifdef __linux__
+  mkdir(REPORT_INITIAL_PATH, 0777);
+  #elif _WIN32
+  CreateDirectory(REPORT_INITIAL_PATH, NULL);
   #endif
 }
 //==============================================================================
@@ -144,10 +153,17 @@ void report_add(char *message)
 #ifndef DEMS_DEVICE
   FILE *report;
   char report_full_name[128];
+
   sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
+
+  report_make_dir();
+
   report = fopen(report_full_name, "a");
-  fprintf(report, "%s\n", message);
-  fclose(report);
+  if(report != NULL)
+  {
+    fprintf(report, "%s\n", message);
+    fclose(report);
+  };
 #endif
 }
 //==============================================================================

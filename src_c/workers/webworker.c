@@ -250,7 +250,7 @@ int web_get_response(char *request, char *response, int *size)
 //==============================================================================
 int web_server_status()
 {
-  log_clr_scr();
+  clr_scr();
 
   sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 }
