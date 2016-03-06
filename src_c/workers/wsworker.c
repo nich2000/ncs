@@ -131,7 +131,7 @@ int ws_server_pause(ws_server_t *server)
 //==============================================================================
 int ws_server_status()
 {
-  clr_scr();
+  log_clr_scr();
 
   sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
 }
@@ -232,12 +232,12 @@ void *ws_recv_worker(void *arg)
         if(sock_send(tmp_sock, response, size) == ERROR_NONE)
         {
           tmp_client->hand_shake = SOCK_TRUE;
-          log_add_fmt(LOG_INFO, "handshake success, socket: %d", tmp_sock);
+          log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
         }
       }
       else
       {
-        log_add_fmt(LOG_INFO, "ws_recv_worker, %s", request);
+        log_add_fmt(LOG_DEBUG, "ws_recv_worker, %s", request);
       }
     }
 

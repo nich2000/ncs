@@ -12,9 +12,9 @@
 
 #include "gps_parse.h"
 
-unsigned char  is_init = 0;
+char           is_init = 0;
 uint8_t       *gprmc_token[13];
-unsigned char  gprmc_str[128];
+char           gprmc_str[128];
 GPRMC_t        gprms_data;
 
 void gps_init()
@@ -36,7 +36,7 @@ void gps_init()
   is_init = 1;
 }
 
-int gps_parse_str(unsigned char *str)
+int gps_parse_str(char *str)
 {
   if(!is_init)
     return 0;

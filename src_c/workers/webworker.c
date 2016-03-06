@@ -195,7 +195,7 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-    log_add(tmp_full_name, LOG_INFO);
+    log_add(tmp_full_name, LOG_DEBUG);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f != NULL)
@@ -250,7 +250,7 @@ int web_get_response(char *request, char *response, int *size)
 //==============================================================================
 int web_server_status()
 {
-  clr_scr();
+  log_clr_scr();
 
   sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 }

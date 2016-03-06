@@ -81,8 +81,9 @@ unsigned short getCRC16(char *data_p, unsigned short length)
 //==============================================================================
 int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int pack, int csv)
 {
+#ifndef DEMS_DEVICE
   if(clear)
-    clr_scr();
+    log_clr_scr();
 
   if(!buffer && !pack && !csv)
     return ERROR_NONE;
@@ -100,7 +101,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     bytes_to_hex(tmp_buffer, (pack_size_t)tmp_size, tmp);
     log_add(tmp, LOG_DEBUG);
     #else
-    add_to_log(tmp_buffer, LOG_DEBUG);
+    log_add(tmp_buffer, LOG_DEBUG);
     #endif
   };
 
@@ -115,7 +116,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     for(pack_size_t i = 0; i < tmp_words_count; i++)
       if(pack_val_by_index_as_string(packet, i, key, valueS) == ERROR_NONE)
         sprintf(tmp, "%s%s: %s\n", tmp, key, valueS);
-    log_add(tmp, LOG_INFO);
+    log_add(tmp, LOG_DEBUG);
   };
 
   if(csv)
@@ -124,7 +125,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     pack_values_to_csv(packet, ';', csv);
     log_add(csv, LOG_DATA);
   };
-
+#endif //DEMS_DEVICE
   return ERROR_NONE;
 }
 //==============================================================================

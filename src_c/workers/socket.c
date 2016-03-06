@@ -693,9 +693,7 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
     make_error(ERROR_WARNING, retval, tmp);
-    #ifdef SOCK_EXTRA_LOGS
-    log_add(tmp, LOG_WARNING);
-    #endif
+    log_add(tmp, LOG_EXTRA);
     return ERROR_WARNING;
   }
   else
@@ -716,12 +714,11 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
       return ERROR_WARNING;
     }
 
-    #ifdef SOCK_EXTRA_LOGS
-    sprintf(tmp, "sock_recv, socket: %d, recv size: %d", sock, size);
-    log_add(tmp, LOG_INFO);
-    log_add(buffer, LOG_INFO);
-//    bytes_to_hex(buffer, (pack_size_t)size, tmp);
-//    log_add(tmp, LOG_INFO);
+    #ifdef USE_EXTRA_LOGS
+    log_add_fmt(LOG_EXTRA, "sock_recv, socket: %d, recv size: %d", sock, size);
+    log_add_fmt(LOG_EXTRA, "sock_recv, buffer:\n%s", buffer);
+    bytes_to_hex(buffer, (pack_size_t)size, tmp);
+    log_add_fmt(LOG_EXTRA, "sock_recv, hex buffer:\n%s", buffer);
     #endif
 
     return ERROR_NONE;
@@ -755,11 +752,10 @@ int sock_send(SOCKET sock, char *buffer, int size)
     else
     {
       #ifdef SOCK_EXTRA_LOGS
-      char tmp[256];
-      sprintf(tmp, "sock_send, send size: %d", res);
-      log_add(tmp, LOG_INFO);
-      bytes_to_hex(buffer, (pack_size)size, tmp);
-      log_add(tmp, LOG_INFO);
+      log_add_fmt(LOG_EXTRA, "sock_send, socket: %d, send size: %d", sock, size);
+      log_add_fmt(LOG_EXTRA, "sock_send, buffer:\n%s", buffer);
+      bytes_to_hex(buffer, (pack_size_t)size, tmp);
+      log_add_fmt(LOG_EXTRA, "sock_send, hex buffer:\n%s", buffer);
       #endif
     }
   }
@@ -775,12 +771,10 @@ int sock_send(SOCKET sock, char *buffer, int size)
   else
   {
     #ifdef SOCK_EXTRA_LOGS
-//    char tmp[256];
-//    sprintf(tmp, "sock_send, send size: %d", res);
-//    log_add(tmp, LOG_INFO);
-//    log_add(buffer, LOG_INFO);
-//    bytes_to_hex(buffer, (pack_size_t)size, tmp);
-//    log_add(tmp, LOG_INFO);
+    log_add_fmt(LOG_EXTRA, "sock_send, socket: %d, send size: %d", sock, size);
+    log_add_fmt(LOG_EXTRA, "sock_send, buffer:\n%s", buffer);
+    bytes_to_hex(buffer, (pack_size_t)size, tmp);
+    log_add_fmt(LOG_EXTRA, "sock_send, hex buffer:\n%s", buffer);
     #endif
   }
   #endif

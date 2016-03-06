@@ -18,25 +18,25 @@ const char  *  _pack_version              ();
   int pack_protocol_init();
   int pack_begin();
   int pack_end();
-  pack_packet *_pack_pack_current(pack_type out);
+  pack_packet_t *_pack_pack_current(pack_type_t out);
   // Это не очень работает...т.к. из функции возвращается неизмененный pack
-  int pack_pack_current(pack_type out, pack_packet *pack);
-  int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate);
-  int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size);
+  int pack_pack_current(pack_type_t out, pack_packet_t *pack);
+  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate);
+  int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size);
   //------------------------------------------------------------------------------
-  pack_packet *_pack_next();
-  int pack_next_buffer(pack_buffer buffer, pack_size *size);
+  pack_packet_t *_pack_next();
+  int pack_next_buffer(pack_buffer_t buffer, pack_size_t *size);
   //------------------------------------------------------------------------------
-  int pack_add_as_int(pack_key key, int value);
-  int pack_add_as_float(pack_key key, float value);
-  int pack_add_as_string(pack_key key, pack_string value);
-  int pack_add_as_bytes(pack_key key, pack_bytes value, pack_size size);
+  int pack_add_as_int(pack_key_t key, int value);
+  int pack_add_as_float(pack_key_t key, float value);
+  int pack_add_as_string(pack_key_t key, pack_string_t value);
+  int pack_add_as_bytes(pack_key_t key, pack_bytes_t value, pack_size_t size);
   //------------------------------------------------------------------------------
-  int pack_add_cmd(pack_value command);
+  int pack_add_cmd(pack_value_t command);
   int pack_add_param_as_int(int   param);
   int pack_add_param_as_float(float param);
-  int pack_add_param_as_string(pack_string param);
-  int pack_add_param_as_bytes(pack_bytes param, pack_size size);
+  int pack_add_param_as_string(pack_string_t param);
+  int pack_add_param_as_bytes(pack_bytes_t param, pack_size_t size);
 #else
   int pack_protocol_init (pack_protocol_t *protocol);
   int pack_begin(pack_protocol_t *protocol);

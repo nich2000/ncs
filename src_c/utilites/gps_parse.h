@@ -34,41 +34,41 @@ $GPRMC,065315.080,A,5535.26112,N,03753.79745,E,5.527,264.98,081015,_._,_._,A *61
 typedef struct
 {
   // 1
-  unsigned char time_gps[10];
+  char          time_gps[10];
   int           time;
   int           time_s;
   // 2
-  unsigned char data_valid[1];
+  char          data_valid[1];
   //3
-  unsigned char lat_gps[10];
+  char          lat_gps[10];
   double        lat;
   // 4
-  unsigned char N_S[1];
+  char          N_S[1];
   // 5
-  unsigned char long_gps[11];
+  char          long_gps[11];
   double        lon;
   // 6
-  unsigned char E_W[1];
+  char          E_W[1];
   // 7
-  unsigned char speed_knots[6];
+  char          speed_knots[6];
   double        speed;
   // 8
-  unsigned char true_course[6];
+  char          true_course[6];
   double        course;
   // 9
-  unsigned char date_gps[6];
+  char          date_gps[6];
   // 10
-  unsigned char magnetic[6];
+  char          magnetic[6];
   // 11
-  unsigned char E_W_magnetic[1];
+  char          E_W_magnetic[1];
   // 12
-  unsigned char mode[1];
+  char          mode[1];
   // 13
-  unsigned char check_summ[2];
+  char          check_summ[2];
 } GPRMC_t;
 //==============================================================================
 void     gps_init();
-int      gps_parse_str(unsigned char *str);
+int      gps_parse_str(char *str);
 GPRMC_t *gps_data();
 //==============================================================================
 #endif /* GPS_PARSE_H */

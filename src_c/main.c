@@ -95,7 +95,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "clear") == 0)
     {
-      clr_scr();
+      log_clr_scr();
       return RESULT_DONE;
     }
     else if(strcmp(token, "typesinfo") == 0)

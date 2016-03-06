@@ -238,9 +238,7 @@ int custom_client_work(custom_client_t *client)
       char tmp[256];
       sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
       make_error(ERROR_WARNING, SOCKET_ERROR, tmp);
-      #ifdef SOCK_EXTRA_LOGS
-      log_add(tmp, LOG_ERROR);
-      #endif
+      log_add(tmp, LOG_EXTRA);
       sleep(SOCK_WAIT_CONNECT);
       continue;
     }

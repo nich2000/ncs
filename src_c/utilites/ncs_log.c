@@ -24,26 +24,22 @@
 char log_name[64]    = "log.txt";
 char report_name[64] = "report.txt";
 //==============================================================================
-int clr_scr()
+void log_clr_scr()
 {
   #ifdef __linux__
     system("clear");
   #elif _WIN32
     system("cls");
   #endif
-
-  return 0;
 }
 //==============================================================================
-int make_log_dir()
+void log_make_dir()
 {
   #ifdef __linux__
   mkdir(LOG_INITIAL_PATH, 0777);
   #elif _WIN32
   CreateDirectory(LOG_INITIAL_PATH, NULL);
   #endif
-
-  return 0;
 }
 //==============================================================================
 void log_set_name(char *name)
@@ -58,6 +54,7 @@ void report_set_name(char *name)
 //==============================================================================
 void log_add_fmt(int log_type, char *message, ...)
 {
+#ifndef DEMS_DEVICE
   char tmp[1024];
 
   va_list params;
@@ -66,6 +63,7 @@ void log_add_fmt(int log_type, char *message, ...)
   va_end(params);
 
   log_add(tmp, log_type);
+#endif
 }
 //==============================================================================
 const char *log_type_to_string(int log_type)
@@ -82,6 +80,8 @@ const char *log_type_to_string(int log_type)
     break;
     case LOG_ERROR_FATAL:    return "[ERROR_FATAL]";
     break;
+    case LOG_EXTRA:          return "[EXTRA]";
+    break;
     case LOG_DEBUG:          return "[DEBUG]";
     break;
     case LOG_DATA:           return "[DATA]";
@@ -89,18 +89,25 @@ const char *log_type_to_string(int log_type)
     case LOG_RAW_DATA:       return "[RAW_DATA]";
     break;
   }
+
+  return "";
 }
 //==============================================================================
 void log_add(char *message, int log_type)
 {
-#if defined(__linux__) || defined(_WIN32)
+#ifndef DEMS_DEVICE
 
   #ifndef DEBUG_MODE
   if(log_type == LOG_DEBUG)
     return;
   #endif
 
-  make_log_dir();
+  #ifndef USE_EXTRA_LOGS
+    if(log_type == LOG_EXTRA)
+      return;
+  #endif
+
+  log_make_dir();
 
 //   time(&rawtime);
 //   timeinfo = localtime(&rawtime);
@@ -134,7 +141,7 @@ void log_add(char *message, int log_type)
 //==============================================================================
 void report_add(char *message)
 {
-#if defined(__linux__) || defined(_WIN32)
+#ifndef DEMS_DEVICE
   FILE *report;
   char report_full_name[128];
   sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
@@ -142,11 +149,5 @@ void report_add(char *message)
   fprintf(report, "%s\n", message);
   fclose(report);
 #endif
-}
-//==============================================================================
-void skip_lines(size_t count)
-{
-  for(size_t i = 0; i < count; i++)
-    printf("\n");
 }
 //==============================================================================

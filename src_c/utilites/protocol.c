@@ -54,7 +54,7 @@ static pack_number_t pack_last_error    = ERROR_NONE;
 static pack_number_t pack_global_number = PACK_GLOBAL_INIT_NUMBER;
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_protocol *protocol;
+pack_protocol_t *protocol;
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_QUEUE
@@ -68,14 +68,14 @@ int pack_queue_add(pack_number_t number, pack_protocol_t *protocol);
 int pack_key_by_index (pack_packet_t *pack, pack_index_t index, pack_key_t key);
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int is_locked(pack_type out);
-int lock(pack_type out);
-int unlock(pack_type out);
-pack_index _pack_current_index(pack_type out);
-int pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack);
-pack_packet *_pack_pack_by_number(pack_number number, pack_type out);
-int pack_pack_by_index (pack_index index,   pack_type out, pack_packet *pack);
-pack_packet *_pack_pack_by_index (pack_index index, pack_type out);
+int is_locked(pack_type_t out);
+int lock(pack_type_t out);
+int unlock(pack_type_t out);
+pack_index_t _pack_current_index(pack_type_t out);
+int pack_pack_by_number(pack_number_t number, pack_type_t out, pack_packet_t *pack);
+pack_packet_t *_pack_pack_by_number(pack_number_t number, pack_type_t out);
+int pack_pack_by_index (pack_index_t index,   pack_type_t out, pack_packet_t *pack);
+pack_packet_t *_pack_pack_by_index (pack_index_t index, pack_type_t out);
 #else
 int is_locked(pack_type_t out, pack_protocol_t *protocol);
 int lock(pack_type_t out, pack_protocol_t *protocol);
@@ -108,7 +108,7 @@ int pack_get_last_error()
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int is_locked(pack_type out)
+int is_locked(pack_type_t out)
 #else
 int is_locked(pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -120,7 +120,7 @@ int is_locked(pack_type_t out, pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int lock(pack_type out)
+int lock(pack_type_t out)
 #else
 int lock(pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -134,7 +134,7 @@ int lock(pack_type_t out, pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int unlock(pack_type out)
+int unlock(pack_type_t out)
 #else
 int unlock(pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -158,6 +158,8 @@ int pack_validation_buffer_init(pack_validation_buffer_t *validation_buffer)
   validation_buffer->size = 0;
 
   memset(validation_buffer->buffer, 0, PACK_BUFFER_SIZE);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int pack_word_init(pack_word_t *word)
@@ -166,6 +168,8 @@ int pack_word_init(pack_word_t *word)
   memset(word->value, 0, PACK_VALUE_SIZE);
   word->type = PACK_WORD_NONE;
   word->size = 0;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int pack_packet_init(pack_packet_t *packet)
@@ -186,6 +190,8 @@ int pack_in_packets_list_init(pack_in_packets_list_t *in_packets_list)
 
   for(int i = 0; i < PACK_IN_PACKETS_COUNT; i++)
     pack_packet_init(&in_packets_list->items[i]);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int pack_out_packets_list_init(pack_out_packets_list_t *out_packets_list)
@@ -197,6 +203,8 @@ int pack_out_packets_list_init(pack_out_packets_list_t *out_packets_list)
 
   for(int i = 0; i < PACK_OUT_PACKETS_COUNT; i++)
     pack_packet_init(&out_packets_list->items[i]);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_QUEUE
@@ -218,7 +226,7 @@ int pack_protocol_init(pack_protocol_t *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-    protocol = malloc(sizeof(pack_protocol));
+    protocol = malloc(sizeof(pack_protocol_t));
   #endif
 
   pack_validation_buffer_init(&protocol->validation_buffer);
@@ -249,7 +257,7 @@ pack_number_t _pack_global_number()
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_index _pack_current_index(pack_type out)
+pack_index_t _pack_current_index(pack_type_t out)
 #else
 pack_index_t _pack_current_index(pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -261,7 +269,7 @@ pack_index_t _pack_current_index(pack_type_t out, pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_pack_by_number(pack_number number, pack_type out, pack_packet *pack)
+int pack_pack_by_number(pack_number_t number, pack_type_t out, pack_packet_t *pack)
 #else
 int pack_pack_by_number(pack_number_t number, pack_type_t out, pack_packet_t *pack, pack_protocol_t *protocol)
 #endif
@@ -299,7 +307,7 @@ int pack_pack_by_number(pack_number_t number, pack_type_t out, pack_packet_t *pa
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_packet *_pack_pack_by_number(pack_number number, pack_type out)
+pack_packet_t *_pack_pack_by_number(pack_number_t number, pack_type_t out)
 #else
 pack_packet_t *_pack_pack_by_number(pack_number_t number, pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -325,7 +333,7 @@ pack_packet_t *_pack_pack_by_number(pack_number_t number, pack_type_t out, pack_
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_pack_by_index(pack_index index, pack_type out, pack_packet *pack)
+int pack_pack_by_index(pack_index_t index, pack_type_t out, pack_packet_t *pack)
 #else
 int pack_pack_by_index(pack_index_t index, pack_type_t out, pack_packet_t *pack, pack_protocol_t *protocol)
 #endif
@@ -349,7 +357,7 @@ int pack_pack_by_index(pack_index_t index, pack_type_t out, pack_packet_t *pack,
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_packet *_pack_pack_by_index (pack_index index, pack_type out)
+pack_packet_t *_pack_pack_by_index (pack_index_t index, pack_type_t out)
 #else
 pack_packet_t *_pack_pack_by_index (pack_index_t index, pack_type_t out, pack_protocol_t *protocol)
 #endif
@@ -369,9 +377,9 @@ pack_packet_t *_pack_pack_by_index (pack_index_t index, pack_type_t out, pack_pr
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_pack_current(pack_type out, pack_packet *pack)
+int pack_pack_current(pack_type_t out, pack_packet_t *pack)
 {
-  pack_index tmp_index = _pack_current_index(out);
+  pack_index_t tmp_index = _pack_current_index(out);
 
   pack_pack_by_index(tmp_index, out, pack);
 
@@ -389,9 +397,9 @@ int pack_pack_current(pack_type_t out, pack_packet_t *pack, pack_protocol_t *pro
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_packet *_pack_pack_current(pack_type out)
+pack_packet_t *_pack_pack_current(pack_type_t out)
 {
-  pack_index tmp_index = _pack_current_index(out);
+  pack_index_t tmp_index = _pack_current_index(out);
 
   if(out)
   {
@@ -703,7 +711,7 @@ int pack_begin(pack_protocol_t *protocol)
   protocol->out_packets_list.empty = PACK_FALSE;
 
   #ifdef PACK_USE_OWN_BUFFER
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -723,7 +731,7 @@ int pack_end(pack_protocol_t *protocol)
     if(!is_locked(PACK_OUT))
       return ERROR_NORMAL;
 
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     if(!is_locked(PACK_OUT, protocol))
       return ERROR_NORMAL;
@@ -784,7 +792,7 @@ int pack_queue_add(pack_number_t number, pack_protocol_t *protocol)
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-pack_packet *_pack_next()
+pack_packet_t *_pack_next()
 #else
 pack_packet_t *_pack_next(pack_protocol_t *protocol)
 #endif
@@ -827,9 +835,9 @@ pack_packet_t *_pack_next(pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_next_buffer(pack_buffer buffer, pack_size *size)
+int pack_next_buffer(pack_buffer_t buffer, pack_size_t *size)
 {
-  pack_packet *tmp_pack = _pack_next(protocol);
+  pack_packet_t *tmp_pack = _pack_next(protocol);
 #else
 int pack_next_buffer(pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol)
 {
@@ -845,13 +853,13 @@ int pack_next_buffer(pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *p
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_as_int(pack_key key, int value)
+int pack_add_as_int(pack_key_t key, int value)
 #else
 int pack_add_as_int(pack_key_t key, int value, pack_protocol_t *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -884,13 +892,13 @@ int pack_add_as_int(pack_key_t key, int value, pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_as_float(pack_key key, float value)
+int pack_add_as_float(pack_key_t key, float value)
 #else
 int pack_add_as_float(pack_key_t key, float value, pack_protocol_t *protocol)
 #endif
 {
   #ifdef PACK_USE_OWN_BUFFER
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -921,7 +929,7 @@ int pack_add_as_float(pack_key_t key, float value, pack_protocol_t *protocol)
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_as_string(pack_key key, pack_string value)
+int pack_add_as_string(pack_key_t key, pack_string_t value)
 #else
 int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *protocol)
 #endif
@@ -937,7 +945,7 @@ int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *pro
   };
 
   #ifdef PACK_USE_OWN_BUFFER
-  paLOG_ERROR_CRITICALk = _pack_pack_current(PACK_OUT);
+  pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
   pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -966,7 +974,7 @@ int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *pro
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_as_bytes (pack_key key, pack_bytes value, pack_size size)
+int pack_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size)
 #else
 int pack_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size, pack_protocol_t *protocol)
 #endif
@@ -980,7 +988,7 @@ int pack_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size, pac
   };
 
   #ifdef PACK_USE_OWN_BUFFER
-    pack_packet *tmp_pack = _pack_pack_current(PACK_OUT);
+    pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT);
   #else
     pack_packet_t *tmp_pack = _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -1009,10 +1017,10 @@ int pack_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size, pac
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_cmd(pack_value command)
+int pack_add_cmd(pack_value_t command)
 {
-  pack_key tmp_key = PACK_CMD_KEY;
-  return pack_add_as_string(tmp_key, (pack_string)command);
+  pack_key_t tmp_key = PACK_CMD_KEY;
+  return pack_add_as_string(tmp_key, (pack_string_t)command);
 }
 #else
 int pack_add_cmd(pack_value_t command, pack_protocol_t *protocol)
@@ -1025,7 +1033,7 @@ int pack_add_cmd(pack_value_t command, pack_protocol_t *protocol)
 #ifdef PACK_USE_OWN_BUFFER
 int pack_add_param_as_int(int param)
 {
-  pack_key tmp_key = PACK_PARAM_KEY;
+  pack_key_t tmp_key = PACK_PARAM_KEY;
   return pack_add_as_int(tmp_key, param);
 }
 #else
@@ -1039,7 +1047,7 @@ int pack_add_param_as_int(int param, pack_protocol_t *protocol)
 #ifdef PACK_USE_OWN_BUFFER
 int pack_add_param_as_float(float param)
 {
-  pack_key tmp_key = PACK_PARAM_KEY;
+  pack_key_t tmp_key = PACK_PARAM_KEY;
   return pack_add_as_float(tmp_key, param);
 }
 #else
@@ -1051,9 +1059,9 @@ int pack_add_param_as_float(float param, pack_protocol_t *protocol)
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_param_as_string(pack_string param)
+int pack_add_param_as_string(pack_string_t param)
 {
-  pack_key tmp_key = PACK_PARAM_KEY;
+  pack_key_t tmp_key = PACK_PARAM_KEY;
   return pack_add_as_string(tmp_key, param);
 }
 #else
@@ -1065,9 +1073,9 @@ int pack_add_param_as_string(pack_string_t param, pack_protocol_t *protocol)
 #endif
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_add_param_as_bytes (pack_bytes param, pack_size size)
+int pack_add_param_as_bytes (pack_bytes_t param, pack_size_t size)
 {
-  pack_key tmp_key = PACK_PARAM_KEY;
+  pack_key_t tmp_key = PACK_PARAM_KEY;
   return pack_add_as_bytes(tmp_key, param, size);
 }
 #else
@@ -1088,12 +1096,12 @@ int pack_add_param_as_bytes (pack_bytes_t param, pack_size_t size, pack_protocol
 */
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_buffer_validate(pack_buffer buffer, pack_size size, pack_type only_validate)
+int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate)
 #else
 int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol)
 #endif
 {
-//  log_add("pack_validate", LOG_INFO);
+//  log_add("pack_validate", LOG_DEBUG);
 
   pack_validation_buffer_t *vbuffer = &protocol->validation_buffer;
 
@@ -1187,7 +1195,7 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t onl
     protocol->in_packets_list.empty = PACK_FALSE;
 
     #ifdef PACK_USE_OWN_BUFFER
-      pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
+      pack_packet_t *tmp_pack = _pack_pack_current(PACK_IN);
     #else
       pack_packet_t *tmp_pack = _pack_pack_current(PACK_IN, protocol);
     #endif
@@ -1316,9 +1324,9 @@ int pack_words_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t 
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
-int pack_current_packet_to_buffer(pack_type out, pack_buffer buffer, pack_size *size)
+int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size)
 {
-  pack_packet *tmp_pack = _pack_pack_current(out);
+  pack_packet_t *tmp_pack = _pack_pack_current(out);
 
   if(tmp_pack == NULL)
     return PACK_QUEUE_EMPTY;

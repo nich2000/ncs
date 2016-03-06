@@ -15,13 +15,12 @@
 #define LOG_ERROR_CRITICAL  103
 #define LOG_ERROR_FATAL     104
 //==============================================================================
-#define LOG_DEBUG           10
-#define LOG_DATA            11
-#define LOG_RAW_DATA        12
+#define LOG_EXTRA           10
+#define LOG_DEBUG           11
+#define LOG_DATA            12
+#define LOG_RAW_DATA        13
 //==============================================================================
-int clr_scr();
-void skip_lines(size_t count);
-//==============================================================================
+void log_clr_scr();
 void log_set_name(char *name);
 void log_add(char *message, int log_type);
 void log_add_fmt(int log_type, char *message, ...);

@@ -76,7 +76,7 @@ int cmd_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int cmd_server_status()
 {
-  clr_scr();
+  log_clr_scr();
 
   sock_print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
 
@@ -116,7 +116,7 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
 //==============================================================================
 int cmd_client_status()
 {
-  clr_scr();
+  log_clr_scr();
 
   sock_print_custom_worker_info(&_cmd_client.custom_client.custom_remote_client.custom_worker, "cmd_client");
 }

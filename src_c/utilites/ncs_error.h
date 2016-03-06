@@ -1,6 +1,10 @@
 #ifndef ERROR_H
 #define ERROR_H
 //==============================================================================
+#ifndef DEMS_DEVICE
+#include <unistd.h>
+#endif
+
 #include "defines.h"
 //==============================================================================
 #define ERROR_NONE       100
