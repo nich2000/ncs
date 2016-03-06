@@ -44,7 +44,9 @@ const char  *  _pack_version              ();
   pack_packet_t *_pack_pack_current(pack_type_t out, pack_protocol_t *protocol);
   // Это не очень работает...т.к. из функции возвращается неизмененный pack
   int pack_pack_current(pack_type_t out, pack_packet_t *pack, pack_protocol_t *protocol);
-  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol);
+  int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size,
+                           pack_type_t only_validate, pack_protocol_t *protocol,
+                           void *sender);
   int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol);
   //------------------------------------------------------------------------------
   int pack_packet_to_buffer(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);

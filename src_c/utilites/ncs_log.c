@@ -21,8 +21,7 @@
   struct tm *timeinfo;
 #endif
 //==============================================================================
-char log_name[64]    = "log.txt";
-char report_name[64] = "report.txt";
+char log_def_name[64] = "log.txt";
 //==============================================================================
 void clr_scr()
 {
@@ -42,23 +41,9 @@ void log_make_dir()
   #endif
 }
 //==============================================================================
-void report_make_dir()
-{
-  #ifdef __linux__
-  mkdir(REPORT_INITIAL_PATH, 0777);
-  #elif _WIN32
-  CreateDirectory(REPORT_INITIAL_PATH, NULL);
-  #endif
-}
-//==============================================================================
 void log_set_name(char *name)
 {
-  strncpy(log_name, name, 64);
-}
-//==============================================================================
-void report_set_name(char *name)
-{
-  strncpy(report_name, name, 64);
+  strncpy(log_def_name, name, 64);
 }
 //==============================================================================
 void log_add_fmt(int log_type, char *message, ...)
@@ -136,7 +121,7 @@ void log_add(char *message, int log_type)
 
   FILE *log;
   char log_full_name[128];
-  sprintf(log_full_name, "%s/%s", LOG_INITIAL_PATH, log_name);
+  sprintf(log_full_name, "%s/%s", LOG_INITIAL_PATH, log_def_name);
   log = fopen(log_full_name, "a");
   if(log != NULL)
   {
@@ -148,22 +133,49 @@ void log_add(char *message, int log_type)
 #endif
 }
 //==============================================================================
-void report_add(char *message)
+void report_make_dir()
+{
+  #ifdef __linux__
+  mkdir(REPORT_INITIAL_PATH, 0777);
+  #elif _WIN32
+  CreateDirectory(REPORT_INITIAL_PATH, NULL);
+  #endif
+}
+//==============================================================================
+FILE *report_open(char *report_name)
 {
 #ifndef DEMS_DEVICE
-  FILE *report;
-  char report_full_name[128];
-
+  char report_full_name[256];
   sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
 
   report_make_dir();
 
-  report = fopen(report_full_name, "a");
-  if(report != NULL)
+  FILE *result = fopen(report_full_name, "a");
+
+  return result;
+#endif
+}
+//==============================================================================
+int report_add(FILE *file, char *message)
+{
+#ifndef DEMS_DEVICE
+  int res = -1;
+  if(file != NULL)
   {
-    fprintf(report, "%s\n", message);
-    fclose(report);
-  };
+    res = fprintf(file, "%s\n", message);
+    fflush(file);
+  }
+  return res;
+#endif
+}
+//==============================================================================
+void report_close(FILE *file)
+{
+#ifndef DEMS_DEVICE
+  if(file != NULL)
+  {
+    fclose(file);
+  }
 #endif
 }
 //==============================================================================

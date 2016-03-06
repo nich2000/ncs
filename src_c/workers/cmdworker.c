@@ -362,7 +362,8 @@ void *cmd_send_worker(void *arg)
       if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
         continue;
 
-      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY, tmp_protocol);
+      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
+                                         tmp_protocol, (void*)tmp_client);
 
       if(tmp_cnt > 0)
       {
@@ -412,7 +413,8 @@ int cmd_recv(void *sender, char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol);
+  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD,
+                       tmp_protocol, (void*)tmp_client);
 }
 //==============================================================================
 int cmd_server_send(int argc, ...)
@@ -471,9 +473,23 @@ int cmd_client_send(int argc, ...)
 //==============================================================================
 int cmd_new_data(void *sender, void *data)
 {
+  custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
+
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
-  pack_print(tmp_packet, "cmd_new_data", 0, 0, 0, 1);
+  char csv[256];
+  int res = pack_values_to_csv(tmp_packet, ';', csv);
+  int len = strlen(csv);
+
+  if(res != ERROR_NONE)
+  {
+    log_add_fmt(LOG_INFO, "cmd_new_data, res = %d, len = %d", res, len);
+  }
+
+  int cnt = report_add(tmp_client->report, csv);
+
+  if(cnt != len)
+    log_add_fmt(LOG_INFO, "cmd_new_data, res = %d, len = %d", cnt, len);
 
   ws_server_route_pack(tmp_packet);
 }

@@ -123,7 +123,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
   {
     pack_buffer_t csv;
     pack_values_to_csv(packet, ';', csv);
-    report_add(csv);
+//    report_add(csv);
   };
 #endif //DEMS_DEVICE
   return ERROR_NONE;

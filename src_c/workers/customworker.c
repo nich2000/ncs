@@ -30,13 +30,15 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
   custom_remote_client->send_thread   = 0;
   custom_remote_client->recv_thread   = 0;
 
-  // Временное явление 1
+  // TODO Временное явление 1
   pack_protocol_init(&custom_remote_client->protocol);
-  // Временное явление 2
+  // TODO Временное явление 2
   custom_remote_client->out_message = 0;
   custom_remote_client->out_message_size = 0;
-  // Временное явление 3
+  //TODO  Временное явление 3
   custom_remote_client->hand_shake = SOCK_FALSE;
+  //TODO  Временное явление 4
+  custom_remote_client->report = 0;
 
   custom_remote_client->on_error      = 0;
   custom_remote_client->on_send       = 0;
@@ -44,6 +46,11 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
   custom_remote_client->on_disconnect = 0;
 
   return ERROR_NONE;
+}
+//==============================================================================
+int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client)
+{
+
 }
 //==============================================================================
 int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list)
@@ -265,13 +272,17 @@ void *custom_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  char tmp[1024];
+  char tmp[256];
   sprintf(tmp, "BEGIN custom_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  char tmp_buffer[2048];
-  int  tmp_size;
-  int  tmp_errors = 0;
+  char tmp_report_name[256];
+  sprintf(tmp_report_name, "report_%d.txt", tmp_client->custom_worker.id);
+  tmp_client->report = report_open(tmp_report_name);
+
+  pack_buffer_t tmp_buffer;
+  int           tmp_size = 0;
+  int           tmp_errors = 0;
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
@@ -301,6 +312,8 @@ void *custom_recv_worker(void *arg)
 
     usleep(1000);
   }
+
+  report_close(tmp_client->report);
 
   sprintf(tmp, "END custom_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);

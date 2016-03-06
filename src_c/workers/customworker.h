@@ -1,6 +1,7 @@
 #ifndef CUSTOMWORKER_H
 #define CUSTOMWORKER_H
 //==============================================================================
+#include <stdio.h>
 #include <pthread.h>
 
 #include "defines.h"
@@ -33,13 +34,15 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
-  // Временное явление 1
+  // TODO Временное явление 1
   pack_protocol_t protocol;
-  // Временное явление 2
+  // TODO Временное явление 2
   char           *out_message;
   int             out_message_size;
-  // Временное явление 3
+  // TODO Временное явление 3
   int             hand_shake;
+  // TODO Временное явление 4
+  FILE           *report;
 
   on_error_t      on_error;
   on_send_t       on_send;
@@ -80,13 +83,15 @@ int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_
 int custom_server_init(custom_server_t *custom_server);
 int custom_client_init(custom_client_t *custom_client);
 
-int custom_worker_stop (custom_worker_t *worker);
+int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client);
 
-int custom_server_start(custom_worker_t *worker);
-int custom_client_start(custom_worker_t *worker);
+int custom_worker_stop  (custom_worker_t *worker);
 
-int custom_server_work (custom_server_t *server);
-int custom_client_work (custom_client_t *client);
+int custom_server_start (custom_worker_t *worker);
+int custom_client_start (custom_worker_t *worker);
+
+int custom_server_work  (custom_server_t *server);
+int custom_client_work  (custom_client_t *client);
 
 void *custom_recv_worker(void *arg);
 //==============================================================================

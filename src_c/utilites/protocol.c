@@ -656,6 +656,9 @@ int pack_keys_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer_t
 //==============================================================================
 int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer)
 {
+  if(pack == NULL)
+    return ERROR_NORMAL;
+
   if(pack->words_count > PACK_WORDS_COUNT)
     return ERROR_NORMAL;
 
@@ -664,6 +667,8 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
   buffer[0] = '\0';
 
   pack_value_t valueS;
+
+  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, words: %d", pack->words_count);
 
   for(pack_size_t i = 0; i < pack->words_count; i++)
   {
@@ -676,6 +681,12 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
   }
 
   buffer[tmp_pos] = '\0';
+
+  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, tmp_pos: %d, len: %d", tmp_pos, strlen(buffer));
+
+  pack_buffer_t tmp_hex;
+  bytes_to_hex(buffer, (pack_size_t)tmp_pos, tmp_hex);
+  log_add(tmp_hex, LOG_DEBUG);
 
   return ERROR_NONE;
 }
@@ -1098,7 +1109,9 @@ int pack_add_param_as_bytes (pack_bytes_t param, pack_size_t size, pack_protocol
 #ifdef PACK_USE_OWN_BUFFER
 int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate)
 #else
-int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t only_validate, pack_protocol_t *protocol)
+int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size,
+                         pack_type_t only_validate, pack_protocol_t *protocol,
+                         void *sender)
 #endif
 {
 //  log_add("pack_validate", LOG_DEBUG);
@@ -1208,7 +1221,7 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size, pack_type_t onl
     if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
     {
       if(protocol->on_new_in_data != 0)
-        protocol->on_new_in_data((void*)protocol, (void*)tmp_pack);
+        protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
     };
   };
 

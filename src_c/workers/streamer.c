@@ -18,6 +18,7 @@ int cmd_streamer_resume(streamer_worker *worker);
 void *cmd_streamer_worker_func(void *arg);
 int cmd_streamer_make(pack_protocol_t *protocol);
 //==============================================================================
+int counter = 0;
 streamer_worker _cmd_streamer;
 extern cmd_client_t _cmd_client;
 //==============================================================================
@@ -143,6 +144,9 @@ int cmd_streamer_make(pack_protocol_t *protocol)
   for(pack_size_t i = 0; i < TEST_PACK_COUNT; i++)
   {
     pack_begin(protocol);
+
+    pack_add_as_int("CNT", counter++, protocol);
+
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
@@ -150,7 +154,10 @@ int cmd_streamer_make(pack_protocol_t *protocol)
       else
         sprintf(tmp_key, "IN%d", i);
 
-      pack_add_as_int(tmp_key, rand(), protocol);
+      int max = 10000;
+      int min = 1;
+      int val = (rand() % (max + 1 - min)) + min;
+      pack_add_as_int(tmp_key, val, protocol);
     };
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
