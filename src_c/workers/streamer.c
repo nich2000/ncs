@@ -154,10 +154,7 @@ int cmd_streamer_make(pack_protocol_t *protocol)
       else
         sprintf(tmp_key, "IN%d", i);
 
-      int max = 10000;
-      int min = 1;
-      int val = (rand() % (max + 1 - min)) + min;
-      pack_add_as_int(tmp_key, val, protocol);
+      pack_add_as_int(tmp_key, rand(), protocol);
     };
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {

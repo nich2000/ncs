@@ -133,6 +133,7 @@ void log_add(char *message, int log_type)
 #endif
 }
 //==============================================================================
+#ifndef DEMS_DEVICE
 void report_make_dir()
 {
   #ifdef __linux__
@@ -141,10 +142,11 @@ void report_make_dir()
   CreateDirectory(REPORT_INITIAL_PATH, NULL);
   #endif
 }
+#endif
 //==============================================================================
+#ifndef DEMS_DEVICE
 FILE *report_open(char *report_name)
 {
-#ifndef DEMS_DEVICE
   char report_full_name[256];
   sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
 
@@ -153,29 +155,30 @@ FILE *report_open(char *report_name)
   FILE *result = fopen(report_full_name, "a");
 
   return result;
-#endif
 }
+#endif
 //==============================================================================
+#ifndef DEMS_DEVICE
 int report_add(FILE *file, char *message)
 {
-#ifndef DEMS_DEVICE
   int res = -1;
   if(file != NULL)
   {
+//    res = fputs(message, file);
     res = fprintf(file, "%s\n", message);
     fflush(file);
   }
   return res;
-#endif
 }
+#endif
 //==============================================================================
+#ifndef DEMS_DEVICE
 void report_close(FILE *file)
 {
-#ifndef DEMS_DEVICE
   if(file != NULL)
   {
     fclose(file);
   }
-#endif
 }
+#endif
 //==============================================================================

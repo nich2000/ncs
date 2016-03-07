@@ -407,7 +407,7 @@ int cmd_send(void *sender)
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
 {
-  log_add("cmd_recv", LOG_DEBUG);
+//  log_add("cmd_recv", LOG_DEBUG);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -479,17 +479,20 @@ int cmd_new_data(void *sender, void *data)
 
   char csv[256];
   int res = pack_values_to_csv(tmp_packet, ';', csv);
-  int len = strlen(csv);
-
   if(res != ERROR_NONE)
   {
-    log_add_fmt(LOG_INFO, "cmd_new_data, res = %d, len = %d", res, len);
+    log_add_fmt(LOG_ERROR, "cmd_new_data, res = %d", res);
   }
+  else
+  {
+    int len = strlen(csv);
 
-  int cnt = report_add(tmp_client->report, csv);
-
-  if(cnt != len)
-    log_add_fmt(LOG_INFO, "cmd_new_data, res = %d, len = %d", cnt, len);
+    int cnt = report_add(tmp_client->report, csv);
+    if(cnt != (len+1))
+    {
+      log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
+    }
+  }
 
   ws_server_route_pack(tmp_packet);
 }

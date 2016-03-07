@@ -668,13 +668,13 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
 
   pack_value_t valueS;
 
-  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, words: %d", pack->words_count);
+//  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, words: %d", pack->words_count);
 
   for(pack_size_t i = 0; i < pack->words_count; i++)
   {
     pack_word_as_string(&pack->words[i], valueS);
 
-    for(pack_size_t j = 0; j < pack->words[i].size; j++)
+    for(pack_size_t j = 0; j < strlen(valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
@@ -682,11 +682,11 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
 
   buffer[tmp_pos] = '\0';
 
-  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, tmp_pos: %d, len: %d", tmp_pos, strlen(buffer));
+//  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, tmp_pos: %d, len: %d", tmp_pos, strlen(buffer));
 
-  pack_buffer_t tmp_hex;
-  bytes_to_hex(buffer, (pack_size_t)tmp_pos, tmp_hex);
-  log_add(tmp_hex, LOG_DEBUG);
+//  pack_buffer_t tmp_hex;
+//  bytes_to_hex(buffer, (pack_size_t)tmp_pos, tmp_hex);
+//  log_add(tmp_hex, LOG_DEBUG);
 
   return ERROR_NONE;
 }
@@ -1218,11 +1218,13 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     tmp_pack->number = tmp_index;
 
+    #ifndef DEMS_DEVICE
     if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
     {
       if(protocol->on_new_in_data != 0)
         protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
     };
+    #endif
   };
 
   return tmp_valid_count;

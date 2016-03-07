@@ -309,17 +309,18 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
 
   for(int i = 0; i < packet->words_count; i++)
   {
-    json_t *tmp_word = json_object();
-
     pack_key_t tmp_key;
     strcpy(tmp_key, packet->words[i].key);
 
     pack_value_t tmp_value;
     strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
 
-    json_t *tmp_json_value = json_string(tmp_value);
+//    json_t *tmp_word = json_object();
+//    json_object_set(tmp_word, tmp_key, json_string(tmp_value));
 
-    json_object_set(tmp_word, tmp_key, tmp_json_value);
+    json_t *tmp_word = json_array();
+    json_array_append(tmp_word, json_string(tmp_key));
+    json_array_append(tmp_word, json_string(tmp_value));
 
     json_array_append(tmp_words, tmp_word);
   }
@@ -343,7 +344,7 @@ int ws_server_route_pack(pack_packet_t *packet)
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
         packet_to_json(packet, json_buffer, &json_size);
-        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;

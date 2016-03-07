@@ -3,13 +3,21 @@
 // http://getbootstrap.com/
 //=============================================================================
 var 
-  ws,
-  wsUri = 'ws://' + location.hostname + ':5800';
+  ws
+  wsUri = 'ws://' + location.hostname + ':5800',
   wsConnected = false;
+
+var
+  dataTable;
+
+var
+  dataCounter = 0;
 
 function init() 
 {
   console.log("init");
+
+  dataTable = $("#remote_data");
 
   var timerConnect = setInterval(function() 
   {
@@ -70,30 +78,43 @@ function onMessage(evt)
   var data;
   data = JSON.parse(evt.data);
 
-  if(data.length <= 0)
+  if(data.length == 0)
     return;
 
-  var commnad_mode = false;
-  if(data[0].CMD != undefined)
-    commnad_mode = true;
+  if(data[0].length == 0)
+    return;
 
   for(var i = 0; i < data.length; i++) 
   {
-    if(commnad_mode)
-    {
-      if(data[i].CMD != undefined)
-      {
-        console.log("Command: " + data[i].CMD);
-        $("#last_cmd").text('Command: ' + data[i].CMD);
-      }
+    dataCounter++;
+    $("#last_cmd").text(dataCounter);
 
-      if(data[i].PAR != undefined)
-        console.log("Parameter: " + data[i].PAR); 
-    }
-    else
+    var line = $("#" + data[i][0]);
+    if(line.length == 0)
     {
-      console.log(data[i]);
+      line = $("<tr style='height:10px'></tr>");
+      // line.height(10);
+      line.attr("id", data[i][0]);
+      dataTable.append(line);
     }
+    
+    var key = $("#key_" + data[i][0]);
+    if(key.length == 0)
+    {
+      key = $("<td></td>");
+      key.attr("id", "key_" + data[i][0]);
+      line.append(key);
+    }
+    key.html(data[i][0]);
+
+    var value = $("#value_" + data[i][0]);
+    if(value.length == 0)
+    {
+      value = $("<td></td>");
+      value.attr("id", "value_" + data[i][0]);
+      line.append(value);
+    }
+    value.html(data[i][1]);
   }
 }
 

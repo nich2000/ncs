@@ -8,6 +8,13 @@
 #include "protocol_types.h"
 #include "ncs_log.h"
 //==============================================================================
+int random_range(int min, int max)
+{
+  int val = (rand() % (max + 1 - min)) + min;
+
+  return val;
+}
+//==============================================================================
 int print_types_info()
 {
   char tmp[1024];
