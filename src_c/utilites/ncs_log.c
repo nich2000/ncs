@@ -12,6 +12,7 @@
 #include <windows.h>
 #endif
 
+#include <stdarg.h>
 #include <string.h>
 
 #include "ncs_log.h"
