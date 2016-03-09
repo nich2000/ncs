@@ -493,8 +493,8 @@ const char *_pack_word_as_string(pack_word_t *word)
   pack_word_as_string(word, tmp_value);
 
   // TODO костыль
-  char *tmp_string = (char*)malloc(strlen(tmp_value));
-  strcpy(tmp_string, tmp_value);
+  char *tmp_string = (char*)malloc(strlen((char*)tmp_value));
+  strcpy(tmp_string, (char *)tmp_value);
 
   return tmp_string;
 }
@@ -674,7 +674,7 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
   {
     pack_word_as_string(&pack->words[i], valueS);
 
-    for(pack_size_t j = 0; j < strlen(valueS); j++)
+    for(size_t j = 0; j < strlen(valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
