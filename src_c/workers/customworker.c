@@ -211,7 +211,7 @@ int custom_server_work(custom_server_t *server)
         log_add(tmp, LOG_DEBUG);
 
         if(server->on_accept((void*)server, tmp_client, tmp_host) != ERROR_NONE)
-          log_add_fmt(LOG_ERROR, "custom_server_work, Error: %s", last_error());
+          log_add_fmt(LOG_ERROR, "custom_server_work, Error: %s", last_error()->message);
       }
     }
 

@@ -99,6 +99,8 @@ int ws_server_init(ws_server_t *server)
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
   server->custom_server.on_accept          = &ws_accept;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_start(ws_server_t *server, sock_port_t port)
@@ -112,21 +114,28 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
+  pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_work(ws_server_t *server)
 {
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_stop(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_pause(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_status()
@@ -134,6 +143,8 @@ int ws_server_status()
   clr_scr();
 
   sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *ws_server_worker(void *arg)
@@ -206,6 +217,8 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 
   pthread_create(&tmp_client->recv_thread, &tmp_attr, ws_recv_worker, (void*)tmp_client);
   pthread_create(&tmp_client->send_thread, &tmp_attr, ws_send_worker, (void*)tmp_client);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *ws_recv_worker(void *arg)
@@ -327,6 +340,8 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
 
   strcpy(buffer, json_dumps(tmp_words, JSON_ENCODE_ANY ));
   *size = strlen(buffer);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_route_pack(pack_packet_t *packet)
@@ -358,6 +373,8 @@ int ws_server_route_pack(pack_packet_t *packet)
       }
     }
   }
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size)
@@ -403,7 +420,7 @@ int ws_hand_shake(char *request, char *response, int *size)
 
   *size = strlen(response);
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)

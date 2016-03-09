@@ -83,6 +83,8 @@ int cmd_server_status()
   sock_print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
 
   sock_print_custom_remote_clients_list_info(&_cmd_server.custom_remote_clients_list, "cmd_server");
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
@@ -121,6 +123,8 @@ int cmd_client_status()
   clr_scr();
 
   sock_print_custom_worker_info(&_cmd_client.custom_client.custom_remote_client.custom_worker, "cmd_client");
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_init(cmd_server_t *server)
@@ -141,6 +145,8 @@ int cmd_server_init(cmd_server_t *server)
   server->custom_server.custom_worker.mode = SOCK_MODE_CMD_SERVER;
 
   server->custom_server.on_accept          = &cmd_accept;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_start(cmd_server_t *server, sock_port_t port)
@@ -154,17 +160,23 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
+  pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_stop(cmd_server_t *server)
 {
   server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_pause(cmd_server_t *worker)
 {
   worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
@@ -235,6 +247,8 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 
   pthread_create(&tmp_client->recv_thread, &tmp_attr, custom_recv_worker, (void*)tmp_client);
   pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker,    (void*)tmp_client);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *cmd_server_worker(void *arg)
@@ -264,6 +278,8 @@ int cmd_client_init(cmd_client_t *client)
   client->custom_client.custom_remote_client.on_error      = cmd_error;
   client->custom_client.custom_remote_client.on_recv       = cmd_recv;
   client->custom_client.custom_remote_client.on_send       = cmd_send;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
@@ -283,17 +299,23 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  return pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
+  pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_stop(cmd_client_t *client)
 {
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_STOP;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_pause(cmd_client_t *client)
 {
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_PAUSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *cmd_client_worker(void *arg)
@@ -340,6 +362,8 @@ int cmd_connect(void *sender)
   pthread_join(tmp_client->custom_remote_client.send_thread, (void**)&status_recv);
 
   log_add("END cmd_connect", LOG_DEBUG);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *cmd_send_worker(void *arg)
@@ -387,11 +411,15 @@ void *cmd_send_worker(void *arg)
 int cmd_disconnect(void *sender)
 {
   log_add("cmd_disconnect", LOG_DEBUG);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_error(void *sender, error_t *error)
 {
   log_add("cmd_error", LOG_DEBUG);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_send(void *sender)
@@ -405,6 +433,8 @@ int cmd_send(void *sender)
   pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
 
   pack_print(tmp_packet, "cmd_send", 0, 0, 1, 0);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
@@ -417,6 +447,8 @@ int cmd_recv(void *sender, char *buffer, int size)
 
   pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD,
                        tmp_protocol, (void*)tmp_client);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_send(int argc, ...)
@@ -448,6 +480,8 @@ int cmd_server_send(int argc, ...)
       pack_end(protocol);
     }
   }
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_send(int argc, ...)
@@ -471,6 +505,8 @@ int cmd_client_send(int argc, ...)
   va_end(params);
 
   pack_end(protocol);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_new_data(void *sender, void *data)
@@ -497,5 +533,7 @@ int cmd_new_data(void *sender, void *data)
   }
 
   ws_server_route_pack(tmp_packet);
+
+  return ERROR_NONE;
 }
 //==============================================================================

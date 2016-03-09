@@ -130,14 +130,20 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
 
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
+  {
+    make_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
     return ERROR_NORMAL;
+  };
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
   if(pthread_create(NULL, &tmp_attr, web_handle_connection, (void*)s) != 0)
+  {
+    make_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
     return ERROR_NORMAL;
+  };
 
   return ERROR_NONE;
 }
