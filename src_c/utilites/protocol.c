@@ -949,9 +949,9 @@ int pack_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *pro
 
   if(tmp_size >= PACK_VALUE_SIZE)
   {
-    char tmp[256];
-    sprintf(tmp, "pack_add_as_string, value too big, value: %s", value);
-    log_add(tmp, LOG_ERROR_CRITICAL);
+    #ifndef DEMS_DEVICE
+    log_add_fmt(LOG_ERROR_CRITICAL, "pack_add_as_string, value too big, value: %s", value);
+    #endif
     return ERROR_NORMAL;
   };
 
@@ -1120,9 +1120,9 @@ int pack_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
-    char tmp[256];
-    sprintf(tmp, "pack_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
-    log_add(tmp, LOG_ERROR_CRITICAL);
+    #ifndef DEMS_DEVICE
+    log_add_fmt(LOG_ERROR_CRITICAL, "pack_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
+    #endif
     return ERROR_NORMAL;
   }
 

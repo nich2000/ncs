@@ -224,8 +224,8 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  sprintf(tmp, "cmd_accept, socket: %d, host: %s", tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
-  log_add(tmp, LOG_DEBUG);
+  sprintf(tmp, "remote client connected, host: %s", tmp_client->custom_worker.host);
+  log_add(tmp, LOG_INFO);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);

@@ -20,10 +20,12 @@
 #define LOG_DATA            12
 #define LOG_RAW_DATA        13
 //==============================================================================
+#ifndef DEMS_DEVICE
 void clr_scr();
 void log_set_name(char *name);
 void log_add(char *message, int log_type);
 void log_add_fmt(int log_type, char *message, ...);
+#endif
 //==============================================================================
 #ifndef DEMS_DEVICE
 FILE *report_open(char *report_name);

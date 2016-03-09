@@ -50,7 +50,6 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
 //==============================================================================
 int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client)
 {
-
 }
 //==============================================================================
 int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list)
@@ -169,8 +168,8 @@ int custom_worker_stop(custom_worker_t *worker)
 int custom_server_work(custom_server_t *server)
 {
   log_add("BEGIN custom_server_work", LOG_DEBUG);
-  log_add("server started", LOG_INFO);
-  log_add("----------", LOG_INFO);
+//  log_add("server started", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -179,7 +178,7 @@ int custom_server_work(custom_server_t *server)
 
   while(server->custom_worker.state == SOCK_STATE_START)
   {
-    log_add("waiting for connect...", LOG_INFO);
+    log_add_fmt(LOG_DEBUG, "waiting for connect, port: %d...", server->custom_worker.port);
 
     SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
@@ -210,9 +209,6 @@ int custom_server_work(custom_server_t *server)
         sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
                 tmp_client, tmp_host, tmp_port);
         log_add(tmp, LOG_DEBUG);
-
-        sprintf(tmp, "client connected, host: %s:%d", tmp_host, tmp_port);
-        log_add(tmp, LOG_INFO);
 
         server->on_accept((void*)server, tmp_client, tmp_host);
       }
