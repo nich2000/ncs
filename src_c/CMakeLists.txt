@@ -16,9 +16,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
 include_directories(../libs/jansson/src)
-include_directories(utilites)
-include_directories(workers)
-include_directories(/)
+include_directories(./utilites)
+include_directories(./workers)
+include_directories(./)
 #-------------------------------------------------------------------------------
 set(_LOG defines.h globals.h utilites/ncs_log.c)
 add_library(log SHARED ${_LOG})
