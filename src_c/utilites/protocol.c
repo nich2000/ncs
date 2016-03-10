@@ -1505,8 +1505,35 @@ pack_size_t _pack_params_count(pack_packet_t *pack)
   return tmp_params_count;
 }
 //==============================================================================
+int pack_next_param(pack_packet_t *pack, pack_index_t *index, pack_string_t value)
+{
+  pack_size_t tmp_words_count = _pack_words_count(pack);
+  pack_key_t  tmp_key;
+
+  for(int i = (int)index+1; i < tmp_words_count; i++)
+  {
+    if(pack_key_by_index(pack, i, tmp_key) == ERROR_NONE)
+    {
+      pack_param_by_index_as_string(pack, (pack_index_t)i, tmp_key, value);
+      *index = i;
+      return ERROR_NONE;
+    }
+  }
+
+  return ERROR_NORMAL;
+}
+//==============================================================================
+pack_string_t _pack_next_param(pack_packet_t *pack, pack_index_t *index)
+{
+}
+//==============================================================================
 int pack_param_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value)
 {
-  return pack_val_by_index_as_string(pack, index, key, value);
+  if(strcmp((char *)key, PACK_PARAM_KEY) == 0)
+  {
+    return pack_val_by_index_as_string(pack, index, key, value);
+  }
+  else
+    return ERROR_NORMAL;
 }
 //==============================================================================

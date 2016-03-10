@@ -40,6 +40,8 @@ int cmd_send      (void *sender);
 int cmd_recv      (void *sender, char *buffer, int size);
 int cmd_new_data  (void *sender, void *data);
 //==============================================================================
+int cmd_exec(pack_packet_t *packet);
+//==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
 //==============================================================================
@@ -516,25 +518,57 @@ int cmd_new_data(void *sender, void *data)
 
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
-  char csv[256];
-  int res = pack_values_to_csv(tmp_packet, ';', csv);
-  if(res != ERROR_NONE)
+  if(cmd_exec(tmp_packet) == SOCK_TRUE)
   {
-    log_add_fmt(LOG_ERROR, "cmd_new_data, res = %d", res);
+
   }
   else
   {
-    int len = strlen(csv);
-
-    int cnt = report_add(tmp_client->report, csv);
-    if(cnt != (len+1))
+    char csv[256];
+    int res = pack_values_to_csv(tmp_packet, ';', csv);
+    if(res != ERROR_NONE)
     {
-      log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
+      log_add_fmt(LOG_ERROR, "cmd_new_data, res = %d", res);
+    }
+    else
+    {
+      int len = strlen(csv);
+
+      int cnt = report_add(tmp_client->report, csv);
+      if(cnt != (len+1))
+      {
+        log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
+      }
     }
   }
 
   ws_server_route_pack(tmp_packet);
 
   return ERROR_NONE;
+}
+//==============================================================================
+int cmd_exec(pack_packet_t *packet)
+{
+  pack_value_t tmp_command;
+  pack_value_t tmp_param;
+  pack_index_t tmp_index = 0;
+
+  char tmp[1024];
+
+  if(pack_command(packet, tmp_command) == ERROR_NONE)
+  {
+    sprintf(tmp, "Command: %s", tmp_command);
+
+    while(pack_next_param(packet, &tmp_index, tmp_param) == ERROR_NONE)
+    {
+      sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
+    }
+
+    log_add(tmp, LOG_INFO);
+
+    return ERROR_NONE;
+  }
+  else
+    return ERROR_NORMAL;
 }
 //==============================================================================
