@@ -138,7 +138,7 @@ int sock_print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "state:                           %s\n" \
           "is_locked:                       %d\n",
           prefix,
-          &worker,
+          (int)&worker,
           worker->id,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),

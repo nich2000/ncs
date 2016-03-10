@@ -139,7 +139,8 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  if(pthread_create(NULL, &tmp_attr, web_handle_connection, (void*)s) != 0)
+  pthread_t *tmp_pthread;
+  if(pthread_create(tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
   {
     make_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
     return ERROR_NORMAL;

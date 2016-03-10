@@ -272,7 +272,7 @@ int main(int argc, char *argv[])
     char command[128];
     while(1)
     {
-      gets(command);
+      fgets(command, sizeof(command), stdin);
 
       switch(handle_command(command))
       {
