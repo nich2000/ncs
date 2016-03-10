@@ -1510,7 +1510,7 @@ int pack_next_param(pack_packet_t *pack, pack_index_t *index, pack_string_t valu
   pack_size_t tmp_words_count = _pack_words_count(pack);
   pack_key_t  tmp_key;
 
-  for(int i = (int)index+1; i < tmp_words_count; i++)
+  for(int i = (int)(*index+1); i < tmp_words_count; i++)
   {
     if(pack_key_by_index(pack, i, tmp_key) == ERROR_NONE)
     {

@@ -1,5 +1,9 @@
 //==============================================================================
 //==============================================================================
+#ifdef __linux__
+  #include <sys/select.h>
+#endif
+
 #include "socket.h"
 #include "ncs_log.h"
 #include "ncs_error.h"
@@ -267,7 +271,7 @@ int sock_server_work(sock_server_t *server)
     tmp_client = accept(server->worker.custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
-      sprintf(tmp, "sock_server_work, accept, Error: %d", sock_get_error());
+      sprintf(tmp, "sock_server_work, accept, error: %d", sock_get_error());
       log_add(tmp, LOG_ERROR);
       server->worker.custom_worker.state == SOCK_STATE_STOP;
       return SOCK_ERROR;
@@ -674,14 +678,15 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   char tmp[1024];
 
   struct timeval tv;
-  tv.tv_sec  = SOCK_WAIT_SELECT;
-  tv.tv_usec = 0;
-
   fd_set rfds;
+
   FD_ZERO(&rfds);
   FD_SET(sock, &rfds);
 
-  int retval = select(1, &rfds, NULL, NULL, &tv);
+  tv.tv_sec  = SOCK_WAIT_SELECT;
+  tv.tv_usec = 0;
+
+  int retval = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
   if (retval == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, sock_error());

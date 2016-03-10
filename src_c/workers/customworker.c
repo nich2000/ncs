@@ -103,6 +103,9 @@ int custom_worker_start(custom_worker_t *worker)
     return ERROR_CRITICAL;
   }
 
+  int reuse = 1;
+  setsockopt(worker->sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
+
   sprintf(tmp, "custom_worker_start, socket: %d", worker->sock);
   log_add(tmp, LOG_DEBUG);
 
@@ -184,7 +187,7 @@ int custom_server_work(custom_server_t *server)
     SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
-      sprintf(tmp, "custom_server_work, accept, Error: %d", sock_error());
+      sprintf(tmp, "custom_server_work, accept, error: %d", sock_error());
       make_last_error(ERROR_NORMAL, INVALID_SOCKET, tmp);
       log_add(tmp, LOG_ERROR);
       errors++;
@@ -267,6 +270,8 @@ int custom_client_work(custom_client_t *client)
 //==============================================================================
 void *custom_recv_worker(void *arg)
 {
+  log_add("custom_recv_worker", LOG_INFO);
+
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
@@ -306,6 +311,10 @@ void *custom_recv_worker(void *arg)
         if(tmp_client->on_disconnect != 0)
           tmp_client->on_disconnect((void*)tmp_client);
       }
+    }
+    else
+    {
+//      log_add_fmt(LOG_INFO, "custom_recv_worker, message: %s", last_error()->message);
     }
 
     usleep(1000);

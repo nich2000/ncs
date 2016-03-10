@@ -371,6 +371,8 @@ int cmd_connect(void *sender)
 //==============================================================================
 void *cmd_send_worker(void *arg)
 {
+  log_add("cmd_send_worker", LOG_INFO);
+
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
@@ -442,7 +444,7 @@ int cmd_send(void *sender)
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
 {
-//  log_add("cmd_recv", LOG_DEBUG);
+  log_add("cmd_recv", LOG_INFO);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -514,13 +516,15 @@ int cmd_client_send(int argc, ...)
 //==============================================================================
 int cmd_new_data(void *sender, void *data)
 {
+  log_add("cmd_new_data", LOG_INFO);
+
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
-  if(cmd_exec(tmp_packet) == SOCK_TRUE)
+  if(cmd_exec(tmp_packet) == ERROR_NONE)
   {
-
+    log_add("cmd_exec", LOG_INFO);
   }
   else
   {
