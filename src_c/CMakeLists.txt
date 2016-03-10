@@ -17,7 +17,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 #-------------------------------------------------------------------------------
 # Warnings settings
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-#SET(CMAKE_C_FLAGS "-pedantic")
+#set(CMAKE_C_FLAGS "-pedantic")
+#-------------------------------------------------------------------------------
+set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
 include_directories(../libs/jansson/src)
 include_directories(./utilites)
