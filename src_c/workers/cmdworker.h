@@ -20,7 +20,7 @@ int cmd_server(sock_state_t state, sock_port_t port);
 int cmd_server_status();
 int cmd_server_send(int argc, ...);
 //==============================================================================
-int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host);
+int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count);
 int cmd_client_status();
 int cmd_client_send(int argc, ...);
 //==============================================================================

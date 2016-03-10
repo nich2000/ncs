@@ -45,8 +45,9 @@ int cmd_exec(pack_packet_t *packet);
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
 //==============================================================================
-int          _cmd_client_id = 0;
-cmd_client_t _cmd_client;
+int          _cmd_client_id    = 0;
+int          _cmd_client_count = 0;
+cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port)
 {
@@ -90,10 +91,20 @@ int cmd_server_status()
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
+int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count)
 {
   sock_print_client_header(port, host);
 
+  if(count >= SOCK_WORKERS_COUNT)
+  {
+    log_add("cmd_client, too match count", LOG_ERROR_CRITICAL);
+    return ERROR_CRITICAL;
+  }
+
+  _cmd_client_count = count;
+
+  for(int i = 0; i < _cmd_client_count; i++)
+  {
   switch(state)
   {
     case SOCK_STATE_NONE:
@@ -102,20 +113,21 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host)
     }
     case SOCK_STATE_START:
     {
-      cmd_client_start(&_cmd_client, port, host);
+      cmd_client_start(&_cmd_client[i], port, host);
       break;
     }
     case SOCK_STATE_STOP:
     {
-      cmd_client_stop(&_cmd_client);
+      cmd_client_stop(&_cmd_client[i]);
       break;
     }
     case SOCK_STATE_PAUSE:
     {
-      cmd_client_pause(&_cmd_client);
+      cmd_client_pause(&_cmd_client[i]);
       break;
     }
     default:;
+  };
   };
 
   return ERROR_NONE;
@@ -125,7 +137,8 @@ int cmd_client_status()
 {
   clr_scr();
 
-  sock_print_custom_worker_info(&_cmd_client.custom_client.custom_remote_client.custom_worker, "cmd_client");
+  for(int i = 0; i < _cmd_client_count; i++)
+    sock_print_custom_worker_info(&_cmd_client[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
 
   return ERROR_NONE;
 }
@@ -437,14 +450,14 @@ int cmd_send(void *sender)
 
   pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
 
-  pack_print(tmp_packet, "cmd_send", 0, 0, 1, 0);
+  pack_print(tmp_packet, "cmd_send", 1, 0, 1, 0);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_recv(void *sender, char *buffer, int size)
 {
-  log_add("cmd_recv", LOG_INFO);
+//  log_add("cmd_recv", LOG_INFO);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -491,32 +504,35 @@ int cmd_server_send(int argc, ...)
 //==============================================================================
 int cmd_client_send(int argc, ...)
 {
-  pack_protocol_t *protocol = &_cmd_client.custom_client.custom_remote_client.protocol;
+  for(int i = 0; i < _cmd_client_count; i++)
+  {
+  pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
 
-  pack_begin(protocol);
+  pack_begin(tmp_protocol);
 
-  va_list params;
-  va_start(params, argc);
+  va_list tmp_params;
+  va_start(tmp_params, argc);
 
-  char *cmd = va_arg(params, char*);
-  pack_add_cmd(cmd, protocol);
+  char *tmp_cmd = va_arg(tmp_params, char*);
+  pack_add_cmd(tmp_cmd, tmp_protocol);
 
   for(int i = 1; i < argc; i++)
   {
-    char *param = va_arg(params, char*);
-    pack_add_param_as_string(param, protocol);
+    char *tmp_param = va_arg(tmp_params, char*);
+    pack_add_param_as_string(tmp_param, tmp_protocol);
   };
 
-  va_end(params);
+  va_end(tmp_params);
 
-  pack_end(protocol);
+  pack_end(tmp_protocol);
+  }
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_new_data(void *sender, void *data)
 {
-  log_add("cmd_new_data", LOG_INFO);
+//  log_add("cmd_new_data", LOG_INFO);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 

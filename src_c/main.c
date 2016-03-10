@@ -61,7 +61,7 @@ int handle_command(char *command)
     {
       log_set_name("client_log.txt");
 
-      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host);
+      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host, 1);
 
       return RESULT_DONE;
     }
@@ -141,6 +141,14 @@ int handle_command(char *command)
     else if(strcmp(token, "sndtosr") == 0)
     {
       cmd_client_send(1, param1);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "client") == 0)
+    {
+      log_set_name("client_log.txt");
+
+      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host, atoi(param1));
+
       return RESULT_DONE;
     }
     else if(strcmp(token, "stream") == 0)

@@ -20,7 +20,8 @@ int cmd_streamer_make(pack_protocol_t *protocol);
 //==============================================================================
 int counter = 0;
 streamer_worker _cmd_streamer;
-extern cmd_client_t _cmd_client;
+//==============================================================================
+extern cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
 int cmd_streamer(sock_state_t state)
 {
