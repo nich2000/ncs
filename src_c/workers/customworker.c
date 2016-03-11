@@ -270,7 +270,7 @@ int custom_client_work(custom_client_t *client)
 //==============================================================================
 void *custom_recv_worker(void *arg)
 {
-  log_add("custom_recv_worker", LOG_INFO);
+//  log_add("custom_recv_worker", LOG_INFO);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;

@@ -9,7 +9,7 @@
 #include "cmdworker.h"
 //==============================================================================
 int cmd_streamer_init  (streamer_worker *worker, pack_protocol_t *protocol);
-int cmd_streamer_start (streamer_worker *worker);
+int cmd_streamer_start (streamer_worker *worker, pack_protocol_t *protocol);
 int cmd_streamer_work  (streamer_worker *worker);
 int cmd_streamer_stop  (streamer_worker *worker);
 int cmd_streamer_pause (streamer_worker *worker);
@@ -19,40 +19,47 @@ void *cmd_streamer_worker_func(void *arg);
 int cmd_streamer_make(pack_protocol_t *protocol);
 //==============================================================================
 int counter = 0;
-streamer_worker _cmd_streamer;
+int             _cmd_streamer_count;
+streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
 //==============================================================================
+extern int          _cmd_client_count;
 extern cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
 int cmd_streamer(sock_state_t state)
 {
-  switch(state)
+  _cmd_streamer_count = _cmd_client_count;
+
+  for(int i = 0; i < _cmd_streamer_count; i++)
   {
-    case SOCK_STATE_NONE:
+    switch(state)
     {
-      break;
+      case SOCK_STATE_NONE:
+      {
+        break;
+      }
+      case SOCK_STATE_START:
+      {
+        cmd_streamer_start(&_cmd_streamer[i], &_cmd_client[i].custom_client.custom_remote_client.protocol);
+        break;
+      }
+      case SOCK_STATE_STOP:
+      {
+        cmd_streamer_stop(&_cmd_streamer[i]);
+        break;
+      }
+      case SOCK_STATE_PAUSE:
+      {
+        cmd_streamer_pause(&_cmd_streamer[i]);
+        break;
+      }
+      case SOCK_STATE_RESUME:
+      {
+        cmd_streamer_resume(&_cmd_streamer[i]);
+        break;
+      }
+      default:;
     }
-    case SOCK_STATE_START:
-    {
-      cmd_streamer_start(&_cmd_streamer);
-      break;
-    }
-    case SOCK_STATE_STOP:
-    {
-      cmd_streamer_stop(&_cmd_streamer);
-      break;
-    }
-    case SOCK_STATE_PAUSE:
-    {
-      cmd_streamer_pause(&_cmd_streamer);
-      break;
-    }
-  case SOCK_STATE_RESUME:
-  {
-    cmd_streamer_resume(&_cmd_streamer);
-    break;
   }
-    default:;
-  };
 
   return ERROR_NONE;
 }
@@ -71,11 +78,11 @@ int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
   worker->work_thread =  0;
 }
 //==============================================================================
-int cmd_streamer_start(streamer_worker *worker)
+int cmd_streamer_start(streamer_worker *worker, pack_protocol_t *protocol)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_start");
 
-  cmd_streamer_init(worker, &_cmd_client.custom_client.custom_remote_client.protocol);
+  cmd_streamer_init(worker, protocol);
 
   worker->is_work  = SOCK_TRUE;
   worker->is_pause = SOCK_FALSE;

@@ -105,29 +105,29 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
 
   for(int i = 0; i < _cmd_client_count; i++)
   {
-  switch(state)
-  {
-    case SOCK_STATE_NONE:
+    switch(state)
     {
-      break;
-    }
-    case SOCK_STATE_START:
-    {
-      cmd_client_start(&_cmd_client[i], port, host);
-      break;
-    }
-    case SOCK_STATE_STOP:
-    {
-      cmd_client_stop(&_cmd_client[i]);
-      break;
-    }
-    case SOCK_STATE_PAUSE:
-    {
-      cmd_client_pause(&_cmd_client[i]);
-      break;
-    }
-    default:;
-  };
+      case SOCK_STATE_NONE:
+      {
+        break;
+      }
+      case SOCK_STATE_START:
+      {
+        cmd_client_start(&_cmd_client[i], port, host);
+        break;
+      }
+      case SOCK_STATE_STOP:
+      {
+        cmd_client_stop(&_cmd_client[i]);
+        break;
+      }
+      case SOCK_STATE_PAUSE:
+      {
+        cmd_client_pause(&_cmd_client[i]);
+        break;
+      }
+      default:;
+    };
   };
 
   return ERROR_NONE;
@@ -384,7 +384,7 @@ int cmd_connect(void *sender)
 //==============================================================================
 void *cmd_send_worker(void *arg)
 {
-  log_add("cmd_send_worker", LOG_INFO);
+//  log_add("cmd_send_worker", LOG_INFO);
 
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
@@ -506,25 +506,25 @@ int cmd_client_send(int argc, ...)
 {
   for(int i = 0; i < _cmd_client_count; i++)
   {
-  pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
+    pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
 
-  pack_begin(tmp_protocol);
+    pack_begin(tmp_protocol);
 
-  va_list tmp_params;
-  va_start(tmp_params, argc);
+    va_list tmp_params;
+    va_start(tmp_params, argc);
 
-  char *tmp_cmd = va_arg(tmp_params, char*);
-  pack_add_cmd(tmp_cmd, tmp_protocol);
+    char *tmp_cmd = va_arg(tmp_params, char*);
+    pack_add_cmd(tmp_cmd, tmp_protocol);
 
-  for(int i = 1; i < argc; i++)
-  {
-    char *tmp_param = va_arg(tmp_params, char*);
-    pack_add_param_as_string(tmp_param, tmp_protocol);
-  };
+    for(int i = 1; i < argc; i++)
+    {
+      char *tmp_param = va_arg(tmp_params, char*);
+      pack_add_param_as_string(tmp_param, tmp_protocol);
+    };
 
-  va_end(tmp_params);
+    va_end(tmp_params);
 
-  pack_end(tmp_protocol);
+    pack_end(tmp_protocol);
   }
 
   return ERROR_NONE;
