@@ -17,31 +17,39 @@
 
     <div class="page-header dems-header" id="header">
       <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <img class="img-responsive pull-left" src="img/our.jpg" alt="no our logo" style="height: 50px; width: 100%; object-fit: contain">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
           <img class="img-responsive pull-right" src="img/their.jpg" alt="no their logo" style="height: 50px; width: 100%; object-fit: contain">
         </div>
       </div> 
     </div>
 
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <td>Param</td>
-          <td>Value</td>
-        </tr>
-      </thead>
+    <!-- <div class="row"> -->
+      <div class="col-md-3">
+      </div>
 
-      <tbody id="remote_data">
-      </tbody>
-    </table>
+      <div class="col-md-9">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <td>Param</td>
+              <td>Value</td>
+            </tr>
+          </thead>
+
+          <tbody id="remote_data">
+          </tbody>
+        </table>
+      </div>
+    <!-- </div> -->
 
     <footer class="footer" id="footer">
       <span class="label label-warning" id="connection_status">Disconnected</span>
+      <span class="label label-info" id="data_counter">0</span>
       <span class="label label-info" id="last_cmd">Command: none</span>
     </footer>
 

@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "streamer.h"
 #include "cmdworker.h"
 #include "wsworker.h"
 #include "socket_utils.h"
@@ -579,9 +580,21 @@ int cmd_exec(pack_packet_t *packet)
   {
     sprintf(tmp, "Command: %s", tmp_command);
 
-    while(pack_next_param(packet, &tmp_index, tmp_param) == ERROR_NONE)
+    if(strcmp(tmp_command, "stream") == 0)
     {
-      sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
+      if(pack_next_param(packet, &tmp_index, tmp_param) == ERROR_NONE)
+      {
+        sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
+
+        if(strcmp(tmp_param, "on") == 0)
+          cmd_streamer(SOCK_STATE_START);
+        else if(strcmp(tmp_param, "off") == 0)
+          cmd_streamer(SOCK_STATE_STOP);
+        else if(strcmp(tmp_param, "pause") == 0)
+          cmd_streamer(SOCK_STATE_PAUSE);
+        else if(strcmp(tmp_param, "resume") == 0)
+          cmd_streamer(SOCK_STATE_RESUME);
+      }
     }
 
     log_add(tmp, LOG_INFO);

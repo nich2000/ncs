@@ -1,5 +1,6 @@
 //==============================================================================
 //==============================================================================
+#include <stdarg.h>
 #include <string.h>
 
 #include "wsworker.h"
@@ -359,6 +360,61 @@ int ws_server_route_pack(pack_packet_t *packet)
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
         packet_to_json(packet, json_buffer, &json_size);
+//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+
+        pack_buffer_t tmp_buffer;
+        pack_size_t   tmp_size = 0;
+        tmp_size = ws_make_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
+
+        tmp_client->out_message_size = tmp_size;
+        tmp_client->out_message = (char*)malloc(tmp_size);
+        memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
+
+        tmp_client->custom_worker.is_locked = SOCK_FALSE;
+      }
+    }
+  }
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_server_send(int argc, ...)
+{
+  if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
+  {
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    {
+      custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+
+      if(tmp_client->custom_worker.state == SOCK_STATE_START)
+      {
+        tmp_client->custom_worker.is_locked = SOCK_TRUE;
+
+        pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+
+        pack_begin(tmp_protocol);
+
+        va_list tmp_params;
+        va_start(tmp_params, argc);
+
+        char *tmp_cmd = va_arg(tmp_params, char*);
+        pack_add_cmd(tmp_cmd, tmp_protocol);
+
+        for(int i = 1; i < argc; i++)
+        {
+          char *tmp_param = va_arg(tmp_params, char*);
+          pack_add_param_as_string(tmp_param, tmp_protocol);
+        };
+
+        va_end(tmp_params);
+
+        pack_end(tmp_protocol);
+
+        pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
+
+        pack_buffer_t json_buffer;
+        pack_size_t   json_size = 0;
+        packet_to_json(tmp_packet, json_buffer, &json_size);
 //        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;

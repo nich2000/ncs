@@ -143,6 +143,11 @@ int handle_command(char *command)
       cmd_client_send(1, param1);
       return RESULT_DONE;
     }
+    else if(strcmp(token, "sndtows") == 0)
+    {
+      ws_server_send(1, param1);
+      return RESULT_DONE;
+    }
     else if(strcmp(token, "client") == 0)
     {
       log_set_name("client_log.txt");

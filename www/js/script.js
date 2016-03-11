@@ -84,37 +84,43 @@ function onMessage(evt)
   if(data[0].length == 0)
     return;
 
-  for(var i = 0; i < data.length; i++) 
+  if(data[0][0] == "CMD")
+  {
+    $("#last_cmd").text("Command: " + data[0][1]);
+  }
+  else
   {
     dataCounter++;
-    $("#last_cmd").text(dataCounter);
+    $("#data_counter").text(dataCounter);
 
-    var line = $("#" + data[i][0]);
-    if(line.length == 0)
+    for(var i = 0; i < data.length; i++) 
     {
-      line = $("<tr style='height:10px'></tr>");
-      // line.height(10);
-      line.attr("id", data[i][0]);
-      dataTable.append(line);
-    }
-    
-    var key = $("#key_" + data[i][0]);
-    if(key.length == 0)
-    {
-      key = $("<td></td>");
-      key.attr("id", "key_" + data[i][0]);
-      line.append(key);
-    }
-    key.html(data[i][0]);
+      var line = $("#" + data[i][0]);
+      if(line.length == 0)
+      {
+        line = $("<tr></tr>");
+        line.attr("id", data[i][0]);
+        dataTable.append(line);
+      }
+      
+      var key = $("#key_" + data[i][0]);
+      if(key.length == 0)
+      {
+        key = $("<td style='height:10px'></td>");
+        key.attr("id", "key_" + data[i][0]);
+        line.append(key);
+      }
+      key.text(data[i][0]);
 
-    var value = $("#value_" + data[i][0]);
-    if(value.length == 0)
-    {
-      value = $("<td></td>");
-      value.attr("id", "value_" + data[i][0]);
-      line.append(value);
+      var value = $("#value_" + data[i][0]);
+      if(value.length == 0)
+      {
+        value = $("<td style='height:10px'></td>");
+        value.attr("id", "value_" + data[i][0]);
+        line.append(value);
+      }
+      value.text(data[i][1]);
     }
-    value.html(data[i][1]);
   }
 }
 
