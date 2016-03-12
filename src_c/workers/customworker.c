@@ -185,7 +185,7 @@ int custom_server_work(custom_server_t *server)
   {
     log_add_fmt(LOG_DEBUG, "waiting for connect, port: %d...", server->custom_worker.port);
 
-    SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (int *)&addrlen);
+    SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
       sprintf(tmp, "custom_server_work, accept, error: %d", sock_error());
@@ -207,7 +207,7 @@ int custom_server_work(custom_server_t *server)
         sock_host_t tmp_host;
         struct sockaddr_in tmp_addr;
         int tmp_len = sizeof(tmp_addr);
-        getsockname(tmp_client, (struct sockaddr *)&tmp_addr, &tmp_len);
+        getsockname(tmp_client, (struct sockaddr*)&tmp_addr, (socklen_t*)&tmp_len);
         strcpy((char*)tmp_host, inet_ntoa(tmp_addr.sin_addr));
         int tmp_port = ntohs(tmp_addr.sin_port);
 
