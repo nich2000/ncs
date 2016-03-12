@@ -1,6 +1,8 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+//#define DEMS_DEVICE
+
 #if defined(__linux__) || defined(_WIN32)
 #else
   #define DEMS_DEVICE

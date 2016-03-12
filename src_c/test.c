@@ -84,7 +84,7 @@ int test_pack()
     test_create_pack();
     test_validate_pack();
     test_parse_pack();
-  };
+  }
   end_c = clock();
   total_c = (double)(end_c - start_c) / CLOCKS_PER_SEC;
   sprintf(tmp, "Total time: %f", total_c);
@@ -111,7 +111,7 @@ int test_create_pack()
       sprintf(key, "IN%d", i);
 
     pack_add_as_int(key, rand());
-  };
+  }
 
 
   for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
@@ -127,7 +127,7 @@ int test_create_pack()
     valueS[j] = '\0';
 
     pack_add_as_string(key, valueS);
-  };
+  }
 
 
   for(pack_size i = 0; i < TEST_WORD_COUNT; i++)
@@ -139,7 +139,7 @@ int test_create_pack()
 
     float rnd = (float)rand()/(float)(RAND_MAX/1000);
     pack_add_as_float(key, rnd);
-  };
+  }
 
   pack_end();
 */
@@ -213,8 +213,8 @@ int test_parse_pack()
         {
           sprintf(tmp, "%s(%d): %s", key, i, valueS);
           log_add(tmp, LOG_DEBUG);
-        };
-    };
+        }
+    }
     //--------------------------------------------------------------------------
     if(TEST_LOG)
       log_add("Test by key out", LOG_DEBUG);
@@ -270,7 +270,7 @@ int test_parse_pack()
         log_add(tmp, LOG_DEBUG);
       }
     //--------------------------------------------------------------------------
-  };
+  }
 */
 
   return ERROR_NONE;

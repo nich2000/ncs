@@ -165,9 +165,9 @@ int cmd_streamer_make(pack_protocol_t *protocol)
 
   for(pack_size_t i = 0; i < TEST_PACK_COUNT; i++)
   {
-    pack_begin(protocol);
+    protocol_begin(protocol);
 
-    pack_add_as_int((unsigned char*)"CNT", counter++, protocol);
+    protocol_add_as_int((unsigned char*)"CNT", counter++, protocol);
 
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
@@ -176,8 +176,8 @@ int cmd_streamer_make(pack_protocol_t *protocol)
       else
         sprintf((char*)tmp_key, "IN%d", i);
 
-      pack_add_as_int(tmp_key, rand(), protocol);
-    };
+      protocol_add_as_int(tmp_key, rand(), protocol);
+    }
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
@@ -190,8 +190,8 @@ int cmd_streamer_make(pack_protocol_t *protocol)
         tmp_value[j] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[rand() % 26];
       tmp_value[j] = '\0';
 
-      pack_add_as_string(tmp_key, tmp_value, protocol);
-    };
+      protocol_add_as_string(tmp_key, tmp_value, protocol);
+    }
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
@@ -200,9 +200,9 @@ int cmd_streamer_make(pack_protocol_t *protocol)
         sprintf((char*)tmp_key, "FL%d", i);
 
       float rnd = (float)rand()/(float)(RAND_MAX/1000);
-      pack_add_as_float(tmp_key, rnd, protocol);
-    };
-    pack_end(protocol);
+      protocol_add_as_float(tmp_key, rnd, protocol);
+    }
+    protocol_end(protocol);
   }
 
 //  log_add_fmt(LOG_DEBUG, "%s", "END cmd_streamer_make");

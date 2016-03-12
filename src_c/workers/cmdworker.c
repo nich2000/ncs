@@ -12,7 +12,6 @@
 #include "ncs_log.h"
 #include "protocol.h"
 #include "protocol_types.h"
-#include "protocol_utils.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
@@ -76,7 +75,7 @@ int cmd_server(sock_state_t state, sock_port_t port)
       break;
     }
     default:;
-  };
+  }
 
   return ERROR_NONE;
 }
@@ -128,8 +127,8 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
         break;
       }
       default:;
-    };
-  };
+    }
+  }
 
   return ERROR_NONE;
 }
@@ -155,7 +154,7 @@ int cmd_server_init(cmd_server_t *server)
 //    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
 //    tmp_client->protocol.on_new_in_data  = cmd_new_data;
 //    tmp_client->protocol.on_new_out_data = cmd_new_data;
-//  };
+//  }
 
   server->custom_server.custom_worker.id   = _cmd_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -232,7 +231,7 @@ custom_remote_client_t *cmd_server_remote_clients_next()
       tmp_client->on_send             = cmd_send;
 
       break;
-    };
+    }
 
   return tmp_client;
 }
@@ -250,7 +249,7 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
             tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
     log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
-  };
+  }
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -258,6 +257,11 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   sprintf(tmp, "cmd_accept, socket: %d, host: %s, port: %d",
           tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
   log_add(tmp, LOG_INFO);
+
+//  pack_packet_t *tmp_pack = _cmd_clients_list();
+//  ws_server_send_cmd(2, "client_connected", tmp_client->custom_worker.host);
+//  ws_server_send_pack();
+//  free(tmp_pack);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -306,7 +310,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
   cmd_client_init(client);
 
-  pack_protocol_init(&client->custom_client.custom_remote_client.protocol);
+  protocol_init(&client->custom_client.custom_remote_client.protocol);
 
   client->custom_client.custom_remote_client.protocol.on_new_in_data  = cmd_new_data;
 //  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
@@ -390,14 +394,10 @@ int cmd_connect(void *sender)
 //==============================================================================
 void *cmd_send_worker(void *arg)
 {
-//  log_add("cmd_send_worker", LOG_INFO);
-
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  char tmp[1024];
-  sprintf(tmp, "BEGIN cmd_send_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "BEGIN cmd_send_worker, socket: %d", tmp_sock);
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
   pack_packet_t   *tmp_pack;
@@ -406,13 +406,13 @@ void *cmd_send_worker(void *arg)
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
-    tmp_pack = _pack_next(tmp_protocol);
+    tmp_pack = _protocol_next_pack(tmp_protocol);
     while(tmp_pack != NULL)
     {
-      if(pack_packet_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
+      if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
         continue;
 
-      int tmp_cnt = pack_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
+      int tmp_cnt = protocol_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
                                          tmp_protocol, (void*)tmp_client);
 
       if(tmp_cnt > 0)
@@ -422,14 +422,13 @@ void *cmd_send_worker(void *arg)
             tmp_client->on_send((void*)tmp_client);
       }
 
-      tmp_pack = _pack_next(tmp_protocol);
+      tmp_pack = _protocol_next_pack(tmp_protocol);
     }
 
     usleep(1000);
   }
 
-  sprintf(tmp, "END cmd_send_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "END cmd_send_worker, socket: %d", tmp_sock);
 
   return NULL;
 }
@@ -450,13 +449,11 @@ int cmd_error(void *sender, error_t *error)
 //==============================================================================
 int cmd_send(void *sender)
 {
-//  log_add("cmd_send", LOG_DEBUG);
-
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
+  pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
 
   pack_print(tmp_packet, "cmd_send", 1, 0, 1, 0);
 
@@ -465,13 +462,11 @@ int cmd_send(void *sender)
 //==============================================================================
 int cmd_recv(void *sender, unsigned char *buffer, int size)
 {
-//  log_add("cmd_recv", LOG_INFO);
-
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+  protocol_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 
   return ERROR_NONE;
 }
@@ -486,23 +481,23 @@ int cmd_server_send(int argc, ...)
     {
       pack_protocol_t *protocol = &tmp_client->protocol;
 
-      pack_begin(protocol);
+      protocol_begin(protocol);
 
       va_list params;
       va_start(params, argc);
 
       unsigned char *cmd = va_arg(params, unsigned char*);
-      pack_add_cmd(cmd, protocol);
+      protocol_add_cmd(cmd, protocol);
 
       for(int i = 1; i < argc; i++)
       {
         unsigned char *param = va_arg(params, unsigned char*);
-        pack_add_param_as_string(param, protocol);
-      };
+        protocol_add_param_as_string(param, protocol);
+      }
 
       va_end(params);
 
-      pack_end(protocol);
+      protocol_end(protocol);
     }
   }
 
@@ -515,23 +510,23 @@ int cmd_client_send(int argc, ...)
   {
     pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
 
-    pack_begin(tmp_protocol);
+    protocol_begin(tmp_protocol);
 
     va_list tmp_params;
     va_start(tmp_params, argc);
 
     unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
-    pack_add_cmd(tmp_cmd, tmp_protocol);
+    protocol_add_cmd(tmp_cmd, tmp_protocol);
 
     for(int i = 1; i < argc; i++)
     {
       unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
-      pack_add_param_as_string(tmp_param, tmp_protocol);
-    };
+      protocol_add_param_as_string(tmp_param, tmp_protocol);
+    }
 
     va_end(tmp_params);
 
-    pack_end(tmp_protocol);
+    protocol_end(tmp_protocol);
   }
 
   return ERROR_NONE;
@@ -568,7 +563,7 @@ int cmd_new_data(void *sender, void *data)
       }
     }
 
-    ws_server_route_pack(tmp_packet);
+    ws_server_send_pack(tmp_packet);
   }
 
   return ERROR_NONE;

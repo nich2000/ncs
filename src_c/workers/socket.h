@@ -7,7 +7,7 @@
 #include "defines.h"
 #include "socket_types.h"
 //==============================================================================
-const char *sock_version();
+const char *_sock_version();
 int sock_error();
 //==============================================================================
 int sock_init();

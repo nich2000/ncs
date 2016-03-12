@@ -78,7 +78,7 @@ int ws_server(sock_state_t state, sock_port_t port)
       break;
     }
     default:;
-  };
+  }
 
   return ERROR_NONE;
 }
@@ -94,7 +94,7 @@ int ws_server_init(ws_server_t *server)
 //    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
 //    tmp_client->protocol.on_new_in_data  = ws_new_data;
 //    tmp_client->protocol.on_new_out_data = ws_new_data;
-//  };
+//  }
 
   server->custom_server.custom_worker.id   = _ws_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
@@ -188,7 +188,7 @@ custom_remote_client_t *ws_server_remote_clients_next()
 //      tmp_client->on_send             = ws_send;
 
       break;
-    };
+    }
 
   return tmp_client;
 }
@@ -206,7 +206,7 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
             tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
     log_add(tmp, LOG_ERROR_CRITICAL);
     return ERROR_NORMAL;
-  };
+  }
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -330,7 +330,6 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
     strcpy((char*)tmp_key, (char*)packet->words[i].key);
 
     pack_value_t tmp_value;
-//    strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
     pack_word_as_string(&packet->words[i], tmp_value);
 
     json_t *tmp_word = json_array();
@@ -346,7 +345,7 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_server_route_pack(pack_packet_t *packet)
+int ws_server_send_pack(pack_packet_t *packet)
 {
   if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
   {
@@ -379,7 +378,7 @@ int ws_server_route_pack(pack_packet_t *packet)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_server_send(int argc, ...)
+int ws_server_send_cmd(int argc, ...)
 {
   if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
   {
@@ -393,25 +392,33 @@ int ws_server_send(int argc, ...)
 
         pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-        pack_begin(tmp_protocol);
+        protocol_begin(tmp_protocol);
+
+
+
+
+//        pack_packet_init(tmp_pack);
+//        pack_add_param_as_string()
+
+
 
         va_list tmp_params;
         va_start(tmp_params, argc);
 
         unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
-        pack_add_cmd(tmp_cmd, tmp_protocol);
+        protocol_add_cmd(tmp_cmd, tmp_protocol);
 
         for(int i = 1; i < argc; i++)
         {
           unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
-          pack_add_param_as_string(tmp_param, tmp_protocol);
-        };
+          protocol_add_param_as_string(tmp_param, tmp_protocol);
+        }
 
         va_end(tmp_params);
 
-        pack_end(tmp_protocol);
+        protocol_end(tmp_protocol);
 
-        pack_packet_t *tmp_packet = _pack_pack_current(PACK_OUT, tmp_protocol);
+        pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
 
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
@@ -464,7 +471,7 @@ int ws_hand_shake(char *request, char *response, int *size)
       base64enc(tmp_accept_key, tmp_sha1, 20);
 
       break;
-    };
+    }
     tmp_request = strtok(NULL, "\r\n");
   }
 

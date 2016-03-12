@@ -15,6 +15,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 
 #include "ncs_log.h"
 //==============================================================================
@@ -50,7 +51,6 @@ void log_set_name(char *name)
 //==============================================================================
 void log_add_fmt(int log_type, char *message, ...)
 {
-#ifndef DEMS_DEVICE
   char tmp[1024];
 
   va_list params;
@@ -59,7 +59,6 @@ void log_add_fmt(int log_type, char *message, ...)
   va_end(params);
 
   log_add(tmp, log_type);
-#endif
 }
 //==============================================================================
 const char *log_type_to_string(int log_type)
@@ -91,8 +90,6 @@ const char *log_type_to_string(int log_type)
 //==============================================================================
 void log_add(char *message, int log_type)
 {
-#ifndef DEMS_DEVICE
-
   #ifndef DEBUG_MODE
   if(log_type == LOG_DEBUG)
     return;
@@ -132,10 +129,8 @@ void log_add(char *message, int log_type)
   }
   else
     printf("[WARNING] Can not open log file, %s\n", log_full_name);
-#endif
 }
 //==============================================================================
-#ifndef DEMS_DEVICE
 void report_make_dir()
 {
   #ifdef __linux__
@@ -144,9 +139,7 @@ void report_make_dir()
   CreateDirectory(REPORT_INITIAL_PATH, NULL);
   #endif
 }
-#endif
 //==============================================================================
-#ifndef DEMS_DEVICE
 FILE *report_open(char *report_name)
 {
   char report_full_name[256];
@@ -158,9 +151,7 @@ FILE *report_open(char *report_name)
 
   return result;
 }
-#endif
 //==============================================================================
-#ifndef DEMS_DEVICE
 int report_add(FILE *file, char *message)
 {
   int res = -1;
@@ -172,9 +163,7 @@ int report_add(FILE *file, char *message)
   }
   return res;
 }
-#endif
 //==============================================================================
-#ifndef DEMS_DEVICE
 void report_close(FILE *file)
 {
   if(file != NULL)
@@ -182,5 +171,4 @@ void report_close(FILE *file)
     fclose(file);
   }
 }
-#endif
 //==============================================================================

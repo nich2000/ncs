@@ -145,7 +145,7 @@ int handle_command(char *command)
     }
     else if(strcmp(token, "sndtows") == 0)
     {
-      ws_server_send(1, param1);
+      ws_server_send_cmd(1, param1);
       return RESULT_DONE;
     }
     else if(strcmp(token, "client") == 0)
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
           break;
       }
     }
-  };
+  }
 
   sock_deinit();
 

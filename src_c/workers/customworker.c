@@ -32,7 +32,7 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
   custom_remote_client->recv_thread   = 0;
 
   // TODO Временное явление 1
-  pack_protocol_init(&custom_remote_client->protocol);
+  protocol_init(&custom_remote_client->protocol);
   // TODO Временное явление 2
   custom_remote_client->out_message = 0;
   custom_remote_client->out_message_size = 0;
@@ -63,8 +63,8 @@ int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_
   {
     custom_remote_client_init(&custom_remote_clients_list->items[i]);
 
-    pack_protocol_init(&custom_remote_clients_list->items[i].protocol);
-  };
+    protocol_init(&custom_remote_clients_list->items[i].protocol);
+  }
 
   return ERROR_NONE;
 }
@@ -198,7 +198,7 @@ int custom_server_work(custom_server_t *server)
         make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
         log_add(tmp, LOG_ERROR_CRITICAL);
         return ERROR_CRITICAL;
-      };
+      }
     }
     else
     {
@@ -258,7 +258,7 @@ int custom_client_work(custom_client_t *client)
         log_add("connected to server", LOG_INFO);
 
         client->on_connect((void*)client);
-      };
+      }
     }
 
     usleep(1000);

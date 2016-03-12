@@ -69,7 +69,7 @@ int web_server(sock_state_t state, sock_port_t port)
       break;
     }
     default:;
-  };
+  }
 
   return ERROR_NONE;
 }
@@ -141,7 +141,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   {
     make_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
     return ERROR_NORMAL;
-  };
+  }
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -153,7 +153,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   {
     make_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
     return ERROR_NORMAL;
-  };
+  }
 
   return ERROR_NONE;
 }
@@ -246,7 +246,7 @@ int web_get_response(char *request, char *response, int *size)
       {
         strcat(response, "Content-Type: image/jpg\r\n");
         strcat(response, "Content-Transfer-Encoding: binary\r\n");
-      };
+      }
 
       sprintf(tmp, "Content-Length: %d\r\n\r\n", tmp_file_size);
       strcat(response, tmp);

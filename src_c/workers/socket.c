@@ -9,7 +9,7 @@
 #include "ncs_error.h"
 #include "protocol_types.h"
 //==============================================================================
-const char *sock_version()
+const char *_sock_version()
 {
   return SOCK_VERSION;
 }
@@ -285,7 +285,7 @@ int sock_server_work(sock_server_t *server)
       sprintf(tmp, "sock_server_work, accepted, socket: %d, ip: %s, port: %d",
               tmp_client, tmp_host, ntohs(sin.sin_port));
       log_add(tmp, LOG_INFO);
-    };
+    }
 
     #ifdef SOCK_USE_FREE_INDEX
     int tmp_index;
@@ -317,8 +317,8 @@ int sock_server_work(sock_server_t *server)
       log_add("sock_server_work, no available workers", LOG_CRITICAL_ERROR);
       server->worker.custom_worker.state = SOCK_STATE_STOP;
       return SOCK_ERROR;
-    };
-  };
+    }
+  }
 
   log_add("END sock_server_work", LOG_DEBUG);
 
@@ -362,7 +362,7 @@ int sock_client_start(sock_worker_t *worker)
   {
     sprintf(tmp, "sock_client_start, socket: %d", worker->custom.sock);
     log_add(tmp, LOG_DEBUG);
-  };
+  }
 
   log_add("END sock_client_start", LOG_INFO);
 }
@@ -393,7 +393,7 @@ int sock_client_work(sock_worker_t *worker)
     }
     else
       break;
-  };
+  }
   log_add("sock_client_work, connected", LOG_INFO);
 
   sock_do_work(worker, 1);
@@ -427,7 +427,7 @@ int sock_do_work(sock_worker_t *worker, int wait)
     pthread_join(worker->send_thread,    (void**)&status_send);
     int status_recv;
     pthread_join(worker->receive_thread, (void**)&status_recv);
-  };
+  }
 }
 */
 //==============================================================================
@@ -451,7 +451,7 @@ int sock_send_cmd(sock_worker_t *worker, int argc, ...)
   {
     char *param = va_arg(params, char*);
     pack_add_param_as_string(param, protocol);
-  };
+  }
 
   va_end(params);
 
@@ -484,9 +484,9 @@ int sock_exec_cmd(sock_worker_t *worker)
 //          streamer_start(&worker->streamer);
 //        else
 //          streamer_stop(&worker->streamer);
-//      };
-    };
-  };
+//      }
+    }
+  }
 
   return SOCK_ERROR;
 }
@@ -541,7 +541,7 @@ void *sock_send_worker(void *arg)
           tmp_pack = _pack_next(&tmp_worker->protocol);
         }
         break;
-      };
+      }
       case SOCK_MODE_WEB_SERVER:
       {
         if(!tmp_worker->custom_worker.is_locked)
@@ -557,7 +557,7 @@ void *sock_send_worker(void *arg)
             tmp_worker->custom_worker.state = SOCK_STATE_STOP;
           }
         break;
-      };
+      }
       case SOCK_MODE_WS_SERVER:
       {
         if(tmp_worker->handshake)
@@ -595,8 +595,8 @@ void *sock_send_worker(void *arg)
             }
         }
         break;
-      };
-    };
+      }
+    }
 
     if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_worker->custom_worker.state == SOCK_STATE_STOP))
       tmp_worker->custom_worker.state = SOCK_STATE_STOP;
@@ -811,12 +811,12 @@ int sock_server_send_cmd(sock_server_t *server, int argc, ...)
     {
       char *param = va_arg(params, char*);
       pack_add_param_as_string(param, protocol);
-    };
+    }
 
     va_end(params);
 
     pack_end(protocol);
-  };
+  }
 
   return SOCK_OK;
 }
@@ -849,7 +849,7 @@ int sock_client_send_cmd(sock_worker_t *worker, int argc, ...)
   {
     char *param = va_arg(params, char*);
     pack_add_param_as_string(param, protocol);
-  };
+  }
 
   va_end(params);
 
@@ -888,7 +888,7 @@ int sock_server_send_to_ws(sock_server_t *server, int argc, ...)
 //    ws_make_frame(TEXT_FRAME, cmd, strlen(cmd), tmp_worker->out_message, 1024);
 
 //    tmp_worker->custom_worker.is_locked--;
-//  };
+//  }
 
 //  va_end(params);
 
