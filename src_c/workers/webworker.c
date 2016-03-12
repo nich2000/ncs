@@ -83,6 +83,8 @@ int web_server_init(web_server_t *server)
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
 
   server->custom_server.on_accept          = &web_accept;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int web_server_start(web_server_t *server, sock_port_t port)
@@ -102,11 +104,15 @@ int web_server_start(web_server_t *server, sock_port_t port)
 int web_server_stop(web_server_t *server)
 {
   server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int web_server_pause(web_server_t *server)
 {
   server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *web_server_worker(void *arg)
@@ -120,6 +126,8 @@ void *web_server_worker(void *arg)
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
   log_add("END web_server_worker", LOG_DEBUG);
+
+  return NULL;
 }
 //==============================================================================
 int web_accept(void *sender, SOCKET socket, sock_host_t host)
@@ -265,5 +273,7 @@ int web_server_status()
   clr_scr();
 
   sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
+
+  return ERROR_NONE;
 }
 //==============================================================================

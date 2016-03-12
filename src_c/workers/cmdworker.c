@@ -38,7 +38,7 @@ int cmd_connect   (void *sender);
 int cmd_disconnect(void *sender);
 int cmd_error     (void *sender, error_t *error);
 int cmd_send      (void *sender);
-int cmd_recv      (void *sender, char *buffer, int size);
+int cmd_recv      (void *sender, unsigned char *buffer, int size);
 int cmd_new_data  (void *sender, void *data);
 //==============================================================================
 int cmd_exec(pack_packet_t *packet);
@@ -280,6 +280,8 @@ void *cmd_server_worker(void *arg)
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
   log_add("END cmd_server_worker", LOG_DEBUG);
+
+  return NULL;
 }
 //==============================================================================
 int cmd_client_init(cmd_client_t *client)
@@ -311,7 +313,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
   client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
-  strcpy(client->custom_client.custom_remote_client.custom_worker.host, host);
+  strcpy((char*)client->custom_client.custom_remote_client.custom_worker.host, (char*)host);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -351,6 +353,8 @@ void *cmd_client_worker(void *arg)
   while(tmp_client->custom_client.custom_remote_client.custom_worker.state == SOCK_STATE_START);
 
   log_add("END cmd_client_worker", LOG_DEBUG);
+
+  return NULL;
 }
 //==============================================================================
 int cmd_connect(void *sender)
@@ -413,7 +417,7 @@ void *cmd_send_worker(void *arg)
 
       if(tmp_cnt > 0)
       {
-        if(sock_send(tmp_sock, tmp_buffer, (int)tmp_size) == ERROR_NONE)
+        if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
           if(tmp_client->on_send != 0)
             tmp_client->on_send((void*)tmp_client);
       }
@@ -426,6 +430,8 @@ void *cmd_send_worker(void *arg)
 
   sprintf(tmp, "END cmd_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
+
+  return NULL;
 }
 //==============================================================================
 int cmd_disconnect(void *sender)
@@ -457,7 +463,7 @@ int cmd_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_recv(void *sender, char *buffer, int size)
+int cmd_recv(void *sender, unsigned char *buffer, int size)
 {
 //  log_add("cmd_recv", LOG_INFO);
 
@@ -465,8 +471,7 @@ int cmd_recv(void *sender, char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD,
-                       tmp_protocol, (void*)tmp_client);
+  pack_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 
   return ERROR_NONE;
 }
@@ -486,12 +491,12 @@ int cmd_server_send(int argc, ...)
       va_list params;
       va_start(params, argc);
 
-      char *cmd = va_arg(params, char*);
+      unsigned char *cmd = va_arg(params, unsigned char*);
       pack_add_cmd(cmd, protocol);
 
       for(int i = 1; i < argc; i++)
       {
-        char *param = va_arg(params, char*);
+        unsigned char *param = va_arg(params, unsigned char*);
         pack_add_param_as_string(param, protocol);
       };
 
@@ -515,12 +520,12 @@ int cmd_client_send(int argc, ...)
     va_list tmp_params;
     va_start(tmp_params, argc);
 
-    char *tmp_cmd = va_arg(tmp_params, char*);
+    unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
     pack_add_cmd(tmp_cmd, tmp_protocol);
 
     for(int i = 1; i < argc; i++)
     {
-      char *tmp_param = va_arg(tmp_params, char*);
+      unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
       pack_add_param_as_string(tmp_param, tmp_protocol);
     };
 
@@ -546,7 +551,7 @@ int cmd_new_data(void *sender, void *data)
   }
   else
   {
-    char csv[256];
+    pack_buffer_t csv;
     int res = pack_values_to_csv(tmp_packet, ';', csv);
     if(res != ERROR_NONE)
     {
@@ -554,9 +559,9 @@ int cmd_new_data(void *sender, void *data)
     }
     else
     {
-      int len = strlen(csv);
+      int len = strlen((char*)csv);
 
-      int cnt = report_add(tmp_client->report, csv);
+      int cnt = report_add(tmp_client->report, (char*)csv);
       if(cnt != (len+1))
       {
         log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
@@ -581,19 +586,19 @@ int cmd_exec(pack_packet_t *packet)
   {
     sprintf(tmp, "Command: %s", tmp_command);
 
-    if(strcmp(tmp_command, "stream") == 0)
+    if(strcmp((char*)tmp_command, "stream") == 0)
     {
       if(pack_next_param(packet, &tmp_index, tmp_param) == ERROR_NONE)
       {
         sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
 
-        if(strcmp(tmp_param, "on") == 0)
+        if(strcmp((char*)tmp_param, "on") == 0)
           cmd_streamer(SOCK_STATE_START);
-        else if(strcmp(tmp_param, "off") == 0)
+        else if(strcmp((char*)tmp_param, "off") == 0)
           cmd_streamer(SOCK_STATE_STOP);
-        else if(strcmp(tmp_param, "pause") == 0)
+        else if(strcmp((char*)tmp_param, "pause") == 0)
           cmd_streamer(SOCK_STATE_PAUSE);
-        else if(strcmp(tmp_param, "resume") == 0)
+        else if(strcmp((char*)tmp_param, "resume") == 0)
           cmd_streamer(SOCK_STATE_RESUME);
       }
     }

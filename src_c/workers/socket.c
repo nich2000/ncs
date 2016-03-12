@@ -142,7 +142,7 @@ int sock_init()
 
   if (WSAStartup(WINSOCK_VERSION, &wsaData))
   {
-    char *tmp;
+    char tmp[128];
     sprintf(tmp, "sock_init, WSAStartup, Error: %d", sock_error());
     log_add(tmp, LOG_ERROR);
 

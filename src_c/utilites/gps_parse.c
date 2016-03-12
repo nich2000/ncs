@@ -19,19 +19,19 @@ GPRMC_t        gprms_data;
 
 void gps_init()
 {
-  gprmc_token[0]  = &gprms_data.time_gps[0];
-  gprmc_token[1]  = &gprms_data.data_valid[0];
-  gprmc_token[2]  = &gprms_data.lat_gps[0];
-  gprmc_token[3]  = &gprms_data.N_S[0];
-  gprmc_token[4]  = &gprms_data.long_gps[0];
-  gprmc_token[5]  = &gprms_data.E_W[0];
-  gprmc_token[6]  = &gprms_data.speed_knots[0];
-  gprmc_token[7]  = &gprms_data.true_course[0];
-  gprmc_token[8]  = &gprms_data.date_gps[0];
-  gprmc_token[9]  = &gprms_data.magnetic[0];
-  gprmc_token[10] = &gprms_data.E_W_magnetic[0];
-  gprmc_token[11] = &gprms_data.mode[0];
-  gprmc_token[12] = &gprms_data.check_summ[0];
+  gprmc_token[0]  = (void*)&gprms_data.time_gps[0];
+  gprmc_token[1]  = (void*)&gprms_data.data_valid[0];
+  gprmc_token[2]  = (void*)&gprms_data.lat_gps[0];
+  gprmc_token[3]  = (void*)&gprms_data.N_S[0];
+  gprmc_token[4]  = (void*)&gprms_data.long_gps[0];
+  gprmc_token[5]  = (void*)&gprms_data.E_W[0];
+  gprmc_token[6]  = (void*)&gprms_data.speed_knots[0];
+  gprmc_token[7]  = (void*)&gprms_data.true_course[0];
+  gprmc_token[8]  = (void*)&gprms_data.date_gps[0];
+  gprmc_token[9]  = (void*)&gprms_data.magnetic[0];
+  gprmc_token[10] = (void*)&gprms_data.E_W_magnetic[0];
+  gprmc_token[11] = (void*)&gprms_data.mode[0];
+  gprmc_token[12] = (void*)&gprms_data.check_summ[0];
 
   is_init = 1;
 }
@@ -56,7 +56,7 @@ int gps_parse_str(char *str)
     // Search first simbol $
     // printf("%c", ch);
     unsigned char ch = *str;
-    *str++;
+    str++;
     if(ch == '$' && !gprmc_ready_flag)
     {
       new_gps_string = 1;

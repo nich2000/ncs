@@ -25,10 +25,10 @@
 #define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_HOST      "127.0.0.1"
 //==============================================================================
-int   web_server_port = DEFAULT_WEB_SERVER_PORT;
-int   ws_server_port  = DEFAULT_WS_SERVER_PORT;
-int   cmd_server_port = DEFAULT_CMD_SERVER_PORT;
-char *cmd_server_host = DEFAULT_SERVER_HOST;
+sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
+sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
+sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
+sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
 //==============================================================================
 int handle_command(char *command)
 {
@@ -252,7 +252,7 @@ int main(int argc, char *argv[])
 
     if(argc > 5)
       if(strcmp(argv[4], "-h") == 0)
-        cmd_server_host = argv[5];
+        strcpy((char*)cmd_server_host, argv[5]);
 
     if(strcmp(argv[1], "-s") == 0)
     {

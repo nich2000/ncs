@@ -51,6 +51,7 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
 //==============================================================================
 int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client)
 {
+  return ERROR_NONE;
 }
 //==============================================================================
 int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list)
@@ -193,7 +194,7 @@ int custom_server_work(custom_server_t *server)
       errors++;
       if(errors > SOCK_ERRORS_COUNT)
       {
-        server->custom_worker.state == SOCK_STATE_STOP;
+        server->custom_worker.state = SOCK_STATE_STOP;
         make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
         log_add(tmp, LOG_ERROR_CRITICAL);
         return ERROR_CRITICAL;
@@ -207,7 +208,7 @@ int custom_server_work(custom_server_t *server)
         struct sockaddr_in tmp_addr;
         int tmp_len = sizeof(tmp_addr);
         getsockname(tmp_client, (struct sockaddr *)&tmp_addr, &tmp_len);
-        strcpy(tmp_host, inet_ntoa(tmp_addr.sin_addr));
+        strcpy((char*)tmp_host, inet_ntoa(tmp_addr.sin_addr));
         int tmp_port = ntohs(tmp_addr.sin_port);
 
         sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
@@ -236,7 +237,7 @@ int custom_client_work(custom_client_t *client)
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(client->custom_remote_client.custom_worker.port);
-  addr.sin_addr.s_addr = inet_addr(client->custom_remote_client.custom_worker.host);
+  addr.sin_addr.s_addr = inet_addr((char*)client->custom_remote_client.custom_worker.host);
 
   log_add("connecting to server...", LOG_INFO);
   while(client->custom_remote_client.custom_worker.state == SOCK_STATE_START)
@@ -289,12 +290,12 @@ void *custom_recv_worker(void *arg)
 
   while(tmp_client->custom_worker.state == SOCK_STATE_START)
   {
-    int retval = sock_recv(tmp_sock, tmp_buffer, &tmp_size);
+    int retval = sock_recv(tmp_sock, (char*)tmp_buffer, &tmp_size);
     if(retval == ERROR_NONE)
     {
       if(tmp_size > 0)
         if(tmp_client->on_recv != 0)
-          tmp_client->on_recv(tmp_client, tmp_buffer, tmp_size);
+          tmp_client->on_recv(tmp_client, (unsigned char*)tmp_buffer, tmp_size);
     }
     else if(retval == ERROR_WARNING)
     {

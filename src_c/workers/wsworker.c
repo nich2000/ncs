@@ -159,6 +159,8 @@ void *ws_server_worker(void *arg)
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
   log_add("END ws_server_worker", LOG_DEBUG);
+
+  return NULL;
 }
 //==============================================================================
 custom_remote_client_t *ws_server_remote_clients_next()
@@ -325,21 +327,21 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
   for(int i = 0; i < packet->words_count; i++)
   {
     pack_key_t tmp_key;
-    strcpy(tmp_key, packet->words[i].key);
+    strcpy((char*)tmp_key, (char*)packet->words[i].key);
 
     pack_value_t tmp_value;
 //    strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
     pack_word_as_string(&packet->words[i], tmp_value);
 
     json_t *tmp_word = json_array();
-    json_array_append(tmp_word, json_string(tmp_key));
-    json_array_append(tmp_word, json_string(tmp_value));
+    json_array_append(tmp_word, json_string((char*)tmp_key));
+    json_array_append(tmp_word, json_string((char*)tmp_value));
 
     json_array_append(tmp_words, tmp_word);
   }
 
-  strcpy(buffer, json_dumps(tmp_words, JSON_ENCODE_ANY ));
-  *size = strlen(buffer);
+  strcpy((char*)buffer, json_dumps(tmp_words, JSON_ENCODE_ANY ));
+  *size = strlen((char*)buffer);
 
   return ERROR_NONE;
 }
@@ -396,12 +398,12 @@ int ws_server_send(int argc, ...)
         va_list tmp_params;
         va_start(tmp_params, argc);
 
-        char *tmp_cmd = va_arg(tmp_params, char*);
+        unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
         pack_add_cmd(tmp_cmd, tmp_protocol);
 
         for(int i = 1; i < argc; i++)
         {
-          char *tmp_param = va_arg(tmp_params, char*);
+          unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
           pack_add_param_as_string(tmp_param, tmp_protocol);
         };
 

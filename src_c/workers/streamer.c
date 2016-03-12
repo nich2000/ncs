@@ -66,6 +66,7 @@ int cmd_streamer(sock_state_t state)
 //==============================================================================
 int cmd_streamer_status()
 {
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
@@ -76,6 +77,8 @@ int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
   worker->last_number = -1;
   worker->protocol    =  protocol;
   worker->work_thread =  0;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_start(streamer_worker *worker, pack_protocol_t *protocol)
@@ -88,6 +91,8 @@ int cmd_streamer_start(streamer_worker *worker, pack_protocol_t *protocol)
   worker->is_pause = SOCK_FALSE;
 
   pthread_create(&worker->work_thread, NULL, cmd_streamer_worker_func, (void*)worker);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_stop(streamer_worker *worker)
@@ -95,6 +100,8 @@ int cmd_streamer_stop(streamer_worker *worker)
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_stop");
 
   worker->is_work = SOCK_FALSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_pause(streamer_worker *worker)
@@ -102,6 +109,8 @@ int cmd_streamer_pause(streamer_worker *worker)
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_pause");
 
   worker->is_pause = SOCK_TRUE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_resume(streamer_worker *worker)
@@ -109,10 +118,13 @@ int cmd_streamer_resume(streamer_worker *worker)
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_resume");
 
   worker->is_pause = SOCK_FALSE;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_streamer_work(streamer_worker *worker)
 {
+  return ERROR_NONE;
 }
 //==============================================================================
 void *cmd_streamer_worker_func(void *arg)
@@ -135,6 +147,8 @@ void *cmd_streamer_worker_func(void *arg)
 
     usleep(100000);
   }
+
+  return NULL;
 }
 //==============================================================================
 int cmd_streamer_make(pack_protocol_t *protocol)
@@ -153,23 +167,23 @@ int cmd_streamer_make(pack_protocol_t *protocol)
   {
     pack_begin(protocol);
 
-    pack_add_as_int("CNT", counter++, protocol);
+    pack_add_as_int((unsigned char*)"CNT", counter++, protocol);
 
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
-        sprintf(tmp_key, "I%d", i);
+        sprintf((char*)tmp_key, "I%d", i);
       else
-        sprintf(tmp_key, "IN%d", i);
+        sprintf((char*)tmp_key, "IN%d", i);
 
       pack_add_as_int(tmp_key, rand(), protocol);
     };
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
-        sprintf(tmp_key, "S%d", i);
+        sprintf((char*)tmp_key, "S%d", i);
       else
-        sprintf(tmp_key, "ST%d", i);
+        sprintf((char*)tmp_key, "ST%d", i);
 
       pack_size_t j = 0;
       for(j = 0; j < TEST_STRING_SIZE; j++)
@@ -181,9 +195,9 @@ int cmd_streamer_make(pack_protocol_t *protocol)
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
       if(i > 9)
-        sprintf(tmp_key, "F%d", i);
+        sprintf((char*)tmp_key, "F%d", i);
       else
-        sprintf(tmp_key, "FL%d", i);
+        sprintf((char*)tmp_key, "FL%d", i);
 
       float rnd = (float)rand()/(float)(RAND_MAX/1000);
       pack_add_as_float(tmp_key, rnd, protocol);
@@ -192,5 +206,7 @@ int cmd_streamer_make(pack_protocol_t *protocol)
   }
 
 //  log_add_fmt(LOG_DEBUG, "%s", "END cmd_streamer_make");
+
+  return ERROR_NONE;
 }
 //==============================================================================

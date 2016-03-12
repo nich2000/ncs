@@ -29,7 +29,7 @@ int bytes_to_float(unsigned char *bytes, int size, float *value)
   return 0;
 }
 //==============================================================================
-char nibbles[] = {"0123456789ABCDEF"};
+unsigned char nibbles[] = {"0123456789ABCDEF"};
 int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
 {
   int j = 0;
@@ -98,7 +98,7 @@ int pack_print(pack_packet_t *packet, char *prefix, int clear, int buffer, int p
     pack_packet_to_buffer(packet, tmp_buffer, &tmp_size);
 
     #ifdef SOCK_PACK_MODE
-    bytes_to_hex(tmp_buffer, (pack_size_t)tmp_size, tmp);
+    bytes_to_hex((unsigned char*)tmp_buffer, (pack_size_t)tmp_size, (unsigned char*)tmp);
     log_add(tmp, LOG_DEBUG);
     #else
     log_add(tmp_buffer, LOG_DEBUG);

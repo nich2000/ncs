@@ -178,6 +178,8 @@ int pack_packet_init(pack_packet_t *packet)
 
   for(int i = 0; i < PACK_WORDS_COUNT; i++)
     pack_word_init(&packet->words[i]);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int pack_in_packets_list_init(pack_in_packets_list_t *in_packets_list)
@@ -215,6 +217,8 @@ int pack_queue_init(pack_queue_t *queue)
 
   for(int i = 0; i < PACK_QUEUE_COUNT; i++)
     queue->packets[i] = NULL;
+
+  return ERROR_NONE;
 }
 #endif
 //==============================================================================
@@ -673,7 +677,7 @@ int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer
   {
     pack_word_as_string(&pack->words[i], valueS);
 
-    for(size_t j = 0; j < strlen(valueS); j++)
+    for(size_t j = 0; j < strlen((char*)valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
@@ -1522,6 +1526,7 @@ int pack_next_param(pack_packet_t *pack, pack_index_t *index, pack_string_t valu
 //==============================================================================
 pack_string_t _pack_next_param(pack_packet_t *pack, pack_index_t *index)
 {
+  return NULL;
 }
 //==============================================================================
 int pack_param_by_index_as_string(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value)

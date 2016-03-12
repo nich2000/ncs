@@ -13,7 +13,7 @@ typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
 typedef int (*on_connect_t)   (void *sender);
 typedef int (*on_disconnect_t)(void *sender);
 typedef int (*on_send_t)      (void *sender);
-typedef int (*on_recv_t)      (void *sender, char *buffer, int size);
+typedef int (*on_recv_t)      (void *sender, unsigned char *buffer, int size);
 //==============================================================================
 typedef struct
 {

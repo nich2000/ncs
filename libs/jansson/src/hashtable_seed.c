@@ -47,20 +47,19 @@
 #include "jansson.h"
 
 
-static uint32_t buf_to_uint32(char *data) {
-    size_t i;
-    uint32_t result = 0;
-
-    for (i = 0; i < sizeof(uint32_t); i++)
-        result = (result << 8) | (unsigned char)data[i];
-
-    return result;
-}
-
-
-
 /* /dev/urandom */
 #if !defined(_WIN32) && defined(USE_URANDOM)
+static uint32_t buf_to_uint32(char *data)
+{
+  size_t i;
+  uint32_t result = 0;
+
+  for (i = 0; i < sizeof(uint32_t); i++)
+    result = (result << 8) | (unsigned char)data[i];
+
+  return result;
+}
+
 static int seed_from_urandom(uint32_t *seed) {
     /* Use unbuffered I/O if we have open(), close() and read(). Otherwise
        fall back to fopen() */
@@ -97,6 +96,17 @@ static int seed_from_urandom(uint32_t *seed) {
 
 /* Windows Crypto API */
 #if defined(_WIN32) && defined(USE_WINDOWS_CRYPTOAPI)
+static uint32_t buf_to_uint32(char *data)
+{
+  size_t i;
+  uint32_t result = 0;
+
+  for (i = 0; i < sizeof(uint32_t); i++)
+    result = (result << 8) | (unsigned char)data[i];
+
+  return result;
+}
+
 #include <wincrypt.h>
 
 typedef BOOL (WINAPI *CRYPTACQUIRECONTEXTA)(HCRYPTPROV *phProv, LPCSTR pszContainer, LPCSTR pszProvider, DWORD dwProvType, DWORD dwFlags);

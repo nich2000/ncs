@@ -20,6 +20,8 @@ const char *error_type_to_string(int error_type)
     break;
     case ERROR_FATAL:    return "[ERROR_FATAL]";
     break;
+    default:             return "[ERROR_UNKNOWN]";
+    break;
   }
 }
 //==============================================================================
@@ -39,6 +41,8 @@ int make_last_error(int level, int number, const char *message)
   _error_.level = level;
   _error_.number = number;
   strcpy(_error_.message, message);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 error_t *last_error()
