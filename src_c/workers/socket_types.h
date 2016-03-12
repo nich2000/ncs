@@ -21,6 +21,8 @@
   typedef int SOCKET;
 #elif _WIN32
   #define WINSOCK_VERSION 0x0101
+
+  typedef int socklen_t;
 #else
 #endif
 //==============================================================================

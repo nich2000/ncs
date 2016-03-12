@@ -178,7 +178,7 @@ int custom_server_work(custom_server_t *server)
 
   char tmp[128];
   struct sockaddr_in addr;
-  int addrlen = sizeof(struct sockaddr_in);
+  socklen_t addrlen = sizeof(struct sockaddr_in);
   int errors = 0;
 
   while(server->custom_worker.state == SOCK_STATE_START)
@@ -206,7 +206,7 @@ int custom_server_work(custom_server_t *server)
       {
         sock_host_t tmp_host;
         struct sockaddr_in tmp_addr;
-        int tmp_len = sizeof(tmp_addr);
+        socklen_t tmp_len = sizeof(tmp_addr);
         getsockname(tmp_client, (struct sockaddr*)&tmp_addr, (socklen_t*)&tmp_len);
         strcpy((char*)tmp_host, inet_ntoa(tmp_addr.sin_addr));
         int tmp_port = ntohs(tmp_addr.sin_port);
