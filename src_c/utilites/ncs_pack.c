@@ -495,11 +495,12 @@ pack_size_t _pack_words_size(pack_packet_t *pack)
 //==============================================================================
 int pack_word_as_int(pack_word_t *word, int *value)
 {
-  bytes_to_int(word->value, value);
+  // TODO этот метод не работает
+//  bytes_to_int(word->value, value);
 
-//  *value = 0;
-//  for(pack_size_t j = 0; j < word->size; j++)
-//    *value = (*value << 8) + word->value[j];
+  *value = 0;
+  for(pack_size_t j = 0; j < word->size; j++)
+    *value = (*value << 8) + word->value[j];
 
   return ERROR_NONE;
 }

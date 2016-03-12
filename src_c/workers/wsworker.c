@@ -333,14 +333,35 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
     pack_word_as_string(&packet->words[i], tmp_value);
 
     json_t *tmp_word = json_array();
-    json_array_append(tmp_word, json_string((char*)tmp_key));
-    json_array_append(tmp_word, json_string((char*)tmp_value));
 
-    json_array_append(tmp_words, tmp_word);
+    json_t *tmp_json_key   = json_string((char*)tmp_key);
+    json_t *tmp_json_value = json_string((char*)tmp_value);
+
+    json_array_append_new(tmp_word, tmp_json_key);
+    json_array_append_new(tmp_word, tmp_json_value);
+
+    json_array_append_new(tmp_words, tmp_word);
   }
 
-  strcpy((char*)buffer, json_dumps(tmp_words, JSON_ENCODE_ANY ));
+  char *tmp_json = json_dumps(tmp_words, JSON_ENCODE_ANY);
+  strcpy((char*)buffer, tmp_json);
   *size = strlen((char*)buffer);
+  free(tmp_json);
+
+  size_t tmp_index_word;
+  json_t *tmp_word;
+  json_array_foreach(tmp_words, tmp_index_word, tmp_word)
+  {
+//    size_t tmp_index;
+//    json_t *tmp_value;
+//    json_array_foreach(tmp_word, tmp_index, tmp_value)
+//    {
+//      json_decref(tmp_value);
+//    }
+    json_array_clear(tmp_word);
+  }
+  json_array_clear(tmp_words);
+  json_decref(tmp_words);
 
   return ERROR_NONE;
 }
