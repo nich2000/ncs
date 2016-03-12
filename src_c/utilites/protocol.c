@@ -95,7 +95,6 @@ int pack_packet_to_buffer(pack_packet_t *packet, pack_buffer_t buffer, pack_size
 //==============================================================================
 int pack_word_as_int    (pack_word_t *word, int   *value);
 int pack_word_as_float  (pack_word_t *word, float *value);
-int pack_word_as_string (pack_word_t *word, pack_string_t value);
 int pack_word_as_bytes  (pack_word_t *word, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
 pack_size_t _pack_words_size(pack_packet_t *pack);
@@ -492,7 +491,7 @@ const char *_pack_word_as_string(pack_word_t *word)
 
   pack_word_as_string(word, tmp_value);
 
-  // TODO костыль
+  // TODO - возможна утечка
   char *tmp_string = (char*)malloc(strlen((char*)tmp_value));
   strcpy(tmp_string, (char *)tmp_value);
 
@@ -1368,8 +1367,6 @@ int pack_current_packet_to_buffer(pack_type_t out, pack_buffer_t buffer, pack_si
 //==============================================================================
 int pack_packet_to_buffer(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size)
 {
-//  char *buffer = (char*)malloc(PACK_VERSION_SIZE);
-
   // Version
   memcpy(buffer, (const void*)PACK_VERSION, PACK_VERSION_SIZE);
   pack_size_t tmp_pack_pos = PACK_VERSION_SIZE;

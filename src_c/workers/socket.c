@@ -686,20 +686,20 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   tv.tv_sec  = SOCK_WAIT_SELECT;
   tv.tv_usec = 0;
 
-  int retval = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
-  if (retval == SOCKET_ERROR)
+  *size = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
+  if (*size == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, sock_error());
-    make_error(ERROR_NORMAL, retval, tmp);
+    make_error(ERROR_NORMAL, *size, tmp);
     log_add(tmp, LOG_ERROR);
     return ERROR_NORMAL;
   }
-  else if(!retval)
+  else if(*size == 0)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
-    make_error(ERROR_WARNING, retval, tmp);
+    make_error(ERROR_NONE, *size, tmp);
     log_add(tmp, LOG_EXTRA);
-    return ERROR_WARNING;
+    return ERROR_NONE;
   }
   else
   {
@@ -728,6 +728,8 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
 
     return ERROR_NONE;
   }
+
+  return ERROR_NORMAL;
 }
 //==============================================================================
 int sock_send(SOCKET sock, char *buffer, int size)

@@ -292,25 +292,27 @@ void *custom_recv_worker(void *arg)
     int retval = sock_recv(tmp_sock, tmp_buffer, &tmp_size);
     if(retval == ERROR_NONE)
     {
-      if(tmp_client->on_recv != 0)
-        tmp_client->on_recv(tmp_client, tmp_buffer, tmp_size);
+      if(tmp_size > 0)
+        if(tmp_client->on_recv != 0)
+          tmp_client->on_recv(tmp_client, tmp_buffer, tmp_size);
     }
-    else if(retval >= ERROR_NORMAL)
+    else if(retval == ERROR_WARNING)
     {
-      if(tmp_size == SOCKET_ERROR)
-      {
-        tmp_errors++;
-        if(tmp_errors > SOCK_ERRORS_COUNT)
-          break;
-
-        if(tmp_client->on_error != 0)
-          tmp_client->on_error((void*)tmp_client, last_error());
-      }
-      else if(tmp_size == 0)
+      if(tmp_size == 0)
       {
         if(tmp_client->on_disconnect != 0)
           tmp_client->on_disconnect((void*)tmp_client);
+        break;
       }
+    }
+    else if(retval >= ERROR_NORMAL)
+    {
+      tmp_errors++;
+      if(tmp_errors > SOCK_ERRORS_COUNT)
+        break;
+
+      if(tmp_client->on_error != 0)
+        tmp_client->on_error((void*)tmp_client, last_error());
     }
     else
     {

@@ -255,7 +255,8 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  sprintf(tmp, "remote client connected, host: %s", tmp_client->custom_worker.host);
+  sprintf(tmp, "cmd_accept, socket: %d, host: %s, port: %d",
+          tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
   log_add(tmp, LOG_INFO);
 
   pthread_attr_t tmp_attr;
@@ -561,9 +562,9 @@ int cmd_new_data(void *sender, void *data)
         log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
       }
     }
-  }
 
-  ws_server_route_pack(tmp_packet);
+    ws_server_route_pack(tmp_packet);
+  }
 
   return ERROR_NONE;
 }

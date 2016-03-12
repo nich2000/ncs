@@ -106,7 +106,7 @@ function onMessage(evt)
       var key = $("#key_" + data[i][0]);
       if(key.length == 0)
       {
-        key = $("<td style='height:10px'></td>");
+        key = $("<td style='height:8px'></td>");
         key.attr("id", "key_" + data[i][0]);
         line.append(key);
       }
@@ -115,7 +115,7 @@ function onMessage(evt)
       var value = $("#value_" + data[i][0]);
       if(value.length == 0)
       {
-        value = $("<td style='height:10px'></td>");
+        value = $("<td style='height:8px'></td>");
         value.attr("id", "value_" + data[i][0]);
         line.append(value);
       }

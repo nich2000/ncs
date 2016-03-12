@@ -73,6 +73,7 @@ int       pack_command           (pack_packet_t *pack, pack_value_t command);
 pack_size_t _pack_params_count   (pack_packet_t *pack);
 //==============================================================================
 const char *_pack_word_as_string(pack_word_t *word);
+int pack_word_as_string (pack_word_t *word, pack_string_t value);
 //==============================================================================
 int pack_next_param(pack_packet_t *pack, pack_index_t *index, pack_string_t value);
 pack_string_t _pack_next_param(pack_packet_t *pack, pack_index_t *index);

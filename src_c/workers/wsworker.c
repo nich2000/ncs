@@ -209,7 +209,8 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  sprintf(tmp, "ws_accept, socket: %d, host: %s", tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
+  sprintf(tmp, "ws_accept, socket: %d, host: %s, port: %d",
+          tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
   log_add(tmp, LOG_DEBUG);
 
   pthread_attr_t tmp_attr;
@@ -327,10 +328,8 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
     strcpy(tmp_key, packet->words[i].key);
 
     pack_value_t tmp_value;
-    strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
-
-//    json_t *tmp_word = json_object();
-//    json_object_set(tmp_word, tmp_key, json_string(tmp_value));
+//    strcpy(tmp_value, _pack_word_as_string(&packet->words[i]));
+    pack_word_as_string(&packet->words[i], tmp_value);
 
     json_t *tmp_word = json_array();
     json_array_append(tmp_word, json_string(tmp_key));
