@@ -97,6 +97,11 @@ int _pack_get_last_error()
   return pack_last_error;
 }
 //==============================================================================
+pack_packet_t *packet()
+{
+  return NULL;
+}
+//==============================================================================
 int pack_word_init(pack_word_t *word)
 {
   memset(word->key, 0, PACK_KEY_SIZE);

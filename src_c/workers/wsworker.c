@@ -310,13 +310,11 @@ void *ws_send_worker(void *arg)
 }
 //==============================================================================
 /*
-{
   [
-    {"key": value},
-    {"key": value},
-    {"key": value}
+    ["key", "value"],
+    ["key", "value"],
+    ["key", "value"]
   ]
-}
 */
 //==============================================================================
 //https://jansson.readthedocs.org/en/2.7/apiref.html
@@ -411,40 +409,24 @@ int ws_server_send_cmd(int argc, ...)
       {
         tmp_client->custom_worker.is_locked = SOCK_TRUE;
 
-        pack_protocol_t *tmp_protocol = &tmp_client->protocol;
-
-        protocol_begin(tmp_protocol);
-
-
-
-
-//        pack_packet_init(tmp_pack);
-//        pack_add_param_as_string()
-
-
+        pack_packet_t tmp_pack;
+        pack_init(&tmp_pack);
 
         va_list tmp_params;
         va_start(tmp_params, argc);
-
         unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
-        protocol_add_cmd(tmp_cmd, tmp_protocol);
+        pack_add_as_string(&tmp_pack, (unsigned char*)PACK_CMD_KEY, tmp_cmd);
 
         for(int i = 1; i < argc; i++)
         {
           unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
-          protocol_add_param_as_string(tmp_param, tmp_protocol);
+          pack_add_as_string(&tmp_pack, (unsigned char*)PACK_PARAM_KEY, tmp_param);
         }
-
         va_end(tmp_params);
-
-        protocol_end(tmp_protocol);
-
-        pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
 
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
-        packet_to_json(tmp_packet, json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+        packet_to_json(&tmp_pack, json_buffer, &json_size);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;

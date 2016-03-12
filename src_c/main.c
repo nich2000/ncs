@@ -186,6 +186,11 @@ int handle_command(char *command)
       cmd_client_send(2, param1, param2);
       return RESULT_DONE;
     }
+    else if(strcmp(token, "sndtows") == 0)
+    {
+      ws_server_send_cmd(2, param1, param2);
+      return RESULT_DONE;
+    }
 
     return RESULT_UNKNOWN;
   }
@@ -199,6 +204,11 @@ int handle_command(char *command)
     else if(strcmp(token, "sndtosr") == 0)
     {
       cmd_client_send(3, param1, param2, param3);
+      return RESULT_DONE;
+    }
+    else if(strcmp(token, "sndtows") == 0)
+    {
+      ws_server_send_cmd(3, param1, param2, param3);
       return RESULT_DONE;
     }
 

@@ -8,7 +8,8 @@ var
   wsConnected = false;
 
 var
-  dataTable;
+  dataTable,
+  clientsTable;
 
 var
   dataCounter = 0;
@@ -18,6 +19,7 @@ function init()
   console.log("init");
 
   dataTable = $("#remote_data");
+  clientsTable = $("#remote_clients");
 
   var timerConnect = setInterval(function() 
   {
@@ -87,6 +89,35 @@ function onMessage(evt)
   if(data[0][0] == "CMD")
   {
     $("#last_cmd").text("Command: " + data[0][1]);
+
+    switch(data[0][1])
+    {
+      case "clients":
+      {
+        for(var i = 1; i < data.length; i++) 
+        {
+          var line_id = "client_" + data[i][1];
+          var line = $("#" + line_id);
+          if(line.length == 0)
+          {
+            line = $("<tr></tr>");
+            line.attr("id", line_id);
+            clientsTable.append(line);
+          }
+
+          var cell_id = "name_" + line_id;
+          var cell = $("#" + cell_id);
+          if(cell.length == 0)
+          {
+            cell = $("<td style='height:8px'></td>");
+            cell.attr("id", cell_id);
+            line.append(cell);
+          }
+          cell.text(data[i][1]);
+        }
+        break;
+      }
+    }
   }
   else
   {
@@ -95,31 +126,34 @@ function onMessage(evt)
 
     for(var i = 0; i < data.length; i++) 
     {
-      var line = $("#" + data[i][0]);
+      var line_id = data[i][0];
+      var line = $("#" + line_id);
       if(line.length == 0)
       {
         line = $("<tr></tr>");
-        line.attr("id", data[i][0]);
+        line.attr("id", line_id);
         dataTable.append(line);
       }
       
-      var key = $("#key_" + data[i][0]);
-      if(key.length == 0)
+      var cell_id = "key_" + data[i][0];
+      var cell = $("#" + cell_id);
+      if(cell.length == 0)
       {
-        key = $("<td style='height:8px'></td>");
-        key.attr("id", "key_" + data[i][0]);
-        line.append(key);
+        cell = $("<td style='height:8px'></td>");
+        cell.attr("id", cell_id);
+        line.append(cell);
       }
-      key.text(data[i][0]);
+      cell.text(data[i][0]);
 
-      var value = $("#value_" + data[i][0]);
-      if(value.length == 0)
+      cell_id = "value_" + data[i][0];
+      cell = $("#" + cell_id);
+      if(cell.length == 0)
       {
-        value = $("<td style='height:8px'></td>");
-        value.attr("id", "value_" + data[i][0]);
-        line.append(value);
+        cell = $("<td style='height:8px'></td>");
+        cell.attr("id", cell_id);
+        line.append(cell);
       }
-      value.text(data[i][1]);
+      cell.text(data[i][1]);
     }
   }
 }
