@@ -96,7 +96,7 @@ int web_server_start(web_server_t *server, sock_port_t port)
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   return pthread_create(&server->custom_server.work_thread, &tmp_attr, web_server_worker, (void*)server);
 }
@@ -147,7 +147,6 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  // TODO here falls on linux
   pthread_t tmp_pthread;
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
   {
@@ -167,9 +166,9 @@ void *web_handle_connection(void *arg)
   sprintf(tmp, "BEGIN web_handle_connection, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
-  char *request  = (char *)malloc(2048);
+  char *request  = (char *)malloc(1024);
   char *response = (char *)malloc(1024*1024);
-  int  size      = 0;
+  int   size     = 0;
 
   while(1)
   {

@@ -113,7 +113,7 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
 
@@ -163,23 +163,23 @@ void *ws_server_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-custom_remote_client_t *ws_server_remote_clients_next()
+custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
 {
   custom_remote_client_t *tmp_client = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(_ws_server.custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
+    if(ws_server->custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
     {
-      tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+      tmp_client = &ws_server->custom_remote_clients_list.items[i];
 
       custom_remote_client_init(tmp_client);
 
 //      tmp_client->protocol.on_new_in_data  = ws_new_data;
 
-      tmp_client->custom_worker.id    = _ws_server.custom_remote_clients_list.next_id++;
+      tmp_client->custom_worker.id    = ws_server->custom_remote_clients_list.next_id++;
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_client->custom_worker.mode  = _ws_server.custom_server.custom_worker.mode;
-      tmp_client->custom_worker.port  = _ws_server.custom_server.custom_worker.port;
+      tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
+      tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
       tmp_client->custom_worker.state = SOCK_STATE_START;
 
 //      tmp_client->on_disconnect       = ws_disconnect;
@@ -195,29 +195,26 @@ custom_remote_client_t *ws_server_remote_clients_next()
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  custom_remote_client_t *tmp_client = ws_server_remote_clients_next();
-
-  char tmp[256];
+  custom_remote_client_t *tmp_client = ws_server_remote_clients_next(&_ws_server);
 
   if(tmp_client == 0)
   {
-    sprintf(tmp,
-            "no available clients, ws_accept, socket: %d, host: %s",
-            tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
-    log_add(tmp, LOG_ERROR_CRITICAL);
+    log_add_fmt(LOG_ERROR_CRITICAL,
+            "ws_accept, no available clients, socket: %d, host: %s",
+            socket, host);
     return ERROR_NORMAL;
   }
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  sprintf(tmp, "ws_accept, socket: %d, host: %s, port: %d",
-          tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG,
+              "ws_accept, socket: %d, host: %s, port: %d",
+              tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&tmp_client->recv_thread, &tmp_attr, ws_recv_worker, (void*)tmp_client);
   pthread_create(&tmp_client->send_thread, &tmp_attr, ws_send_worker, (void*)tmp_client);
@@ -300,7 +297,7 @@ void *ws_send_worker(void *arg)
         }
     }
 
-    usleep(1000);
+    usleep(100000);
   }
 
   sprintf(tmp, "END ws_send_worker, socket: %d", tmp_sock);

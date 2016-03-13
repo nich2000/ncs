@@ -20,7 +20,7 @@ int cmd_server_pause(cmd_server_t *server);
 //==============================================================================
 void *cmd_server_worker(void *arg);
 //==============================================================================
-custom_remote_client_t *cmd_server_remote_clients_next();
+custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server);
 int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list);
 //==============================================================================
 int cmd_client_init (cmd_client_t *client);
@@ -174,7 +174,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
 
@@ -206,23 +206,23 @@ int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
   return tmp_count;
 }
 //==============================================================================
-custom_remote_client_t *cmd_server_remote_clients_next()
+custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server)
 {
   custom_remote_client_t *tmp_client = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
+    if(cmd_server->custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
     {
-      tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
+      tmp_client = &cmd_server->custom_remote_clients_list.items[i];
 
       custom_remote_client_init(tmp_client);
 
       tmp_client->protocol.on_new_in_data = cmd_new_data;
 
-      tmp_client->custom_worker.id    = _cmd_server.custom_remote_clients_list.next_id++;
+      tmp_client->custom_worker.id    = cmd_server->custom_remote_clients_list.next_id++;
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_client->custom_worker.mode  = _cmd_server.custom_server.custom_worker.mode;
-      tmp_client->custom_worker.port  = _cmd_server.custom_server.custom_worker.port;
+      tmp_client->custom_worker.mode  = cmd_server->custom_server.custom_worker.mode;
+      tmp_client->custom_worker.port  = cmd_server->custom_server.custom_worker.port;
       tmp_client->custom_worker.state = SOCK_STATE_START;
 
       tmp_client->on_disconnect       = cmd_disconnect;
@@ -238,25 +238,22 @@ custom_remote_client_t *cmd_server_remote_clients_next()
 //==============================================================================
 int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  custom_remote_client_t *tmp_client = cmd_server_remote_clients_next();
-
-  char tmp[256];
+  custom_remote_client_t *tmp_client = cmd_server_remote_clients_next(&_cmd_server);
 
   if(tmp_client == 0)
   {
-    sprintf(tmp,
-            "no available clients, cmd_accept, socket: %d, host: %s",
-            tmp_client->custom_worker.sock, tmp_client->custom_worker.host);
-    log_add(tmp, LOG_ERROR_CRITICAL);
-    return ERROR_NORMAL;
+    log_add_fmt(LOG_ERROR_CRITICAL,
+                "cmd_accept, no available clients, socket: %d, host: %s",
+                socket, host);
+    return ERROR_CRITICAL;
   }
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  sprintf(tmp, "cmd_accept, socket: %d, host: %s, port: %d",
-          tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
-  log_add(tmp, LOG_INFO);
+  log_add_fmt(LOG_DEBUG,
+              "cmd_accept, socket: %d, host: %s, port: %d",
+              tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
 //  pack_packet_t *tmp_pack = _cmd_clients_list();
 //  ws_server_send_cmd(2, "client_connected", tmp_client->custom_worker.host);
@@ -321,7 +318,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
 
@@ -369,7 +366,7 @@ int cmd_connect(void *sender)
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
-  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
+  pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_create(&tmp_client->custom_remote_client.recv_thread,
                  &tmp_attr,
