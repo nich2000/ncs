@@ -172,7 +172,7 @@ int custom_worker_stop(custom_worker_t *worker)
 //==============================================================================
 int custom_server_work(custom_server_t *server)
 {
-  log_add("BEGIN custom_server_work", LOG_DEBUG);
+  log_add("[BEGIN] custom_server_work", LOG_DEBUG);
 //  log_add("server started", LOG_INFO);
 //  log_add("----------", LOG_INFO);
 
@@ -197,6 +197,7 @@ int custom_server_work(custom_server_t *server)
         server->custom_worker.state = STATE_STOP;
         make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
         log_add(tmp, LOG_ERROR_CRITICAL);
+        server->custom_worker.state = STATE_STOP;
         return ERROR_CRITICAL;
       }
     }
@@ -223,14 +224,16 @@ int custom_server_work(custom_server_t *server)
     usleep(1000);
   }
 
-  log_add("END custom_server_work", LOG_DEBUG);
+  server->custom_worker.state = STATE_STOP;
+
+  log_add("[END] custom_server_work", LOG_DEBUG);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_client_work(custom_client_t *client)
 {
-  log_add("BEGIN custom_client_work", LOG_DEBUG);
+  log_add("[BEGIN] custom_client_work", LOG_DEBUG);
   log_add("client started", LOG_INFO);
   log_add("----------", LOG_INFO);
 
@@ -246,7 +249,7 @@ int custom_client_work(custom_client_t *client)
     {
       char tmp[256];
       sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
-      make_error(ERROR_WARNING, SOCKET_ERROR, tmp);
+      make_last_error(ERROR_WARNING, SOCKET_ERROR, tmp);
       log_add(tmp, LOG_EXTRA);
       sleep(SOCK_WAIT_CONNECT);
       continue;
@@ -254,17 +257,13 @@ int custom_client_work(custom_client_t *client)
     else
     {
       if(client->on_connect != 0)
-      {
-        log_add("connected to server", LOG_INFO);
-
         client->on_connect((void*)client);
-      }
     }
 
     usleep(1000);
   }
 
-  log_add("END custom_client_work", LOG_DEBUG);
+  log_add("[END] custom_client_work", LOG_DEBUG);
 
   return ERROR_NONE;
 }
@@ -276,9 +275,7 @@ void *custom_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  char tmp[256];
-  sprintf(tmp, "BEGIN custom_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] custom_recv_worker, socket: %d", tmp_sock);
 
   char tmp_report_name[256];
   sprintf(tmp_report_name, "report_%d.txt", tmp_client->custom_worker.id);
@@ -323,10 +320,11 @@ void *custom_recv_worker(void *arg)
     usleep(1000);
   }
 
+  tmp_client->custom_worker.state = STATE_STOP;
+
   report_close(tmp_client->report);
 
-  sprintf(tmp, "END custom_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[END] custom_recv_worker, socket: %d", tmp_sock);
 
   return NULL;
 }

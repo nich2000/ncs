@@ -84,7 +84,7 @@ int cmd_server_status()
 {
   clr_scr();
 
-  print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
+  print_custom_worker_info(&_cmd_server.custom_server.custom_worker , "cmd_server");
 
   print_custom_remote_clients_list_info(&_cmd_server.custom_remote_clients_list, "cmd_server");
 
@@ -272,7 +272,7 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 //==============================================================================
 void *cmd_server_worker(void *arg)
 {
-  log_add("BEGIN cmd_server_worker", LOG_DEBUG);
+  log_add("[BEGIN] cmd_server_worker", LOG_DEBUG);
 
   cmd_server_t *tmp_server = (cmd_server_t*)arg;
 
@@ -280,7 +280,7 @@ void *cmd_server_worker(void *arg)
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add("END cmd_server_worker", LOG_DEBUG);
+  log_add("[END] cmd_server_worker", LOG_DEBUG);
 
   return NULL;
 }
@@ -341,7 +341,7 @@ int cmd_client_pause(cmd_client_t *client)
 //==============================================================================
 void *cmd_client_worker(void *arg)
 {
-  log_add("BEGIN cmd_client_worker", LOG_DEBUG);
+  log_add("[BEGIN] cmd_client_worker", LOG_DEBUG);
 
   cmd_client_t *tmp_client = (cmd_client_t*)arg;
 
@@ -353,14 +353,16 @@ void *cmd_client_worker(void *arg)
   }
   while(tmp_client->custom_client.custom_remote_client.custom_worker.state == STATE_START);
 
-  log_add("END cmd_client_worker", LOG_DEBUG);
+  log_add("[END] cmd_client_worker", LOG_DEBUG);
 
   return NULL;
 }
 //==============================================================================
 int cmd_connect(void *sender)
 {
-  log_add("BEGIN cmd_connect", LOG_DEBUG);
+  log_add("[BEGIN] cmd_connect", LOG_DEBUG);
+
+  log_add("connected to server", LOG_INFO);
 
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
@@ -384,7 +386,7 @@ int cmd_connect(void *sender)
   int status_recv;
   pthread_join(tmp_client->custom_remote_client.send_thread, (void**)&status_recv);
 
-  log_add("END cmd_connect", LOG_DEBUG);
+  log_add("[END] cmd_connect", LOG_DEBUG);
 
   return ERROR_NONE;
 }
@@ -394,7 +396,7 @@ void *cmd_send_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "BEGIN cmd_send_worker, socket: %d", tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_send_worker, socket: %d", tmp_sock);
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
   pack_packet_t   *tmp_pack;
@@ -425,21 +427,23 @@ void *cmd_send_worker(void *arg)
     usleep(1000);
   }
 
-  log_add_fmt(LOG_DEBUG, "END cmd_send_worker, socket: %d", tmp_sock);
+  tmp_client->custom_worker.state = STATE_STOP;
+
+  log_add_fmt(LOG_DEBUG, "[END] cmd_send_worker, socket: %d", tmp_sock);
 
   return NULL;
 }
 //==============================================================================
 int cmd_disconnect(void *sender)
 {
-  log_add("cmd_disconnect", LOG_DEBUG);
+  log_add("disconnected from server", LOG_INFO);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_error(void *sender, error_t *error)
 {
-  log_add("cmd_error", LOG_DEBUG);
+  log_add_fmt(LOG_INFO, "cmd_error, message: %s", error->message);
 
   return ERROR_NONE;
 }

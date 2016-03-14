@@ -62,7 +62,7 @@ int sock_server(sock_server_t *server, sock_port_t port, sock_mode_t mode)
 /*
 void *sock_server_worker(void *arg)
 {
-  log_add("BEGIN sock_server_worker", LOG_DEBUG);
+  log_add("[BEGIN] sock_server_worker", LOG_DEBUG);
 
   sock_server_t *tmp_server = (sock_server_t*)arg;
 
@@ -74,7 +74,7 @@ void *sock_server_worker(void *arg)
   sock_server_work   (tmp_server);
   custom_worker_stop (&tmp_server->worker.custom_worker);
 
-  log_add("END sock_server_worker", LOG_DEBUG);
+  log_add("[END] sock_server_worker", LOG_DEBUG);
 }
 */
 //==============================================================================
@@ -107,7 +107,7 @@ int sock_client(int port, char *host, sock_worker_t *worker)
 /*
 void *sock_client_worker(void *arg)
 {
-  log_add("BEGIN sock_client_worker", LOG_DEBUG);
+  log_add("[BEGIN] sock_client_worker", LOG_DEBUG);
 
   sock_worker_t *tmp_worker = (sock_worker_t*)arg;
 
@@ -120,7 +120,7 @@ void *sock_client_worker(void *arg)
   }
   while(tmp_worker->custom_worker.state == SOCK_STATE_START);
 
-  log_add("END sock_client_worker", LOG_DEBUG);
+  log_add("[END] sock_client_worker", LOG_DEBUG);
 }
 */
 //==============================================================================
@@ -193,7 +193,7 @@ int sock_server_init(sock_server_t *server)
 /*
 int sock_server_start(sock_worker_t *worker)
 {
-  log_add("BEGIN sock_server_start", LOG_DEBUG);
+  log_add("[BEGIN] sock_server_start", LOG_DEBUG);
 
   char tmp[128];
   sprintf(tmp, "sock_server_start, Port: %d", worker->custom.port);
@@ -231,7 +231,7 @@ int sock_server_start(sock_worker_t *worker)
   else
     log_add("sock_server_start, listen", LOG_DEBUG);
 
-  log_add("END sock_server_start", LOG_DEBUG);
+  log_add("[END] sock_server_start", LOG_DEBUG);
 
   return SOCK_OK;
 }
@@ -253,7 +253,7 @@ int sock_find_free_index(sock_server_t *server, int *index)
 /*
 int sock_server_work(sock_server_t *server)
 {
-  log_add("BEGIN sock_server_work", LOG_DEBUG);
+  log_add("[BEGIN] sock_server_work", LOG_DEBUG);
   log_add("Server started", LOG_INFO);
   log_add("----------", LOG_INFO);
 
@@ -320,7 +320,7 @@ int sock_server_work(sock_server_t *server)
     }
   }
 
-  log_add("END sock_server_work", LOG_DEBUG);
+  log_add("[END] sock_server_work", LOG_DEBUG);
 
   return SOCK_OK;
 }
@@ -345,7 +345,7 @@ int sock_client_init(sock_worker_t *worker)
 /*
 int sock_client_start(sock_worker_t *worker)
 {
-  log_add("BEGIN sock_client_start", LOG_INFO);
+  log_add("[BEGIN] sock_client_start", LOG_INFO);
 
   char tmp[128];
   sprintf(tmp, "sock_client_start, Port: %d, Host: %s", worker->custom.port, worker->custom.host);
@@ -364,14 +364,14 @@ int sock_client_start(sock_worker_t *worker)
     log_add(tmp, LOG_DEBUG);
   }
 
-  log_add("END sock_client_start", LOG_INFO);
+  log_add("[END] sock_client_start", LOG_INFO);
 }
 */
 //==============================================================================
 /*
 int sock_client_work(sock_worker_t *worker)
 {
-  log_add("BEGIN sock_client_work", LOG_INFO);
+  log_add("[BEGIN] sock_client_work", LOG_INFO);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -398,7 +398,7 @@ int sock_client_work(sock_worker_t *worker)
 
   sock_do_work(worker, 1);
 
-  log_add("END sock_client_work", LOG_INFO);
+  log_add("[END] sock_client_work", LOG_INFO);
 }
 */
 //==============================================================================
@@ -499,7 +499,7 @@ void *sock_send_worker(void *arg)
   SOCKET         tmp_sock = tmp_worker->custom_worker.sock;
 
   char tmp[1024];
-  sprintf(tmp, "BEGIN sock_send_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[BEGIN] sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   pack_buffer    tmp_buffer;
@@ -604,7 +604,7 @@ void *sock_send_worker(void *arg)
     usleep(1000);
   }
 
-  sprintf(tmp, "END sock_send_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[END] sock_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   return NULL;
@@ -618,7 +618,7 @@ void *sock_recv_worker(void *arg)
   SOCKET tmp_sock = tmp_worker->sock;
 
   char tmp[1024];
-  sprintf(tmp, "BEGIN sock_recv_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[BEGIN] sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   pack_buffer tmp_buffer;
@@ -664,7 +664,7 @@ void *sock_recv_worker(void *arg)
     }
   }
 
-  sprintf(tmp, "END sock_recv_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[END] sock_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   tmp_worker->state = SOCK_STATE_STOP;
@@ -690,14 +690,14 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   if (*size == SOCKET_ERROR)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, sock_error());
-    make_error(ERROR_NORMAL, *size, tmp);
+    make_last_error(ERROR_NORMAL, *size, tmp);
     log_add(tmp, LOG_ERROR);
     return ERROR_NORMAL;
   }
   else if(*size == 0)
   {
     sprintf(tmp, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
-    make_error(ERROR_NONE, *size, tmp);
+    make_last_error(ERROR_NONE, *size, tmp);
     log_add(tmp, LOG_EXTRA);
     return ERROR_NONE;
   }
@@ -707,14 +707,14 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     if(*size == SOCKET_ERROR)
     {
       sprintf(tmp, "sock_recv, recv, socket: %d, error: %d", sock, sock_error());
-      make_error(ERROR_NORMAL, *size, tmp);
+      make_last_error(ERROR_NORMAL, *size, tmp);
       log_add(tmp, LOG_ERROR);
       return ERROR_NORMAL;
     }
     else if(*size == 0)
     {
       sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
-      make_error(ERROR_WARNING, *size, tmp);
+      make_last_error(ERROR_WARNING, *size, tmp);
       log_add(tmp, LOG_WARNING);
       return ERROR_WARNING;
     }

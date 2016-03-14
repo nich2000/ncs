@@ -117,7 +117,7 @@ int web_server_pause(web_server_t *server)
 //==============================================================================
 void *web_server_worker(void *arg)
 {
-  log_add("BEGIN web_server_worker", LOG_DEBUG);
+  log_add("[BEGIN] web_server_worker", LOG_DEBUG);
 
   web_server_t *tmp_server = (web_server_t*)arg;
 
@@ -125,7 +125,7 @@ void *web_server_worker(void *arg)
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add("END web_server_worker", LOG_DEBUG);
+  log_add("[END] web_server_worker", LOG_DEBUG);
 
   return NULL;
 }
@@ -139,7 +139,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
   {
-    make_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
+    make_last_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
     return ERROR_NORMAL;
   }
 
@@ -150,7 +150,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_t tmp_pthread;
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
   {
-    make_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
+    make_last_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
     return ERROR_NORMAL;
   }
 
@@ -163,7 +163,7 @@ void *web_handle_connection(void *arg)
   free(arg);
 
   char tmp[256];
-  sprintf(tmp, "BEGIN web_handle_connection, socket: %d", tmp_sock);
+  sprintf(tmp, "[BEGIN] web_handle_connection, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   char *request  = (char *)malloc(1024);
@@ -187,7 +187,7 @@ void *web_handle_connection(void *arg)
   free(request);
   free(response);
 
-  sprintf(tmp, "END web_handle_connection, socket: %d", tmp_sock);
+  sprintf(tmp, "[END] web_handle_connection, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   return NULL;

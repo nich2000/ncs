@@ -99,6 +99,8 @@ int handle_command(char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SERVER);
 
+      log_set_name("server_log.txt");
+
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
@@ -117,6 +119,8 @@ int handle_command(char *command)
     else if(strcmp(token, CMD_WEB_SERVER) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_WEB_SERVER);
+
+      log_set_name("web_server_log.txt");
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -137,6 +141,8 @@ int handle_command(char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_WS_SERVER);
 
+      log_set_name("ws_server_log.txt");
+
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
@@ -155,6 +161,8 @@ int handle_command(char *command)
     else if(strcmp(token, CMD_CLIENT) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_CLIENT);
+
+      log_set_name("client_log.txt");
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");

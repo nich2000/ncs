@@ -150,7 +150,7 @@ int ws_server_status()
 //==============================================================================
 void *ws_server_worker(void *arg)
 {
-  log_add("BEGIN ws_server_worker", LOG_DEBUG);
+  log_add("[BEGIN] ws_server_worker", LOG_DEBUG);
 
   ws_server_t *tmp_server = (ws_server_t*)arg;
 
@@ -158,7 +158,7 @@ void *ws_server_worker(void *arg)
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add("END ws_server_worker", LOG_DEBUG);
+  log_add("[END] ws_server_worker", LOG_DEBUG);
 
   return NULL;
 }
@@ -228,7 +228,7 @@ void *ws_recv_worker(void *arg)
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
   char tmp[256];
-  sprintf(tmp, "BEGIN ws_recv_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[BEGIN] ws_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   char *request  = (char*)malloc(2048);
@@ -261,7 +261,7 @@ void *ws_recv_worker(void *arg)
   free(request);
   free(response);
 
-  sprintf(tmp, "END ws_recv_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[END] ws_recv_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   return NULL;
@@ -273,7 +273,7 @@ void *ws_send_worker(void *arg)
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
   char tmp[1024];
-  sprintf(tmp, "BEGIN ws_send_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[BEGIN] ws_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   int tmp_errors = 0;
@@ -300,7 +300,7 @@ void *ws_send_worker(void *arg)
     usleep(100000);
   }
 
-  sprintf(tmp, "END ws_send_worker, socket: %d", tmp_sock);
+  sprintf(tmp, "[END] ws_send_worker, socket: %d", tmp_sock);
   log_add(tmp, LOG_DEBUG);
 
   return NULL;

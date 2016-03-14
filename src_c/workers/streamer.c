@@ -153,7 +153,7 @@ void *cmd_streamer_worker_func(void *arg)
 //==============================================================================
 int cmd_streamer_make(pack_protocol_t *protocol)
 {
-//  log_add_fmt(LOG_DEBUG, "%s", "BEGIN cmd_streamer_make");
+//  log_add_fmt(LOG_DEBUG, "%s", "[BEGIN] cmd_streamer_make");
 
   #define TEST_SEND_COUNT  1
   #define TEST_PACK_COUNT  1
@@ -205,7 +205,7 @@ int cmd_streamer_make(pack_protocol_t *protocol)
     protocol_end(protocol);
   }
 
-//  log_add_fmt(LOG_DEBUG, "%s", "END cmd_streamer_make");
+//  log_add_fmt(LOG_DEBUG, "%s", "[END] cmd_streamer_make");
 
   return ERROR_NONE;
 }
