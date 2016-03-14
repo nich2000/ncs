@@ -28,16 +28,6 @@
 //==============================================================================
 #include "defines.h"
 //==============================================================================
-#define SOCK_STATE_NONE          0
-#define SOCK_STATE_START         1
-#define SOCK_STATE_STARTING      2
-#define SOCK_STATE_STOP          3
-#define SOCK_STATE_STOPPING      4
-#define SOCK_STATE_PAUSE         5
-#define SOCK_STATE_PAUSING       6
-#define SOCK_STATE_RESUME        7
-#define SOCK_STATE_RESUMING      8
-//==============================================================================
 #define SOCK_TYPE_UNKNOWN        0
 #define SOCK_TYPE_CLIENT         1
 #define SOCK_TYPE_SERVER         2
@@ -52,9 +42,6 @@
 #define SOCK_VERSION             "SOCK001\0"
 #define SOCK_VERSION_SIZE        8
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
-//==============================================================================
-#define SOCK_TRUE                1
-#define SOCK_FALSE               0
 //==============================================================================
 #define SOCK_BUFFER_SIZE         100
 #define SOCK_WORKERS_COUNT       256

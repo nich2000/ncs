@@ -58,21 +58,21 @@ int ws_server(sock_state_t state, sock_port_t port)
 
   switch(state)
   {
-    case SOCK_STATE_NONE:
+    case STATE_NONE:
     {
       break;
     }
-    case SOCK_STATE_START:
+    case STATE_START:
     {
       ws_server_start(&_ws_server, port);
       break;
     }
-    case SOCK_STATE_STOP:
+    case STATE_STOP:
     {
       ws_server_stop(&_ws_server);
       break;
     }
-    case SOCK_STATE_PAUSE:
+    case STATE_PAUSE:
     {
       ws_server_pause(&_ws_server);
       break;
@@ -109,7 +109,7 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
   ws_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
-  server->custom_server.custom_worker.state = SOCK_STATE_START;
+  server->custom_server.custom_worker.state = STATE_START;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -127,14 +127,14 @@ int ws_server_work(ws_server_t *server)
 //==============================================================================
 int ws_server_stop(ws_server_t *server)
 {
-  server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+  server->custom_server.custom_worker.state = STATE_STOP;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_pause(ws_server_t *server)
 {
-  server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+  server->custom_server.custom_worker.state = STATE_PAUSE;
 
   return ERROR_NONE;
 }
@@ -143,7 +143,7 @@ int ws_server_status()
 {
   clr_scr();
 
-  sock_print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
+  print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
 
   return ERROR_NONE;
 }
@@ -168,7 +168,7 @@ custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
   custom_remote_client_t *tmp_client = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(ws_server->custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
+    if(ws_server->custom_remote_clients_list.items[i].custom_worker.state == STATE_STOP)
     {
       tmp_client = &ws_server->custom_remote_clients_list.items[i];
 
@@ -180,7 +180,7 @@ custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
       tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
       tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
-      tmp_client->custom_worker.state = SOCK_STATE_START;
+      tmp_client->custom_worker.state = STATE_START;
 
 //      tmp_client->on_disconnect       = ws_disconnect;
 //      tmp_client->on_error            = ws_error;
@@ -239,13 +239,13 @@ void *ws_recv_worker(void *arg)
   {
     if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
-      if(tmp_client->hand_shake != SOCK_TRUE)
+      if(tmp_client->hand_shake != TRUE)
       {
         ws_hand_shake(request, response, &size);
 
         if(sock_send(tmp_sock, response, size) == ERROR_NONE)
         {
-          tmp_client->hand_shake = SOCK_TRUE;
+          tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
         }
       }
@@ -280,7 +280,7 @@ void *ws_send_worker(void *arg)
 
   while(1)
   {
-    if(tmp_client->hand_shake == SOCK_TRUE)
+    if(tmp_client->hand_shake == TRUE)
     {
       if(!tmp_client->custom_worker.is_locked)
         if((tmp_client->out_message != NULL) && (tmp_client->out_message_size != 0))
@@ -292,7 +292,7 @@ void *ws_send_worker(void *arg)
           tmp_client->out_message = NULL;
           tmp_client->out_message_size = 0;
 
-          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_client->custom_worker.state == SOCK_STATE_STOP))
+          if((tmp_errors > SOCK_ERRORS_COUNT) || (tmp_client->custom_worker.state == STATE_STOP))
             break;
         }
     }
@@ -363,15 +363,15 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
 //==============================================================================
 int ws_server_send_pack(pack_packet_t *packet)
 {
-  if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
+  if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     {
       custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
 
-      if(tmp_client->custom_worker.state == SOCK_STATE_START)
+      if(tmp_client->custom_worker.state == STATE_START)
       {
-        tmp_client->custom_worker.is_locked = SOCK_TRUE;
+        tmp_client->custom_worker.is_locked = TRUE;
 
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
@@ -386,7 +386,7 @@ int ws_server_send_pack(pack_packet_t *packet)
         tmp_client->out_message = (char*)malloc(tmp_size);
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
-        tmp_client->custom_worker.is_locked = SOCK_FALSE;
+        tmp_client->custom_worker.is_locked = FALSE;
       }
     }
   }
@@ -396,15 +396,15 @@ int ws_server_send_pack(pack_packet_t *packet)
 //==============================================================================
 int ws_server_send_cmd(int argc, ...)
 {
-  if(_ws_server.custom_server.custom_worker.state == SOCK_STATE_START)
+  if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     {
       custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
 
-      if(tmp_client->custom_worker.state == SOCK_STATE_START)
+      if(tmp_client->custom_worker.state == STATE_START)
       {
-        tmp_client->custom_worker.is_locked = SOCK_TRUE;
+        tmp_client->custom_worker.is_locked = TRUE;
 
         pack_packet_t tmp_pack;
         pack_init(&tmp_pack);
@@ -433,7 +433,7 @@ int ws_server_send_cmd(int argc, ...)
         tmp_client->out_message = (char*)malloc(tmp_size);
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
-        tmp_client->custom_worker.is_locked = SOCK_FALSE;
+        tmp_client->custom_worker.is_locked = FALSE;
       }
     }
   }

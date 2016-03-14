@@ -55,21 +55,21 @@ int cmd_server(sock_state_t state, sock_port_t port)
 
   switch(state)
   {
-    case SOCK_STATE_NONE:
+    case STATE_NONE:
     {
       break;
     }
-    case SOCK_STATE_START:
+    case STATE_START:
     {
       cmd_server_start(&_cmd_server, port);
       break;
     }
-    case SOCK_STATE_STOP:
+    case STATE_STOP:
     {
       cmd_server_stop(&_cmd_server);
       break;
     }
-    case SOCK_STATE_PAUSE:
+    case STATE_PAUSE:
     {
       cmd_server_pause(&_cmd_server);
       break;
@@ -84,9 +84,9 @@ int cmd_server_status()
 {
   clr_scr();
 
-  sock_print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
+  print_custom_worker_info(&_cmd_server.custom_server.custom_worker, "cmd_server");
 
-  sock_print_custom_remote_clients_list_info(&_cmd_server.custom_remote_clients_list, "cmd_server");
+  print_custom_remote_clients_list_info(&_cmd_server.custom_remote_clients_list, "cmd_server");
 
   return ERROR_NONE;
 }
@@ -107,21 +107,21 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
   {
     switch(state)
     {
-      case SOCK_STATE_NONE:
+      case STATE_NONE:
       {
         break;
       }
-      case SOCK_STATE_START:
+      case STATE_START:
       {
         cmd_client_start(&_cmd_client[i], port, host);
         break;
       }
-      case SOCK_STATE_STOP:
+      case STATE_STOP:
       {
         cmd_client_stop(&_cmd_client[i]);
         break;
       }
-      case SOCK_STATE_PAUSE:
+      case STATE_PAUSE:
       {
         cmd_client_pause(&_cmd_client[i]);
         break;
@@ -138,7 +138,7 @@ int cmd_client_status()
   clr_scr();
 
   for(int i = 0; i < _cmd_client_count; i++)
-    sock_print_custom_worker_info(&_cmd_client[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
+    print_custom_worker_info(&_cmd_client[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
 
   return ERROR_NONE;
 }
@@ -170,7 +170,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   cmd_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
-  server->custom_server.custom_worker.state = SOCK_STATE_START;
+  server->custom_server.custom_worker.state = STATE_START;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -183,14 +183,14 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
 //==============================================================================
 int cmd_server_stop(cmd_server_t *server)
 {
-  server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+  server->custom_server.custom_worker.state = STATE_STOP;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_pause(cmd_server_t *worker)
 {
-  worker->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+  worker->custom_server.custom_worker.state = STATE_PAUSE;
 
   return ERROR_NONE;
 }
@@ -200,8 +200,8 @@ int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
   int tmp_count = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(clients_list->items[i].custom_worker.state == SOCK_STATE_START)
-      tmp_count++;
+    if(clients_list->items[i].custom_worker.state == STATE_START)
+       tmp_count++;
 
   return tmp_count;
 }
@@ -211,7 +211,7 @@ custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server)
   custom_remote_client_t *tmp_client = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(cmd_server->custom_remote_clients_list.items[i].custom_worker.state == SOCK_STATE_STOP)
+    if(cmd_server->custom_remote_clients_list.items[i].custom_worker.state == STATE_STOP)
     {
       tmp_client = &cmd_server->custom_remote_clients_list.items[i];
 
@@ -223,7 +223,7 @@ custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server)
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
       tmp_client->custom_worker.mode  = cmd_server->custom_server.custom_worker.mode;
       tmp_client->custom_worker.port  = cmd_server->custom_server.custom_worker.port;
-      tmp_client->custom_worker.state = SOCK_STATE_START;
+      tmp_client->custom_worker.state = STATE_START;
 
       tmp_client->on_disconnect       = cmd_disconnect;
       tmp_client->on_error            = cmd_error;
@@ -313,7 +313,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 //  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
-  client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_START;
+  client->custom_client.custom_remote_client.custom_worker.state = STATE_START;
   strcpy((char*)client->custom_client.custom_remote_client.custom_worker.host, (char*)host);
 
   pthread_attr_t tmp_attr;
@@ -327,14 +327,14 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 //==============================================================================
 int cmd_client_stop(cmd_client_t *client)
 {
-  client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_STOP;
+  client->custom_client.custom_remote_client.custom_worker.state = STATE_STOP;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_pause(cmd_client_t *client)
 {
-  client->custom_client.custom_remote_client.custom_worker.state = SOCK_STATE_PAUSE;
+  client->custom_client.custom_remote_client.custom_worker.state  = STATE_PAUSE;
 
   return ERROR_NONE;
 }
@@ -351,7 +351,7 @@ void *cmd_client_worker(void *arg)
     custom_client_work (&tmp_client->custom_client);
     custom_worker_stop (&tmp_client->custom_client.custom_remote_client.custom_worker);
   }
-  while(tmp_client->custom_client.custom_remote_client.custom_worker.state == SOCK_STATE_START);
+  while(tmp_client->custom_client.custom_remote_client.custom_worker.state == STATE_START);
 
   log_add("END cmd_client_worker", LOG_DEBUG);
 
@@ -401,7 +401,7 @@ void *cmd_send_worker(void *arg)
   pack_buffer_t    tmp_buffer;
   pack_size_t      tmp_size;
 
-  while(tmp_client->custom_worker.state == SOCK_STATE_START)
+  while(tmp_client->custom_worker.state == STATE_START)
   {
     tmp_pack = _protocol_next_pack(tmp_protocol);
     while(tmp_pack != NULL)
@@ -452,7 +452,7 @@ int cmd_send(void *sender)
 
   pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
 
-  pack_print(tmp_packet, "cmd_send", 1, 0, 1, 0);
+  print_pack(tmp_packet, "cmd_send", 1, 0, 1, 0);
 
   return ERROR_NONE;
 }
@@ -474,7 +474,7 @@ int cmd_server_send(int argc, ...)
   {
     custom_remote_client_t *tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
 
-    if(tmp_client->custom_worker.state == SOCK_STATE_START)
+    if(tmp_client->custom_worker.state == STATE_START)
     {
       pack_protocol_t *protocol = &tmp_client->protocol;
 
@@ -585,13 +585,13 @@ int cmd_exec(pack_packet_t *packet)
         sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
 
         if(strcmp((char*)tmp_param, "on") == 0)
-          cmd_streamer(SOCK_STATE_START);
+          cmd_streamer(STATE_START);
         else if(strcmp((char*)tmp_param, "off") == 0)
-          cmd_streamer(SOCK_STATE_STOP);
+          cmd_streamer(STATE_STOP);
         else if(strcmp((char*)tmp_param, "pause") == 0)
-          cmd_streamer(SOCK_STATE_PAUSE);
+          cmd_streamer(STATE_PAUSE);
         else if(strcmp((char*)tmp_param, "resume") == 0)
-          cmd_streamer(SOCK_STATE_RESUME);
+          cmd_streamer(STATE_RESUME);
       }
     }
 

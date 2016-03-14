@@ -49,21 +49,21 @@ int web_server(sock_state_t state, sock_port_t port)
 
   switch(state)
   {
-    case SOCK_STATE_NONE:
+    case STATE_NONE:
     {
       break;
     }
-    case SOCK_STATE_START:
+    case STATE_START:
     {
       web_server_start(&_web_server, port);
       break;
     }
-    case SOCK_STATE_STOP:
+    case STATE_STOP:
     {
       web_server_stop(&_web_server);
       break;
     }
-    case SOCK_STATE_PAUSE:
+    case STATE_PAUSE:
     {
       web_server_pause(&_web_server);
       break;
@@ -92,7 +92,7 @@ int web_server_start(web_server_t *server, sock_port_t port)
   web_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
-  server->custom_server.custom_worker.state = SOCK_STATE_START;
+  server->custom_server.custom_worker.state = STATE_START;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -103,14 +103,14 @@ int web_server_start(web_server_t *server, sock_port_t port)
 //==============================================================================
 int web_server_stop(web_server_t *server)
 {
-  server->custom_server.custom_worker.state = SOCK_STATE_STOP;
+  server->custom_server.custom_worker.state = STATE_STOP;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int web_server_pause(web_server_t *server)
 {
-  server->custom_server.custom_worker.state = SOCK_STATE_PAUSE;
+  server->custom_server.custom_worker.state = STATE_PAUSE;
 
   return ERROR_NONE;
 }
@@ -271,7 +271,7 @@ int web_server_status()
 {
   clr_scr();
 
-  sock_print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
+  print_custom_worker_info(&_web_server.custom_server.custom_worker, "web_server");
 
   return ERROR_NONE;
 }

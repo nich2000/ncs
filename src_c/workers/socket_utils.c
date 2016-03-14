@@ -50,36 +50,6 @@ const char *sock_type_to_string(sock_type_t type)
   }
 }
 //==============================================================================
-const char *sock_state_to_string(sock_state_t state)
-{
-  switch (state) {
-  case SOCK_STATE_NONE:
-    return "SOCK_STATE_NONE";
-    break;
-  case SOCK_STATE_START:
-    return "SOCK_STATE_START";
-    break;
-    case SOCK_STATE_STARTING:
-      return "SOCK_STATE_STARTING";
-      break;
-  case SOCK_STATE_STOP:
-    return "SOCK_STATE_STOP";
-    break;
-    case SOCK_STATE_STOPPING:
-      return "SOCK_STATE_STOPPING";
-      break;
-  case SOCK_STATE_PAUSE:
-    return "SOCK_STATE_PAUSE";
-    break;
-    case SOCK_STATE_PAUSING:
-      return "SOCK_STATE_PAUSING";
-      break;
-  default:
-    return "SOCK_STATE_UNKNOWN";
-    break;
-  }
-}
-//==============================================================================
 int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 {
   char tmp[128];
@@ -117,51 +87,5 @@ int sock_print_client_header(sock_port_t port, sock_host_t host)
   log_add("----------", LOG_INFO);
 
   return ERROR_NONE;
-}
-//==============================================================================
-int sock_print_custom_worker_info(custom_worker_t *worker, char *prefix)
-{
-  if(worker == NULL)
-    return 1;
-
-  char tmp_info[1024];
-
-  sprintf(tmp_info,
-          "%s\n"                                  \
-          "addr:                            %d\n" \
-          "id:                              %d\n" \
-          "type:                            %s\n" \
-          "mode:                            %s\n" \
-          "port:                            %d\n" \
-          "host:                            %s\n" \
-          "sock:                            %d\n" \
-          "state:                           %s\n" \
-          "is_locked:                       %d\n",
-          prefix,
-          (int)&worker,
-          worker->id,
-          sock_type_to_string(worker->type),
-          sock_mode_to_string(worker->mode),
-          worker->port,
-          worker->host,
-          worker->sock,
-          sock_state_to_string(worker->state),
-          worker->is_locked);
-
-  log_add(tmp_info, LOG_INFO);
-
-  return 0;
-}
-//==============================================================================
-int sock_print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix)
-{
-  if(clients_list == 0)
-    return 1;
-
-  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(clients_list->items[i].custom_worker.state == SOCK_STATE_START)
-      sock_print_custom_worker_info(&clients_list->items[i].custom_worker, prefix);
-
-  return 0;
 }
 //==============================================================================

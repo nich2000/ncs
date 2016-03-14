@@ -33,26 +33,26 @@ int cmd_streamer(sock_state_t state)
   {
     switch(state)
     {
-      case SOCK_STATE_NONE:
+      case STATE_NONE:
       {
         break;
       }
-      case SOCK_STATE_START:
+      case STATE_START:
       {
         cmd_streamer_start(&_cmd_streamer[i], &_cmd_client[i].custom_client.custom_remote_client.protocol);
         break;
       }
-      case SOCK_STATE_STOP:
+      case STATE_STOP:
       {
         cmd_streamer_stop(&_cmd_streamer[i]);
         break;
       }
-      case SOCK_STATE_PAUSE:
+      case STATE_PAUSE:
       {
         cmd_streamer_pause(&_cmd_streamer[i]);
         break;
       }
-      case SOCK_STATE_RESUME:
+      case STATE_RESUME:
       {
         cmd_streamer_resume(&_cmd_streamer[i]);
         break;
@@ -72,8 +72,8 @@ int cmd_streamer_status()
 int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
 {
   worker->is_test     =  0;
-  worker->is_work     =  SOCK_FALSE;
-  worker->is_pause    =  SOCK_TRUE;
+  worker->is_work     =  FALSE;
+  worker->is_pause    =  TRUE;
   worker->last_number = -1;
   worker->protocol    =  protocol;
   worker->work_thread =  0;
@@ -87,8 +87,8 @@ int cmd_streamer_start(streamer_worker *worker, pack_protocol_t *protocol)
 
   cmd_streamer_init(worker, protocol);
 
-  worker->is_work  = SOCK_TRUE;
-  worker->is_pause = SOCK_FALSE;
+  worker->is_work  = TRUE;
+  worker->is_pause = FALSE;
 
   pthread_create(&worker->work_thread, NULL, cmd_streamer_worker_func, (void*)worker);
 
@@ -99,7 +99,7 @@ int cmd_streamer_stop(streamer_worker *worker)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_stop");
 
-  worker->is_work = SOCK_FALSE;
+  worker->is_work = FALSE;
 
   return ERROR_NONE;
 }
@@ -108,7 +108,7 @@ int cmd_streamer_pause(streamer_worker *worker)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_pause");
 
-  worker->is_pause = SOCK_TRUE;
+  worker->is_pause = TRUE;
 
   return ERROR_NONE;
 }
@@ -117,7 +117,7 @@ int cmd_streamer_resume(streamer_worker *worker)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_resume");
 
-  worker->is_pause = SOCK_FALSE;
+  worker->is_pause = FALSE;
 
   return ERROR_NONE;
 }

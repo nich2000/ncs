@@ -16,7 +16,7 @@ int custom_worker_init(custom_worker_t *worker)
   worker->mode               = SOCK_MODE_UNKNOWN;
   worker->port               = 0;
   worker->sock               = INVALID_SOCKET;
-  worker->state              = SOCK_STATE_STOP;
+  worker->state              = STATE_STOP;
   worker->is_locked          = 0;
 
   memset(worker->host, 0, SOCK_HOST_SIZE);
@@ -37,7 +37,7 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
   custom_remote_client->out_message = 0;
   custom_remote_client->out_message_size = 0;
   //TODO  Временное явление 3
-  custom_remote_client->hand_shake = SOCK_FALSE;
+  custom_remote_client->hand_shake = FALSE;
   //TODO  Временное явление 4
   custom_remote_client->report = 0;
 
@@ -181,7 +181,7 @@ int custom_server_work(custom_server_t *server)
   socklen_t addrlen = sizeof(struct sockaddr_in);
   int errors = 0;
 
-  while(server->custom_worker.state == SOCK_STATE_START)
+  while(server->custom_worker.state == STATE_START)
   {
     log_add_fmt(LOG_DEBUG, "waiting for connect, port: %d...", server->custom_worker.port);
 
@@ -194,7 +194,7 @@ int custom_server_work(custom_server_t *server)
       errors++;
       if(errors > SOCK_ERRORS_COUNT)
       {
-        server->custom_worker.state = SOCK_STATE_STOP;
+        server->custom_worker.state = STATE_STOP;
         make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
         log_add(tmp, LOG_ERROR_CRITICAL);
         return ERROR_CRITICAL;
@@ -240,7 +240,7 @@ int custom_client_work(custom_client_t *client)
   addr.sin_addr.s_addr = inet_addr((char*)client->custom_remote_client.custom_worker.host);
 
   log_add("connecting to server...", LOG_INFO);
-  while(client->custom_remote_client.custom_worker.state == SOCK_STATE_START)
+  while(client->custom_remote_client.custom_worker.state == STATE_START)
   {
     if(connect(client->custom_remote_client.custom_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
     {
@@ -288,7 +288,7 @@ void *custom_recv_worker(void *arg)
   int           tmp_size = 0;
   int           tmp_errors = 0;
 
-  while(tmp_client->custom_worker.state == SOCK_STATE_START)
+  while(tmp_client->custom_worker.state == STATE_START)
   {
     int retval = sock_recv(tmp_sock, (char*)tmp_buffer, &tmp_size);
     if(retval == ERROR_NONE)

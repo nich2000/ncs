@@ -28,9 +28,16 @@ int          valueI;
 pack_buffer_t  valueS;
 float        valueF;
 //==============================================================================
+int test_pack();
+int test_gps();
 int test_create_pack();
 int test_validate_pack();
 int test_parse_pack();
+//==============================================================================
+int test()
+{
+  return ERROR_NONE;
+}
 //==============================================================================
 int test_gps()
 {
