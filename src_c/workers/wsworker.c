@@ -41,7 +41,7 @@ void *ws_server_worker(void *arg);
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host);
 //==============================================================================
-custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server);
+custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
@@ -159,7 +159,9 @@ int ws_server_status()
 {
   clr_scr();
 
-  print_custom_worker_info(&_ws_server.custom_server.custom_worker, "ws_server");
+  print_custom_worker_info(&_ws_server.custom_server.custom_worker , "ws_server");
+
+  print_custom_remote_clients_list_info(&_ws_server.custom_remote_clients_list, "ws_server");
 
   return ERROR_NONE;
 }
@@ -179,38 +181,33 @@ void *ws_server_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
+custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server)
 {
-  custom_remote_client_t *tmp_client = NULL;
+  custom_remote_client_t *tmp_client = _custom_server_remote_clients_next(&ws_server->custom_remote_clients_list);
 
-  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(ws_server->custom_remote_clients_list.items[i].custom_worker.state == STATE_STOP)
-    {
-      tmp_client = &ws_server->custom_remote_clients_list.items[i];
+  if(tmp_client != NULL)
+  {
+    custom_remote_client_init(tmp_client);
 
-      custom_remote_client_init(tmp_client);
+    tmp_client->protocol.on_new_in_data  = ws_new_data;
 
-      tmp_client->protocol.on_new_in_data  = ws_new_data;
+    tmp_client->custom_worker.id    = ws_server->custom_remote_clients_list.next_id++;
+    tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
+    tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
+    tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
 
-      tmp_client->custom_worker.id    = ws_server->custom_remote_clients_list.next_id++;
-      tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
-      tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
-      tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
-
-      tmp_client->on_disconnect       = ws_disconnect;
-      tmp_client->on_error            = ws_error;
-      tmp_client->on_recv             = ws_recv;
-      tmp_client->on_send             = ws_send;
-
-      break;
-    }
+    tmp_client->on_disconnect       = ws_disconnect;
+    tmp_client->on_error            = ws_error;
+    tmp_client->on_recv             = ws_recv;
+    tmp_client->on_send             = ws_send;
+  }
 
   return tmp_client;
 }
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  custom_remote_client_t *tmp_client = ws_server_remote_clients_next(&_ws_server);
+  custom_remote_client_t *tmp_client = _ws_server_remote_clients_next(&_ws_server);
 
   if(tmp_client == 0)
   {

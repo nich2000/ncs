@@ -235,6 +235,8 @@ int custom_client_work(custom_client_t *client)
   log_add("----------", LOG_INFO);
 
   client->custom_remote_client.custom_worker.state = STATE_START;
+  if(client->custom_remote_client.custom_worker.on_state != NULL)
+    client->custom_remote_client.custom_worker.on_state(client, STATE_START);
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -263,6 +265,8 @@ int custom_client_work(custom_client_t *client)
   }
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
+  if(client->custom_remote_client.custom_worker.on_state != NULL)
+    client->custom_remote_client.custom_worker.on_state(client, STATE_STOP);
 
   log_add("[END] custom_client_work", LOG_DEBUG);
 
@@ -277,6 +281,8 @@ void *custom_recv_worker(void *arg)
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
   log_add_fmt(LOG_DEBUG, "[BEGIN] custom_recv_worker, socket: %d", tmp_sock);
+
+  tmp_client->custom_worker.state = STATE_START;
 
   char tmp_report_name[256];
   sprintf(tmp_report_name, "report_%d.txt", tmp_client->custom_worker.id);
@@ -328,5 +334,32 @@ void *custom_recv_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[END] custom_recv_worker, socket: %d", tmp_sock);
 
   return NULL;
+}
+//==============================================================================
+int _custom_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
+{
+  int tmp_count = 0;
+
+  if(clients_list != NULL)
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+      if(clients_list->items[i].custom_worker.state == STATE_START)
+         tmp_count++;
+
+  return tmp_count;
+}
+//==============================================================================
+custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list)
+{
+  custom_remote_client_t *tmp_client = NULL;
+
+  if(clients_list != NULL)
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+      if(clients_list->items[i].custom_worker.state == STATE_STOP)
+      {
+        tmp_client = &clients_list->items[i];
+        break;
+      }
+
+  return tmp_client;
 }
 //==============================================================================

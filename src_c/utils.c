@@ -81,7 +81,7 @@ int print_types_info()
   );
   log_add(tmp, LOG_INFO);
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int print_defines_info()
@@ -120,7 +120,7 @@ int print_defines_info()
   );
   log_add(tmp, LOG_INFO);
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int print_custom_worker_info(custom_worker_t *worker, char *prefix)
@@ -168,7 +168,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
 
   log_add(tmp_info, LOG_INFO);
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix)
@@ -176,11 +176,17 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
   if(clients_list == 0)
     return 1;
 
-  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-    if(clients_list->items[i].custom_worker.state == STATE_START)
-      print_custom_worker_info(&clients_list->items[i].custom_worker, prefix);
+  log_add_fmt(LOG_INFO, "clients count: %d", _custom_server_remote_clients_count(clients_list));
 
-  return 0;
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    custom_worker_t *tmp_worker = &clients_list->items[i].custom_worker;
+
+    if(tmp_worker->state == STATE_START)
+      print_custom_worker_info(tmp_worker, prefix);
+  }
+
+  return ERROR_NONE;
 }
 //==============================================================================
 unsigned char nibbles[] = {"0123456789ABCDEF"};
@@ -197,7 +203,7 @@ int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
 
   hex[j] = '0';
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int print_pack(pack_packet_t *packet, char *prefix, int clear, int buffer, int pack, int csv)

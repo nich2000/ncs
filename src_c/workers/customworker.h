@@ -100,5 +100,8 @@ int custom_server_work  (custom_server_t *server);
 int custom_client_work  (custom_client_t *client);
 
 void *custom_recv_worker(void *arg);
+
+int _custom_server_remote_clients_count(custom_remote_clients_list_t *clients_list);
+custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list);
 //==============================================================================
 #endif //CUSTOMWORKER_H
