@@ -10,6 +10,8 @@
 #include "socket_types.h"
 #include "ncs_error.h"
 //==============================================================================
+typedef int (*on_state_t)     (void *sender, sock_state_t state);
+typedef int (*on_lock_t)      (void *sender, int is_locked);
 typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
 typedef int (*on_connect_t)   (void *sender);
 typedef int (*on_disconnect_t)(void *sender);
@@ -26,6 +28,9 @@ typedef struct
   SOCKET          sock;
   sock_state_t    state;
   int             is_locked;
+
+  on_state_t      on_state;
+  on_lock_t       on_lock;
 }custom_worker_t;
 //==============================================================================
 typedef struct

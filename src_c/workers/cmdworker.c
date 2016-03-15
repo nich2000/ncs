@@ -17,6 +17,7 @@ int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
 int cmd_server_stop (cmd_server_t *server);
 int cmd_server_pause(cmd_server_t *server);
+int cmd_server_resume(cmd_server_t *server);
 //==============================================================================
 void *cmd_server_worker(void *arg);
 //==============================================================================
@@ -72,6 +73,11 @@ int cmd_server(sock_state_t state, sock_port_t port)
     case STATE_PAUSE:
     {
       cmd_server_pause(&_cmd_server);
+      break;
+    }
+    case STATE_RESUME:
+    {
+      cmd_server_resume(&_cmd_server);
       break;
     }
     default:;
@@ -170,7 +176,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   cmd_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
-  server->custom_server.custom_worker.state = STATE_START;
+  server->custom_server.custom_worker.state = STATE_STARTING;
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -183,14 +189,21 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
 //==============================================================================
 int cmd_server_stop(cmd_server_t *server)
 {
-  server->custom_server.custom_worker.state = STATE_STOP;
+  server->custom_server.custom_worker.state = STATE_STOPPING;
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_pause(cmd_server_t *worker)
+int cmd_server_pause(cmd_server_t *server)
 {
-  worker->custom_server.custom_worker.state = STATE_PAUSE;
+  server->custom_server.custom_worker.state = STATE_PAUSING;
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_server_resume(cmd_server_t *server)
+{
+  server->custom_server.custom_worker.state = STATE_RESUMING;
 
   return ERROR_NONE;
 }
@@ -208,7 +221,7 @@ int _cmd_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
 //==============================================================================
 custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server)
 {
-  custom_remote_client_t *tmp_client = 0;
+  custom_remote_client_t *tmp_client = NULL;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     if(cmd_server->custom_remote_clients_list.items[i].custom_worker.state == STATE_STOP)
@@ -223,7 +236,6 @@ custom_remote_client_t *cmd_server_remote_clients_next(cmd_server_t *cmd_server)
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
       tmp_client->custom_worker.mode  = cmd_server->custom_server.custom_worker.mode;
       tmp_client->custom_worker.port  = cmd_server->custom_server.custom_worker.port;
-      tmp_client->custom_worker.state = STATE_START;
 
       tmp_client->on_disconnect       = cmd_disconnect;
       tmp_client->on_error            = cmd_error;
@@ -247,6 +259,10 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
                 socket, host);
     return ERROR_CRITICAL;
   }
+
+  tmp_client->custom_worker.state = STATE_STARTING;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_STARTING);
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -313,7 +329,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 //  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
-  client->custom_client.custom_remote_client.custom_worker.state = STATE_START;
+  client->custom_client.custom_remote_client.custom_worker.state = STATE_STARTING;
   strcpy((char*)client->custom_client.custom_remote_client.custom_worker.host, (char*)host);
 
   pthread_attr_t tmp_attr;
@@ -436,7 +452,7 @@ void *cmd_send_worker(void *arg)
 //==============================================================================
 int cmd_disconnect(void *sender)
 {
-  log_add("disconnected from server", LOG_INFO);
+  log_add("cmd_disconnect, disconnected from server", LOG_INFO);
 
   return ERROR_NONE;
 }

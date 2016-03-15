@@ -41,8 +41,18 @@ void *ws_server_worker(void *arg);
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host);
 //==============================================================================
+custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server);
+//==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
+//==============================================================================
+int ws_new_data(void *sender, void *data);
+int ws_disconnect(void *sender);
+int ws_error(void *sender, error_t *error);
+int ws_recv(void *sender, unsigned char *buffer, int size);
+int ws_send(void *sender);
+//==============================================================================
+int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
@@ -109,7 +119,9 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
   ws_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
-  server->custom_server.custom_worker.state = STATE_START;
+  server->custom_server.custom_worker.state = STATE_STARTING;
+  if(server->custom_server.custom_worker.on_state != NULL)
+    server->custom_server.custom_worker.on_state(server, STATE_STARTING);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -128,6 +140,8 @@ int ws_server_work(ws_server_t *server)
 int ws_server_stop(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_STOP;
+  if(server->custom_server.custom_worker.on_state != NULL)
+    server->custom_server.custom_worker.on_state(server, STATE_STOP);
 
   return ERROR_NONE;
 }
@@ -135,6 +149,8 @@ int ws_server_stop(ws_server_t *server)
 int ws_server_pause(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_PAUSE;
+  if(server->custom_server.custom_worker.on_state != NULL)
+    server->custom_server.custom_worker.on_state(server, STATE_PAUSE);
 
   return ERROR_NONE;
 }
@@ -165,7 +181,7 @@ void *ws_server_worker(void *arg)
 //==============================================================================
 custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
 {
-  custom_remote_client_t *tmp_client = 0;
+  custom_remote_client_t *tmp_client = NULL;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     if(ws_server->custom_remote_clients_list.items[i].custom_worker.state == STATE_STOP)
@@ -174,18 +190,17 @@ custom_remote_client_t *ws_server_remote_clients_next(ws_server_t *ws_server)
 
       custom_remote_client_init(tmp_client);
 
-//      tmp_client->protocol.on_new_in_data  = ws_new_data;
+      tmp_client->protocol.on_new_in_data  = ws_new_data;
 
       tmp_client->custom_worker.id    = ws_server->custom_remote_clients_list.next_id++;
       tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
       tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
       tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
-      tmp_client->custom_worker.state = STATE_START;
 
-//      tmp_client->on_disconnect       = ws_disconnect;
-//      tmp_client->on_error            = ws_error;
-//      tmp_client->on_recv             = ws_recv;
-//      tmp_client->on_send             = ws_send;
+      tmp_client->on_disconnect       = ws_disconnect;
+      tmp_client->on_error            = ws_error;
+      tmp_client->on_recv             = ws_recv;
+      tmp_client->on_send             = ws_send;
 
       break;
     }
@@ -204,6 +219,10 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
             socket, host);
     return ERROR_NORMAL;
   }
+
+  tmp_client->custom_worker.state = STATE_STARTING;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_STARTING);
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -227,15 +246,17 @@ void *ws_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  char tmp[256];
-  sprintf(tmp, "[BEGIN] ws_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] ws_recv_worker, socket: %d", tmp_sock);
+
+  tmp_client->custom_worker.state = STATE_START;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
   char *request  = (char*)malloc(2048);
   char *response = (char*)malloc(1024*1024);
   int  size      = 0;
 
-  while(1)
+  while(tmp_client->custom_worker.state == STATE_START)
   {
     if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
@@ -261,8 +282,11 @@ void *ws_recv_worker(void *arg)
   free(request);
   free(response);
 
-  sprintf(tmp, "[END] ws_recv_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  tmp_client->custom_worker.state = STATE_STOP;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_STOP);
+
+  log_add_fmt(LOG_DEBUG, "[END] ws_recv_worker, socket: %d", tmp_sock);
 
   return NULL;
 }
@@ -272,13 +296,15 @@ void *ws_send_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  char tmp[1024];
-  sprintf(tmp, "[BEGIN] ws_send_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] ws_send_worker, socket: %d", tmp_sock);
+
+  tmp_client->custom_worker.state = STATE_START;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
   int tmp_errors = 0;
 
-  while(1)
+  while(tmp_client->custom_worker.state == STATE_START)
   {
     if(tmp_client->hand_shake == TRUE)
     {
@@ -300,10 +326,42 @@ void *ws_send_worker(void *arg)
     usleep(100000);
   }
 
-  sprintf(tmp, "[END] ws_send_worker, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  tmp_client->custom_worker.state = STATE_STOP;
+  if(tmp_client->custom_worker.on_state != NULL)
+    tmp_client->custom_worker.on_state(tmp_client, STATE_STOP);
+
+  log_add_fmt(LOG_DEBUG, "[END] ws_send_worker, socket: %d", tmp_sock);
 
   return NULL;
+}
+//==============================================================================
+int ws_new_data(void *sender, void *data)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_disconnect(void *sender)
+{
+  log_add("ws_disconnect, disconnected from server", LOG_INFO);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_error(void *sender, error_t *error)
+{
+  log_add_fmt(LOG_INFO, "ws_error, message: %s", error->message);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_recv(void *sender, unsigned char *buffer, int size)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_send(void *sender)
+{
+  return ERROR_NONE;
 }
 //==============================================================================
 /*
@@ -372,6 +430,8 @@ int ws_server_send_pack(pack_packet_t *packet)
       if(tmp_client->custom_worker.state == STATE_START)
       {
         tmp_client->custom_worker.is_locked = TRUE;
+        if(tmp_client->custom_worker.on_lock != 0)
+          tmp_client->custom_worker.on_lock(tmp_client, TRUE);
 
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
@@ -387,6 +447,8 @@ int ws_server_send_pack(pack_packet_t *packet)
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
         tmp_client->custom_worker.is_locked = FALSE;
+        if(tmp_client->custom_worker.on_lock != 0)
+          tmp_client->custom_worker.on_lock(tmp_client, FALSE);
       }
     }
   }
@@ -405,6 +467,8 @@ int ws_server_send_cmd(int argc, ...)
       if(tmp_client->custom_worker.state == STATE_START)
       {
         tmp_client->custom_worker.is_locked = TRUE;
+        if(tmp_client->custom_worker.on_lock != 0)
+          tmp_client->custom_worker.on_lock(tmp_client, TRUE);
 
         pack_packet_t tmp_pack;
         pack_init(&tmp_pack);
@@ -434,6 +498,8 @@ int ws_server_send_cmd(int argc, ...)
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
         tmp_client->custom_worker.is_locked = FALSE;
+        if(tmp_client->custom_worker.on_lock != 0)
+          tmp_client->custom_worker.on_lock(tmp_client, FALSE);
       }
     }
   }

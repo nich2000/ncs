@@ -130,6 +130,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
 
   char tmp_info[1024];
 
+  #ifdef PRINT_ALL_INFO
   sprintf(tmp_info,
           "%s\n"                                  \
           "addr:                            %d\n" \
@@ -151,6 +152,19 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           worker->sock,
           state_to_string(worker->state),
           worker->is_locked);
+  #else
+  sprintf(tmp_info,
+          "%s\n"                                  \
+          "id:                              %d\n" \
+          "type:                            %s\n" \
+          "mode:                            %s\n" \
+          "state:                           %s\n",
+          prefix,
+          worker->id,
+          sock_type_to_string(worker->type),
+          sock_mode_to_string(worker->mode),
+          state_to_string(worker->state));
+  #endif
 
   log_add(tmp_info, LOG_INFO);
 

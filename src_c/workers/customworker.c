@@ -21,6 +21,9 @@ int custom_worker_init(custom_worker_t *worker)
 
   memset(worker->host, 0, SOCK_HOST_SIZE);
 
+  worker->on_state           = 0;
+  worker->on_lock            = 0;
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -173,8 +176,9 @@ int custom_worker_stop(custom_worker_t *worker)
 int custom_server_work(custom_server_t *server)
 {
   log_add("[BEGIN] custom_server_work", LOG_DEBUG);
-//  log_add("server started", LOG_INFO);
-//  log_add("----------", LOG_INFO);
+  log_add_fmt(LOG_INFO, "server started, port: %d...", server->custom_worker.port);
+
+  server->custom_worker.state = STATE_START;
 
   char tmp[128];
   struct sockaddr_in addr;
@@ -193,13 +197,7 @@ int custom_server_work(custom_server_t *server)
       log_add(tmp, LOG_ERROR);
       errors++;
       if(errors > SOCK_ERRORS_COUNT)
-      {
-        server->custom_worker.state = STATE_STOP;
-        make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
-        log_add(tmp, LOG_ERROR_CRITICAL);
-        server->custom_worker.state = STATE_STOP;
-        return ERROR_CRITICAL;
-      }
+        server->custom_worker.state = STATE_STOPPING;
     }
     else
     {
@@ -211,10 +209,9 @@ int custom_server_work(custom_server_t *server)
         getsockname(tmp_client, (struct sockaddr*)&tmp_addr, (socklen_t*)&tmp_len);
         strcpy((char*)tmp_host, inet_ntoa(tmp_addr.sin_addr));
         int tmp_port = ntohs(tmp_addr.sin_port);
-
-        sprintf(tmp, "custom_server_work, accepted, socket: %d, host: %s, port: %d",
-                tmp_client, tmp_host, tmp_port);
-        log_add(tmp, LOG_DEBUG);
+        log_add_fmt(LOG_DEBUG,
+                    "custom_server_work, accepted, socket: %d, host: %s, port: %d",
+                    tmp_client, tmp_host, tmp_port);
 
         if(server->on_accept((void*)server, tmp_client, tmp_host) != ERROR_NONE)
           log_add_fmt(LOG_ERROR, "custom_server_work, Error: %s", last_error()->message);
@@ -236,6 +233,8 @@ int custom_client_work(custom_client_t *client)
   log_add("[BEGIN] custom_client_work", LOG_DEBUG);
   log_add("client started", LOG_INFO);
   log_add("----------", LOG_INFO);
+
+  client->custom_remote_client.custom_worker.state = STATE_START;
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -262,6 +261,8 @@ int custom_client_work(custom_client_t *client)
 
     usleep(1000);
   }
+
+  client->custom_remote_client.custom_worker.state = STATE_STOP;
 
   log_add("[END] custom_client_work", LOG_DEBUG);
 
