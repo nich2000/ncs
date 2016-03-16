@@ -13,7 +13,9 @@ int sock_error();
 int sock_init();
 int sock_deinit();
 //==============================================================================
-int sock_send(SOCKET sock, char *buffer, int  size);
-int sock_recv(SOCKET sock, char *buffer, int *size);
+int sock_accept (SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t *port);
+int sock_connect(SOCKET sock, sock_port_t port, sock_host_t host);
+int sock_send   (SOCKET sock, char *buffer, int  size);
+int sock_recv   (SOCKET sock, char *buffer, int *size);
 //==============================================================================
 #endif //SOCKET_H

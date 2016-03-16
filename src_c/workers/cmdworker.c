@@ -471,6 +471,7 @@ int cmd_error(void *sender, error_t *error)
 //==============================================================================
 int cmd_send(void *sender)
 {
+  #ifdef PRINT_SND_PACK
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
@@ -478,6 +479,7 @@ int cmd_send(void *sender)
   pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
 
   print_pack(tmp_packet, "cmd_send", 1, 0, 1, 0);
+  #endif
 
   return ERROR_NONE;
 }

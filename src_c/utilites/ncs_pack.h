@@ -99,7 +99,7 @@ int pack_keys_to_csv             (pack_packet_t *pack, unsigned char delimeter, 
 int pack_values_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
 //==============================================================================
 int pack_add_cmd                 (pack_packet_t *pack, pack_string_t command);
-int pack_add_param               (pack_packet_t *pack, pack_string_t command);
+int pack_add_param               (pack_packet_t *pack, pack_string_t param);
 //==============================================================================
 BOOL _pack_is_command            (pack_packet_t *pack);
 int pack_command                 (pack_packet_t *pack, pack_value_t command);

@@ -174,24 +174,25 @@ int custom_worker_stop(custom_worker_t *worker)
 int custom_server_work(custom_server_t *server)
 {
   log_add("[BEGIN] custom_server_work", LOG_DEBUG);
-  log_add_fmt(LOG_INFO, "server started, port: %d...", server->custom_worker.port);
 
   server->custom_worker.state = STATE_START;
 
-  struct sockaddr_in addr;
-  socklen_t addrlen = sizeof(struct sockaddr_in);
+  log_add_fmt(LOG_INFO, "server started, port: %d...", server->custom_worker.port);
+
   int errors = 0;
 
   while(server->custom_worker.state == STATE_START)
   {
     log_add_fmt(LOG_DEBUG, "waiting for connect, port: %d...", server->custom_worker.port);
 
-    SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
-    if(tmp_client == INVALID_SOCKET)
+    SOCKET tmp_client;
+    sock_host_t tmp_host;
+    sock_port_t tmp_port;
+    if(sock_accept(server->custom_worker.sock, &tmp_client, tmp_host, &tmp_port) >= ERROR_NORMAL)
     {
       char tmp[128];
-      sprintf(tmp, "custom_server_work, accept, error: %d", sock_error());
-      make_last_error(ERROR_NORMAL, INVALID_SOCKET, tmp);
+      sprintf(tmp, "custom_server_work, sock_accept, error: %d", sock_error());
+      make_last_error(ERROR_NORMAL, ERROR_NORMAL, tmp);
       log_add(tmp, LOG_ERROR);
       errors++;
       if(errors > SOCK_ERRORS_COUNT)
@@ -201,12 +202,6 @@ int custom_server_work(custom_server_t *server)
     {
       if(server->on_accept != 0)
       {
-        sock_host_t tmp_host;
-        struct sockaddr_in tmp_addr;
-        socklen_t tmp_len = sizeof(tmp_addr);
-        getsockname(tmp_client, (struct sockaddr*)&tmp_addr, (socklen_t*)&tmp_len);
-        strcpy((char*)tmp_host, inet_ntoa(tmp_addr.sin_addr));
-        int tmp_port = ntohs(tmp_addr.sin_port);
         log_add_fmt(LOG_DEBUG,
                     "custom_server_work, accepted, socket: %d, host: %s, port: %d",
                     tmp_client, tmp_host, tmp_port);
@@ -220,6 +215,8 @@ int custom_server_work(custom_server_t *server)
   }
 
   server->custom_worker.state = STATE_STOP;
+
+  log_add_fmt(LOG_INFO, "server stopped, port: %d", server->custom_worker.port);
 
   log_add("[END] custom_server_work", LOG_DEBUG);
 
@@ -236,19 +233,16 @@ int custom_client_work(custom_client_t *client)
   if(client->custom_remote_client.custom_worker.on_state != NULL)
     client->custom_remote_client.custom_worker.on_state(client, STATE_START);
 
-  struct sockaddr_in addr;
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(client->custom_remote_client.custom_worker.port);
-  addr.sin_addr.s_addr = inet_addr((char*)client->custom_remote_client.custom_worker.host);
-
   log_add("connecting to server...", LOG_INFO);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
   {
-    if(connect(client->custom_remote_client.custom_worker.sock, (struct sockaddr *)&addr , sizeof(addr)) == SOCKET_ERROR)
+    if(sock_connect(client->custom_remote_client.custom_worker.sock,
+                    client->custom_remote_client.custom_worker.port,
+                    client->custom_remote_client.custom_worker.host) >= ERROR_NORMAL)
     {
       char tmp[256];
-      sprintf(tmp, "custom_client_work, connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
-      make_last_error(ERROR_WARNING, SOCKET_ERROR, tmp);
+      sprintf(tmp, "custom_client_work, sock_connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
+      make_last_error(ERROR_WARNING, ERROR_WARNING, tmp);
       log_add(tmp, LOG_EXTRA);
       sleep(SOCK_WAIT_CONNECT);
       continue;

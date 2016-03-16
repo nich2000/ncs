@@ -11,6 +11,8 @@
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
 #else
+  #define PRINT_RESV_PACK
+  #define PRINT_SND_PACK
 //  #define PRINT_ALL_INFO
 
   #define PACK_USE_OWN_QUEUE

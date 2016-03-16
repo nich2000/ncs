@@ -124,9 +124,18 @@ int handle_command_str(char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_ALL) == 0)
     {
-      cmd_server(STATE_START, DEFAULT_CMD_SERVER_PORT);
-      web_server(STATE_START, DEFAULT_WEB_SERVER_PORT);
-      ws_server (STATE_START, DEFAULT_WS_SERVER_PORT);
+      log_add_fmt(LOG_INFO, "token: %s", CMD_ALL);
+
+      log_set_name("all_log.txt");
+
+      sock_state_t state = STATE_START;
+      char *state_str = strtok(NULL, " ");
+      if(state_str != NULL)
+        state = cmd_state(state_str);
+
+      cmd_server(state, DEFAULT_CMD_SERVER_PORT);
+      web_server(state, DEFAULT_WEB_SERVER_PORT);
+      ws_server (state, DEFAULT_WS_SERVER_PORT);
 
       return EXEC_DONE;
     }
@@ -228,12 +237,44 @@ int handle_command_str(char *command)
     else if(strcmp(token, CMD_SND_TO_SERVER) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_SERVER);
+
+      pack_packet_t tmp_packet;
+      pack_init(&tmp_packet);
+      int cnt = 0;
+      char *arg = strtok(NULL, " ");
+      while(arg != NULL)
+      {
+        if(cnt == 0)
+          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
+        else
+          pack_add_param(&tmp_packet, (unsigned char*)arg);
+        arg = strtok(NULL, " ");
+        cnt++;
+      }
+      cmd_client_send_pack(&tmp_packet);
+
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_WSSERVER) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_WSSERVER);
+
+      pack_packet_t tmp_packet;
+      pack_init(&tmp_packet);
+      int cnt = 0;
+      char *arg = strtok(NULL, " ");
+      while(arg != NULL)
+      {
+        if(cnt == 0)
+          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
+        else
+          pack_add_param(&tmp_packet, (unsigned char*)arg);
+        arg = strtok(NULL, " ");
+        cnt++;
+      }
+      ws_server_send_pack(&tmp_packet);
+
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
@@ -243,16 +284,14 @@ int handle_command_str(char *command)
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
-
       int cnt = 0;
       char *arg = strtok(NULL, " ");
       while(arg != NULL)
       {
         if(cnt == 0)
-          pack_add_cmd(&tmp_packet, arg);
+          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
         else
-          pack_add_param(&tmp_packet, arg);
-
+          pack_add_param(&tmp_packet, (unsigned char*)arg);
         arg = strtok(NULL, " ");
         cnt++;
       }
