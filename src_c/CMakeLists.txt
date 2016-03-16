@@ -43,7 +43,7 @@ add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log error)
 #-------------------------------------------------------------------------------
-set(_SOCKET defines.h globals.h utils.c workers/socket_types.h workers/socket.c workers/socket_utils.c workers/streamer.c workers/customworker.c workers/cmdworker.c workers/webworker.c workers/wsworker.c workers/base64.c workers/sha1.c)
+set(_SOCKET defines.h globals.h utils.c workers/exec.c workers/socket_types.h workers/socket.c workers/socket_utils.c workers/streamer.c workers/customworker.c workers/cmdworker.c workers/webworker.c workers/wsworker.c workers/base64.c workers/sha1.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
 target_link_libraries(socket protocol jansson log error)

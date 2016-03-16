@@ -2,6 +2,7 @@
 #define PROTOCOL_TYPES_H
 //==============================================================================
 #include "defines.h"
+#include "globals.h"
 #include "ncs_error.h"
 #include "ncs_pack.h"
 //==============================================================================
@@ -20,9 +21,6 @@
 //==============================================================================
 #define PACK_QUEUE_EMPTY         0
 #define PACK_QUEUE_FULL          1
-//==============================================================================
-#define PACK_TRUE                1
-#define PACK_FALSE               0
 //==============================================================================
 #define PACK_OUT                 1
 #define PACK_IN                  0
@@ -50,7 +48,7 @@ typedef struct
 //==============================================================================
 typedef struct
 {
-  pack_type_t           empty;
+  BOOL                  empty;
 //  char                 _align1[3];
   pack_index_t          index;
 //  char                 _align2[2];
@@ -63,7 +61,7 @@ typedef struct
 //==============================================================================
 typedef struct
 {
-  pack_type_t           empty;
+  BOOL                  empty;
 //  char                 _align1[3];
   pack_index_t          index;
 //  char                 _align2[2];

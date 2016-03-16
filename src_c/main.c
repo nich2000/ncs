@@ -36,13 +36,13 @@ int main(int argc, char *argv[])
       log_add("server mode", LOG_INFO);
 
       sprintf(command, "server on %d", cmd_server_port);
-      handle_command(command);
+      handle_command_str(command);
 
       sprintf(command, "webserver on %d", web_server_port);
-      handle_command(command);
+      handle_command_str(command);
 
       sprintf(command, "wsserver on %d", ws_server_port);
-      handle_command(command);
+      handle_command_str(command);
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
           strcpy((char*)cmd_server_host, argv[5]);
 
       sprintf(command, "client on %d %s 1", cmd_server_port, cmd_server_host);
-      handle_command(command);
+      handle_command_str(command);
     }
     else
     {
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     while(1)
     {
       fgets(command, sizeof(command), stdin);
-      switch(handle_command(command))
+      switch(handle_command_str(command))
       {
         case EXEC_NONE:
           return 0;

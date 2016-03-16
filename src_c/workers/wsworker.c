@@ -54,6 +54,7 @@ int ws_recv(void *sender, unsigned char *buffer, int size);
 int ws_send(void *sender);
 //==============================================================================
 int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
+int json_to_packet(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
@@ -431,7 +432,12 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_server_send_pack(pack_packet_t *packet)
+int json_to_packet(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_server_send_pack(pack_packet_t *pack)
 {
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
@@ -447,7 +453,7 @@ int ws_server_send_pack(pack_packet_t *packet)
 
         pack_buffer_t json_buffer;
         pack_size_t   json_size = 0;
-        packet_to_json(packet, json_buffer, &json_size);
+        packet_to_json(pack, json_buffer, &json_size);
 //        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;

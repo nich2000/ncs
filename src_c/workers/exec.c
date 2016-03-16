@@ -71,7 +71,30 @@ sock_state_t cmd_state(char *cmd)
     return STATE_NONE;
 }
 //==============================================================================
-int handle_command(char *command)
+int handle_command_pack(pack_packet_t *packet)
+{
+  pack_value_t cmd;
+  if(pack_command(packet, cmd) == ERROR_NONE)
+  {
+    char command[1024];
+    sprintf(command, "%s", cmd);
+
+    pack_value_t value;
+    pack_index_t index = 0;
+    while(pack_next_param(packet, &index, value) == ERROR_NONE)
+    {
+      char tmp[128];
+      sprintf(tmp, " %s", value);
+      strcat(command, tmp);
+    }
+
+    return handle_command_str(command);
+  };
+
+  return ERROR_NORMAL;
+}
+//==============================================================================
+int handle_command_str(char *command)
 {
   char *token = strtok(command, " ");
   if(token != NULL)
@@ -217,6 +240,24 @@ int handle_command(char *command)
     else if(strcmp(token, CMD_SND_TO_CLIENT) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_CLIENT);
+
+      pack_packet_t tmp_packet;
+      pack_init(&tmp_packet);
+
+      int cnt = 0;
+      char *arg = strtok(NULL, " ");
+      while(arg != NULL)
+      {
+        if(cnt == 0)
+          pack_add_cmd(&tmp_packet, arg);
+        else
+          pack_add_param(&tmp_packet, arg);
+
+        arg = strtok(NULL, " ");
+        cnt++;
+      }
+      cmd_server_send_pack(&tmp_packet);
+
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------

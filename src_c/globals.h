@@ -1,8 +1,12 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 //==============================================================================
-#define TRUE                1
-#define FALSE               0
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
 //==============================================================================
 #define STATE_NONE          0
 #define STATE_START         1
@@ -14,5 +18,6 @@
 #define STATE_RESUME        7
 #define STATE_RESUMING      8
 //==============================================================================
+typedef int BOOL;
 //==============================================================================
 #endif //GLOBALS_H

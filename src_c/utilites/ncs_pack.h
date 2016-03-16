@@ -2,6 +2,7 @@
 #define PACKET_H
 //==============================================================================
 #include "defines.h"
+#include "globals.h"
 //==============================================================================
 #define PACK_GLOBAL_INIT_NUMBER  0
 //==============================================================================
@@ -84,6 +85,8 @@ int pack_add_as_float            (pack_packet_t *pack, pack_key_t key, float val
 int pack_add_as_string           (pack_packet_t *pack, pack_key_t key, pack_string_t value);
 int pack_add_as_bytes            (pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size);
 //==============================================================================
+int pack_assign_pack             (pack_packet_t *dst, pack_packet_t *src);
+//==============================================================================
 int pack_val_by_index_as_int     (pack_packet_t *pack, pack_index_t index, pack_key_t key, int   *value);
 int pack_val_by_index_as_float   (pack_packet_t *pack, pack_index_t index, pack_key_t key, float *value);
 int pack_val_by_index_as_string  (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
@@ -95,6 +98,10 @@ int pack_to_json                 (pack_packet_t *pack, pack_buffer_t buffer);
 int pack_keys_to_csv             (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
 int pack_values_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
 //==============================================================================
+int pack_add_cmd                 (pack_packet_t *pack, pack_string_t command);
+int pack_add_param               (pack_packet_t *pack, pack_string_t command);
+//==============================================================================
+BOOL _pack_is_command            (pack_packet_t *pack);
 int pack_command                 (pack_packet_t *pack, pack_value_t command);
 //==============================================================================
 int            pack_next_param   (pack_packet_t *pack, pack_index_t *index, pack_string_t value);

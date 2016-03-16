@@ -18,10 +18,14 @@ typedef struct
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port);
 int cmd_server_status();
-int cmd_server_send(int argc, ...);
+//==============================================================================
+int cmd_server_send_cmd (int argc, ...);
+int cmd_server_send_pack(pack_packet_t *pack);
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count);
 int cmd_client_status();
-int cmd_client_send(int argc, ...);
+//==============================================================================
+int cmd_client_send_cmd (int argc, ...);
+int cmd_client_send_pack(pack_packet_t *pack);
 //==============================================================================
 #endif //CMDWORKER_H

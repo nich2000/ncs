@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "defines.h"
 #include "customworker.h"
 #include "socket.h"
 #include "ncs_log.h"
@@ -17,12 +16,12 @@ int custom_worker_init(custom_worker_t *worker)
   worker->port               = 0;
   worker->sock               = INVALID_SOCKET;
   worker->state              = STATE_STOP;
-  worker->is_locked          = 0;
+  worker->is_locked          = FALSE;
 
   memset(worker->host, 0, SOCK_HOST_SIZE);
 
-  worker->on_state           = 0;
-  worker->on_lock            = 0;
+  worker->on_state           = NULL;
+  worker->on_lock            = NULL;
 
   return ERROR_NONE;
 }
@@ -31,23 +30,26 @@ int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
 {
   custom_worker_init(&custom_remote_client->custom_worker);
 
-  custom_remote_client->send_thread   = 0;
-  custom_remote_client->recv_thread   = 0;
+  custom_remote_client->send_thread      = 0;
+  custom_remote_client->recv_thread      = 0;
+
+  custom_remote_client->active           = FALSE;
 
   // TODO Временное явление 1
   protocol_init(&custom_remote_client->protocol);
+
   // TODO Временное явление 2
-  custom_remote_client->out_message = 0;
+  custom_remote_client->out_message      = NULL;
   custom_remote_client->out_message_size = 0;
   //TODO  Временное явление 3
-  custom_remote_client->hand_shake = FALSE;
+  custom_remote_client->hand_shake       = FALSE;
   //TODO  Временное явление 4
-  custom_remote_client->report = 0;
+  custom_remote_client->report           = 0;
 
-  custom_remote_client->on_error      = 0;
-  custom_remote_client->on_send       = 0;
-  custom_remote_client->on_recv       = 0;
-  custom_remote_client->on_disconnect = 0;
+  custom_remote_client->on_error         = NULL;
+  custom_remote_client->on_send          = NULL;
+  custom_remote_client->on_recv          = NULL;
+  custom_remote_client->on_disconnect    = NULL;
 
   return ERROR_NONE;
 }
@@ -78,7 +80,7 @@ int custom_server_init(custom_server_t *custom_server)
 
   custom_server->work_thread = 0;
 
-  custom_server->on_accept   = 0;
+  custom_server->on_accept   = NULL;
 
   return ERROR_NONE;
 }
@@ -89,18 +91,17 @@ int custom_client_init(custom_client_t *custom_client)
 
   custom_client->work_thread = 0;
 
-  custom_client->on_connect = 0;
+  custom_client->on_connect = NULL;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_worker_start(custom_worker_t *worker)
 {
-  char tmp[128];
-
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (worker->sock == INVALID_SOCKET)
   {
+    char tmp[128];
     sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
@@ -110,17 +111,14 @@ int custom_worker_start(custom_worker_t *worker)
   int reuse = 1;
   setsockopt(worker->sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
 
-  sprintf(tmp, "custom_worker_start, socket: %d", worker->sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "custom_worker_start, socket: %d", worker->sock);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_server_start(custom_worker_t *worker)
 {
-  char tmp[128];
-  sprintf(tmp, "custom_server_start, Port: %d", worker->port);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "custom_server_start, Port: %d", worker->port);
 
   if(custom_worker_start(worker) >= ERROR_NORMAL)
     return ERROR_CRITICAL;
@@ -131,6 +129,7 @@ int custom_server_start(custom_worker_t *worker)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
+    char tmp[128];
     sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
@@ -141,6 +140,7 @@ int custom_server_start(custom_worker_t *worker)
 
   if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
   {
+    char tmp[128];
     sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
     make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
@@ -154,9 +154,7 @@ int custom_server_start(custom_worker_t *worker)
 //==============================================================================
 int custom_client_start(custom_worker_t *worker)
 {
-  char tmp[128];
-  sprintf(tmp, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
 
   if(custom_worker_start(worker) >= ERROR_NORMAL)
     return ERROR_CRITICAL;
@@ -180,7 +178,6 @@ int custom_server_work(custom_server_t *server)
 
   server->custom_worker.state = STATE_START;
 
-  char tmp[128];
   struct sockaddr_in addr;
   socklen_t addrlen = sizeof(struct sockaddr_in);
   int errors = 0;
@@ -192,6 +189,7 @@ int custom_server_work(custom_server_t *server)
     SOCKET tmp_client = accept(server->custom_worker.sock, (struct sockaddr *)&addr, (socklen_t*)&addrlen);
     if(tmp_client == INVALID_SOCKET)
     {
+      char tmp[128];
       sprintf(tmp, "custom_server_work, accept, error: %d", sock_error());
       make_last_error(ERROR_NORMAL, INVALID_SOCKET, tmp);
       log_add(tmp, LOG_ERROR);

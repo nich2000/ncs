@@ -85,7 +85,7 @@ int pack_validation_buffer_init(pack_validation_buffer_t *validation_buffer)
 //==============================================================================
 int pack_in_packets_list_init(pack_in_packets_list_t *in_packets_list)
 {
-  in_packets_list->empty       = PACK_TRUE;
+  in_packets_list->empty       = TRUE;
   in_packets_list->index       = PACK_PACKETS_INIT_INDEX;
   in_packets_list->count       = PACK_GLOBAL_INIT_NUMBER;
   in_packets_list->lock_count  = 0;
@@ -98,7 +98,7 @@ int pack_in_packets_list_init(pack_in_packets_list_t *in_packets_list)
 //==============================================================================
 int pack_out_packets_list_init(pack_out_packets_list_t *out_packets_list)
 {
-  out_packets_list->empty      = PACK_TRUE;
+  out_packets_list->empty      = TRUE;
   out_packets_list->index      = PACK_PACKETS_INIT_INDEX;
   out_packets_list->count      = PACK_GLOBAL_INIT_NUMBER;
   out_packets_list->lock_count = 0;
@@ -112,7 +112,7 @@ int pack_out_packets_list_init(pack_out_packets_list_t *out_packets_list)
 #ifdef PACK_USE_OWN_QUEUE
 int pack_queue_init(pack_queue_t *queue)
 {
-  queue->empty  = PACK_TRUE;
+  queue->empty  = TRUE;
   queue->start  = PACK_QUEUE_INIT_INDEX;
   queue->finish = PACK_QUEUE_INIT_INDEX;
 
@@ -135,9 +135,9 @@ int protocol_init(pack_protocol_t *protocol)
 
   pack_out_packets_list_init(&protocol->out_packets_list);
 
-  protocol->on_error            = 0;
-  protocol->on_new_in_data      = 0;
-  protocol->on_new_out_data     = 0;
+  protocol->on_error            = NULL;
+  protocol->on_new_in_data      = NULL;
+  protocol->on_new_out_data     = NULL;
 
   #ifdef PACK_USE_OWN_QUEUE
   pack_queue_init(&protocol->queue);
@@ -278,7 +278,7 @@ int protocol_begin(pack_protocol_t *protocol)
   if(protocol->out_packets_list.index >= PACK_OUT_PACKETS_COUNT)
     protocol->out_packets_list.index = PACK_PACKETS_INIT_INDEX;
 
-  protocol->out_packets_list.empty = PACK_FALSE;
+  protocol->out_packets_list.empty = FALSE;
 
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
 
@@ -320,7 +320,7 @@ int pack_queue_add(pack_number_t number, pack_protocol_t *protocol)
 
   tmp_queue->packets[tmp_finish] = tmp_pack;
 
-  tmp_queue->empty = PACK_FALSE;
+  tmp_queue->empty = FALSE;
 
   tmp_queue->finish++;
   if(tmp_queue->finish > PACK_QUEUE_COUNT)
@@ -352,7 +352,7 @@ pack_packet_t *_protocol_next_pack(pack_protocol_t *protocol)
       tmp_queue->start = 0;
 
     if(tmp_queue->start == tmp_queue->finish)
-      tmp_queue->empty = PACK_TRUE;
+      tmp_queue->empty = TRUE;
 
     return tmp_queue->packets[tmp_index];
   #else
@@ -433,6 +433,16 @@ int protocol_add_param_as_bytes(pack_bytes_t param, pack_size_t size, pack_proto
   pack_key_t tmp_key = PACK_PARAM_KEY;
 
   return protocol_add_as_bytes(tmp_key, param, size, protocol);
+}
+//==============================================================================
+int protocol_assign_pack(pack_protocol_t *protocol, pack_packet_t *pack)
+{
+  if(pack == NULL)
+    return ERROR_NORMAL;
+
+  pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
+
+  return pack_assign_pack(tmp_pack, pack);
 }
 //==============================================================================
 int protocol_buffer_validate(pack_buffer_t buffer, pack_size_t size,
@@ -530,7 +540,7 @@ int protocol_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     if(protocol->in_packets_list.index >= PACK_IN_PACKETS_COUNT)
       protocol->in_packets_list.index = PACK_PACKETS_INIT_INDEX;
 
-    protocol->in_packets_list.empty = PACK_FALSE;
+    protocol->in_packets_list.empty = FALSE;
 
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
 

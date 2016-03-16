@@ -27,7 +27,7 @@ typedef struct
   sock_host_t     host;
   SOCKET          sock;
   sock_state_t    state;
-  int             is_locked;
+  BOOL            is_locked;
 
   on_state_t      on_state;
   on_lock_t       on_lock;
@@ -40,13 +40,15 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
+  BOOL            active;
+
   // TODO Временное явление 1
   pack_protocol_t protocol;
   // TODO Временное явление 2
   char           *out_message;
   int             out_message_size;
   // TODO Временное явление 3
-  int             hand_shake;
+  BOOL            hand_shake;
   // TODO Временное явление 4
   FILE           *report;
 

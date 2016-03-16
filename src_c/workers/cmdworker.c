@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "streamer.h"
+#include "exec.h"
 #include "customworker.h"
 #include "cmdworker.h"
 #include "wsworker.h"
@@ -41,8 +42,6 @@ int cmd_error     (void *sender, error_t *error);
 int cmd_send      (void *sender);
 int cmd_recv      (void *sender, unsigned char *buffer, int size);
 int cmd_new_data  (void *sender, void *data);
-//==============================================================================
-int cmd_exec(pack_packet_t *packet);
 //==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
@@ -494,7 +493,7 @@ int cmd_recv(void *sender, unsigned char *buffer, int size)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_send(int argc, ...)
+int cmd_server_send_cmd(int argc, ...)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -502,32 +501,53 @@ int cmd_server_send(int argc, ...)
 
     if(tmp_client->custom_worker.state == STATE_START)
     {
-      pack_protocol_t *protocol = &tmp_client->protocol;
+      pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-      protocol_begin(protocol);
+      protocol_begin(tmp_protocol);
 
       va_list params;
       va_start(params, argc);
 
       unsigned char *cmd = va_arg(params, unsigned char*);
-      protocol_add_cmd(cmd, protocol);
+      protocol_add_cmd(cmd, tmp_protocol);
 
       for(int i = 1; i < argc; i++)
       {
         unsigned char *param = va_arg(params, unsigned char*);
-        protocol_add_param_as_string(param, protocol);
+        protocol_add_param_as_string(param, tmp_protocol);
       }
 
       va_end(params);
 
-      protocol_end(protocol);
+      protocol_end(tmp_protocol);
     }
   }
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_client_send(int argc, ...)
+int cmd_server_send_pack(pack_packet_t *pack)
+{
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    custom_remote_client_t *tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
+
+    if(tmp_client->custom_worker.state == STATE_START)
+    {
+      pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+
+      protocol_begin(tmp_protocol);
+
+      protocol_assign_pack(tmp_protocol, pack);
+
+      protocol_end(tmp_protocol);
+    }
+  }
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_client_send_cmd(int argc, ...)
 {
   for(int i = 0; i < _cmd_client_count; i++)
   {
@@ -555,6 +575,22 @@ int cmd_client_send(int argc, ...)
   return ERROR_NONE;
 }
 //==============================================================================
+int cmd_client_send_pack(pack_packet_t *pack)
+{
+  for(int i = 0; i < _cmd_client_count; i++)
+  {
+    pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
+
+    protocol_begin(tmp_protocol);
+
+    protocol_assign_pack(tmp_protocol, pack);
+
+    protocol_end(tmp_protocol);
+  }
+
+  return ERROR_NONE;
+}
+//==============================================================================
 int cmd_new_data(void *sender, void *data)
 {
 //  log_add("cmd_new_data", LOG_INFO);
@@ -563,69 +599,33 @@ int cmd_new_data(void *sender, void *data)
 
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
-  if(cmd_exec(tmp_packet) == ERROR_NONE)
+  if(_pack_is_command(tmp_packet))
   {
-    log_add("cmd_exec", LOG_INFO);
+    return handle_command_pack(tmp_packet);
   }
   else
   {
     pack_buffer_t csv;
-    int res = pack_values_to_csv(tmp_packet, ';', csv);
-    if(res != ERROR_NONE)
+    int result = pack_values_to_csv(tmp_packet, ';', csv);
+    if(result != ERROR_NONE)
     {
-      log_add_fmt(LOG_ERROR, "cmd_new_data, res = %d", res);
+      log_add_fmt(LOG_ERROR, "cmd_new_data, pack_values_to_csv, result: %d", result);
     }
     else
     {
       int len = strlen((char*)csv);
 
-      int cnt = report_add(tmp_client->report, (char*)csv);
-      if(cnt != (len+1))
+      int wrote = report_add(tmp_client->report, (char*)csv);
+      if(wrote != (len+1))
       {
-        log_add_fmt(LOG_ERROR, "cmd_new_data, cnt = %d, len = %d", cnt, len);
+        log_add_fmt(LOG_ERROR, "cmd_new_data, report_add, len: %d, wrote: %d", len, wrote);
       }
     }
 
-    ws_server_send_pack(tmp_packet);
+    if(tmp_client->active)
+      ws_server_send_pack(tmp_packet);
   }
 
   return ERROR_NONE;
-}
-//==============================================================================
-int cmd_exec(pack_packet_t *packet)
-{
-  pack_value_t tmp_command;
-  pack_value_t tmp_param;
-  pack_index_t tmp_index = 0;
-
-  char tmp[1024];
-
-  if(pack_command(packet, tmp_command) == ERROR_NONE)
-  {
-    sprintf(tmp, "Command: %s", tmp_command);
-
-    if(strcmp((char*)tmp_command, "stream") == 0)
-    {
-      if(pack_next_param(packet, &tmp_index, tmp_param) == ERROR_NONE)
-      {
-        sprintf(tmp, "%s\nParam: %s", tmp, tmp_param);
-
-        if(strcmp((char*)tmp_param, "on") == 0)
-          cmd_streamer(STATE_START);
-        else if(strcmp((char*)tmp_param, "off") == 0)
-          cmd_streamer(STATE_STOP);
-        else if(strcmp((char*)tmp_param, "pause") == 0)
-          cmd_streamer(STATE_PAUSE);
-        else if(strcmp((char*)tmp_param, "resume") == 0)
-          cmd_streamer(STATE_RESUME);
-      }
-    }
-
-    log_add(tmp, LOG_INFO);
-
-    return ERROR_NONE;
-  }
-  else
-    return ERROR_NORMAL;
 }
 //==============================================================================
