@@ -36,6 +36,7 @@ int ws_server_start(ws_server_t *server, sock_port_t port);
 int ws_server_work (ws_server_t *server);
 int ws_server_stop (ws_server_t *server);
 int ws_server_pause(ws_server_t *server);
+int ws_server_resume(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
@@ -85,6 +86,11 @@ int ws_server(sock_state_t state, sock_port_t port)
     case STATE_PAUSE:
     {
       ws_server_pause(&_ws_server);
+      break;
+    }
+    case STATE_RESUME:
+    {
+      ws_server_resume(&_ws_server);
       break;
     }
     default:;
@@ -139,18 +145,27 @@ int ws_server_work(ws_server_t *server)
 //==============================================================================
 int ws_server_stop(ws_server_t *server)
 {
-  server->custom_server.custom_worker.state = STATE_STOP;
+  server->custom_server.custom_worker.state = STATE_STOPPING;
   if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_STOP);
+    server->custom_server.custom_worker.on_state(server, STATE_STOPPING);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int ws_server_pause(ws_server_t *server)
 {
-  server->custom_server.custom_worker.state = STATE_PAUSE;
+  server->custom_server.custom_worker.state = STATE_PAUSING;
   if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_PAUSE);
+    server->custom_server.custom_worker.on_state(server, STATE_PAUSING);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int ws_server_resume(ws_server_t *server)
+{
+  server->custom_server.custom_worker.state = STATE_RESUMING;
+  if(server->custom_server.custom_worker.on_state != NULL)
+    server->custom_server.custom_worker.on_state(server, STATE_RESUMING);
 
   return ERROR_NONE;
 }

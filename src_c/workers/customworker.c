@@ -232,7 +232,7 @@ int custom_client_work(custom_client_t *client)
 {
   log_add("[BEGIN] custom_client_work", LOG_DEBUG);
   log_add("client started", LOG_INFO);
-  log_add("----------", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   client->custom_remote_client.custom_worker.state = STATE_START;
   if(client->custom_remote_client.custom_worker.on_state != NULL)

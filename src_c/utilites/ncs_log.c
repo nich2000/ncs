@@ -75,6 +75,8 @@ const char *log_type_to_string(int log_type)
     break;
     case LOG_ERROR_FATAL:    return "[ERROR_FATAL]";
     break;
+    case LOG_CMD:            return "[CMD]";
+    break;
     case LOG_EXTRA:          return "[EXTRA]";
     break;
     case LOG_DEBUG:          return "[DEBUG]";
@@ -112,6 +114,8 @@ void log_add(char *message, int log_type)
 
   if(
      (log_type == LOG_INFO)
+     ||
+     (log_type == LOG_CMD)
      #ifndef SILENT_MODE
      || (log_type >= LOG_ERROR_CRITICAL)
      #endif

@@ -28,6 +28,7 @@ int cmd_client_init (cmd_client_t *client);
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host);
 int cmd_client_stop (cmd_client_t *client);
 int cmd_client_pause(cmd_client_t *client);
+int cmd_client_resume(cmd_client_t *client);
 //==============================================================================
 void *cmd_client_worker(void *arg);
 //==============================================================================
@@ -99,13 +100,13 @@ int cmd_server_status()
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count)
 {
-  sock_print_client_header(port, host);
-
   if(count >= SOCK_WORKERS_COUNT)
   {
     log_add("cmd_client, too match count", LOG_ERROR_CRITICAL);
     return ERROR_CRITICAL;
   }
+
+  sock_print_client_header(port, host);
 
   _cmd_client_count = count;
 
@@ -130,6 +131,11 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
       case STATE_PAUSE:
       {
         cmd_client_pause(&_cmd_client[i]);
+        break;
+      }
+      case STATE_RESUME:
+      {
+        cmd_client_resume(&_cmd_client[i]);
         break;
       }
       default:;
@@ -330,14 +336,21 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 //==============================================================================
 int cmd_client_stop(cmd_client_t *client)
 {
-  client->custom_client.custom_remote_client.custom_worker.state = STATE_STOP;
+  client->custom_client.custom_remote_client.custom_worker.state = STATE_STOPPING;
 
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_client_pause(cmd_client_t *client)
 {
-  client->custom_client.custom_remote_client.custom_worker.state  = STATE_PAUSE;
+  client->custom_client.custom_remote_client.custom_worker.state  = STATE_PAUSING;
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_client_resume(cmd_client_t *client)
+{
+  client->custom_client.custom_remote_client.custom_worker.state = STATE_RESUMING;
 
   return ERROR_NONE;
 }

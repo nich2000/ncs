@@ -25,6 +25,7 @@
 #define CMD_TEST            "test"           // 0
 #define CMD_CLEAR           "clear"          // 0
 #define CMD_EXIT            "exit"           // 0
+#define CMD_ALL             "all"            // 0 start all default servers
 #define CMD_SERVER          "server"         // 1 - 2(state, port)
 #define CMD_WEB_SERVER      "webserver"      // 1 - 2(state, port)
 #define CMD_WS_SERVER       "wsserver"       // 1 - 2(state, port)
@@ -47,6 +48,9 @@
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
+  if(cmd[strlen(cmd)-1] == '\n')
+    cmd[strlen(cmd)-1] = '\0';
+
   if(strcmp(CMD_START, cmd) == 0)
   {
     return STATE_START;
@@ -92,6 +96,15 @@ int handle_command(char *command)
     else if(strcmp(token, CMD_EXIT) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_EXIT);
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_ALL) == 0)
+    {
+      cmd_server(STATE_START, DEFAULT_CMD_SERVER_PORT);
+      web_server(STATE_START, DEFAULT_WEB_SERVER_PORT);
+      ws_server (STATE_START, DEFAULT_WS_SERVER_PORT);
+
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------

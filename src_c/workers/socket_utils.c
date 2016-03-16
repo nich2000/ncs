@@ -54,7 +54,7 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 {
   char tmp[128];
 
-  log_add("----------", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   log_add_fmt(LOG_INFO, "Sock version: %s, Pack version: %s", _sock_version(), _pack_version());
 
@@ -72,19 +72,19 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port)
   }
   log_add(tmp, LOG_INFO);
 
-  log_add("----------", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int sock_print_client_header(sock_port_t port, sock_host_t host)
 {
-  log_add("----------", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   log_add_fmt(LOG_INFO, "Sock version: %s, Pack version: %s", _sock_version(), _pack_version());
   log_add_fmt(LOG_INFO, "Client, port: %d, host: %s", port, host);
 
-  log_add("----------", LOG_INFO);
+//  log_add("----------", LOG_INFO);
 
   return ERROR_NONE;
 }

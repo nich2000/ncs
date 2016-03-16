@@ -64,7 +64,6 @@ int main(int argc, char *argv[])
   else
   {
     log_add("command mode", LOG_INFO);
-    printf(">");
     while(1)
     {
       fgets(command, sizeof(command), stdin);
@@ -73,10 +72,10 @@ int main(int argc, char *argv[])
         case EXEC_NONE:
           return 0;
         case EXEC_UNKNOWN:
-          printf("unknown: %s\n", command);
+          log_add_fmt(LOG_CMD, "unknown: %s\n", command);
           break;
         case EXEC_DONE:
-          printf("done: %s\n", command);
+          log_add_fmt(LOG_CMD, "done: %s\n", command);
           break;
       }
     }
