@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "wsworker.h"
+#include "cmdworker.h"
 #include "ncs_log.h"
 #include "sha1.h"
 #include "base64.h"
@@ -40,13 +41,12 @@ int ws_server_resume(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
-int ws_accept(void *sender, SOCKET socket, sock_host_t host);
-//==============================================================================
 custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
 //==============================================================================
+int ws_accept(void *sender, SOCKET socket, sock_host_t host);
 int ws_new_data(void *sender, void *data);
 int ws_disconnect(void *sender);
 int ws_error(void *sender, error_t *error);
@@ -58,7 +58,7 @@ int json_to_packet(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
-int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
+int       ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
 int         _ws_server_id = 0;
@@ -266,6 +266,20 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   return ERROR_NONE;
 }
 //==============================================================================
+int ws_server_send_clients()
+{
+  if(_ws_server.custom_server.custom_worker.state != STATE_START)
+    return ERROR_NORMAL;
+
+  pack_packet_t tmp_packet;
+
+  cmd_server_list(&tmp_packet);
+
+  ws_server_send_pack(&tmp_packet);
+
+  return ERROR_NONE;
+}
+//==============================================================================
 void *ws_recv_worker(void *arg)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
@@ -293,6 +307,8 @@ void *ws_recv_worker(void *arg)
         {
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
+
+          ws_server_send_clients();
         }
       }
       else
@@ -327,6 +343,8 @@ void *ws_send_worker(void *arg)
   if(tmp_client->custom_worker.on_state != NULL)
     tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
+  ws_server_send_clients();
+
   int tmp_errors = 0;
 
   while(tmp_client->custom_worker.state == STATE_START)
@@ -348,7 +366,7 @@ void *ws_send_worker(void *arg)
         }
     }
 
-    usleep(100000);
+    usleep(1000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
@@ -470,7 +488,7 @@ int ws_server_send_pack(pack_packet_t *pack)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_make_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);
@@ -521,7 +539,7 @@ int ws_server_send_cmd(int argc, ...)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_make_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);
@@ -583,7 +601,7 @@ int ws_hand_shake(char *request, char *response, int *size)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_make_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)
+int ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size)
 {
   int pos = 0;
   int size = msg_length;

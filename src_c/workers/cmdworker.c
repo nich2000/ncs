@@ -272,10 +272,7 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
               "cmd_accept, socket: %d, host: %s, port: %d",
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
-//  pack_packet_t *tmp_pack = _cmd_clients_list();
-//  ws_server_send_cmd(2, "client_connected", tmp_client->custom_worker.host);
-//  ws_server_send_pack();
-//  free(tmp_pack);
+  ws_server_send_clients();
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -638,6 +635,43 @@ int cmd_new_data(void *sender, void *data)
 
     if(tmp_client->active)
       ws_server_send_pack(tmp_packet);
+  }
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_server_list(pack_packet_t *pack)
+{
+  if(pack == NULL)
+    return ERROR_NORMAL;
+
+  pack_init(pack);
+
+  pack_add_cmd(pack, (unsigned char*)"clients");
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+    {
+      char tmp[128];
+      sprintf(tmp,
+              "%s %d",
+              _cmd_server.custom_remote_clients_list.items[i].custom_worker.name,
+              _cmd_server.custom_remote_clients_list.items[i].custom_worker.id);
+      pack_add_param(pack, (unsigned char*)tmp);
+    }
+  };
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_server_activate(sock_id_t id)
+{
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
+        _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
   }
 
   return ERROR_NONE;

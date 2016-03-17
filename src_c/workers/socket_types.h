@@ -13,6 +13,8 @@
 #endif
 //==============================================================================
 #include "defines.h"
+#include "globals.h"
+#include "ncs_pack.h"
 //==============================================================================
 #ifdef __linux__
   #define INVALID_SOCKET -1
@@ -40,6 +42,7 @@
 #define SOCK_MODE_WEB_SERVER     4
 //==============================================================================
 #define SOCK_VERSION             "SOCK001\0"
+#define SOCK_NAME_DEFAULT        "DEVICE\0"
 #define SOCK_VERSION_SIZE        8
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
 //==============================================================================
@@ -55,6 +58,7 @@ typedef unsigned char  sock_host_t[SOCK_HOST_SIZE];
 typedef unsigned short sock_mode_t;
 typedef unsigned short sock_type_t;
 typedef unsigned short sock_id_t;
+typedef unsigned char  sock_name_t[PACK_VALUE_SIZE];
 typedef unsigned short sock_index_t;
 typedef unsigned short sock_state_t;
 //==============================================================================

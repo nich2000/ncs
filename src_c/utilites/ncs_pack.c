@@ -774,10 +774,10 @@ BOOL _pack_is_command(pack_packet_t *pack)
     pack_key_t tmp_key;
     if(pack_key_by_index(pack, 0, tmp_key) == ERROR_NONE)
       if(strcmp((char *)tmp_key, PACK_CMD_KEY) == 0)
-        return ERROR_NONE;
+        return TRUE;
   }
 
-  return ERROR_NORMAL;
+  return FALSE;
 }
 //==============================================================================
 int pack_command(pack_packet_t *pack, pack_value_t command)

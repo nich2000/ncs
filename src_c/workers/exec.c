@@ -30,6 +30,7 @@
 #define CMD_WEB_SERVER      "webserver"      // 1 - 2(state, port)
 #define CMD_WS_SERVER       "wsserver"       // 1 - 2(state, port)
 #define CMD_CLIENT          "client"         // 1 - 3(state, host, port)
+#define CMD_ACTIVATE        "activate"       // 0
 #define CMD_SND_TO_SERVER   "sndtosr"        // 1 - n
 #define CMD_SND_TO_WSSERVER "sndtows"        // 1 - n
 #define CMD_SND_TO_CLIENT   "sndtocl"        // 1 - n
@@ -364,6 +365,20 @@ int handle_command_str(char *command)
       log_add_fmt(LOG_INFO, "token: %s", CMD_CLIENT_INFO);
 
       cmd_client_status();
+
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_ACTIVATE) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_ACTIVATE);
+
+      sock_id_t id = -1;
+      char *id_str = strtok(NULL, " ");
+      if(id_str != NULL)
+        id = atoi(id_str);
+
+      cmd_server_activate(id, state);
 
       return EXEC_DONE;
     }

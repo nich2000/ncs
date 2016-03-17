@@ -18,6 +18,7 @@ int custom_worker_init(custom_worker_t *worker)
   worker->state              = STATE_STOP;
   worker->is_locked          = FALSE;
 
+  strcpy((char*)worker->name, SOCK_NAME_DEFAULT);
   memset(worker->host, 0, SOCK_HOST_SIZE);
 
   worker->on_state           = NULL;

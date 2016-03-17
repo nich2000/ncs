@@ -37,4 +37,6 @@ int ws_server_status();
 int ws_server_send_cmd (int argc, ...);
 int ws_server_send_pack(pack_packet_t *pack);
 //==============================================================================
+int ws_server_send_clients();
+//==============================================================================
 #endif //WSWORKER_H
