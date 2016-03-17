@@ -67,6 +67,8 @@ const char *log_type_to_string(int log_type)
   {
     case LOG_INFO:           return "[INFO]";
     break;
+    case LOG_WAIT:           return "[WAIT]";
+    break;
     case LOG_WARNING:        return "[WARNING]";
     break;
     case LOG_ERROR:          return "[ERROR]";
@@ -99,6 +101,11 @@ void log_add(char *message, int log_type)
 
   #ifndef USE_EXTRA_LOGS
     if(log_type == LOG_EXTRA)
+      return;
+  #endif
+
+  #ifndef USE_WAIT_LOGS
+    if(log_type == LOG_WAIT)
       return;
   #endif
 

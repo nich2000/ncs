@@ -196,6 +196,10 @@ int cmd_server_stop(cmd_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_STOPPING;
 
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_STOPPING;
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -203,12 +207,20 @@ int cmd_server_pause(cmd_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_PAUSING;
 
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_PAUSING;
+
   return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server_resume(cmd_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_RESUMING;
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_PAUSE)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_RESUMING;
 
   return ERROR_NONE;
 }

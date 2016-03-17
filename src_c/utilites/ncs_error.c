@@ -12,6 +12,8 @@ const char *error_type_to_string(int error_type)
   {
     case ERROR_NONE:     return "[ERROR_NONE]";
     break;
+    case ERROR_WAIT:     return "[ERROR_WAIT]";
+    break;
     case ERROR_WARNING:  return "[ERROR_WARNING]";
     break;
     case ERROR_NORMAL:   return "[ERROR_NORMAL]";

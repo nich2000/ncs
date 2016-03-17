@@ -9,10 +9,11 @@
 #define REPORT_INITIAL_PATH "../reports"
 //==============================================================================
 #define LOG_INFO            100
-#define LOG_WARNING         101
-#define LOG_ERROR           102
-#define LOG_ERROR_CRITICAL  103
-#define LOG_ERROR_FATAL     104
+#define LOG_WAIT            101
+#define LOG_WARNING         102
+#define LOG_ERROR           103
+#define LOG_ERROR_CRITICAL  104
+#define LOG_ERROR_FATAL     105
 //==============================================================================
 #define LOG_CMD             10
 #define LOG_EXTRA           11

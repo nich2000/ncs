@@ -183,22 +183,11 @@ int custom_server_work(custom_server_t *server)
 
   while(server->custom_worker.state == STATE_START)
   {
-    log_add_fmt(LOG_DEBUG, "waiting for connect, port: %d...", server->custom_worker.port);
-
     SOCKET tmp_client;
     sock_host_t tmp_host;
     sock_port_t tmp_port;
-    if(sock_accept(server->custom_worker.sock, &tmp_client, tmp_host, &tmp_port) >= ERROR_NORMAL)
-    {
-      char tmp[128];
-      sprintf(tmp, "custom_server_work, sock_accept, error: %d", sock_error());
-      make_last_error(ERROR_NORMAL, ERROR_NORMAL, tmp);
-      log_add(tmp, LOG_ERROR);
-      errors++;
-      if(errors > SOCK_ERRORS_COUNT)
-        server->custom_worker.state = STATE_STOPPING;
-    }
-    else
+    int res = sock_accept(server->custom_worker.sock, &tmp_client, tmp_host, &tmp_port);
+    if(res == ERROR_NONE)
     {
       if(server->on_accept != 0)
       {
@@ -206,9 +195,15 @@ int custom_server_work(custom_server_t *server)
                     "custom_server_work, accepted, socket: %d, host: %s, port: %d",
                     tmp_client, tmp_host, tmp_port);
 
-        if(server->on_accept((void*)server, tmp_client, tmp_host) != ERROR_NONE)
-          log_add_fmt(LOG_ERROR, "custom_server_work, Error: %s", last_error()->message);
+        if(server->on_accept((void*)server, tmp_client, tmp_host) >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "custom_server_work, on_accept, error: %s", last_error()->message);
       }
+    }
+    else if(res >= ERROR_NORMAL)
+    {
+      log_add_fmt(LOG_ERROR, "custom_server_work, sock_accept, error: %s", last_error()->message);
+      if(errors++ > SOCK_ERRORS_COUNT)
+        server->custom_worker.state = STATE_STOPPING;
     }
 
     usleep(1000);
@@ -286,14 +281,14 @@ void *custom_recv_worker(void *arg)
 
   while(tmp_client->custom_worker.state == STATE_START)
   {
-    int retval = sock_recv(tmp_sock, (char*)tmp_buffer, &tmp_size);
-    if(retval == ERROR_NONE)
+    int res = sock_recv(tmp_sock, (char*)tmp_buffer, &tmp_size);
+    if(res == ERROR_NONE)
     {
       if(tmp_size > 0)
         if(tmp_client->on_recv != 0)
           tmp_client->on_recv(tmp_client, (unsigned char*)tmp_buffer, tmp_size);
     }
-    else if(retval == ERROR_WARNING)
+    else if(res == ERROR_WARNING)
     {
       if(tmp_size == 0)
       {
@@ -302,18 +297,13 @@ void *custom_recv_worker(void *arg)
         break;
       }
     }
-    else if(retval >= ERROR_NORMAL)
+    else if(res >= ERROR_NORMAL)
     {
-      tmp_errors++;
-      if(tmp_errors > SOCK_ERRORS_COUNT)
-        break;
-
       if(tmp_client->on_error != 0)
         tmp_client->on_error((void*)tmp_client, last_error());
-    }
-    else
-    {
-//      log_add_fmt(LOG_INFO, "custom_recv_worker, message: %s", last_error()->message);
+
+      if(tmp_errors++ > SOCK_ERRORS_COUNT)
+        tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
     usleep(1000);

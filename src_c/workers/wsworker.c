@@ -150,6 +150,10 @@ int ws_server_stop(ws_server_t *server)
   if(server->custom_server.custom_worker.on_state != NULL)
     server->custom_server.custom_worker.on_state(server, STATE_STOPPING);
 
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_STOPPING;
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -159,6 +163,10 @@ int ws_server_pause(ws_server_t *server)
   if(server->custom_server.custom_worker.on_state != NULL)
     server->custom_server.custom_worker.on_state(server, STATE_PAUSING);
 
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_PAUSING;
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -167,6 +175,10 @@ int ws_server_resume(ws_server_t *server)
   server->custom_server.custom_worker.state = STATE_RESUMING;
   if(server->custom_server.custom_worker.on_state != NULL)
     server->custom_server.custom_worker.on_state(server, STATE_RESUMING);
+
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+    if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_PAUSE)
+      server->custom_remote_clients_list.items[i].custom_worker.state = STATE_RESUMING;
 
   return ERROR_NONE;
 }
