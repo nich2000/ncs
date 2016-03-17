@@ -9,14 +9,14 @@
 #include "cmdworker.h"
 //==============================================================================
 int cmd_streamer_init  (streamer_worker *worker, pack_protocol_t *protocol);
-int cmd_streamer_start (streamer_worker *worker, pack_protocol_t *protocol);
+int cmd_streamer_start (int id, streamer_worker *worker, pack_protocol_t *protocol);
 int cmd_streamer_work  (streamer_worker *worker);
 int cmd_streamer_stop  (streamer_worker *worker);
 int cmd_streamer_pause (streamer_worker *worker);
 int cmd_streamer_resume(streamer_worker *worker);
 //==============================================================================
 void *cmd_streamer_worker_func(void *arg);
-int cmd_streamer_make(pack_protocol_t *protocol);
+int cmd_streamer_make(int id, pack_protocol_t *protocol);
 //==============================================================================
 int counter = 0;
 int             _cmd_streamer_count;
@@ -39,7 +39,7 @@ int cmd_streamer(sock_state_t state)
       }
       case STATE_START:
       {
-        cmd_streamer_start(&_cmd_streamer[i], &_cmd_client[i].custom_client.custom_remote_client.protocol);
+        cmd_streamer_start(i, &_cmd_streamer[i], &_cmd_client[i].custom_client.custom_remote_client.protocol);
         break;
       }
       case STATE_STOP:
@@ -71,6 +71,7 @@ int cmd_streamer_status()
 //==============================================================================
 int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
 {
+  worker->id          = -1;
   worker->is_test     =  0;
   worker->is_work     =  FALSE;
   worker->is_pause    =  TRUE;
@@ -81,12 +82,13 @@ int cmd_streamer_init(streamer_worker *worker, pack_protocol_t *protocol)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_streamer_start(streamer_worker *worker, pack_protocol_t *protocol)
+int cmd_streamer_start(int id, streamer_worker *worker, pack_protocol_t *protocol)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_start");
 
   cmd_streamer_init(worker, protocol);
 
+  worker->id       = id;
   worker->is_work  = TRUE;
   worker->is_pause = FALSE;
 
@@ -143,7 +145,7 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
-    cmd_streamer_make(tmp_protocol);
+    cmd_streamer_make(tmp_worker->id, tmp_protocol);
 
     usleep(100000);
   }
@@ -151,7 +153,7 @@ void *cmd_streamer_worker_func(void *arg)
   return NULL;
 }
 //==============================================================================
-int cmd_streamer_make(pack_protocol_t *protocol)
+int cmd_streamer_make(int id, pack_protocol_t *protocol)
 {
 //  log_add_fmt(LOG_DEBUG, "%s", "[BEGIN] cmd_streamer_make");
 
@@ -166,6 +168,10 @@ int cmd_streamer_make(pack_protocol_t *protocol)
   for(pack_size_t i = 0; i < TEST_PACK_COUNT; i++)
   {
     protocol_begin(protocol);
+
+    char tmp[32];
+    sprintf(tmp, "STREAMER_%d", id);
+    protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)tmp, protocol);
 
     protocol_add_as_int((unsigned char*)"CNT", counter++, protocol);
 

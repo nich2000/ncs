@@ -299,7 +299,7 @@ void *ws_recv_worker(void *arg)
   {
     if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
-      if(tmp_client->hand_shake != TRUE)
+      if(tmp_client->hand_shake == FALSE)
       {
         ws_hand_shake(request, response, &size);
 
@@ -313,7 +313,13 @@ void *ws_recv_worker(void *arg)
       }
       else
       {
-        log_add_fmt(LOG_DEBUG, "ws_recv_worker, %s", request);
+        int tmp_size;
+        unsigned char tmp_buffer[1024];
+        ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, 1024, &tmp_size);
+        log_add_fmt(LOG_INFO, "ws_recv_worker, %s", tmp_buffer);
+
+        cmd_derver_activate_all(STATE_STOP);
+        cmd_server_activate(atoi((char*)tmp_buffer), STATE_START);
       }
     }
 

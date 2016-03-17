@@ -23,7 +23,8 @@ int cmd_server_send_cmd (int argc, ...);
 int cmd_server_send_pack(pack_packet_t *pack);
 //==============================================================================
 int cmd_server_list(pack_packet_t *pack);
-int cmd_server_activate(sock_id_t id);
+int cmd_server_activate(sock_id_t id, sock_state_t state);
+int cmd_derver_activate_all(sock_state_t state);
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count);
 int cmd_client_status();

@@ -23,3 +23,14 @@
   height: 55px;
   padding-bottom: 0px;
 }
+
+td 
+{
+  border: 1px #DDD solid; padding: 5px; cursor: pointer;
+}
+
+.selected 
+{
+    background-color: brown;
+    color: #FFF;
+}

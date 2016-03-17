@@ -9,6 +9,7 @@
 //==============================================================================
 typedef struct
 {
+  int            id;
   int            is_test;
   int            is_work;
   int            is_pause;

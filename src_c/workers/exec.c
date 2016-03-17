@@ -378,6 +378,11 @@ int handle_command_str(char *command)
       if(id_str != NULL)
         id = atoi(id_str);
 
+      sock_state_t state = STATE_START;
+      char *state_str = strtok(NULL, " ");
+      if(state_str != NULL)
+        state = cmd_state(state_str);
+
       cmd_server_activate(id, state);
 
       return EXEC_DONE;

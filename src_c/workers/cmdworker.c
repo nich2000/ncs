@@ -655,7 +655,7 @@ int cmd_server_list(pack_packet_t *pack)
     {
       char tmp[128];
       sprintf(tmp,
-              "%s %d",
+              "%s_%d",
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.name,
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.id);
       pack_add_param(pack, (unsigned char*)tmp);
@@ -665,13 +665,34 @@ int cmd_server_list(pack_packet_t *pack)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_activate(sock_id_t id)
+int cmd_server_activate(sock_id_t id, sock_state_t state)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
     if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
+      {
+        if(state == STATE_START)
+          _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
+        else
+          _cmd_server.custom_remote_clients_list.items[i].active = FALSE;
+      }
+  }
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_derver_activate_all(sock_state_t state)
+{
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+    {
+      if(state == STATE_START)
         _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
+      else
+        _cmd_server.custom_remote_clients_list.items[i].active = FALSE;
+    }
   }
 
   return ERROR_NONE;

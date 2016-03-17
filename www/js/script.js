@@ -96,12 +96,19 @@ function onMessage(evt)
       {
         for(var i = 1; i < data.length; i++) 
         {
+          var param = data[i][1].split('_');
           var line_id = "client_" + data[i][1];
           var line = $("#" + line_id);
           if(line.length == 0)
           {
             line = $("<tr></tr>");
             line.attr("id", line_id);
+            line.click(function()
+            {
+              $(this).addClass('selected').siblings().removeClass('selected');  
+              var value = $(this).find('td:last').text();
+              doSend(value); 
+            });
             clientsTable.append(line);
           }
 
@@ -113,7 +120,17 @@ function onMessage(evt)
             cell.attr("id", cell_id);
             line.append(cell);
           }
-          cell.text(data[i][1]);
+          cell.text(param[0]);
+
+          var cell_id = "id_" + line_id;
+          var cell = $("#" + cell_id);
+          if(cell.length == 0)
+          {
+            cell = $("<td style='height:8px'></td>");
+            cell.attr("id", cell_id);
+            line.append(cell);
+          }
+          cell.text(param[1]);
         }
         break;
       }
