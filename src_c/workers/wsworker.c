@@ -548,7 +548,9 @@ int ws_server_send_cmd(int argc, ...)
         tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
-        tmp_client->out_message = (char*)malloc(tmp_size);
+        tmp_client->out_message = (char*)malloc(tmp_size+1);
+        tmp_client->out_message[tmp_size] = '\0';
+
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
         tmp_client->custom_worker.is_locked = FALSE;

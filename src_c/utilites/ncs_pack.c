@@ -576,7 +576,9 @@ const char *_pack_word_as_string(pack_word_t *word)
   pack_word_as_string(word, tmp_value);
 
   // TODO - возможна утечка
-  char *tmp_string = (char*)malloc(strlen((char*)tmp_value));
+  char *tmp_string = (char*)malloc(strlen((char*)tmp_value)+1);
+  tmp_string[strlen((char*)tmp_value)] = '\0';
+
   strcpy(tmp_string, (char *)tmp_value);
 
   return tmp_string;

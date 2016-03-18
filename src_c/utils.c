@@ -52,19 +52,19 @@ int print_types_info()
   sprintf(
     tmp,
     "\n"                               \
-    "pack_word:                  %d\n" \
-    "pack_words:                 %d\n" \
-    "pack_packet:                %d\n" \
-    "pack_out_packets:           %d\n" \
-    "pack_in_packets:            %d\n" \
-    "pack_queue_packets:         %d\n" \
-    "pack_validation_buffer:     %d\n" \
-    "pack_out_packets_list:      %d\n" \
-    "pack_in_packets_list:       %d\n" \
-    "pack_protocol:              %d\n" \
-    "pack_queue:                 %d\n" \
-    "custom_worker:              %d\n" \
-    "custom_remote_clients_list: %d",
+    "pack_word:                  %lu\n" \
+    "pack_words:                 %lu\n" \
+    "pack_packet:                %lu\n" \
+    "pack_out_packets:           %lu\n" \
+    "pack_in_packets:            %lu\n" \
+    "pack_queue_packets:         %lu\n" \
+    "pack_validation_buffer:     %lu\n" \
+    "pack_out_packets_list:      %lu\n" \
+    "pack_in_packets_list:       %lu\n" \
+    "pack_protocol:              %lu\n" \
+    "pack_queue:                 %lu\n" \
+    "custom_worker:              %lu\n" \
+    "custom_remote_clients_list: %lu",
     sizeof(pack_word_t),
     sizeof(pack_words_t),
     sizeof(pack_packet_t),
