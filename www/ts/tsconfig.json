@@ -1,0 +1,20 @@
+{
+    "compilerOptions": 
+    {
+        "noImplicitAny": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "out": "../js/script.js",
+        "sourceMap": true
+    },
+    "files": 
+    [
+        "main.ts",
+        "socket.ts",
+        "visual.ts",
+        "func.ts",
+        "exec.ts",
+        "signal.ts",
+        "utils.ts"
+    ]
+}

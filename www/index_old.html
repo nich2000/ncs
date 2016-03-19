@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html class="full">
+  <meta charset="utf-8" />
+
+  <title>DEMS</title>
+  
+  <head>
+    <link type="image/x-icon" rel="icon" href="img/favicon.ico">
+
+    <link href="bootstrap-3.3.6-dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="js/jquery-1.12.1.min.js"></script>
+
+    <!-- <script src="js/script.js"></script> -->
+    <link href="css/style.css" rel="stylesheet">
+  </head>
+  
+  <body>
+
+    <div class="page-header dems-header" id="header">
+      <div class="row">
+        <div class="col-md-4">
+          <img class="img-responsive pull-left" src="img/our.jpg" alt="no our logo" style="height: 50px; width: 100%; object-fit: contain">
+        </div>
+        <div class="col-md-4">
+        </div>
+        <div class="col-md-4">
+          <img class="img-responsive pull-right" src="img/their.jpg" alt="no their logo" style="height: 50px; width: 100%; object-fit: contain">
+        </div>
+      </div> 
+    </div>
+
+    <div class="row">
+      <div class="col-md-3">
+        <div style="height: 600px; overflow: auto">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <td>Name</td>
+                <td>Id</td>
+              </tr>
+            </thead>
+
+            <tbody id="remote_clients">
+            </tbody>
+          </table>
+        </div>
+        <button style="width:100%">
+          Refresh
+        </button>
+      </div>
+
+      <div class="col-md-9">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <td>Param</td>
+              <td>Value</td>
+            </tr>
+          </thead>
+
+          <tbody id="remote_data">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <footer class="footer" id="footer">
+      <span class="label label-warning" id="connection_status">Disconnected</span>
+      <span class="label label-info" id="data_counter">0</span>
+      <span class="label label-info" id="last_cmd">Command: none</span>
+    </footer>
+
+  </body>
+</html>

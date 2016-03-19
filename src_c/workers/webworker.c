@@ -153,6 +153,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
   {
     make_last_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
+    log_add("web_accept, memcpy == NULL", LOG_ERROR);
     return ERROR_NORMAL;
   }
 
@@ -164,6 +165,7 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
   {
     make_last_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
+    log_add("web_accept, pthread_create != 0", LOG_ERROR);
     return ERROR_NORMAL;
   }
 
@@ -260,7 +262,7 @@ int web_get_response(char *request, char *response, int *size)
         strcat(response, "Content-Transfer-Encoding: binary\r\n");
       }
 
-      sprintf(tmp, "Content-Length: %lu\r\n\r\n", tmp_file_size);
+      sprintf(tmp, "Content-Length: %u\r\n\r\n", tmp_file_size);
       strcat(response, tmp);
 
       *size = strlen(response);

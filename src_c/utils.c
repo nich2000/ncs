@@ -51,7 +51,8 @@ int print_types_info()
 
   sprintf(
     tmp,
-    "\n"                               \
+    #ifdef __linux__
+    "\n"                                \
     "pack_word:                  %lu\n" \
     "pack_words:                 %lu\n" \
     "pack_packet:                %lu\n" \
@@ -65,6 +66,22 @@ int print_types_info()
     "pack_queue:                 %lu\n" \
     "custom_worker:              %lu\n" \
     "custom_remote_clients_list: %lu",
+    #elif _WIN32
+    "\n"                               \
+    "pack_word:                  %u\n" \
+    "pack_words:                 %u\n" \
+    "pack_packet:                %u\n" \
+    "pack_out_packets:           %u\n" \
+    "pack_in_packets:            %u\n" \
+    "pack_queue_packets:         %u\n" \
+    "pack_validation_buffer:     %u\n" \
+    "pack_out_packets_list:      %u\n" \
+    "pack_in_packets_list:       %u\n" \
+    "pack_protocol:              %u\n" \
+    "pack_queue:                 %u\n" \
+    "custom_worker:              %u\n" \
+    "custom_remote_clients_list: %u",
+    #endif
     sizeof(pack_word_t),
     sizeof(pack_words_t),
     sizeof(pack_packet_t),
