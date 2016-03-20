@@ -83,7 +83,7 @@ const char *log_type_to_string(int log_type)
     break;
     case LOG_DATA:           return "[DATA]";
     break;
-    case LOG_RAW_DATA:       return "[RAW_DATA]";
+    case LOG_RAW_DATA:       return "";
     break;
   }
 

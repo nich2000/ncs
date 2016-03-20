@@ -8,7 +8,6 @@
 
 #include "ncs_log.h"
 #include "protocol.h"
-#include "gps_parse.h"
 
 #include "test.h"
 //==============================================================================

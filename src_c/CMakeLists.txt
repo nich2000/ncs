@@ -51,7 +51,7 @@ IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
-set(_PROG main.c defines.h globals.h utils.c workers/socket_utils.c workers/exec.c workers/streamer.c utilites/protocol_utils.c utilites/gps_parse.c)
+set(_PROG main.c defines.h globals.h utils.c workers/socket_utils.c workers/exec.c workers/streamer.c utilites/protocol_utils.c)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

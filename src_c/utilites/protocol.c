@@ -445,9 +445,8 @@ int protocol_assign_pack(pack_protocol_t *protocol, pack_packet_t *pack)
   return pack_assign_pack(tmp_pack, pack);
 }
 //==============================================================================
-int protocol_buffer_validate(pack_buffer_t buffer, pack_size_t size,
-                         pack_type_t only_validate, pack_protocol_t *protocol,
-                         void *sender)
+int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
+  pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
 //  log_add("pack_validate", LOG_DEBUG);
 
@@ -557,6 +556,19 @@ int protocol_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   }
 
   return tmp_valid_count;
+}
+//==============================================================================
+int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
+  pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
+{
+//  char tmp[PACK_BUFFER_SIZE];
+//  if(sscanf(buffer, PACK_FORMAT, ) == PACK_FORMAT_COUNT)
+//  {
+//  }
+
+  log_add_fmt(LOG_INFO, "%s", buffer);
+
+  return 1;
 }
 //==============================================================================
 int protocol_current_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol)

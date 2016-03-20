@@ -439,7 +439,7 @@ void *cmd_send_worker(void *arg)
       if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
         continue;
 
-      int tmp_cnt = protocol_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
+      int tmp_cnt = protocol_bin_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
                                          tmp_protocol, (void*)tmp_client);
 
       if(tmp_cnt > 0)
@@ -499,7 +499,11 @@ int cmd_recv(void *sender, unsigned char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  protocol_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+#ifdef USE_BINARY_PROTOCOL
+  protocol_bin_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+#else
+  protocol_txt_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+#endif
 
   return ERROR_NONE;
 }
