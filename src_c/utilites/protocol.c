@@ -11,11 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "globals.h"
 #include "protocol.h"
 #include "ncs_log.h"
 #include "ncs_pack_utils.h"
 //==============================================================================
 extern pack_number_t pack_global_number;
+extern char *pack_txt_names[];
 //==============================================================================
 #ifdef PACK_USE_OWN_BUFFER
 pack_protocol_t *protocol;
@@ -505,7 +507,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     // Get index
     pack_index_t tmp_index = tmp_value_buffer[0] << 8;
-    tmp_index           |= tmp_value_buffer[1];
+    tmp_index             |= tmp_value_buffer[1];
 
     // Get crc16 1
     if(tmp_validation_size < 2)
@@ -546,6 +548,8 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     if(tmp_pack == NULL)
       return ERROR_NORMAL;
 
+    pack_init(tmp_pack);
+
     tmp_pack->number = tmp_index;
 
     if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
@@ -558,15 +562,98 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   return tmp_valid_count;
 }
 //==============================================================================
+// <"Car_001"|0|0|80974|0.0|0.0|0|0|1|0|-0.46|-3.10|43.2|41.9|4.08|1.000000|2.000000|0.02|1>
+// 1. Проверяем наличие < >
+// 2. Парсим каждое значение
+// 3. Должнно быть PACK_TXT_FORMAT_COUNT
+//==============================================================================
+char *next_value(char *token, char *dst, int *cnt)
+{
+  if(token != NULL)
+  {
+    (*cnt)++;
+    strcpy(dst, token);
+    return strtok(NULL, "|");
+  }
+
+  return NULL;
+}
+//==============================================================================
 int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
-//  char tmp[PACK_BUFFER_SIZE];
-//  if(sscanf(buffer, PACK_FORMAT, ) == PACK_FORMAT_COUNT)
-//  {
-//  }
+  if((buffer[0] != '<') || (buffer[strlen((char*)buffer)-3] != '>'))
+    return ERROR_NONE;
 
-  log_add_fmt(LOG_INFO, "%s", buffer);
+  int cnt = 0;
+  pack_txt_s_t tmp_txt_pack;
+
+  char *token = strtok((char*)&buffer[1], "|");
+
+  token = next_value(token, tmp_txt_pack._ID,             &cnt);
+  token = next_value(token, tmp_txt_pack.sGPStime,        &cnt);
+  token = next_value(token, tmp_txt_pack.sGPStime_s,      &cnt);
+  token = next_value(token, tmp_txt_pack.sTickCount,      &cnt);
+  token = next_value(token, tmp_txt_pack.sGPSspeed,       &cnt);
+  token = next_value(token, tmp_txt_pack.sGPSheading,     &cnt);
+  token = next_value(token, tmp_txt_pack.sGPSlat,         &cnt);
+  token = next_value(token, tmp_txt_pack.sGPSlon,         &cnt);
+  token = next_value(token, tmp_txt_pack.sint_par1,       &cnt);
+  token = next_value(token, tmp_txt_pack.sint_par2,       &cnt);
+  token = next_value(token, tmp_txt_pack.sGyro1AngleZ,    &cnt);
+  token = next_value(token, tmp_txt_pack.sGyro2AngleZ,    &cnt);
+  token = next_value(token, tmp_txt_pack.sMPU1temp,       &cnt);
+  token = next_value(token, tmp_txt_pack.sMPU2temp,       &cnt);
+  token = next_value(token, tmp_txt_pack.sBatteryVoltage, &cnt);
+  token = next_value(token, tmp_txt_pack.sfl_par1,        &cnt);
+  token = next_value(token, tmp_txt_pack.sfl_par2,        &cnt);
+  token = next_value(token, tmp_txt_pack.sExtVoltage,     &cnt);
+  token = next_value(token, tmp_txt_pack.sUSBConnected,   &cnt);
+
+  if(cnt == PACK_TXT_FORMAT_COUNT)
+  {
+    protocol->in_packets_list.count++;
+    if(protocol->in_packets_list.count >= USHRT_MAX)
+      protocol->in_packets_list.count = PACK_GLOBAL_INIT_NUMBER;
+
+    protocol->in_packets_list.index++;
+    if(protocol->in_packets_list.index >= PACK_IN_PACKETS_COUNT)
+      protocol->in_packets_list.index = PACK_PACKETS_INIT_INDEX;
+
+    protocol->in_packets_list.empty = FALSE;
+
+    pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
+
+    if(tmp_pack == NULL)
+      return ERROR_NORMAL;
+
+    pack_init(tmp_pack);
+
+    tmp_pack->number = atoi(tmp_txt_pack.sTickCount);
+
+    pack_add_as_string(tmp_pack, pack_txt_names[0],  tmp_txt_pack._ID);             // 1
+    pack_add_as_string(tmp_pack, pack_txt_names[1],  tmp_txt_pack.sGPStime);        // 2
+    pack_add_as_string(tmp_pack, pack_txt_names[2],  tmp_txt_pack.sGPStime_s);      // 3
+    pack_add_as_string(tmp_pack, pack_txt_names[3],  tmp_txt_pack.sTickCount);      // 4
+    pack_add_as_string(tmp_pack, pack_txt_names[4],  tmp_txt_pack.sGPSspeed);       // 5
+    pack_add_as_string(tmp_pack, pack_txt_names[5],  tmp_txt_pack.sGPSheading);     // 6
+    pack_add_as_string(tmp_pack, pack_txt_names[6],  tmp_txt_pack.sGPSlat);         // 7
+    pack_add_as_string(tmp_pack, pack_txt_names[7],  tmp_txt_pack.sGPSlon);         // 8
+    pack_add_as_string(tmp_pack, pack_txt_names[8],  tmp_txt_pack.sint_par1);       // 9
+    pack_add_as_string(tmp_pack, pack_txt_names[9],  tmp_txt_pack.sint_par2);       // 10
+    pack_add_as_string(tmp_pack, pack_txt_names[10], tmp_txt_pack.sGyro1AngleZ);    // 11
+    pack_add_as_string(tmp_pack, pack_txt_names[11], tmp_txt_pack.sGyro2AngleZ);    // 12
+    pack_add_as_string(tmp_pack, pack_txt_names[12], tmp_txt_pack.sMPU1temp);       // 13
+    pack_add_as_string(tmp_pack, pack_txt_names[13], tmp_txt_pack.sMPU2temp);       // 14
+    pack_add_as_string(tmp_pack, pack_txt_names[14], tmp_txt_pack.sBatteryVoltage); // 15
+    pack_add_as_string(tmp_pack, pack_txt_names[15], tmp_txt_pack.sfl_par1);        // 16
+    pack_add_as_string(tmp_pack, pack_txt_names[16], tmp_txt_pack.sfl_par2);        // 17
+    pack_add_as_string(tmp_pack, pack_txt_names[17], tmp_txt_pack.sExtVoltage);     // 18
+    pack_add_as_string(tmp_pack, pack_txt_names[18], tmp_txt_pack.sUSBConnected);   // 19
+
+    if(protocol->on_new_in_data != 0)
+      protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
+  }
 
   return 1;
 }

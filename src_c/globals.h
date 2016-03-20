@@ -20,36 +20,57 @@
 //==============================================================================
 typedef int BOOL;
 //==============================================================================
-#define PACK_FORMAT         "<%s|%u|%u|%u|%.1f|%.1f|%ld|%ld|%d|%d|%.2f|%.2f|%.1f|%.1f|%.2f|%f|%f|%.2f|%c>"
-#define PACK_FORMAT_COUNT   19
+#define PACK_TXT_FORMAT_COUNT   19
 //==============================================================================
-//<Car_001|0|0|81774|0.0|0.0|0|0|1|0|-221.44|5.32|39.9|38.9|4.12|1.000000|2.000000|0.01|1>
+//                                1  2  3  4  5    6    7   8   9  10 11   12   13   14   15   16 17 18   19
+#define PACK_TXT_FORMAT         "<%s|%u|%u|%u|%.1f|%.1f|%ld|%ld|%d|%d|%.2f|%.2f|%.1f|%.1f|%.2f|%f|%f|%.2f|%c>"
 //==============================================================================
-/*
 typedef struct
 {
-  Float_t MPU1temp;       //(float градусы) temp1 = (accelgyro1.getTemperature() + 12412.0) / 340.0;
-  Float_t MPU2temp;       //(float градусы) обычно датчик при комнатной температуре нагревается до 35 градусов
-  Float_t MPU1magX;
-  Float_t MPU1magY;
-  Float_t MPU1magZ;
-  Float_t MPU2magX;
-  Float_t MPU2magY;
-  Float_t MPU2magZ;
-  Float_t Gyro1AngleZ;
-  Float_t Gyro2AngleZ;
-  Float_t GPSspeed;       // (float km/h) - NIch RMC строка выдает в узлах
-  Float_t GPSheading;     // (float градусы)
-  U32_t   GPStime;        // (float как в строке RMC) - NIch ИМХО в RMC не float, а строка
-  U32_t   GPStime_s;
-  Bool_t  GPSValid;       // (char) Валидные ли данные с GPS
-  S32_t   GPSlat;         // (int градусы с десятичными долями градуса с 5(можно оставить 6, как прилетает с ГПС приёмника) знаками после запятой, умноженные на 100000)
-  S32_t   GPSlon;         // (int градусы с десятичными долями градуса с 5(можно оставить 6, как прилетает с ГПС приёмника) знаками после запятой, умноженные на 100000)
-  U8_t    ChargingState;  // (int 0-нет зарядки, 1-малый ток от USB, 2-большой ток от USB, 3-от 12В)
-  Float_t BatteryVoltage; // (float Вольты с десятичными долями)
-  Float_t ExtVoltage;     // (float входное напряжение)
-  Bool_t  USBConnected;
-} GlobalVar_t;
-*/
+  char  _ID[32];         // 1
+  int   GPStime;         // 2
+  int   GPStime_s;       // 3
+  int   TickCount;       // 4
+  float GPSspeed;        // 5
+  float GPSheading;      // 6
+  float GPSlat;          // 7
+  float GPSlon;          // 8
+  int   int_par1;        // 9
+  int   int_par2;        // 10
+  float Gyro1AngleZ;     // 11
+  float Gyro2AngleZ;     // 12
+  float MPU1temp;        // 13
+  float MPU2temp;        // 14
+  float BatteryVoltage;  // 15
+  float fl_par1;         // 16
+  float fl_par2;         // 17
+  float ExtVoltage;      // 18
+  char  USBConnected;    // 19
+} pack_txt_t;
+//==============================================================================
+#define PACK_TXT_S_FORMAT   "<%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s>"
+//==============================================================================
+typedef struct
+{
+  char _ID[32];             // 1
+  char sGPStime[32];        // 2
+  char sGPStime_s[32];      // 3
+  char sTickCount[32];      // 4
+  char sGPSspeed[32];       // 5
+  char sGPSheading[32];     // 6
+  char sGPSlat[32];         // 7
+  char sGPSlon[32];         // 8
+  char sint_par1[32];       // 9
+  char sint_par2[32];       // 10
+  char sGyro1AngleZ[32];    // 11
+  char sGyro2AngleZ[32];    // 12
+  char sMPU1temp[32];       // 13
+  char sMPU2temp[32];       // 14
+  char sBatteryVoltage[32]; // 15
+  char sfl_par1[32];        // 16
+  char sfl_par2[32];        // 17
+  char sExtVoltage[32];     // 18
+  char sUSBConnected[32];   // 19
+} pack_txt_s_t;
 //==============================================================================
 #endif //GLOBALS_H

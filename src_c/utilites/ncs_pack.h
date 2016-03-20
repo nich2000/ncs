@@ -29,12 +29,12 @@
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
 //==============================================================================
-typedef unsigned char           *pack_string_t;
-typedef unsigned char           *pack_bytes_t;
-typedef unsigned char            pack_buffer_t[PACK_BUFFER_SIZE];
-typedef unsigned char            pack_value_t [PACK_VALUE_SIZE];
-typedef unsigned char            pack_ver_t   [PACK_VERSION_SIZE];
-typedef unsigned char            pack_key_t   [PACK_KEY_SIZE];
+typedef char                    *pack_string_t;
+typedef char                    *pack_bytes_t;
+typedef char                     pack_buffer_t[PACK_BUFFER_SIZE];
+typedef char                     pack_value_t [PACK_VALUE_SIZE];
+typedef char                     pack_ver_t   [PACK_VERSION_SIZE];
+typedef char                     pack_key_t   [PACK_KEY_SIZE];
 //==============================================================================
 typedef unsigned short           pack_count_t;
 typedef unsigned short           pack_size_t;

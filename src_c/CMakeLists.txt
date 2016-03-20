@@ -38,7 +38,7 @@ set(_JANSSON ../libs/jansson/src/dump.c ../libs/jansson/src/error.c ../libs/jans
 add_library(jansson SHARED ${_JANSSON})
 set_property(TARGET jansson PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
-set(_PROTOCOL defines.h globals.h utilites/ncs_pack.c utilites/ncs_pack_utils.c utilites/protocol_types.h utilites/protocol.c utilites/protocol_utils.c test.c)
+set(_PROTOCOL defines.h globals.h globals.c utilites/ncs_pack.c utilites/ncs_pack_utils.c utilites/protocol_types.h utilites/protocol.c utilites/protocol_utils.c test.c)
 add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log error)

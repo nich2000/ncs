@@ -6,7 +6,7 @@
 //==============================================================================
 unsigned short getCRC16(char *data, unsigned short length)
 {
-  unsigned char i;
+  char i;
   unsigned int tmp_data;
   unsigned int crc = 0xffff;
 
@@ -34,7 +34,7 @@ unsigned short getCRC16(char *data, unsigned short length)
   return (crc);
 }
 //==============================================================================
-int bytes_to_int(unsigned char *bytes, int *value)
+int bytes_to_int(char *bytes, int *value)
 {
   intUnion tmp_value;
 
@@ -46,7 +46,7 @@ int bytes_to_int(unsigned char *bytes, int *value)
   return 0;
 }
 //==============================================================================
-int bytes_to_float(unsigned char *bytes, float *value)
+int bytes_to_float(char *bytes, float *value)
 {
   floatUnion tmp_value;
 
@@ -58,7 +58,7 @@ int bytes_to_float(unsigned char *bytes, float *value)
   return 0;
 }
 //==============================================================================
-int bytes_from_int(unsigned char *bytes, int value)
+int bytes_from_int(char *bytes, int value)
 {
   intUnion tmp_value;
 
@@ -70,7 +70,7 @@ int bytes_from_int(unsigned char *bytes, int value)
   return 0;
 }
 //==============================================================================
-int bytes_from_float(unsigned char *bytes, float value)
+int bytes_from_float(char *bytes, float value)
 {
   floatUnion tmp_value;
 
