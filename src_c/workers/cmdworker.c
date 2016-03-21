@@ -512,9 +512,9 @@ int cmd_recv(void *sender, char *buffer, int size)
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
 #ifdef USE_BINARY_PROTOCOL
-  protocol_bin_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+  protocol_bin_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 #else
-  protocol_txt_buffer_validate(buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+  protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 #endif
 
   return ERROR_NONE;
@@ -536,12 +536,12 @@ int cmd_server_send_cmd(int argc, ...)
       va_start(params, argc);
 
       char *cmd = va_arg(params, char*);
-      protocol_add_cmd(cmd, tmp_protocol);
+      protocol_add_cmd((unsigned char*)cmd, tmp_protocol);
 
       for(int i = 1; i < argc; i++)
       {
         char *param = va_arg(params, char*);
-        protocol_add_param_as_string(param, tmp_protocol);
+        protocol_add_param_as_string((unsigned char*)param, tmp_protocol);
       }
 
       va_end(params);
@@ -586,12 +586,12 @@ int cmd_client_send_cmd(int argc, ...)
     va_start(tmp_params, argc);
 
     char *tmp_cmd = va_arg(tmp_params, char*);
-    protocol_add_cmd(tmp_cmd, tmp_protocol);
+    protocol_add_cmd((unsigned char*)tmp_cmd, tmp_protocol);
 
     for(int i = 1; i < argc; i++)
     {
       char *tmp_param = va_arg(tmp_params, char*);
-      protocol_add_param_as_string(tmp_param, tmp_protocol);
+      protocol_add_param_as_string((unsigned char*)tmp_param, tmp_protocol);
     }
 
     va_end(tmp_params);
@@ -663,7 +663,7 @@ int cmd_server_list(pack_packet_t *pack)
 
   pack_init(pack);
 
-  pack_add_cmd(pack, (char*)"clients");
+  pack_add_cmd(pack, (unsigned char*)"clients");
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -674,7 +674,7 @@ int cmd_server_list(pack_packet_t *pack)
               "%s_%d",
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.name,
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.id);
-      pack_add_param(pack, (char*)tmp);
+      pack_add_param(pack, (unsigned char*)tmp);
     }
   };
 

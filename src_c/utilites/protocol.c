@@ -678,25 +678,25 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     tmp_pack->number = atoi(tmp_txt_pack.sTickCount);
 
-    pack_add_as_string(tmp_pack, pack_txt_names[0],  tmp_txt_pack._ID);             // 1
-    pack_add_as_string(tmp_pack, pack_txt_names[1],  tmp_txt_pack.sGPStime);        // 2
-    pack_add_as_string(tmp_pack, pack_txt_names[2],  tmp_txt_pack.sGPStime_s);      // 3
-    pack_add_as_string(tmp_pack, pack_txt_names[3],  tmp_txt_pack.sTickCount);      // 4
-    pack_add_as_string(tmp_pack, pack_txt_names[4],  tmp_txt_pack.sGPSspeed);       // 5
-    pack_add_as_string(tmp_pack, pack_txt_names[5],  tmp_txt_pack.sGPSheading);     // 6
-    pack_add_as_string(tmp_pack, pack_txt_names[6],  tmp_txt_pack.sGPSlat);         // 7
-    pack_add_as_string(tmp_pack, pack_txt_names[7],  tmp_txt_pack.sGPSlon);         // 8
-    pack_add_as_string(tmp_pack, pack_txt_names[8],  tmp_txt_pack.sint_par1);       // 9
-    pack_add_as_string(tmp_pack, pack_txt_names[9],  tmp_txt_pack.sint_par2);       // 10
-    pack_add_as_string(tmp_pack, pack_txt_names[10], tmp_txt_pack.sGyro1AngleZ);    // 11
-    pack_add_as_string(tmp_pack, pack_txt_names[11], tmp_txt_pack.sGyro2AngleZ);    // 12
-    pack_add_as_string(tmp_pack, pack_txt_names[12], tmp_txt_pack.sMPU1temp);       // 13
-    pack_add_as_string(tmp_pack, pack_txt_names[13], tmp_txt_pack.sMPU2temp);       // 14
-    pack_add_as_string(tmp_pack, pack_txt_names[14], tmp_txt_pack.sBatteryVoltage); // 15
-    pack_add_as_string(tmp_pack, pack_txt_names[15], tmp_txt_pack.sfl_par1);        // 16
-    pack_add_as_string(tmp_pack, pack_txt_names[16], tmp_txt_pack.sfl_par2);        // 17
-    pack_add_as_string(tmp_pack, pack_txt_names[17], tmp_txt_pack.sExtVoltage);     // 18
-    pack_add_as_string(tmp_pack, pack_txt_names[18], tmp_txt_pack.sUSBConnected);   // 19
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[0],  (unsigned char*)tmp_txt_pack._ID);             // 1
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[1],  (unsigned char*)tmp_txt_pack.sGPStime);        // 2
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[2],  (unsigned char*)tmp_txt_pack.sGPStime_s);      // 3
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[3],  (unsigned char*)tmp_txt_pack.sTickCount);      // 4
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[4],  (unsigned char*)tmp_txt_pack.sGPSspeed);       // 5
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[5],  (unsigned char*)tmp_txt_pack.sGPSheading);     // 6
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[6],  (unsigned char*)tmp_txt_pack.sGPSlat);         // 7
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[7],  (unsigned char*)tmp_txt_pack.sGPSlon);         // 8
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[8],  (unsigned char*)tmp_txt_pack.sint_par1);       // 9
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[9],  (unsigned char*)tmp_txt_pack.sint_par2);       // 10
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[10], (unsigned char*)tmp_txt_pack.sGyro1AngleZ);    // 11
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[11], (unsigned char*)tmp_txt_pack.sGyro2AngleZ);    // 12
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[12], (unsigned char*)tmp_txt_pack.sMPU1temp);       // 13
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[13], (unsigned char*)tmp_txt_pack.sMPU2temp);       // 14
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[14], (unsigned char*)tmp_txt_pack.sBatteryVoltage); // 15
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[15], (unsigned char*)tmp_txt_pack.sfl_par1);        // 16
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[16], (unsigned char*)tmp_txt_pack.sfl_par2);        // 17
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[17], (unsigned char*)tmp_txt_pack.sExtVoltage);     // 18
+    pack_add_as_string(tmp_pack, (unsigned char*)pack_txt_names[18], (unsigned char*)tmp_txt_pack.sUSBConnected);   // 19
 
     if(protocol->on_new_in_data != 0)
       protocol->on_new_in_data((void*)sender, (void*)tmp_pack);

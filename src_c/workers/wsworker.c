@@ -553,12 +553,12 @@ int ws_server_send_cmd(int argc, ...)
         va_list tmp_params;
         va_start(tmp_params, argc);
         char *tmp_cmd = va_arg(tmp_params, char*);
-        pack_add_as_string(&tmp_pack, (char*)PACK_CMD_KEY, tmp_cmd);
+        pack_add_as_string(&tmp_pack, (unsigned char*)PACK_CMD_KEY, (unsigned char*)tmp_cmd);
 
         for(int i = 1; i < argc; i++)
         {
           char *tmp_param = va_arg(tmp_params, char*);
-          pack_add_as_string(&tmp_pack, (char*)PACK_PARAM_KEY, tmp_param);
+          pack_add_as_string(&tmp_pack, (unsigned char*)PACK_PARAM_KEY, (unsigned char*)tmp_param);
         }
         va_end(tmp_params);
 

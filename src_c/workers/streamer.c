@@ -181,9 +181,9 @@ int cmd_streamer_make(int id, pack_protocol_t *protocol)
 
     char tmp[32];
     sprintf(tmp, "STREAMER_%d", id);
-    protocol_add_as_string((char*)"NAM", (char*)tmp, protocol);
+    protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)tmp, protocol);
 
-    protocol_add_as_int((char*)"CNT", counter++, protocol);
+    protocol_add_as_int((unsigned char*)"CNT", counter++, protocol);
 
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {
