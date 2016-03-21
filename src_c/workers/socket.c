@@ -181,7 +181,10 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   }
   else if(res == 0)
   {
-    log_add_fmt(LOG_WAIT, "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
+    char tmp[256];
+    sprintf(tmp,  "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
+    make_last_error(ERROR_WAIT, errno, tmp);
+    log_add(tmp, ERROR_WAIT);
 
     return ERROR_WAIT;
   }
@@ -206,7 +209,10 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
           }
           else if(*size == 0)
           {
-            log_add_fmt(LOG_WARNING,  "sock_recv, recv, socket: %d, socket closed", sock);
+            char tmp[256];
+            sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
+            make_last_error(ERROR_WARNING, errno, tmp);
+            log_add(tmp, ERROR_WARNING);
 
 //            FD_CLR(sock, &active_fd_set);
             return ERROR_WARNING;
@@ -236,7 +242,7 @@ int sock_send(SOCKET sock, char *buffer, int size)
   #ifdef SOCK_RANDOM_BUFFER
   int tmp_index = 0;
   int real_buffer_size = rand() % SOCK_BUFFER_SIZE + 1;
-  unsigned char tmp_buffer[real_buffer_size];
+  char tmp_buffer[real_buffer_size];
 
   while(tmp_index < size)
   {

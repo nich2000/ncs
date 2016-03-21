@@ -40,7 +40,7 @@ int cmd_connect   (void *sender);
 int cmd_disconnect(void *sender);
 int cmd_error     (void *sender, error_t *error);
 int cmd_send      (void *sender);
-int cmd_recv      (void *sender, unsigned char *buffer, int size);
+int cmd_recv      (void *sender, char *buffer, int size);
 int cmd_new_data  (void *sender, void *data);
 //==============================================================================
 int          _cmd_server_id = 0;
@@ -493,7 +493,7 @@ int cmd_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_recv(void *sender, unsigned char *buffer, int size)
+int cmd_recv(void *sender, char *buffer, int size)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -523,12 +523,12 @@ int cmd_server_send_cmd(int argc, ...)
       va_list params;
       va_start(params, argc);
 
-      unsigned char *cmd = va_arg(params, unsigned char*);
+      char *cmd = va_arg(params, char*);
       protocol_add_cmd(cmd, tmp_protocol);
 
       for(int i = 1; i < argc; i++)
       {
-        unsigned char *param = va_arg(params, unsigned char*);
+        char *param = va_arg(params, char*);
         protocol_add_param_as_string(param, tmp_protocol);
       }
 
@@ -573,12 +573,12 @@ int cmd_client_send_cmd(int argc, ...)
     va_list tmp_params;
     va_start(tmp_params, argc);
 
-    unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
+    char *tmp_cmd = va_arg(tmp_params, char*);
     protocol_add_cmd(tmp_cmd, tmp_protocol);
 
     for(int i = 1; i < argc; i++)
     {
-      unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
+      char *tmp_param = va_arg(tmp_params, char*);
       protocol_add_param_as_string(tmp_param, tmp_protocol);
     }
 
@@ -651,7 +651,7 @@ int cmd_server_list(pack_packet_t *pack)
 
   pack_init(pack);
 
-  pack_add_cmd(pack, (unsigned char*)"clients");
+  pack_add_cmd(pack, (char*)"clients");
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -662,7 +662,7 @@ int cmd_server_list(pack_packet_t *pack)
               "%s_%d",
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.name,
               _cmd_server.custom_remote_clients_list.items[i].custom_worker.id);
-      pack_add_param(pack, (unsigned char*)tmp);
+      pack_add_param(pack, (char*)tmp);
     }
   };
 

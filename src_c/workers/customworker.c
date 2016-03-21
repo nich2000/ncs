@@ -287,7 +287,7 @@ void *custom_recv_worker(void *arg)
     {
       if(tmp_size > 0)
         if(tmp_client->on_recv != 0)
-          tmp_client->on_recv(tmp_client, (unsigned char*)tmp_buffer, tmp_size);
+          tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);
     }
     else if(res == ERROR_WARNING)
     {

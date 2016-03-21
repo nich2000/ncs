@@ -50,7 +50,7 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host);
 int ws_new_data(void *sender, void *data);
 int ws_disconnect(void *sender);
 int ws_error(void *sender, error_t *error);
-int ws_recv(void *sender, unsigned char *buffer, int size);
+int ws_recv(void *sender, char *buffer, int size);
 int ws_send(void *sender);
 //==============================================================================
 int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
@@ -291,19 +291,25 @@ void *ws_recv_worker(void *arg)
   if(tmp_client->custom_worker.on_state != NULL)
     tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
-  char *request  = (char*)malloc(2048);
-  char *response = (char*)malloc(1024*1024);
-  int  size      = 0;
+  char *request   = (char*)malloc(2048);
+  char *response  = (char*)malloc(1024*1024);
+  int  tmp_size   = 0;
+  int  tmp_errors = 0;
 
   while(tmp_client->custom_worker.state == STATE_START)
   {
-    if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
+    int res = sock_recv(tmp_sock, request, &tmp_size);
+    if(res == ERROR_NONE)
     {
+//      if(tmp_size > 0)
+//        if(tmp_client->on_recv != 0)
+//          tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);
+
       if(tmp_client->hand_shake == FALSE)
       {
-        ws_hand_shake(request, response, &size);
+        ws_hand_shake(request, response, &tmp_size);
 
-        if(sock_send(tmp_sock, response, size) == ERROR_NONE)
+        if(sock_send(tmp_sock, response, tmp_size) == ERROR_NONE)
         {
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
@@ -321,6 +327,23 @@ void *ws_recv_worker(void *arg)
         cmd_derver_activate_all(STATE_STOP);
         cmd_server_activate(atoi((char*)tmp_buffer), STATE_START);
       }
+    }
+    else if(res == ERROR_WARNING)
+    {
+      if(tmp_size == 0)
+      {
+        if(tmp_client->on_disconnect != 0)
+          tmp_client->on_disconnect((void*)tmp_client);
+        break;
+      }
+    }
+    else if(res >= ERROR_NORMAL)
+    {
+      if(tmp_client->on_error != 0)
+        tmp_client->on_error((void*)tmp_client, last_error());
+
+      if(tmp_errors++ > SOCK_ERRORS_COUNT)
+        tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
     usleep(1000);
@@ -403,7 +426,7 @@ int ws_error(void *sender, error_t *error)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_recv(void *sender, unsigned char *buffer, int size)
+int ws_recv(void *sender, char *buffer, int size)
 {
   return ERROR_NONE;
 }
@@ -494,7 +517,7 @@ int ws_server_send_pack(pack_packet_t *pack)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);
@@ -529,13 +552,13 @@ int ws_server_send_cmd(int argc, ...)
 
         va_list tmp_params;
         va_start(tmp_params, argc);
-        unsigned char *tmp_cmd = va_arg(tmp_params, unsigned char*);
-        pack_add_as_string(&tmp_pack, (unsigned char*)PACK_CMD_KEY, tmp_cmd);
+        char *tmp_cmd = va_arg(tmp_params, char*);
+        pack_add_as_string(&tmp_pack, (char*)PACK_CMD_KEY, tmp_cmd);
 
         for(int i = 1; i < argc; i++)
         {
-          unsigned char *tmp_param = va_arg(tmp_params, unsigned char*);
-          pack_add_as_string(&tmp_pack, (unsigned char*)PACK_PARAM_KEY, tmp_param);
+          char *tmp_param = va_arg(tmp_params, char*);
+          pack_add_as_string(&tmp_pack, (char*)PACK_PARAM_KEY, tmp_param);
         }
         va_end(tmp_params);
 
@@ -545,7 +568,7 @@ int ws_server_send_cmd(int argc, ...)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, PACK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size+1);

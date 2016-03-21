@@ -424,7 +424,7 @@ int pack_key_by_index(pack_packet_t *pack, pack_index_t index, pack_key_t key)
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_keys_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer)
+int pack_keys_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer)
 {
   if(pack->words_count > PACK_WORDS_COUNT)
     return ERROR_NORMAL;
@@ -446,7 +446,7 @@ int pack_keys_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer_t
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_values_to_csv(pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer)
+int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer)
 {
   if(pack == NULL)
     return ERROR_NORMAL;

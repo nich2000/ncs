@@ -2,7 +2,7 @@
 #define DEFINES_H
 
 //#define DEMS_DEVICE
-//#define USE_BINARY_PROTOCOL
+#define USE_BINARY_PROTOCOL
 
 #if defined(__linux__) || defined(_WIN32)
 #else

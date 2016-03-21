@@ -35,6 +35,7 @@ typedef char                     pack_buffer_t[PACK_BUFFER_SIZE];
 typedef char                     pack_value_t [PACK_VALUE_SIZE];
 typedef char                     pack_ver_t   [PACK_VERSION_SIZE];
 typedef char                     pack_key_t   [PACK_KEY_SIZE];
+typedef char                     pack_delim_t;
 //==============================================================================
 typedef unsigned short           pack_count_t;
 typedef unsigned short           pack_size_t;
@@ -95,8 +96,8 @@ int pack_val_by_index_as_bytes   (pack_packet_t *pack, pack_index_t index, pack_
 int pack_to_buffer               (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
 int pack_to_json                 (pack_packet_t *pack, pack_buffer_t buffer);
 //==============================================================================
-int pack_keys_to_csv             (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
-int pack_values_to_csv           (pack_packet_t *pack, unsigned char delimeter, pack_buffer_t buffer);
+int pack_keys_to_csv             (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
+int pack_values_to_csv           (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
 //==============================================================================
 int pack_add_cmd                 (pack_packet_t *pack, pack_string_t command);
 int pack_add_param               (pack_packet_t *pack, pack_string_t param);

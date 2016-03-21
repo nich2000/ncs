@@ -247,9 +247,9 @@ int handle_command_str(char *command)
       while(arg != NULL)
       {
         if(cnt == 0)
-          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
+          pack_add_cmd(&tmp_packet, (char*)arg);
         else
-          pack_add_param(&tmp_packet, (unsigned char*)arg);
+          pack_add_param(&tmp_packet, (char*)arg);
         arg = strtok(NULL, " ");
         cnt++;
       }
@@ -269,9 +269,9 @@ int handle_command_str(char *command)
       while(arg != NULL)
       {
         if(cnt == 0)
-          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
+          pack_add_cmd(&tmp_packet, (char*)arg);
         else
-          pack_add_param(&tmp_packet, (unsigned char*)arg);
+          pack_add_param(&tmp_packet, (char*)arg);
         arg = strtok(NULL, " ");
         cnt++;
       }
@@ -291,9 +291,9 @@ int handle_command_str(char *command)
       while(arg != NULL)
       {
         if(cnt == 0)
-          pack_add_cmd(&tmp_packet, (unsigned char*)arg);
+          pack_add_cmd(&tmp_packet, (char*)arg);
         else
-          pack_add_param(&tmp_packet, (unsigned char*)arg);
+          pack_add_param(&tmp_packet, (char*)arg);
         arg = strtok(NULL, " ");
         cnt++;
       }
