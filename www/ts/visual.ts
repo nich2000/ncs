@@ -75,7 +75,7 @@ class clients_table_t extends table_t
         var cell: any;
         cell = $(this).find('td:last');
         var value = cell.text();
-        Signal.emit("doSend", [["cmd", "activate"], ["par", value]]);
+        Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
       });
       this.table.append(line);
       this.rows_count++;

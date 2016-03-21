@@ -38,6 +38,8 @@ class web_socket_t
   {
     console.log("doSend: " + message);
 
+    message = JSON.stringify(message);
+
     this.socket.send(message);
   }
 

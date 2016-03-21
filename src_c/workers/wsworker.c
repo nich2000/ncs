@@ -517,23 +517,35 @@ int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
 //==============================================================================
 int json_to_packet(pack_packet_t *packet, char *buffer, int *size)
 {
+  pack_init(packet);
+
   json_error_t tmp_error;
-  json_t *tmp_json = json_loadb(buffer, *size, JSON_DECODE_ANY, &tmp_error);
+  json_t *tmp_json = json_loads(buffer, JSON_DECODE_ANY, &tmp_error);
 
   if(tmp_json != NULL)
   {
     if(json_array_size(tmp_json) >= 0)
     {
       int line = 0;
-      json_array_foreach()
+      size_t tmp_index_word;
+      json_t *tmp_word;
+      json_array_foreach(tmp_json, tmp_index_word, tmp_word)
       {
-        if(line == 0)
+        if(json_array_size(tmp_word) == 2)
         {
-          line++;
-          pack_add_cmd();
-        }
+//          json_t *tmp_key   = json_array_get(tmp_word, 0);
+          json_t *tmp_value = json_array_get(tmp_word, 1);
 
-        pack_add_param();
+          if(line == 0)
+          {
+            line++;
+            pack_add_cmd(packet, json_string_value(tmp_value));
+          }
+          else
+          {
+            pack_add_param(packet, json_string_value(tmp_value));
+          }
+        }
       }
     }
 

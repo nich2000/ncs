@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "protocol.h"
 #include "ncs_log.h"
@@ -455,6 +456,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
     char tmp[128];
+    errno = 0;
     sprintf(tmp, "protocol_bin_buffer_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
     make_last_error(ERROR_NORMAL, errno, tmp);
     return ERROR_NORMAL;
