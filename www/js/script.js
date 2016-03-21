@@ -110,7 +110,7 @@ var clients_table_t = (function (_super) {
                 var cell;
                 cell = $(this).find('td:last');
                 var value = cell.text();
-                Signal.emit("doSend", value);
+                Signal.emit("doSend", [["cmd", "activate"], ["par", value]]);
             });
             this.table.append(line);
             this.rows_count++;

@@ -3,6 +3,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "jansson.h"
+
 #include "wsworker.h"
 #include "cmdworker.h"
 #include "ncs_log.h"
@@ -13,7 +15,7 @@
 #include "utils.h"
 #include "socket_utils.h"
 #include "socket.h"
-#include "jansson.h"
+#include "exec.h"
 //==============================================================================
 // http://learn.javascript.ru/websockets#описание-фрейма
 //==============================================================================
@@ -53,8 +55,8 @@ int ws_error(void *sender, error_t *error);
 int ws_recv(void *sender, char *buffer, int size);
 int ws_send(void *sender);
 //==============================================================================
-int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
-int json_to_packet(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size);
+int packet_to_json(pack_packet_t *packet, char *buffer, int *size);
+int json_to_packet(pack_packet_t *packet, char *buffer, int *size);
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
@@ -313,8 +315,14 @@ void *ws_recv_worker(void *arg)
         {
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
-
           ws_server_send_clients();
+        }
+        else
+        {
+          char tmp[128];
+          errno = 1;
+          sprintf(tmp, "ws_recv_worker, errno: %d", errno);
+          make_last_error(ERROR_NORMAL, errno, tmp);
         }
       }
       else
@@ -324,8 +332,18 @@ void *ws_recv_worker(void *arg)
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, 1024, &tmp_size);
         log_add_fmt(LOG_INFO, "ws_recv_worker, %s", tmp_buffer);
 
-        cmd_derver_activate_all(STATE_STOP);
-        cmd_server_activate(atoi((char*)tmp_buffer), STATE_START);
+        pack_packet_t tmp_pack;
+        if(json_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
+        {
+          handle_command_pack(&tmp_pack);
+        }
+        else
+        {
+          char tmp[128];
+          errno = 2;
+          sprintf(tmp, "ws_recv_worker, errno: %d", errno);
+          make_last_error(ERROR_NORMAL, errno, tmp);
+        }
       }
     }
     else if(res == ERROR_WARNING)
@@ -343,7 +361,13 @@ void *ws_recv_worker(void *arg)
         tmp_client->on_error((void*)tmp_client, last_error());
 
       if(tmp_errors++ > SOCK_ERRORS_COUNT)
+      {
+        char tmp[128];
+        errno = 3;
+        sprintf(tmp, "ws_recv_worker, errno: %d", errno);
+        make_last_error(ERROR_NORMAL, errno, tmp);
         tmp_client->custom_worker.state = STATE_STOPPING;
+      }
     }
 
     usleep(1000);
@@ -445,7 +469,7 @@ int ws_send(void *sender)
 */
 //==============================================================================
 //https://jansson.readthedocs.org/en/2.7/apiref.html
-int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size)
+int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
 {
   json_t *tmp_words = json_array();
 
@@ -491,9 +515,37 @@ int packet_to_json(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *siz
   return ERROR_NONE;
 }
 //==============================================================================
-int json_to_packet(pack_packet_t *packet, pack_buffer_t buffer, pack_size_t *size)
+int json_to_packet(pack_packet_t *packet, char *buffer, int *size)
 {
-  return ERROR_NONE;
+  json_error_t tmp_error;
+  json_t *tmp_json = json_loadb(buffer, *size, JSON_DECODE_ANY, &tmp_error);
+
+  if(tmp_json != NULL)
+  {
+    if(json_array_size(tmp_json) >= 0)
+    {
+      int line = 0;
+      json_array_foreach()
+      {
+        if(line == 0)
+        {
+          line++;
+          pack_add_cmd();
+        }
+
+        pack_add_param();
+      }
+    }
+
+    return ERROR_NONE;
+  }
+  else
+  {
+    char tmp[128];
+    sprintf(tmp, "json_to_packet, error: %s", tmp_error.text);
+    make_last_error(ERROR_NORMAL, errno, tmp);
+    return ERROR_NONE;
+  }
 }
 //==============================================================================
 int ws_server_send_pack(pack_packet_t *pack)
@@ -511,8 +563,8 @@ int ws_server_send_pack(pack_packet_t *pack)
           tmp_client->custom_worker.on_lock(tmp_client, TRUE);
 
         pack_buffer_t json_buffer;
-        pack_size_t   json_size = 0;
-        packet_to_json(pack, json_buffer, &json_size);
+        int           json_size = 0;
+        packet_to_json(pack, (char*)json_buffer, &json_size);
 //        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;
@@ -563,8 +615,8 @@ int ws_server_send_cmd(int argc, ...)
         va_end(tmp_params);
 
         pack_buffer_t json_buffer;
-        pack_size_t   json_size = 0;
-        packet_to_json(&tmp_pack, json_buffer, &json_size);
+        int           json_size = 0;
+        packet_to_json(&tmp_pack, (char*)json_buffer, &json_size);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
