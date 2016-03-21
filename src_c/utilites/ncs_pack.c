@@ -564,7 +564,7 @@ int pack_word_as_int(pack_word_t *word, int *value)
 //==============================================================================
 int pack_word_as_float(pack_word_t *word, float *value)
 {
-  bytes_to_float(word->value, value);
+  bytes_to_float((unsigned char*)word->value, value);
 
   return ERROR_NONE;
 }

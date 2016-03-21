@@ -60,16 +60,16 @@ int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client)
   return ERROR_NONE;
 }
 //==============================================================================
-int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list)
+int custom_remote_clients_list_init(custom_remote_clients_list_t *clients_list)
 {
-  custom_remote_clients_list->index   = 0;
-  custom_remote_clients_list->next_id = 0;
+  clients_list->index   = 0;
+  clients_list->next_id = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
-    custom_remote_client_init(&custom_remote_clients_list->items[i]);
+    custom_remote_client_init(&clients_list->items[i]);
 
-    protocol_init(&custom_remote_clients_list->items[i].protocol);
+    protocol_init(&clients_list->items[i].protocol);
   }
 
   return ERROR_NONE;
@@ -263,8 +263,6 @@ int custom_client_work(custom_client_t *client)
 //==============================================================================
 void *custom_recv_worker(void *arg)
 {
-//  log_add("custom_recv_worker", LOG_INFO);
-
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 

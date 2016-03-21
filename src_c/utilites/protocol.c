@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "globals.h"
 #include "protocol.h"
 #include "ncs_log.h"
 #include "ncs_pack_utils.h"
+#include "ncs_error.h"
 //==============================================================================
 extern pack_number_t pack_global_number;
 extern char *pack_txt_names[];
@@ -450,15 +450,13 @@ int protocol_assign_pack(pack_protocol_t *protocol, pack_packet_t *pack)
 int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
-//  log_add("pack_validate", LOG_DEBUG);
-
   pack_validation_buffer_t *vbuffer = &protocol->validation_buffer;
 
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
-    #ifndef DEMS_DEVICE
-    log_add_fmt(LOG_ERROR_CRITICAL, "pack_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
-    #endif
+    char tmp[128];
+    sprintf(tmp, "protocol_bin_buffer_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
+    make_last_error(ERROR_NORMAL, errno, tmp);
     return ERROR_NORMAL;
   }
 
@@ -466,13 +464,20 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   vbuffer->size += size;
 
   pack_size_t tmp_validation_size = vbuffer->size;
-
   int tmp_valid_count = 0;
 
   while(1)
   {
+    errno = 0;
+
     if(vbuffer->size <= 0)
+    {
+      char tmp[128];
+      errno = 1;
+      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+      make_last_error(ERROR_NORMAL, errno, tmp);
       return tmp_valid_count;
+    }
 
     pack_size_t tmp_pack_pos = 0;
 
@@ -480,16 +485,34 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     for(pack_size_t i = 0; i < PACK_VERSION_SIZE; i++)
     {
       if(vbuffer->buffer[tmp_pack_pos++] != PACK_VERSION[i])
+      {
+        char tmp[128];
+        errno = 2;
+        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+        make_last_error(ERROR_NORMAL, errno, tmp);
         return tmp_valid_count;
+      }
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
+      {
+        char tmp[128];
+        errno = 3;
+        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+        make_last_error(ERROR_NORMAL, errno, tmp);
         return tmp_valid_count;
+      }
     }
 
     // Get size
     if(tmp_validation_size < 2)
+    {
+      char tmp[128];
+      errno = 4;
+      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+      make_last_error(ERROR_NORMAL, errno, tmp);
       return tmp_valid_count;
+    }
 
     pack_size_t tmp_size = vbuffer->buffer[tmp_pack_pos++] << 8;
     tmp_size          |= vbuffer->buffer[tmp_pack_pos++];
@@ -502,7 +525,13 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
       tmp_validation_size--;
       if(tmp_validation_size <= 0)
+      {
+        char tmp[128];
+        errno = 5;
+        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+        make_last_error(ERROR_NORMAL, errno, tmp);
         return tmp_valid_count;
+      }
     }
 
     // Get index
@@ -511,7 +540,13 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     // Get crc16 1
     if(tmp_validation_size < 2)
+    {
+      char tmp[128];
+      errno = 6;
+      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+      make_last_error(ERROR_NORMAL, errno, tmp);
       return tmp_valid_count;
+    }
 
     pack_crc16_t tmp_crc16_1 = vbuffer->buffer[tmp_pack_pos++] << 8;
     tmp_crc16_1           |= vbuffer->buffer[tmp_pack_pos++];
@@ -521,7 +556,13 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
+    {
+      char tmp[128];
+      errno = 7;
+      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+      make_last_error(ERROR_NORMAL, errno, tmp);
       return tmp_valid_count;
+    }
 
     pack_size_t tmp_remain_count = vbuffer->size - tmp_pack_pos;
     for(pack_size_t j = 0; j < tmp_remain_count; j++)
@@ -546,7 +587,13 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
 
     if(tmp_pack == NULL)
+    {
+      char tmp[128];
+      errno = 8;
+      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
+      make_last_error(ERROR_NORMAL, errno, tmp);
       return ERROR_NORMAL;
+    }
 
     pack_init(tmp_pack);
 

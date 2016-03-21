@@ -86,25 +86,25 @@ typedef struct
   on_connect_t           on_connect;
 }custom_client_t;
 //==============================================================================
-int custom_worker_init (custom_worker_t *worker);
-int custom_remote_client_init(custom_remote_client_t *custom_remote_client);
-int custom_remote_clients_list_init(custom_remote_clients_list_t *custom_remote_clients_list);
-int custom_server_init(custom_server_t *custom_server);
-int custom_client_init(custom_client_t *custom_client);
+int custom_worker_init             (custom_worker_t *worker);
+int custom_worker_stop             (custom_worker_t *worker);
 
-int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client);
+int custom_server_start            (custom_worker_t *worker);
+int custom_client_start            (custom_worker_t *worker);
 
-int custom_worker_stop  (custom_worker_t *worker);
+int custom_server_init             (custom_server_t *custom_server);
+int custom_server_work             (custom_server_t *server);
 
-int custom_server_start (custom_worker_t *worker);
-int custom_client_start (custom_worker_t *worker);
+int custom_remote_client_init      (custom_remote_client_t *custom_remote_client);
+int custom_remote_client_deinit    (custom_remote_client_t *custom_remote_client);
 
-int custom_server_work  (custom_server_t *server);
-int custom_client_work  (custom_client_t *client);
+int custom_client_init             (custom_client_t *custom_client);
+int custom_client_work             (custom_client_t *client);
+
+int custom_remote_clients_list_init                       (custom_remote_clients_list_t *clients_list);
+int _custom_server_remote_clients_count                   (custom_remote_clients_list_t *clients_list);
+custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list);
 
 void *custom_recv_worker(void *arg);
-
-int _custom_server_remote_clients_count(custom_remote_clients_list_t *clients_list);
-custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list);
 //==============================================================================
 #endif //CUSTOMWORKER_H

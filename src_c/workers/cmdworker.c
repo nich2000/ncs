@@ -439,14 +439,26 @@ void *cmd_send_worker(void *arg)
       if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
         continue;
 
-      int tmp_cnt = protocol_bin_buffer_validate(tmp_buffer, tmp_size, PACK_VALIDATE_ONLY,
-                                         tmp_protocol, (void*)tmp_client);
-
+      int tmp_cnt = protocol_bin_buffer_validate(tmp_buffer,
+                                                 tmp_size,
+                                                 PACK_VALIDATE_ONLY,
+                                                 tmp_protocol,
+                                                 (void*)tmp_client);
       if(tmp_cnt > 0)
       {
         if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
+        {
           if(tmp_client->on_send != 0)
             tmp_client->on_send((void*)tmp_client);
+        }
+        else
+        {
+          log_add_fmt(LOG_ERROR, "cmd_send_worker, error: %s", last_error()->message);
+        }
+      }
+      else
+      {
+        log_add_fmt(LOG_ERROR, "cmd_send_worker, error: %s", last_error()->message);
       }
 
       tmp_pack = _protocol_next_pack(tmp_protocol);
