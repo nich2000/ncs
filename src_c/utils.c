@@ -225,8 +225,8 @@ int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
 //==============================================================================
 int print_pack(pack_packet_t *packet, char *prefix, int clear, int buffer, int pack, int csv)
 {
-  if(clear)
-    clr_scr();
+//  if(clear)
+//    clr_scr();
 
   if(!buffer && !pack && !csv)
     return ERROR_NONE;

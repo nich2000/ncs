@@ -17,7 +17,7 @@
 #else
 #define PACK_BUFFER_SIZE         102400
 #define PACK_VALUE_SIZE          128
-#define PACK_WORDS_COUNT         32
+#define PACK_WORDS_COUNT         64
 #endif
 //==============================================================================
 #define PACK_KEY_SIZE            4
@@ -29,13 +29,13 @@
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
 //==============================================================================
-typedef unsigned char                    *pack_string_t;
-typedef unsigned char                    *pack_bytes_t;
-typedef unsigned char                     pack_buffer_t[PACK_BUFFER_SIZE];
-typedef unsigned char                     pack_value_t [PACK_VALUE_SIZE];
-typedef unsigned char                     pack_ver_t   [PACK_VERSION_SIZE];
-typedef unsigned char                     pack_key_t   [PACK_KEY_SIZE];
-typedef unsigned char                     pack_delim_t;
+typedef unsigned char           *pack_string_t;
+typedef unsigned char           *pack_bytes_t;
+typedef unsigned char            pack_buffer_t[PACK_BUFFER_SIZE];
+typedef unsigned char            pack_value_t [PACK_VALUE_SIZE];
+typedef unsigned char            pack_ver_t   [PACK_VERSION_SIZE];
+typedef unsigned char            pack_key_t   [PACK_KEY_SIZE];
+typedef unsigned char            pack_delim_t;
 //==============================================================================
 typedef unsigned short           pack_count_t;
 typedef unsigned short           pack_size_t;

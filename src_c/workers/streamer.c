@@ -137,10 +137,6 @@ void *cmd_streamer_worker_func(void *arg)
 
   pack_protocol_t *tmp_protocol = tmp_worker->protocol;
 
-  #ifdef PRINT_STREAMER_COUNTER
-  int counter = 0;
-  #endif
-
   while(tmp_worker->is_work)
   {
     if(tmp_worker->is_pause)
@@ -151,13 +147,7 @@ void *cmd_streamer_worker_func(void *arg)
 
     cmd_streamer_make(tmp_worker->id, tmp_protocol);
 
-    #ifdef PRINT_STREAMER_COUNTER
-    counter++;
-    clr_scr();
-    printf("%d", counter);
-    #endif
-
-    usleep(100000);
+    usleep(100 * 1000);
   }
 
   return NULL;
