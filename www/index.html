@@ -7,8 +7,10 @@
   <head>
     <link type="image/x-icon" rel="icon" href="img/favicon.ico">
 
-    <link href="bootstrap-3.3.6-dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="js/jquery-1.12.1.min.js"></script>
+
+    <link href="bootstrap-3.3.6-dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
 
     <script src="js/script.js"></script>
     <link href="css/style.css" rel="stylesheet">
@@ -17,6 +19,7 @@
   <body class="dems-full">
 
     <div class="dems-header">
+
       <div class="col-md-4">
         <img class="img-responsive pull-left dems-logo" src="img/our.jpg" alt="no our logo">
       </div>
@@ -27,50 +30,92 @@
       <div class="col-md-4">
         <img class="img-responsive pull-right dems-logo" src="img/their.jpg" alt="no their logo">
       </div>
-    </div>
+
+    </div> <!-- dems-header -->
+
 
     <div class="dems-body">
 
       <div class="col-md-3" style="height: 100%">
-        <div style="width: 100%; height: 90%; overflow-y: auto; overflow-x: hidden;">
+        <div class="dems-table" style="width: 100%; height: 90%;">
           <table class="table table-striped">
             <thead style="background-color: green">
               <tr>
                 <th>Name</th><th>Id</th>
               </tr>
             </thead>
-
             <tbody id="remote_clients">
             </tbody>
           </table>
         </div>
 
-        <button style="width:100%; height: 10%">
+        <button type="button" class="btn btn-primary btn-sm btn-block">
           Refresh
         </button>
       </div>
 
       <div class="col-md-9" style="height: 100%">
-        <div style="width: 100%; height: 100%; overflow-y: auto; overflow-x: hidden;">
+        <div class="dems-table" style="width: 100%; height: 100%;">
           <table class="table table-striped">
             <thead style="background-color: green">
               <tr>
                 <th>Param</th><th>Value</th>
               </tr>
             </thead>
-
             <tbody id="remote_data">
             </tbody>
           </table>
         </div>
       </div>
 
-    </div>
+    </div> <!-- dems-body -->
+
 
     <div class="dems-footer">
+
       <span class="label label-warning" id="connection_status">Disconnected</span>
       <span class="label label-info"    id="last_cmd">Command: none</span>
-    </div>
 
-  </body>
+      <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#myModal">
+        Sign in
+      </button>
+
+    </div> <!-- dems-footer -->
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+          </div>
+          <div class="modal-body">
+            ...
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      $('#myModal').on('shown.bs.modal', function () {
+        $('#myInput').focus()
+      })
+    </script>
+
+
+    <!-- https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial -->
+    <canvas height='320' width='480' id='example'>Обновите браузер</canvas>
+    <script>
+      var example = document.getElementById("example"),
+      ctx     = example.getContext('2d');
+      ctx.fillRect(0, 0, example.width, example.height);
+    </script>
+
+
+  </body> <!-- dems-full -->
 </html>

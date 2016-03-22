@@ -1,0 +1,3 @@
+http://ndevilla.free.fr/iniparser/
+
+https://github.com/ndevilla/iniparser

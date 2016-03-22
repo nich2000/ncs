@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "removeComments": true,
+        "target":"ES5",
+        "module": "commonjs",
+        "sourceMap": true,
+        "out": "../js/main.js"
+    },
+    "files": [
+        "protocol.ts",
+        "centrgenrep.ts",
+        "main.ts"
+    ]
+}
