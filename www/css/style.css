@@ -1,63 +1,44 @@
-.dems-full 
+.dems-html
 {
-  background: url(../img/back.jpg) no-repeat center center fixed; 
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-}
-
-.dems-header
-{
-  margin: 0px;
-  padding-bottom: 0px;
-  position: absolute;
-  top: 0px;
+  height: 100%;
   width: 100%;
-  height: 10%;
-  background-color: #f5f5f5;
 }
 
 .dems-body
 {
-  position: absolute;
-  top: 10%;
+  height: 100%;
   width: 100%;
-  height: 80%;
 }
 
-.dems-footer 
+.dems-header
 {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
   height: 10%;
-  background-color: #f5f5f5;
-}
-
-.dems-table
-{
-  overflow-y: auto; 
-  /*overflow-y: scroll; */
-  overflow-x: hidden;
-}
-
-.dems-logo
-{
   width: 100%;
-  height: 55px;
-  object-fit: contain;
+  background-color: brown;
 }
 
-.dems-selected 
+.dems-workspace
 {
-  background-color: brown!important;
-  color: #FFF;
+  height: 80%;
+  width: 100%;
+  background-color: gray;
 }
 
-td 
+.dems-footer
 {
-  border: 1px #DDD solid; 
-  padding: 5px; 
-  cursor: pointer;
+  height: 10%;
+  width: 100%;
+  background-color: silver;
+}
+
+.dems-cars-list
+{
+  height: 100%;
+  background-color: green;
+}
+
+.dems-cars
+{
+  height: 100%;
+  background-color: maroon;
 }

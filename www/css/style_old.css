@@ -1,0 +1,63 @@
+.dems-full 
+{
+  background: url(../img/back.jpg) no-repeat center center fixed; 
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
+.dems-header
+{
+  margin: 0px;
+  padding-bottom: 0px;
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  height: 10%;
+  background-color: #f5f5f5;
+}
+
+.dems-body
+{
+  position: absolute;
+  top: 10%;
+  width: 100%;
+  height: 80%;
+}
+
+.dems-footer 
+{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 10%;
+  background-color: #f5f5f5;
+}
+
+.dems-table
+{
+  overflow-y: auto; 
+  /*overflow-y: scroll; */
+  overflow-x: hidden;
+}
+
+.dems-logo
+{
+  width: 100%;
+  height: 55px;
+  object-fit: contain;
+}
+
+.dems-selected 
+{
+  background-color: brown!important;
+  color: #FFF;
+}
+
+td 
+{
+  border: 1px #DDD solid; 
+  padding: 5px; 
+  cursor: pointer;
+}
