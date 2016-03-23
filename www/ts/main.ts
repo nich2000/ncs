@@ -14,5 +14,16 @@ function init()
   dataTable = new data_table_t("remote_data", 2);
 }
 //=============================================================================
-window.addEventListener("load", init, false);
+$(window).load(function()
+{
+  // console.log("load");
+  $('body').height($(window).height());
+  init();
+});
+//=============================================================================
+$(window).resize(function()
+{
+  // console.log("resize");
+  $('body').height($(window).height());
+});
 //=============================================================================

@@ -9,7 +9,13 @@ function init() {
     clientsTable = new clients_table_t("remote_clients", 2);
     dataTable = new data_table_t("remote_data", 2);
 }
-window.addEventListener("load", init, false);
+$(window).load(function () {
+    $('body').height($(window).height());
+    init();
+});
+$(window).resize(function () {
+    $('body').height($(window).height());
+});
 /// <reference path="./jquery.d.ts"/>
 var web_socket_t = (function () {
     function web_socket_t(host) {
@@ -173,6 +179,7 @@ var data_table_t = (function (_super) {
 })(table_t);
 var exec_t = (function () {
     function exec_t() {
+        console.log("constructor: exec_t");
         Signal.bind("onMessage", this.doOnMessage, this);
     }
     exec_t.prototype.doOnMessage = function (message) {

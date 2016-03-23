@@ -2,6 +2,8 @@ class exec_t
 {
   constructor()
   {
+    console.log("constructor: exec_t");
+    
     Signal.bind("onMessage", this.doOnMessage, this);
   }
 
