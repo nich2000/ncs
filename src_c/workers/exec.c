@@ -82,7 +82,7 @@ int handle_command_pack(pack_packet_t *packet)
     sprintf(command, "%s", cmd);
 
     pack_value_t value;
-    pack_index_t index = 0;
+    pack_index_t index = 1;
     while(pack_next_param(packet, &index, value) == ERROR_NONE)
     {
       char tmp[128];
@@ -384,7 +384,7 @@ int handle_command_str(char *command)
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      cmd_derver_activate_all(STATE_STOP);
+      cmd_server_activate_all(STATE_STOP);
       cmd_server_activate(id, state);
 
       return EXEC_DONE;

@@ -253,7 +253,7 @@ int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, p
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_add_cmd(pack_packet_t *pack, pack_string_t command)
+int pack_add_cmd(pack_packet_t *pack, const pack_string_t command)
 {
   pack_key_t tmp_key = PACK_CMD_KEY;
 
@@ -262,7 +262,7 @@ int pack_add_cmd(pack_packet_t *pack, pack_string_t command)
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_add_param(pack_packet_t *pack, pack_string_t param)
+int pack_add_param(pack_packet_t *pack, const pack_string_t param)
 {
   pack_key_t tmp_key = PACK_PARAM_KEY;
 

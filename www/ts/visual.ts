@@ -126,7 +126,7 @@ class data_table_t extends table_t
       cell.attr("id", cell_id);
       line.append(cell);
     }
-    cell.text(data[0]);
+    cell.text(data[1]);
 
     cell_id = "value_" + data[0];
     cell = $("#" + cell_id);
@@ -135,7 +135,7 @@ class data_table_t extends table_t
       cell.attr("id", cell_id);
       line.append(cell);
     }
-    cell.text(data[1]);
+    cell.text(data[2]);
   }
 }
 //==============================================================================

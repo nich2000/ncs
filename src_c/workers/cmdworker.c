@@ -689,16 +689,22 @@ int cmd_server_activate(sock_id_t id, sock_state_t state)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
         if(state == STATE_START)
+        {
+          log_add_fmt(LOG_INFO, "acivate - %d", id);
           _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
+        }
         else
+        {
+          log_add_fmt(LOG_INFO, "deacivate - %d", id);
           _cmd_server.custom_remote_clients_list.items[i].active = FALSE;
+        }
       }
   }
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_derver_activate_all(sock_state_t state)
+int cmd_server_activate_all(sock_state_t state)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {

@@ -1,5 +1,11 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var ws;
-var dataTable;
+var data_table_first;
+var data_table_second;
 var clientsTable;
 var exec;
 function init() {
@@ -7,7 +13,8 @@ function init() {
     exec = new exec_t();
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
     clientsTable = new clients_table_t("remote_clients", 2);
-    dataTable = new data_table_t("remote_data", 2);
+    data_table_first = new data_table_t("remote_data_first", 2);
+    data_table_second = new data_table_t("remote_data_second", 2);
 }
 $(window).load(function () {
     $('body').height($(window).height());
@@ -16,7 +23,6 @@ $(window).load(function () {
 $(window).resize(function () {
     $('body').height($(window).height());
 });
-/// <reference path="./jquery.d.ts"/>
 var web_socket_t = (function () {
     function web_socket_t(host) {
         var _this = this;
@@ -72,26 +78,19 @@ var web_socket_t = (function () {
         Signal.emit('onMessage', evt.data);
     };
     return web_socket_t;
-})();
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-/// <reference path="./jquery.d.ts"/>
+}());
 var cell_t = (function () {
     function cell_t(id, text) {
         this.id = id;
         this.text = text;
     }
     return cell_t;
-})();
+}());
 var row_t = (function () {
     function row_t() {
     }
     return row_t;
-})();
+}());
 var table_t = (function () {
     function table_t(id, cols) {
         console.log("constructor: table_t, id: " + id);
@@ -102,7 +101,7 @@ var table_t = (function () {
         this.rows_count = 0;
     }
     return table_t;
-})();
+}());
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
     function clients_table_t(id, cols) {
@@ -143,7 +142,7 @@ var clients_table_t = (function (_super) {
         cell.text(client[1]);
     };
     return clients_table_t;
-})(table_t);
+}(table_t));
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
     function data_table_t(id, cols) {
@@ -165,7 +164,7 @@ var data_table_t = (function (_super) {
             cell.attr("id", cell_id);
             line.append(cell);
         }
-        cell.text(data[0]);
+        cell.text(data[1]);
         cell_id = "value_" + data[0];
         cell = $("#" + cell_id);
         if (cell.length == 0) {
@@ -173,12 +172,20 @@ var data_table_t = (function (_super) {
             cell.attr("id", cell_id);
             line.append(cell);
         }
-        cell.text(data[1]);
+        cell.text(data[2]);
     };
     return data_table_t;
-})(table_t);
+}(table_t));
 var exec_t = (function () {
     function exec_t() {
+        this.static_filter = [
+            "_ID",
+            "TIM",
+            "SPD",
+            "HEA",
+            "LAT",
+            "LON"
+        ];
         console.log("constructor: exec_t");
         Signal.bind("onMessage", this.doOnMessage, this);
     }
@@ -190,43 +197,25 @@ var exec_t = (function () {
         if (data[0].length == 0)
             return;
         if (data[0][0] == "CMD") {
-            $("#last_cmd").text("Command: " + data[0][1]);
-            switch (data[0][1]) {
+            $("#last_cmd").text("Command: " + data[0][2]);
+            switch (data[0][2]) {
                 case "clients":
                     {
                         for (var i = 1; i < data.length; i++)
-                            Signal.emit("add_client", data[i][1].split('_'));
+                            Signal.emit("add_client", data[i][2].split('_'));
                         break;
                     }
             }
         }
         else {
-            for (var i = 0; i < data.length; i++)
-                Signal.emit("add_data", data[i]);
+            for (var i = 0; i < data.length; i++) {
+                if (this.static_filter.indexOf(data[i][0]) != -1)
+                    Signal.emit("add_data", data[i]);
+            }
         }
     };
     return exec_t;
-})();
-/*
-class Socket
-{
-  public onmessage(data: any): void
-  {
-    Signal.emit('onmessage', data);
-  }
-}
-class OtherClass
-{
-  public constructor()
-  {
-    Signal.bind('onmessage', proceedData);
-  }
-  public proceedData(data: any)
-  {
-    console.log(data);
-  }
-}
-*/
+}());
 var Signal = (function () {
     function Signal() {
     }
@@ -253,7 +242,7 @@ var Signal = (function () {
     };
     Signal.signals = [];
     return Signal;
-})();
+}());
 function asInt(value) {
     var result = [
         (value & 0x000000ff),

@@ -65,6 +65,8 @@ WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* o
 //==============================================================================
 int         _ws_server_id = 0;
 ws_server_t _ws_server;
+extern char *pack_struct_keys[];
+extern char *pack_struct_captions[];
 //==============================================================================
 int ws_server(sock_state_t state, sock_port_t port)
 {
@@ -468,6 +470,21 @@ int ws_send(void *sender)
   ]
 */
 //==============================================================================
+const char*caption_by_key(const char*key)
+{
+  char tmp[32];
+  memset(tmp, '\0', 32);
+
+  for(int i = 0; i < PACK_STRUCT_VAL_COUNT; i++)
+    if(strcmp(key, pack_struct_keys[i]) == 0)
+    {
+      strcpy(tmp, pack_struct_captions[i]);
+      break;
+    }
+
+  return tmp;
+}
+//==============================================================================
 //https://jansson.readthedocs.org/en/2.7/apiref.html
 int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
 {
@@ -483,10 +500,12 @@ int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
 
     json_t *tmp_word = json_array();
 
-    json_t *tmp_json_key   = json_string((char*)tmp_key);
-    json_t *tmp_json_value = json_string((char*)tmp_value);
+    json_t *tmp_json_key     = json_string((char*)tmp_key);
+    json_t *tmp_json_caption = json_string(caption_by_key((char*)tmp_key));
+    json_t *tmp_json_value   = json_string((char*)tmp_value);
 
     json_array_append_new(tmp_word, tmp_json_key);
+    json_array_append_new(tmp_word, tmp_json_caption);
     json_array_append_new(tmp_word, tmp_json_value);
 
     json_array_append_new(tmp_words, tmp_word);

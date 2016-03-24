@@ -16,6 +16,7 @@ int cmd_streamer_pause (streamer_worker *worker);
 int cmd_streamer_resume(streamer_worker *worker);
 //==============================================================================
 void *cmd_streamer_worker_func(void *arg);
+int cmd_streamer_make_random(int id, pack_protocol_t *protocol);
 int cmd_streamer_make(int id, pack_protocol_t *protocol);
 //==============================================================================
 int counter = 0;
@@ -24,6 +25,7 @@ streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
 //==============================================================================
 extern int          _cmd_client_count;
 extern cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
+extern char *pack_struct_keys[];
 //==============================================================================
 int cmd_streamer(sock_state_t state)
 {
@@ -145,6 +147,7 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
+//    cmd_streamer_make_random(tmp_worker->id, tmp_protocol);
     cmd_streamer_make(tmp_worker->id, tmp_protocol);
 
     usleep(100 * 1000);
@@ -154,6 +157,56 @@ void *cmd_streamer_worker_func(void *arg)
 }
 //==============================================================================
 int cmd_streamer_make(int id, pack_protocol_t *protocol)
+{
+  pack_struct_t tmp_pack;
+  char tmp[32];
+  sprintf(tmp, "STREAMER_%d", id);
+  strcpy(tmp_pack._ID, tmp);
+  tmp_pack.GPStime         = rand();
+  tmp_pack.GPStime_s       = rand();
+  tmp_pack.TickCount       = rand();
+  tmp_pack.GPSspeed        = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.GPSheading      = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.GPSlat          = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.GPSlon          = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.int_par1        = rand();
+  tmp_pack.int_par2        = rand();
+  tmp_pack.Gyro1AngleZ     = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.Gyro2AngleZ     = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.MPU1temp        = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.MPU2temp        = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.BatteryVoltage  = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.fl_par1         = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.fl_par2         = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.ExtVoltage      = (float)rand()/(float)(RAND_MAX/1000);
+  tmp_pack.USBConnected    = '1';
+
+  protocol_begin(protocol);
+  protocol_add_as_string((unsigned char*)pack_struct_keys[0],  tmp_pack._ID,            protocol);
+  protocol_add_as_int   ((unsigned char*)pack_struct_keys[1],  tmp_pack.GPStime,        protocol);
+  protocol_add_as_int   ((unsigned char*)pack_struct_keys[2],  tmp_pack.GPStime_s,      protocol);
+  protocol_add_as_int   ((unsigned char*)pack_struct_keys[3],  tmp_pack.TickCount,      protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[4],  tmp_pack.GPSspeed,       protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[5],  tmp_pack.GPSheading,     protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[6],  tmp_pack.GPSlat,         protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[7],  tmp_pack.GPSlon,         protocol);
+  protocol_add_as_int   ((unsigned char*)pack_struct_keys[8],  tmp_pack.int_par1,       protocol);
+  protocol_add_as_int   ((unsigned char*)pack_struct_keys[9],  tmp_pack.int_par2,       protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[10], tmp_pack.Gyro1AngleZ,    protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[11], tmp_pack.Gyro2AngleZ,    protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[12], tmp_pack.MPU1temp,       protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[13], tmp_pack.MPU2temp,       protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[14], tmp_pack.BatteryVoltage, protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[15], tmp_pack.fl_par1,        protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[16], tmp_pack.fl_par2,        protocol);
+  protocol_add_as_float ((unsigned char*)pack_struct_keys[17], tmp_pack.ExtVoltage,     protocol);
+//  protocol_add_as_string((unsigned char*)pack_struct_keys[18], tmp_pack.USBConnected,   protocol);
+  protocol_end(protocol);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_streamer_make_random(int id, pack_protocol_t *protocol)
 {
 //  log_add_fmt(LOG_DEBUG, "%s", "[BEGIN] cmd_streamer_make");
 

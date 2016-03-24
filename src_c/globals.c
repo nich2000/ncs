@@ -2,7 +2,7 @@
 //==============================================================================
 #include "globals.h"
 //==============================================================================
-char *pack_txt_names[]=
+char *pack_struct_keys[PACK_STRUCT_VAL_COUNT]=
 {
   "_ID",                 // 1
   "TIM",                 // 2
@@ -25,7 +25,7 @@ char *pack_txt_names[]=
   "USB"                  // 19
 };
 //==============================================================================
-char *pack_txt_captions[]=
+char *pack_struct_captions[PACK_STRUCT_VAL_COUNT]=
 {
   "ID",                  // 1
   "GPStime",             // 2
