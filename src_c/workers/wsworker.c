@@ -270,6 +270,14 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   return ERROR_NONE;
 }
 //==============================================================================
+int ws_server_send_config()
+{
+  if(_ws_server.custom_server.custom_worker.state != STATE_START)
+    return ERROR_NORMAL;
+
+  return ERROR_NONE;
+}
+//==============================================================================
 int ws_server_send_clients()
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
@@ -317,6 +325,8 @@ void *ws_recv_worker(void *arg)
         {
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
+
+          ws_server_send_config();
           ws_server_send_clients();
         }
         else
@@ -579,13 +589,22 @@ int json_to_packet(pack_packet_t *packet, char *buffer, int *size)
   }
 }
 //==============================================================================
-int ws_server_send_pack(pack_packet_t *pack)
+int ws_server_send_pack(int session_id, pack_packet_t *pack)
 {
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     {
       custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+
+      // TODO Доработать!
+      if((session_id != WS_SEND_TO_ALL) && (tmp_client->session_id != session_id))
+        continue;
+
+      // 1 0 1
+      // 1 1 1
+      // 0 1 1
+      // 0 0 0
 
       if(tmp_client->custom_worker.state == STATE_START)
       {
@@ -616,7 +635,7 @@ int ws_server_send_pack(pack_packet_t *pack)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_server_send_cmd(int argc, ...)
+int ws_server_send_cmd(int session_id, int argc, ...)
 {
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {

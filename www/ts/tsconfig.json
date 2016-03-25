@@ -6,10 +6,6 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "sourceMap": true,
-        "listFiles": true,
-        "newLine": "LF",
-        "pretty": true,
-        "noImplicitReturns": true,
         "out": "../js/script.js"
     },
     "files": 

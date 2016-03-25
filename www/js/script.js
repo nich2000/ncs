@@ -1,8 +1,3 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var ws;
 var data_table_first;
 var data_table_second;
@@ -26,6 +21,7 @@ $(window).load(function () {
 $(window).resize(function () {
     $('body').height($(window).height());
 });
+/// <reference path="./jquery.d.ts"/>
 var web_socket_t = (function () {
     function web_socket_t(host) {
         var _this = this;
@@ -81,19 +77,26 @@ var web_socket_t = (function () {
         Signal.emit('onMessage', evt.data);
     };
     return web_socket_t;
-}());
+})();
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
+/// <reference path="./jquery.d.ts"/>
 var cell_t = (function () {
     function cell_t(id, text) {
         this.id = id;
         this.text = text;
     }
     return cell_t;
-}());
+})();
 var row_t = (function () {
     function row_t() {
     }
     return row_t;
-}());
+})();
 var table_t = (function () {
     function table_t(id, cols) {
         console.log("constructor: table_t, id: " + id);
@@ -104,7 +107,7 @@ var table_t = (function () {
         this.rows_count = 0;
     }
     return table_t;
-}());
+})();
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
     function clients_table_t(id, cols) {
@@ -145,7 +148,7 @@ var clients_table_t = (function (_super) {
         cell.text(client[1]);
     };
     return clients_table_t;
-}(table_t));
+})(table_t);
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
     function data_table_t(id, cols) {
@@ -178,7 +181,7 @@ var data_table_t = (function (_super) {
         cell.text(data[2]);
     };
     return data_table_t;
-}(table_t));
+})(table_t);
 var exec_t = (function () {
     function exec_t() {
         this.static_filter = [
@@ -218,7 +221,27 @@ var exec_t = (function () {
         }
     };
     return exec_t;
-}());
+})();
+/*
+class Socket
+{
+  public onmessage(data: any): void
+  {
+    Signal.emit('onmessage', data);
+  }
+}
+class OtherClass
+{
+  public constructor()
+  {
+    Signal.bind('onmessage', proceedData);
+  }
+  public proceedData(data: any)
+  {
+    console.log(data);
+  }
+}
+*/
 var Signal = (function () {
     function Signal() {
     }
@@ -245,7 +268,7 @@ var Signal = (function () {
     };
     Signal.signals = [];
     return Signal;
-}());
+})();
 function asInt(value) {
     var result = [
         (value & 0x000000ff),
@@ -286,70 +309,4 @@ function toNumberToByte(value) {
     var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
     return arr[value >> 4] + '' + arr[value & 0xF];
 }
-var map_t = (function () {
-    function map_t(id) {
-        this._is_init = false;
-        console.log("constructor: map_t, id: " + id);
-        this._id = id;
-        this._canvas = $("#" + id)[0];
-        var canvasSupported = !!document.createElement("canvas").getContext;
-        if (canvasSupported) {
-            this._ctx = this._canvas.getContext('2d');
-            this._height = this._canvas.height;
-            this._width = this._canvas.width;
-            this._is_init = true;
-        }
-        else {
-            console.error('Can not get context');
-            this._is_init = false;
-        }
-        this.clear();
-    }
-    map_t.prototype.get_height = function () {
-        return this._height;
-    };
-    map_t.prototype.set_height = function (height) {
-        this._height = height;
-    };
-    map_t.prototype.get_width = function () {
-        return this._width;
-    };
-    map_t.prototype.set_width = function (width) {
-        this._width = width;
-    };
-    map_t.prototype.get_scale = function () {
-        return this._scale;
-    };
-    map_t.prototype.set_scale = function (height, width) {
-        var tmp_scale_h = height / this._height;
-        var tmp_scale_w = width / this._width;
-        if (tmp_scale_h < tmp_scale_w)
-            this._scale = tmp_scale_h;
-        else
-            this._scale = tmp_scale_w;
-    };
-    map_t.prototype.clear = function () {
-        if (!this._is_init)
-            return;
-        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-    };
-    map_t.prototype.test_draw = function () {
-        if (!this._is_init)
-            return;
-        this.clear();
-        this._ctx.beginPath();
-        this._ctx.moveTo(170, 80);
-        this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
-        this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
-        this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
-        this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
-        this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
-        this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
-        this._ctx.closePath();
-        this._ctx.lineWidth = 5;
-        this._ctx.strokeStyle = 'blue';
-        this._ctx.stroke();
-    };
-    return map_t;
-}());
 //# sourceMappingURL=script.js.map

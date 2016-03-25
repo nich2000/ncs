@@ -34,9 +34,10 @@ typedef struct
 int ws_server(sock_state_t state, sock_port_t port);
 int ws_server_status();
 //==============================================================================
-int ws_server_send_cmd (int argc, ...);
-int ws_server_send_pack(pack_packet_t *pack);
+int ws_server_send_cmd (int session_id, int argc, ...);
+int ws_server_send_pack(int session_id, pack_packet_t *pack);
 //==============================================================================
+int ws_server_send_config();
 int ws_server_send_clients();
 //==============================================================================
 #endif //WSWORKER_H
