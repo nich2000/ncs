@@ -4,6 +4,7 @@ var ws: web_socket_t;
 var data_table_first: data_table_t;
 var data_table_second: data_table_t;
 var clientsTable: clients_table_t;
+var map: map_t;
 var exec: exec_t;
 //=============================================================================
 function init() 
@@ -14,6 +15,8 @@ function init()
   clientsTable = new clients_table_t("remote_clients", 2);
   data_table_first = new data_table_t("remote_data_first", 2);
   data_table_second = new data_table_t("remote_data_second", 2);
+  map = new map_t('canvas');
+  map.test_draw();
 }
 //=============================================================================
 $(window).load(function()

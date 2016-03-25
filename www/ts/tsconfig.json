@@ -15,6 +15,7 @@
         "func.ts",
         "exec.ts",
         "signal.ts",
-        "utils.ts"
+        "utils.ts",
+        "map.ts"
     ]
 }

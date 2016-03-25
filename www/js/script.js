@@ -7,6 +7,7 @@ var ws;
 var data_table_first;
 var data_table_second;
 var clientsTable;
+var map;
 var exec;
 function init() {
     console.log("init");
@@ -15,6 +16,8 @@ function init() {
     clientsTable = new clients_table_t("remote_clients", 2);
     data_table_first = new data_table_t("remote_data_first", 2);
     data_table_second = new data_table_t("remote_data_second", 2);
+    map = new map_t('canvas');
+    map.test_draw();
 }
 $(window).load(function () {
     $('body').height($(window).height());
@@ -283,4 +286,70 @@ function toNumberToByte(value) {
     var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
     return arr[value >> 4] + '' + arr[value & 0xF];
 }
+var map_t = (function () {
+    function map_t(id) {
+        this._is_init = false;
+        console.log("constructor: map_t, id: " + id);
+        this._id = id;
+        this._canvas = $("#" + id)[0];
+        var canvasSupported = !!document.createElement("canvas").getContext;
+        if (canvasSupported) {
+            this._ctx = this._canvas.getContext('2d');
+            this._height = this._canvas.height;
+            this._width = this._canvas.width;
+            this._is_init = true;
+        }
+        else {
+            console.error('Can not get context');
+            this._is_init = false;
+        }
+        this.clear();
+    }
+    map_t.prototype.get_height = function () {
+        return this._height;
+    };
+    map_t.prototype.set_height = function (height) {
+        this._height = height;
+    };
+    map_t.prototype.get_width = function () {
+        return this._width;
+    };
+    map_t.prototype.set_width = function (width) {
+        this._width = width;
+    };
+    map_t.prototype.get_scale = function () {
+        return this._scale;
+    };
+    map_t.prototype.set_scale = function (height, width) {
+        var tmp_scale_h = height / this._height;
+        var tmp_scale_w = width / this._width;
+        if (tmp_scale_h < tmp_scale_w)
+            this._scale = tmp_scale_h;
+        else
+            this._scale = tmp_scale_w;
+    };
+    map_t.prototype.clear = function () {
+        if (!this._is_init)
+            return;
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    };
+    map_t.prototype.test_draw = function () {
+        if (!this._is_init)
+            return;
+        this.clear();
+        this._ctx.beginPath();
+        this._ctx.moveTo(170, 80);
+        this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
+        this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
+        this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
+        this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
+        this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
+        this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
+        this._ctx.closePath();
+        this._ctx.lineWidth = 5;
+        this._ctx.strokeStyle = 'blue';
+        this._ctx.stroke();
+    };
+    return map_t;
+}());
 //# sourceMappingURL=script.js.map
