@@ -53,12 +53,15 @@
 #define SOCK_WAIT_SELECT         5
 #define SOCK_WAIT_CONNECT        5
 //==============================================================================
+#define SOCK_SEND_TO_ALL        -1
+//==============================================================================
 typedef unsigned short sock_port_t;
 typedef unsigned char  sock_host_t[SOCK_HOST_SIZE];
 typedef unsigned short sock_mode_t;
 typedef unsigned short sock_type_t;
 typedef unsigned short sock_id_t;
 typedef unsigned char  sock_name_t[PACK_VALUE_SIZE];
+typedef unsigned char  sock_data_t[PACK_VALUE_SIZE];
 typedef unsigned short sock_index_t;
 typedef unsigned short sock_state_t;
 //==============================================================================

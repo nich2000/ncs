@@ -41,7 +41,6 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host);
 void *web_handle_connection(void *arg);
 int web_get_response(char *request, char *response, int *size);
 //==============================================================================
-int          _web_server_id = 0;
 web_server_t _web_server;
 //==============================================================================
 int web_server(sock_state_t state, sock_port_t port)
@@ -84,7 +83,6 @@ int web_server_init(web_server_t *server)
 {
   custom_worker_init(&server->custom_server.custom_worker);
 
-  server->custom_server.custom_worker.id   = _web_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
 

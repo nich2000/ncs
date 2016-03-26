@@ -28,6 +28,7 @@
 #define PACK_WORD_FLOAT          2
 #define PACK_WORD_STRING         3
 #define PACK_WORD_BYTES          4
+#define PACK_WORD_PACK           5
 //==============================================================================
 typedef unsigned char           *pack_string_t;
 typedef unsigned char           *pack_bytes_t;
@@ -64,7 +65,7 @@ typedef pack_word_t pack_words_t[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_number_t number;
+  pack_number_t         number;
 //  char               _align1[2];
   pack_size_t           words_count;
 //  char               _align2[2];
@@ -84,17 +85,19 @@ int pack_word_as_string          (pack_word_t *word, pack_string_t value);
 int pack_add_as_int              (pack_packet_t *pack, pack_key_t key, int value);
 int pack_add_as_float            (pack_packet_t *pack, pack_key_t key, float value);
 int pack_add_as_string           (pack_packet_t *pack, pack_key_t key, pack_string_t value);
-int pack_add_as_bytes            (pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size);
+int pack_add_as_bytes            (pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size, pack_type_t type);
+int pack_add_as_pack             (pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_pack);
 //==============================================================================
 int pack_assign_pack             (pack_packet_t *dst, pack_packet_t *src);
 //==============================================================================
-int pack_val_by_index_as_int     (pack_packet_t *pack, pack_index_t index, pack_key_t key, int   *value);
-int pack_val_by_index_as_float   (pack_packet_t *pack, pack_index_t index, pack_key_t key, float *value);
-int pack_val_by_index_as_string  (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t value);
-int pack_val_by_index_as_bytes   (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t value, pack_size_t *size);
+int pack_val_by_index_as_int     (pack_packet_t *pack, pack_index_t index, pack_key_t key, int           *value);
+int pack_val_by_index_as_float   (pack_packet_t *pack, pack_index_t index, pack_key_t key, float         *value);
+int pack_val_by_index_as_string  (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_string_t  value);
+int pack_val_by_index_as_bytes   (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t   value, pack_size_t *size);
+int pack_val_by_index_as_pack    (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_packet_t *value);
 //==============================================================================
 int pack_to_buffer               (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
-int pack_to_json                 (pack_packet_t *pack, pack_buffer_t buffer);
+int pack_to_bytes                (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
 //==============================================================================
 int pack_keys_to_csv             (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
 int pack_values_to_csv           (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
@@ -108,6 +111,8 @@ int pack_command                 (pack_packet_t *pack, pack_value_t command);
 int            pack_next_param   (pack_packet_t *pack, pack_index_t *index, pack_string_t value);
 pack_string_t _pack_next_param   (pack_packet_t *pack, pack_index_t *index);
 //==============================================================================
-int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count);
+int pack_word_as_pack            (pack_word_t *word, pack_packet_t *pack);
+//==============================================================================
+int pack_buffer_to_words         (pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count);
 //==============================================================================
 #endif //PACKET_H

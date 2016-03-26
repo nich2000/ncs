@@ -193,7 +193,7 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
   if(clients_list == 0)
     return 1;
 
-  log_add_fmt(LOG_INFO, "clients count: %d", _custom_server_remote_clients_count(clients_list));
+  log_add_fmt(LOG_INFO, "clients count: %d", _custom_remote_clients_count(clients_list));
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {

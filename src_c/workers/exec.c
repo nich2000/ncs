@@ -262,10 +262,15 @@ int handle_command_str(char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_WSSERVER);
 
+      int tmp_session_id = SOCK_SEND_TO_ALL;
+      char *arg = strtok(NULL, " ");
+      if(arg != NULL)
+        tmp_session_id = atoi(arg);
+
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
       int cnt = 0;
-      char *arg = strtok(NULL, " ");
+      arg = strtok(NULL, " ");
       while(arg != NULL)
       {
         if(cnt == 0)
@@ -275,7 +280,8 @@ int handle_command_str(char *command)
         arg = strtok(NULL, " ");
         cnt++;
       }
-      ws_server_send_pack(&tmp_packet);
+
+      ws_server_send_pack(tmp_session_id, &tmp_packet);
 
       return EXEC_DONE;
     }

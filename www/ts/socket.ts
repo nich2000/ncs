@@ -83,7 +83,7 @@ class web_socket_t
   {
     console.log("onMessage: " + evt.data);
 
-    Signal.emit('onMessage', evt.data);
+    // Signal.emit('onMessage', evt.data);
   }
 }
 //==============================================================================

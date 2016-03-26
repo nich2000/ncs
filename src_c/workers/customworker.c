@@ -8,9 +8,11 @@
 #include "ncs_log.h"
 #include "protocol.h"
 //==============================================================================
+int custom_worker_id = 0;
+//==============================================================================
 int custom_worker_init(custom_worker_t *worker)
 {
-  worker->id                 = 0;
+  worker->id                 = custom_worker_id++;
   worker->type               = SOCK_TYPE_UNKNOWN;
   worker->mode               = SOCK_MODE_UNKNOWN;
   worker->port               = 0;
@@ -18,7 +20,10 @@ int custom_worker_init(custom_worker_t *worker)
   worker->state              = STATE_STOP;
   worker->is_locked          = FALSE;
 
-  strcpy((char*)worker->name, SOCK_NAME_DEFAULT);
+  char tmp[128];
+  sprintf(tmp, "%s_%d", SOCK_NAME_DEFAULT, worker->id);
+  strcpy((char*)worker->name, tmp);
+
   memset(worker->host, 0, SOCK_HOST_SIZE);
 
   worker->on_state           = NULL;
@@ -60,10 +65,9 @@ int custom_remote_client_deinit(custom_remote_client_t *custom_remote_client)
   return ERROR_NONE;
 }
 //==============================================================================
-int custom_remote_clients_list_init(custom_remote_clients_list_t *clients_list)
+int custom_remote_clients_init(custom_remote_clients_list_t *clients_list)
 {
   clients_list->index   = 0;
-  clients_list->next_id = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -317,7 +321,7 @@ void *custom_recv_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-int _custom_server_remote_clients_count(custom_remote_clients_list_t *clients_list)
+int _custom_remote_clients_count(custom_remote_clients_list_t *clients_list)
 {
   int tmp_count = 0;
 
@@ -329,7 +333,7 @@ int _custom_server_remote_clients_count(custom_remote_clients_list_t *clients_li
   return tmp_count;
 }
 //==============================================================================
-custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list)
+custom_remote_client_t *_custom_remote_clients_next(custom_remote_clients_list_t *clients_list)
 {
   custom_remote_client_t *tmp_client = NULL;
 

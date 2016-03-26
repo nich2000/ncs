@@ -218,7 +218,7 @@ int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size)
+int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size, pack_type_t type)
 {
   if(size >= PACK_VALUE_SIZE)
   {
@@ -239,7 +239,7 @@ int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, p
   memcpy(tmp_word->key, key, PACK_KEY_SIZE);
 
   // Type
-  tmp_word->type = PACK_WORD_BYTES;
+  tmp_word->type = type; //PACK_WORD_BYTES PACK_WORD_PACK
 
   // Size
   tmp_word->size = size;
@@ -249,6 +249,17 @@ int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, p
 
   // Words counter
   pack->words_count++;
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_add_as_pack(pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_pack)
+{
+  pack_size_t tmp_size;
+  pack_bytes_t tmp_bytes;
+  pack_to_bytes(inner_pack, tmp_bytes, &tmp_size);
+
+  pack_add_as_bytes(pack, key, tmp_bytes, tmp_size, PACK_WORD_PACK);
 
   return ERROR_NONE;
 }
@@ -406,6 +417,15 @@ int pack_val_by_index_as_bytes(pack_packet_t *pack, pack_index_t index, pack_key
     return ERROR_NORMAL;
 }
 //==============================================================================
+int pack_val_by_index_as_pack(pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_packet_t *value)
+{
+  pack_word_t tmp_word;
+  if(pack_word_by_index(pack, index, key, &tmp_word) == ERROR_NONE)
+    return pack_word_as_pack(&tmp_word, value);
+  else
+    return ERROR_NORMAL;
+}
+//==============================================================================
 int pack_key_by_index(pack_packet_t *pack, pack_index_t index, pack_key_t key)
 {
   if(pack == NULL)
@@ -530,9 +550,9 @@ int pack_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_to_json(pack_packet_t *pack, pack_buffer_t buffer)
+int pack_to_bytes(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
 {
-  return ERROR_NONE;
+  return pack_to_buffer(pack, buffer, size);
 }
 //==============================================================================
 pack_size_t _pack_words_count(pack_packet_t *pack)
@@ -625,6 +645,20 @@ int pack_word_as_string(pack_word_t *word, pack_string_t value)
 int pack_word_as_bytes(pack_word_t *word, pack_bytes_t value, pack_size_t *size)
 {
   return ERROR_NORMAL;
+}
+//==============================================================================
+int pack_word_as_pack(pack_word_t *word, pack_packet_t *pack)
+{
+  if(word->type == PACK_WORD_PACK)
+  {
+    pack_init(pack);
+    return pack_buffer_to_words(word->value, word->size, pack->words, &pack->words_count);
+  }
+  else
+  {
+    make_last_error(ERROR_NORMAL, errno, "pack_word_as_pack, word is not inner packet");
+    return ERROR_NORMAL;
+  };
 }
 //==============================================================================
 pack_size_t _pack_word_size(pack_word_t *word)

@@ -42,14 +42,14 @@ class exec_t
 
     if (data[0][0] == "CMD") 
     {
-      $("#last_cmd").text("Command: " + data[0][2]);
+      $("#last_cmd").text("Command: " + data[0][1]);
 
-      switch (data[0][2]) 
+      switch (data[0][1]) 
       {
         case "clients":
         {
           for (var i = 1; i < data.length; i++) 
-            Signal.emit("add_client", data[i][2].split('_'));
+            Signal.emit("add_client", data[i]);
           break;
         }
       }

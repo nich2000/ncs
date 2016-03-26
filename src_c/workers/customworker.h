@@ -22,6 +22,7 @@ typedef struct
 {
   sock_id_t       id;
   sock_name_t     name;
+//  sock_data_t     data;
   sock_type_t     type;
   sock_mode_t     mode;
   sock_port_t     port;
@@ -64,7 +65,6 @@ typedef custom_remote_client_t custom_remote_clients_t[SOCK_WORKERS_COUNT];
 typedef struct
 {
   sock_index_t            index;
-  sock_id_t               next_id;
   custom_remote_clients_t items;
 } custom_remote_clients_list_t;
 //==============================================================================
@@ -89,21 +89,20 @@ typedef struct
 int custom_worker_init             (custom_worker_t *worker);
 int custom_worker_stop             (custom_worker_t *worker);
 
-int custom_server_start            (custom_worker_t *worker);
-int custom_client_start            (custom_worker_t *worker);
-
 int custom_server_init             (custom_server_t *custom_server);
+int custom_server_start            (custom_worker_t *worker);
 int custom_server_work             (custom_server_t *server);
 
 int custom_remote_client_init      (custom_remote_client_t *custom_remote_client);
 int custom_remote_client_deinit    (custom_remote_client_t *custom_remote_client);
 
 int custom_client_init             (custom_client_t *custom_client);
+int custom_client_start            (custom_worker_t *worker);
 int custom_client_work             (custom_client_t *client);
 
-int custom_remote_clients_list_init                       (custom_remote_clients_list_t *clients_list);
-int _custom_server_remote_clients_count                   (custom_remote_clients_list_t *clients_list);
-custom_remote_client_t *_custom_server_remote_clients_next(custom_remote_clients_list_t *clients_list);
+int                      custom_remote_clients_init (custom_remote_clients_list_t *clients_list);
+int                     _custom_remote_clients_count(custom_remote_clients_list_t *clients_list);
+custom_remote_client_t *_custom_remote_clients_next (custom_remote_clients_list_t *clients_list);
 
 void *custom_recv_worker(void *arg);
 //==============================================================================

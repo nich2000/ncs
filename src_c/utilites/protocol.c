@@ -396,11 +396,18 @@ int protocol_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t 
   return pack_add_as_string(tmp_pack, key, value);
 }
 //==============================================================================
-int protocol_add_as_bytes (pack_key_t key, pack_bytes_t value, pack_size_t size, pack_protocol_t *protocol)
+int protocol_add_as_bytes(pack_key_t key, pack_bytes_t value, pack_size_t size, pack_protocol_t *protocol)
 {
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
 
-  return pack_add_as_bytes(tmp_pack, key, value, size);
+  return pack_add_as_bytes(tmp_pack, key, value, size, PACK_WORD_BYTES);
+}
+//==============================================================================
+int protocol_add_as_pack(pack_key_t key, pack_packet_t *value, pack_protocol_t *protocol)
+{
+  pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
+
+  return pack_add_as_pack(tmp_pack, key, value);
 }
 //==============================================================================
 int protocol_add_cmd(pack_value_t command, pack_protocol_t *protocol)

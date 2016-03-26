@@ -43,7 +43,7 @@ int ws_server_resume(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
-custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server);
+custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
@@ -55,15 +55,15 @@ int ws_error(void *sender, error_t *error);
 int ws_recv(void *sender, char *buffer, int size);
 int ws_send(void *sender);
 //==============================================================================
-int packet_to_json(pack_packet_t *packet, char *buffer, int *size);
-int json_to_packet(pack_packet_t *packet, char *buffer, int *size);
+int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size);
+//==============================================================================
+int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size);
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
 int       ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
-int         _ws_server_id = 0;
 ws_server_t _ws_server;
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
@@ -108,7 +108,7 @@ int ws_server_init(ws_server_t *server)
 {
   custom_server_init(&server->custom_server);
 
-  custom_remote_clients_list_init(&server->custom_remote_clients_list);
+  custom_remote_clients_init(&server->custom_remote_clients_list);
 
 //  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
 //  {
@@ -117,7 +117,6 @@ int ws_server_init(ws_server_t *server)
 //    tmp_client->protocol.on_new_out_data = ws_new_data;
 //  }
 
-  server->custom_server.custom_worker.id   = _ws_server_id++;
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
   server->custom_server.on_accept          = &ws_accept;
@@ -213,9 +212,9 @@ void *ws_server_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server)
+custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server)
 {
-  custom_remote_client_t *tmp_client = _custom_server_remote_clients_next(&ws_server->custom_remote_clients_list);
+  custom_remote_client_t *tmp_client = _custom_remote_clients_next(&ws_server->custom_remote_clients_list);
 
   if(tmp_client != NULL)
   {
@@ -223,7 +222,6 @@ custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server)
 
     tmp_client->protocol.on_new_in_data  = ws_new_data;
 
-    tmp_client->custom_worker.id    = ws_server->custom_remote_clients_list.next_id++;
     tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
     tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
     tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
@@ -239,7 +237,7 @@ custom_remote_client_t *_ws_server_remote_clients_next(ws_server_t *ws_server)
 //==============================================================================
 int ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  custom_remote_client_t *tmp_client = _ws_server_remote_clients_next(&_ws_server);
+  custom_remote_client_t *tmp_client = _ws_remote_clients_next(&_ws_server);
 
   if(tmp_client == 0)
   {
@@ -270,26 +268,38 @@ int ws_accept(void *sender, SOCKET socket, sock_host_t host)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_server_send_config()
-{
-  if(_ws_server.custom_server.custom_worker.state != STATE_START)
-    return ERROR_NORMAL;
-
-  return ERROR_NONE;
-}
+/*
+ *
+*/
 //==============================================================================
-int ws_server_send_clients()
+int ws_server_send_config()
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
     return ERROR_NORMAL;
 
   pack_packet_t tmp_packet;
 
-  cmd_server_list(&tmp_packet);
-
-  ws_server_send_pack(&tmp_packet);
+  ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
 
   return ERROR_NONE;
+}
+//==============================================================================
+/*
+ *
+*/
+//==============================================================================
+int ws_server_send_clients()
+{
+  if(_ws_server.custom_server.custom_worker.state != STATE_START)
+  {
+    make_last_error(ERROR_NORMAL, errno, "ws_server_send_clients, server not started");
+    return ERROR_NORMAL;
+  }
+
+  pack_packet_t tmp_packet;
+  cmd_server_list(&tmp_packet);
+
+  return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
 }
 //==============================================================================
 void *ws_recv_worker(void *arg)
@@ -345,7 +355,7 @@ void *ws_recv_worker(void *arg)
         log_add_fmt(LOG_INFO, "ws_recv_worker, %s", tmp_buffer);
 
         pack_packet_t tmp_pack;
-        if(json_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
+        if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
           handle_command_pack(&tmp_pack);
         }
@@ -407,8 +417,6 @@ void *ws_send_worker(void *arg)
   tmp_client->custom_worker.state = STATE_START;
   if(tmp_client->custom_worker.on_state != NULL)
     tmp_client->custom_worker.on_state(tmp_client, STATE_START);
-
-  ws_server_send_clients();
 
   int tmp_errors = 0;
 
@@ -480,7 +488,7 @@ int ws_send(void *sender)
   ]
 */
 //==============================================================================
-const char*caption_by_key(const char*key)
+const char *caption_by_key(const char *key)
 {
   char tmp[32];
   memset(tmp, '\0', 32);
@@ -495,56 +503,104 @@ const char*caption_by_key(const char*key)
   return tmp;
 }
 //==============================================================================
-//https://jansson.readthedocs.org/en/2.7/apiref.html
-int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
+int json_to_buffer(json_t *json, pack_buffer_t buffer, int *size)
 {
-  json_t *tmp_words = json_array();
+  strcpy(buffer, json_dumps(json, JSON_ENCODE_ANY));
 
-  for(int i = 0; i < packet->words_count; i++)
-  {
-    pack_key_t tmp_key;
-    strcpy((char*)tmp_key, (char*)packet->words[i].key);
-
-    pack_value_t tmp_value;
-    pack_word_as_string(&packet->words[i], tmp_value);
-
-    json_t *tmp_word = json_array();
-
-    json_t *tmp_json_key     = json_string((char*)tmp_key);
-    json_t *tmp_json_caption = json_string(caption_by_key((char*)tmp_key));
-    json_t *tmp_json_value   = json_string((char*)tmp_value);
-
-    json_array_append_new(tmp_word, tmp_json_key);
-    json_array_append_new(tmp_word, tmp_json_caption);
-    json_array_append_new(tmp_word, tmp_json_value);
-
-    json_array_append_new(tmp_words, tmp_word);
-  }
-
-  char *tmp_json = json_dumps(tmp_words, JSON_ENCODE_ANY);
-  strcpy((char*)buffer, tmp_json);
-  *size = strlen((char*)buffer);
-  free(tmp_json);
-
-  size_t tmp_index_word;
-  json_t *tmp_word;
-  json_array_foreach(tmp_words, tmp_index_word, tmp_word)
-  {
-//    size_t tmp_index;
-//    json_t *tmp_value;
-//    json_array_foreach(tmp_word, tmp_index, tmp_value)
-//    {
-//      json_decref(tmp_value);
-//    }
-    json_array_clear(tmp_word);
-  }
-  json_array_clear(tmp_words);
-  json_decref(tmp_words);
+  *size = strlen(buffer);
 
   return ERROR_NONE;
 }
 //==============================================================================
-int json_to_packet(pack_packet_t *packet, char *buffer, int *size)
+// Рекурсивный алгоритм
+json_t *pack_to_json(pack_packet_t *packet)
+{
+  json_t *tmp_json_words = json_array();
+
+  for(int i = 0; i < packet->words_count; i++)
+  {
+    pack_word_t *tmp_word = &packet->words[i];
+
+    pack_key_t tmp_key;
+    strcpy((char*)tmp_key, (char*)tmp_word->key);
+
+    json_t *tmp_json_value;
+    if(tmp_word->type == PACK_WORD_PACK)
+    {
+      pack_packet_t *tmp_pack;
+      pack_word_as_pack(tmp_word, tmp_pack);
+
+      tmp_json_value = pack_to_json(tmp_pack);
+    }
+    else
+    {
+      pack_value_t tmp_value;
+      pack_word_as_string(tmp_word, tmp_value);
+
+      tmp_json_value = json_string(tmp_value);
+    }
+
+    json_t *tmp_json_word = json_object();
+    json_object_set_new(tmp_json_word, tmp_key, tmp_json_value);
+
+    json_array_append_new(tmp_json_words, tmp_json_word);
+  }
+
+  return tmp_json_words;
+}
+//==============================================================================
+int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size)
+{
+  json_t *tmp_json = pack_to_json(packet);
+
+  return json_to_buffer(tmp_json, buffer, size);
+}
+//==============================================================================
+//https://jansson.readthedocs.org/en/2.7/apiref.html
+// TODO deprecated
+//int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
+//{
+//  json_t *tmp_words = json_array();
+
+//  for(int i = 0; i < packet->words_count; i++)
+//  {
+//    pack_key_t tmp_key;
+//    strcpy((char*)tmp_key, (char*)packet->words[i].key);
+
+//    pack_value_t tmp_value;
+//    pack_word_as_string(&packet->words[i], tmp_value);
+
+//    json_t *tmp_word = json_array();
+
+//    json_t *tmp_json_key     = json_string((char*)tmp_key);
+//    json_t *tmp_json_value   = json_string((char*)tmp_value);
+//    json_t *tmp_json_caption = json_string(caption_by_key((char*)tmp_key));
+
+//    json_array_append_new(tmp_word, tmp_json_key);
+//    json_array_append_new(tmp_word, tmp_json_value);
+//    json_array_append_new(tmp_word, tmp_json_caption);
+
+//    json_array_append_new(tmp_words, tmp_word);
+//  }
+
+//  char *tmp_json = json_dumps(tmp_words, JSON_ENCODE_ANY);
+//  strcpy((char*)buffer, tmp_json);
+//  *size = strlen((char*)buffer);
+//  free(tmp_json);
+
+//  size_t tmp_index_word;
+//  json_t *tmp_word;
+//  json_array_foreach(tmp_words, tmp_index_word, tmp_word)
+//  {
+//    json_array_clear(tmp_word);
+//  }
+//  json_array_clear(tmp_words);
+//  json_decref(tmp_words);
+
+//  return ERROR_NONE;
+//}
+//==============================================================================
+int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
 {
   pack_init(packet);
 
@@ -591,20 +647,17 @@ int json_to_packet(pack_packet_t *packet, char *buffer, int *size)
 //==============================================================================
 int ws_server_send_pack(int session_id, pack_packet_t *pack)
 {
+  if(_ws_server.custom_server.custom_worker.state != STATE_START)
+    return ERROR_NORMAL;
+
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     {
       custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
 
-      // TODO Доработать!
-      if((session_id != WS_SEND_TO_ALL) && (tmp_client->session_id != session_id))
+      if(!((session_id == SOCK_SEND_TO_ALL) || (tmp_client->custom_worker.id == session_id)))
         continue;
-
-      // 1 0 1
-      // 1 1 1
-      // 0 1 1
-      // 0 0 0
 
       if(tmp_client->custom_worker.state == STATE_START)
       {
@@ -614,7 +667,7 @@ int ws_server_send_pack(int session_id, pack_packet_t *pack)
 
         pack_buffer_t json_buffer;
         int           json_size = 0;
-        packet_to_json(pack, (char*)json_buffer, &json_size);
+        packet_to_json_str(pack, (char*)json_buffer, &json_size);
 //        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;
@@ -637,11 +690,17 @@ int ws_server_send_pack(int session_id, pack_packet_t *pack)
 //==============================================================================
 int ws_server_send_cmd(int session_id, int argc, ...)
 {
+  if(_ws_server.custom_server.custom_worker.state != STATE_START)
+    return ERROR_NORMAL;
+
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     {
       custom_remote_client_t *tmp_client = &_ws_server.custom_remote_clients_list.items[i];
+
+      if(!((session_id == SOCK_SEND_TO_ALL) || (tmp_client->custom_worker.id == session_id)))
+        continue;
 
       if(tmp_client->custom_worker.state == STATE_START)
       {
@@ -666,7 +725,8 @@ int ws_server_send_cmd(int session_id, int argc, ...)
 
         pack_buffer_t json_buffer;
         int           json_size = 0;
-        packet_to_json(&tmp_pack, (char*)json_buffer, &json_size);
+        packet_to_json_str(&tmp_pack, (char*)json_buffer, &json_size);
+//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;

@@ -29,10 +29,11 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer,
 //==============================================================================
 pack_packet_t *_protocol_next_pack(pack_protocol_t *protocol);
 //==============================================================================
-int protocol_add_as_int                  (pack_key_t key, int value, pack_protocol_t *protocol);
-int protocol_add_as_float                (pack_key_t key, float value, pack_protocol_t *protocol);
-int protocol_add_as_string               (pack_key_t key, pack_string_t value, pack_protocol_t *protocol);
-int protocol_add_as_bytes                (pack_key_t key, pack_bytes_t value, pack_size_t size, pack_protocol_t *protocol);
+int protocol_add_as_int                  (pack_key_t key, int            value,                   pack_protocol_t *protocol);
+int protocol_add_as_float                (pack_key_t key, float          value,                   pack_protocol_t *protocol);
+int protocol_add_as_string               (pack_key_t key, pack_string_t  value,                   pack_protocol_t *protocol);
+int protocol_add_as_bytes                (pack_key_t key, pack_bytes_t   value, pack_size_t size, pack_protocol_t *protocol);
+int protocol_add_as_pack                 (pack_key_t key, pack_packet_t *value,                   pack_protocol_t *protocol);
 //==============================================================================
 int protocol_add_cmd                     (pack_value_t command, pack_protocol_t *protocol);
 //==============================================================================
