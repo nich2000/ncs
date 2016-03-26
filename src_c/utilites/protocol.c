@@ -465,8 +465,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     char tmp[128];
     errno = 0;
     sprintf(tmp, "protocol_bin_buffer_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
-    make_last_error(ERROR_NORMAL, errno, tmp);
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, errno, tmp);
   }
 
   memcpy(&protocol->validation_buffer.buffer[vbuffer->size], buffer, size);
@@ -600,8 +599,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
       char tmp[128];
       errno = 8;
       sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      make_last_error(ERROR_NORMAL, errno, tmp);
-      return ERROR_NORMAL;
+      return make_last_error(ERROR_NORMAL, errno, tmp);
     }
 
     pack_init(tmp_pack);

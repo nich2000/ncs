@@ -8,11 +8,19 @@
 #include "ncs_log.h"
 #include "protocol.h"
 //==============================================================================
-int custom_worker_id = 0;
+// ID генерится
+// 1. для клиента
+// 2. для remote клиента, т.е. CMD и WS клиенты будут пересекаться
+// начинается с последнего статического ID
+int custom_id = STATIC_WS_SERVER_ID + 1;
 //==============================================================================
-int custom_worker_init(custom_worker_t *worker)
+int custom_worker_init(int id, custom_worker_t *worker)
 {
-  worker->id                 = custom_worker_id++;
+  if(id == ID_GEN_NEW)
+    worker->id = custom_id++;
+  else
+    worker->id = id;
+
   worker->type               = SOCK_TYPE_UNKNOWN;
   worker->mode               = SOCK_MODE_UNKNOWN;
   worker->port               = 0;
@@ -20,7 +28,7 @@ int custom_worker_init(custom_worker_t *worker)
   worker->state              = STATE_STOP;
   worker->is_locked          = FALSE;
 
-  char tmp[128];
+  char tmp[32];
   sprintf(tmp, "%s_%d", SOCK_NAME_DEFAULT, worker->id);
   strcpy((char*)worker->name, tmp);
 
@@ -32,9 +40,9 @@ int custom_worker_init(custom_worker_t *worker)
   return ERROR_NONE;
 }
 //==============================================================================
-int custom_remote_client_init(custom_remote_client_t *custom_remote_client)
+int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_client)
 {
-  custom_worker_init(&custom_remote_client->custom_worker);
+  custom_worker_init(id, &custom_remote_client->custom_worker);
 
   custom_remote_client->send_thread      = 0;
   custom_remote_client->recv_thread      = 0;
@@ -71,7 +79,7 @@ int custom_remote_clients_init(custom_remote_clients_list_t *clients_list)
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
-    custom_remote_client_init(&clients_list->items[i]);
+    custom_remote_client_init(ID_DEFAULT, &clients_list->items[i]);
 
     protocol_init(&clients_list->items[i].protocol);
   }
@@ -79,9 +87,9 @@ int custom_remote_clients_init(custom_remote_clients_list_t *clients_list)
   return ERROR_NONE;
 }
 //==============================================================================
-int custom_server_init(custom_server_t *custom_server)
+int custom_server_init(int id, custom_server_t *custom_server)
 {
-  custom_worker_init(&custom_server->custom_worker);
+  custom_worker_init(id, &custom_server->custom_worker);
 
   custom_server->work_thread = 0;
 
@@ -92,7 +100,7 @@ int custom_server_init(custom_server_t *custom_server)
 //==============================================================================
 int custom_client_init(custom_client_t *custom_client)
 {
-  custom_remote_client_init(&custom_client->custom_remote_client);
+  custom_remote_client_init(ID_GEN_NEW, &custom_client->custom_remote_client);
 
   custom_client->work_thread = 0;
 
@@ -108,9 +116,8 @@ int custom_worker_start(custom_worker_t *worker)
   {
     char tmp[128];
     sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
-    make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
-    return ERROR_CRITICAL;
+    return make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
   }
 
   int reuse = 1;
@@ -136,9 +143,8 @@ int custom_server_start(custom_worker_t *worker)
   {
     char tmp[128];
     sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
-    make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
-    return ERROR_CRITICAL;
+    return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
     log_add("custom_server_start, bind", LOG_DEBUG);
@@ -147,9 +153,8 @@ int custom_server_start(custom_worker_t *worker)
   {
     char tmp[128];
     sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
-    make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
     log_add(tmp, LOG_ERROR_CRITICAL);
-    return ERROR_CRITICAL;
+    return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
     log_add("custom_server_start, listen", LOG_DEBUG);

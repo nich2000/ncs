@@ -10,6 +10,13 @@
 #include "socket_types.h"
 #include "ncs_error.h"
 //==============================================================================
+#define ID_GEN_NEW -1
+#define ID_DEFAULT  0
+//==============================================================================
+#define STATIC_CMD_SERVER_ID 1
+#define STATIC_WEB_SERVER_ID 2
+#define STATIC_WS_SERVER_ID  3
+//==============================================================================
 typedef int (*on_state_t)     (void *sender, sock_state_t state);
 typedef int (*on_lock_t)      (void *sender, int is_locked);
 typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
@@ -86,14 +93,14 @@ typedef struct
   on_connect_t           on_connect;
 }custom_client_t;
 //==============================================================================
-int custom_worker_init             (custom_worker_t *worker);
-int custom_worker_stop             (custom_worker_t *worker);
+int custom_worker_init             (int id, custom_worker_t *worker);
+int custom_worker_stop             (        custom_worker_t *worker);
 
-int custom_server_init             (custom_server_t *custom_server);
+int custom_server_init             (int id, custom_server_t *custom_server);
 int custom_server_start            (custom_worker_t *worker);
 int custom_server_work             (custom_server_t *server);
 
-int custom_remote_client_init      (custom_remote_client_t *custom_remote_client);
+int custom_remote_client_init      (int id, custom_remote_client_t *custom_remote_client);
 int custom_remote_client_deinit    (custom_remote_client_t *custom_remote_client);
 
 int custom_client_init             (custom_client_t *custom_client);

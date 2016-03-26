@@ -91,10 +91,8 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
     char tmp[256];
     int error = sock_error();
     sprintf(tmp, "sock_accept, select, socket: %d, error: %d", sock, error);
-    make_last_error(ERROR_NORMAL, error, tmp);
     log_add(tmp, LOG_ERROR);
-
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, error, tmp);
   }
   else if(res == 0)
   {
@@ -118,10 +116,8 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
             char tmp[256];
             int error = sock_error();
             sprintf(tmp, "sock_accept, select, accept: %d, error: %d", sock, error);
-            make_last_error(ERROR_NORMAL, error, tmp);
             log_add(tmp, LOG_ERROR);
-
-            return ERROR_NORMAL;
+            return make_last_error(ERROR_NORMAL, error, tmp);
           }
           else
           {
@@ -174,19 +170,15 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     char tmp[256];
     int error = sock_error();
     sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, error);
-    make_last_error(ERROR_NORMAL, error, tmp);
     log_add(tmp, LOG_ERROR);
-
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, error, tmp);
   }
   else if(res == 0)
   {
     char tmp[256];
     sprintf(tmp,  "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
-    make_last_error(ERROR_WAIT, errno, tmp);
     log_add(tmp, ERROR_WAIT);
-
-    return ERROR_WAIT;
+    return make_last_error(ERROR_WAIT, errno, tmp);
   }
   else
   {
@@ -202,20 +194,15 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
             char tmp[256];
             int error = sock_error();
             sprintf(tmp, "sock_recv, recv, socket: %d, error: %d", sock, error);
-            make_last_error(ERROR_NORMAL, error, tmp);
             log_add(tmp, LOG_ERROR);
-
-            return ERROR_NORMAL;
+            return make_last_error(ERROR_NORMAL, error, tmp);
           }
           else if(*size == 0)
           {
             char tmp[256];
             sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
-            make_last_error(ERROR_WARNING, errno, tmp);
             log_add(tmp, ERROR_WARNING);
-
-//            FD_CLR(sock, &active_fd_set);
-            return ERROR_WARNING;
+            return make_last_error(ERROR_WARNING, errno, tmp);
           }
           else
           {

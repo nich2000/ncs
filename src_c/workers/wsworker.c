@@ -106,16 +106,9 @@ int ws_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int ws_server_init(ws_server_t *server)
 {
-  custom_server_init(&server->custom_server);
+  custom_server_init(STATIC_WS_SERVER_ID, &server->custom_server);
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
-
-//  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-//  {
-//    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
-//    tmp_client->protocol.on_new_in_data  = ws_new_data;
-//    tmp_client->protocol.on_new_out_data = ws_new_data;
-//  }
 
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
@@ -126,6 +119,9 @@ int ws_server_init(ws_server_t *server)
 //==============================================================================
 int ws_server_start(ws_server_t *server, sock_port_t port)
 {
+  if(server->custom_server.custom_worker.state == STATE_START)
+    return make_last_error(ERROR_NORMAL, errno, "ws_server_start, server already started");
+
   ws_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
@@ -218,7 +214,7 @@ custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server)
 
   if(tmp_client != NULL)
   {
-    custom_remote_client_init(tmp_client);
+    custom_remote_client_init(ID_GEN_NEW, tmp_client);
 
     tmp_client->protocol.on_new_in_data  = ws_new_data;
 
@@ -292,8 +288,7 @@ int ws_server_send_clients()
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
   {
-    make_last_error(ERROR_NORMAL, errno, "ws_server_send_clients, server not started");
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, errno, "ws_server_send_clients, server not started");
   }
 
   pack_packet_t tmp_packet;
@@ -640,8 +635,7 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
   {
     char tmp[128];
     sprintf(tmp, "json_to_packet, error: %s", tmp_error.text);
-    make_last_error(ERROR_NORMAL, errno, tmp);
-    return ERROR_NONE;
+    return make_last_error(ERROR_NORMAL, errno, tmp);
   }
 }
 //==============================================================================

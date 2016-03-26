@@ -44,7 +44,7 @@ int make_last_error(int level, int number, const char *message)
   _error_.number = number;
   strcpy(_error_.message, message);
 
-  return ERROR_NONE;
+  return level;
 }
 //==============================================================================
 error_t *last_error()

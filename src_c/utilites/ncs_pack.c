@@ -656,8 +656,7 @@ int pack_word_as_pack(pack_word_t *word, pack_packet_t *pack)
   }
   else
   {
-    make_last_error(ERROR_NORMAL, errno, "pack_word_as_pack, word is not inner packet");
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, errno, "pack_word_as_pack, word is not inner packet");
   };
 }
 //==============================================================================

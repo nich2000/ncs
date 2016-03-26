@@ -155,20 +155,12 @@ int cmd_client_status()
 //==============================================================================
 int cmd_server_init(cmd_server_t *server)
 {
-  custom_server_init(&server->custom_server);
+  custom_server_init(STATIC_CMD_SERVER_ID, &server->custom_server);
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
 
-//  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-//  {
-//    custom_remote_client_t *tmp_client = &server->custom_remote_clients_list.items[i];
-//    tmp_client->protocol.on_new_in_data  = cmd_new_data;
-//    tmp_client->protocol.on_new_out_data = cmd_new_data;
-//  }
-
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_CMD_SERVER;
-
   server->custom_server.on_accept          = &cmd_accept;
 
   return ERROR_NONE;
@@ -176,6 +168,9 @@ int cmd_server_init(cmd_server_t *server)
 //==============================================================================
 int cmd_server_start(cmd_server_t *server, sock_port_t port)
 {
+  if(server->custom_server.custom_worker.state == STATE_START)
+    return make_last_error(ERROR_NORMAL, errno, "cmd_server_start, server already started");
+
   cmd_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
@@ -229,7 +224,7 @@ custom_remote_client_t *_cmd_remote_clients_next(cmd_server_t *cmd_server)
 
   if(tmp_client != NULL)
   {
-    custom_remote_client_init(tmp_client);
+    custom_remote_client_init(ID_GEN_NEW, tmp_client);
 
     tmp_client->protocol.on_new_in_data = cmd_new_data;
 

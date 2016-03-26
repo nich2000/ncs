@@ -81,11 +81,10 @@ int web_server(sock_state_t state, sock_port_t port)
 //==============================================================================
 int web_server_init(web_server_t *server)
 {
-  custom_worker_init(&server->custom_server.custom_worker);
+  custom_server_init(STATIC_WEB_SERVER_ID, &server->custom_server);
 
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
-
   server->custom_server.on_accept          = &web_accept;
 
   return ERROR_NONE;
@@ -93,6 +92,9 @@ int web_server_init(web_server_t *server)
 //==============================================================================
 int web_server_start(web_server_t *server, sock_port_t port)
 {
+  if(server->custom_server.custom_worker.state == STATE_START)
+    return make_last_error(ERROR_NORMAL, errno, "web_server_start, server already started");
+
   web_server_init(server);
 
   server->custom_server.custom_worker.port  = port;
@@ -150,9 +152,8 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
   {
-    make_last_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
     log_add("web_accept, memcpy == NULL", LOG_ERROR);
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
   }
 
   pthread_attr_t tmp_attr;
@@ -162,9 +163,8 @@ int web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_t tmp_pthread;
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
   {
-    make_last_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
     log_add("web_accept, pthread_create != 0", LOG_ERROR);
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
   }
 
   return ERROR_NONE;
