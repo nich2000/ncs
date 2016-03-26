@@ -41,6 +41,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <limits.h>
+#include <errno.h>
 
 #ifndef DEMS_DEVICE
 #include "ncs_log.h"

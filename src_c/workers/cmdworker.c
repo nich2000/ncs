@@ -35,13 +35,14 @@ void *cmd_client_worker(void *arg);
 //==============================================================================
 void *cmd_send_worker(void *arg);
 //==============================================================================
-int cmd_accept    (void *sender, SOCKET socket, sock_host_t host);
-int cmd_connect   (void *sender);
-int cmd_disconnect(void *sender);
-int cmd_error     (void *sender, error_t *error);
-int cmd_send      (void *sender);
-int cmd_recv      (void *sender, char *buffer, int size);
-int cmd_new_data  (void *sender, void *data);
+int on_cmd_accept    (void *sender, SOCKET socket, sock_host_t host);
+int on_cmd_connect   (void *sender);
+int on_cmd_disconnect(void *sender);
+int on_cmd_error     (void *sender, error_t *error);
+int on_cmd_send      (void *sender);
+int on_cmd_recv      (void *sender, char *buffer, int size);
+int on_cmd_new_data  (void *sender, void *data);
+int on_cmd_state     (void *sender, sock_state_t state);
 //==============================================================================
 int          _cmd_server_id = 0;
 cmd_server_t _cmd_server;
@@ -161,7 +162,7 @@ int cmd_server_init(cmd_server_t *server)
 
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_CMD_SERVER;
-  server->custom_server.on_accept          = &cmd_accept;
+  server->custom_server.on_accept          = &on_cmd_accept;
 
   return ERROR_NONE;
 }
@@ -226,22 +227,22 @@ custom_remote_client_t *_cmd_remote_clients_next(cmd_server_t *cmd_server)
   {
     custom_remote_client_init(ID_GEN_NEW, tmp_client);
 
-    tmp_client->protocol.on_new_in_data = cmd_new_data;
+    tmp_client->protocol.on_new_in_data = on_cmd_new_data;
 
     tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
     tmp_client->custom_worker.mode  = cmd_server->custom_server.custom_worker.mode;
     tmp_client->custom_worker.port  = cmd_server->custom_server.custom_worker.port;
 
-    tmp_client->on_disconnect       = cmd_disconnect;
-    tmp_client->on_error            = cmd_error;
-    tmp_client->on_recv             = cmd_recv;
-    tmp_client->on_send             = cmd_send;
+    tmp_client->on_disconnect       = on_cmd_disconnect;
+    tmp_client->on_error            = on_cmd_error;
+    tmp_client->on_recv             = on_cmd_recv;
+    tmp_client->on_send             = on_cmd_send;
   }
 
   return tmp_client;
 }
 //==============================================================================
-int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
+int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
   if(tmp_client == 0)
@@ -251,6 +252,8 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
                 socket, host);
     return ERROR_CRITICAL;
   }
+
+  tmp_client->custom_worker.on_state = on_cmd_state;
 
   tmp_client->custom_worker.state = STATE_STARTING;
   if(tmp_client->custom_worker.on_state != NULL)
@@ -262,8 +265,6 @@ int cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   log_add_fmt(LOG_DEBUG,
               "cmd_accept, socket: %d, host: %s, port: %d",
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
-
-  ws_server_send_clients();
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -297,12 +298,12 @@ int cmd_client_init(cmd_client_t *client)
   client->custom_client.custom_remote_client.custom_worker.type = SOCK_TYPE_CLIENT;
   client->custom_client.custom_remote_client.custom_worker.mode = SOCK_MODE_CMD_CLIENT;
 
-  client->custom_client.on_connect                         = cmd_connect;
+  client->custom_client.on_connect                         = on_cmd_connect;
 
-  client->custom_client.custom_remote_client.on_disconnect = cmd_disconnect;
-  client->custom_client.custom_remote_client.on_error      = cmd_error;
-  client->custom_client.custom_remote_client.on_recv       = cmd_recv;
-  client->custom_client.custom_remote_client.on_send       = cmd_send;
+  client->custom_client.custom_remote_client.on_disconnect = on_cmd_disconnect;
+  client->custom_client.custom_remote_client.on_error      = on_cmd_error;
+  client->custom_client.custom_remote_client.on_recv       = on_cmd_recv;
+  client->custom_client.custom_remote_client.on_send       = on_cmd_send;
 
   return ERROR_NONE;
 }
@@ -313,7 +314,7 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 
   protocol_init(&client->custom_client.custom_remote_client.protocol);
 
-  client->custom_client.custom_remote_client.protocol.on_new_in_data  = cmd_new_data;
+  client->custom_client.custom_remote_client.protocol.on_new_in_data  = on_cmd_new_data;
 //  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
@@ -372,7 +373,7 @@ void *cmd_client_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-int cmd_connect(void *sender)
+int on_cmd_connect(void *sender)
 {
   log_add("[BEGIN] cmd_connect", LOG_DEBUG);
 
@@ -466,21 +467,21 @@ void *cmd_send_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-int cmd_disconnect(void *sender)
+int on_cmd_disconnect(void *sender)
 {
   log_add("cmd_disconnect, disconnected from server", LOG_INFO);
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_error(void *sender, error_t *error)
+int on_cmd_error(void *sender, error_t *error)
 {
   log_add_fmt(LOG_INFO, "cmd_error, message: %s", error->message);
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_send(void *sender)
+int on_cmd_send(void *sender)
 {
   #ifdef PRINT_SND_PACK
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
@@ -495,7 +496,7 @@ int cmd_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_recv(void *sender, char *buffer, int size)
+int on_cmd_recv(void *sender, char *buffer, int size)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
@@ -608,7 +609,7 @@ int cmd_client_send_pack(pack_packet_t *pack)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_new_data(void *sender, void *data)
+int on_cmd_new_data(void *sender, void *data)
 {
 //  log_add("cmd_new_data", LOG_INFO);
 
@@ -645,6 +646,12 @@ int cmd_new_data(void *sender, void *data)
   }
 
   return ERROR_NONE;
+}
+//==============================================================================
+int on_cmd_state(void *sender, sock_state_t state)
+{
+  if(state == STATE_START)
+    ws_server_send_clients();
 }
 //==============================================================================
 int cmd_server_list(pack_packet_t *pack)

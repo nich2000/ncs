@@ -36,7 +36,7 @@ int web_server_resume(web_server_t *server);
 //==============================================================================
 void *web_server_worker(void *arg);
 //==============================================================================
-int web_accept(void *sender, SOCKET socket, sock_host_t host);
+int on_web_accept(void *sender, SOCKET socket, sock_host_t host);
 //==============================================================================
 void *web_handle_connection(void *arg);
 int web_get_response(char *request, char *response, int *size);
@@ -85,7 +85,7 @@ int web_server_init(web_server_t *server)
 
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
-  server->custom_server.on_accept          = &web_accept;
+  server->custom_server.on_accept          = &on_web_accept;
 
   return ERROR_NONE;
 }
@@ -143,7 +143,7 @@ void *web_server_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-int web_accept(void *sender, SOCKET socket, sock_host_t host)
+int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   char tmp[256];
   sprintf(tmp, "web_accept, socket: %d", socket);

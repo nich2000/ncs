@@ -235,8 +235,6 @@ int custom_client_work(custom_client_t *client)
 //  log_add("----------", LOG_INFO);
 
   client->custom_remote_client.custom_worker.state = STATE_START;
-  if(client->custom_remote_client.custom_worker.on_state != NULL)
-    client->custom_remote_client.custom_worker.on_state(client, STATE_START);
 
   log_add("connecting to server...", LOG_INFO);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
@@ -262,8 +260,6 @@ int custom_client_work(custom_client_t *client)
   }
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
-  if(client->custom_remote_client.custom_worker.on_state != NULL)
-    client->custom_remote_client.custom_worker.on_state(client, STATE_STOP);
 
   log_add("[END] custom_client_work", LOG_DEBUG);
 

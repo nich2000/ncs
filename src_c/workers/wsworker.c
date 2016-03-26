@@ -48,12 +48,12 @@ custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server);
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
 //==============================================================================
-int ws_accept(void *sender, SOCKET socket, sock_host_t host);
-int ws_new_data(void *sender, void *data);
-int ws_disconnect(void *sender);
-int ws_error(void *sender, error_t *error);
-int ws_recv(void *sender, char *buffer, int size);
-int ws_send(void *sender);
+int on_ws_accept    (void *sender, SOCKET socket, sock_host_t host);
+int on_ws_new_data  (void *sender, void *data);
+int on_ws_disconnect(void *sender);
+int on_ws_error     (void *sender, error_t *error);
+int on_ws_recv      (void *sender, char *buffer, int size);
+int on_ws_send      (void *sender);
 //==============================================================================
 int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size);
 //==============================================================================
@@ -112,7 +112,7 @@ int ws_server_init(ws_server_t *server)
 
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
-  server->custom_server.on_accept          = &ws_accept;
+  server->custom_server.on_accept          = &on_ws_accept;
 
   return ERROR_NONE;
 }
@@ -216,22 +216,22 @@ custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server)
   {
     custom_remote_client_init(ID_GEN_NEW, tmp_client);
 
-    tmp_client->protocol.on_new_in_data  = ws_new_data;
+    tmp_client->protocol.on_new_in_data  = on_ws_new_data;
 
     tmp_client->custom_worker.type  = SOCK_TYPE_REMOTE_CLIENT;
     tmp_client->custom_worker.mode  = ws_server->custom_server.custom_worker.mode;
     tmp_client->custom_worker.port  = ws_server->custom_server.custom_worker.port;
 
-    tmp_client->on_disconnect       = ws_disconnect;
-    tmp_client->on_error            = ws_error;
-    tmp_client->on_recv             = ws_recv;
-    tmp_client->on_send             = ws_send;
+    tmp_client->on_disconnect       = on_ws_disconnect;
+    tmp_client->on_error            = on_ws_error;
+    tmp_client->on_recv             = on_ws_recv;
+    tmp_client->on_send             = on_ws_send;
   }
 
   return tmp_client;
 }
 //==============================================================================
-int ws_accept(void *sender, SOCKET socket, sock_host_t host)
+int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _ws_remote_clients_next(&_ws_server);
 
@@ -305,8 +305,6 @@ void *ws_recv_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[BEGIN] ws_recv_worker, socket: %d", tmp_sock);
 
   tmp_client->custom_worker.state = STATE_START;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
   char *request   = (char*)malloc(2048);
   char *response  = (char*)malloc(1024*1024);
@@ -394,8 +392,6 @@ void *ws_recv_worker(void *arg)
   free(response);
 
   tmp_client->custom_worker.state = STATE_STOP;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_STOP);
 
   log_add_fmt(LOG_DEBUG, "[END] ws_recv_worker, socket: %d", tmp_sock);
 
@@ -446,31 +442,31 @@ void *ws_send_worker(void *arg)
   return NULL;
 }
 //==============================================================================
-int ws_new_data(void *sender, void *data)
+int on_ws_new_data(void *sender, void *data)
 {
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_disconnect(void *sender)
+int on_ws_disconnect(void *sender)
 {
   log_add("ws_disconnect, disconnected from server", LOG_INFO);
 
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_error(void *sender, error_t *error)
+int on_ws_error(void *sender, error_t *error)
 {
   log_add_fmt(LOG_INFO, "ws_error, message: %s", error->message);
 
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_recv(void *sender, char *buffer, int size)
+int on_ws_recv(void *sender, char *buffer, int size)
 {
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_send(void *sender)
+int on_ws_send(void *sender)
 {
   return ERROR_NONE;
 }
