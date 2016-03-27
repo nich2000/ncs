@@ -3,8 +3,8 @@
 * Moscow 2016
 * ----
 * FullPack(size in bytes)
-* 6         2      2       SIZE   2   TOTAL = 6 + 2 + 2 + SIZE + 2 = 12 + SIZE
-* VER01\0   SIZE   INDEX   DATA   CRC
+* 4       2      2       SIZE   2   TOTAL = 6 + 2 + 2 + SIZE + 2 = 12 + SIZE
+* V01\0   SIZE   INDEX   DATA   CRC
 * -
 * CRC = CRC(INDEX + DATA)
 * -----
@@ -257,10 +257,10 @@ int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, p
 int pack_add_as_pack(pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_pack)
 {
   pack_size_t tmp_size;
-  pack_bytes_t tmp_bytes;
-  pack_to_bytes(inner_pack, tmp_bytes, &tmp_size);
+  char        tmp_buffer[1024];
+  pack_to_bytes(inner_pack, tmp_buffer, &tmp_size);
 
-  pack_add_as_bytes(pack, key, tmp_bytes, tmp_size, PACK_WORD_PACK);
+  pack_add_as_bytes(pack, key, tmp_buffer, tmp_size, PACK_WORD_PACK);
 
   return ERROR_NONE;
 }
@@ -636,6 +636,8 @@ int pack_word_as_string(pack_word_t *word, pack_string_t value)
       break;
     case PACK_WORD_BYTES:
       break;
+    case PACK_WORD_PACK:
+      break;
     default:
       break;
   }
@@ -651,14 +653,9 @@ int pack_word_as_bytes(pack_word_t *word, pack_bytes_t value, pack_size_t *size)
 int pack_word_as_pack(pack_word_t *word, pack_packet_t *pack)
 {
   if(word->type == PACK_WORD_PACK)
-  {
-    pack_init(pack);
-    return pack_buffer_to_words(word->value, word->size, pack->words, &pack->words_count);
-  }
+    return pack_buffer_to_pack(word->value, word->size, pack);
   else
-  {
     return make_last_error(ERROR_NORMAL, errno, "pack_word_as_pack, word is not inner packet");
-  };
 }
 //==============================================================================
 pack_size_t _pack_word_size(pack_word_t *word)
@@ -683,6 +680,10 @@ pack_size_t _pack_word_size(pack_word_t *word)
     tmp_size += word->size;
     break;
   case PACK_WORD_BYTES:
+    tmp_size += PACK_SIZE_SIZE;
+    tmp_size += word->size;
+    break;
+  case PACK_WORD_PACK:
     tmp_size += PACK_SIZE_SIZE;
     tmp_size += word->size;
     break;
@@ -722,6 +723,12 @@ int pack_word_to_buffer(pack_word_t *word, pack_buffer_t buffer, pack_size_t *st
       buffer[tmp_index++] = (word->size     ) & 0xff;
     }
     break;
+  case PACK_WORD_PACK:
+    {
+      buffer[tmp_index++] = (word->size >> 8) & 0xff;
+      buffer[tmp_index++] = (word->size     ) & 0xff;
+    }
+    break;
   default:
     break;
   }
@@ -734,9 +741,22 @@ int pack_word_to_buffer(pack_word_t *word, pack_buffer_t buffer, pack_size_t *st
   return ERROR_NONE;
 }
 //==============================================================================
+int pack_buffer_to_pack(pack_buffer_t buffer, pack_size_t size, pack_packet_t *pack)
+{
+  pack_init(pack);
+
+  // TODO - maybe govnocode
+  int init_index = PACK_VERSION_SIZE + PACK_SIZE_SIZE;
+
+  return pack_buffer_to_words(&buffer[init_index], size-init_index, pack->words, &pack->words_count);
+}
+//==============================================================================
 int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count)
 {
   pack_size_t tmp_count = 0;
+
+  if(buffer_size < (PACK_KEY_SIZE + PACK_TYPE_SIZE))
+    return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, buffer too small");
 
   // Exclude index
   pack_size_t i = PACK_INDEX_SIZE;
@@ -775,8 +795,14 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
           tmp_word->size |= buffer[i++];
         }
         break;
-      default:
+      case PACK_WORD_PACK:
+        {
+          tmp_word->size  = buffer[i++] << 8;
+          tmp_word->size |= buffer[i++];
+        }
         break;
+      default:
+        return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, unknown word type");
     }
 
     // Read Value
@@ -787,7 +813,7 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
     tmp_count++;
     *words_count = tmp_count;
     if(tmp_count > PACK_WORDS_COUNT)
-      return ERROR_NORMAL;
+      return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, words count overflow");
   }
 
   return ERROR_NONE;

@@ -279,7 +279,7 @@ void *custom_recv_worker(void *arg)
   sprintf(tmp_report_name, "report_%d.txt", tmp_client->custom_worker.id);
   tmp_client->report = report_open(tmp_report_name);
 
-  pack_buffer_t tmp_buffer;
+  sock_buffer_t tmp_buffer;
   int           tmp_size = 0;
   int           tmp_errors = 0;
 

@@ -16,16 +16,16 @@
 #define TEST_STRING_SIZE 5
 #define TEST_LOG (TEST_PACK_COUNT <= 5)
 //==============================================================================
-char           tmp[128];
-clock_t        start_c, end_c;
-double         total_c;
-pack_buffer_t  buffer;
-pack_size_t    size;
-pack_index_t   ind;
-pack_key_t     key;
-int            valueI;
-pack_buffer_t  valueS;
-float          valueF;
+//char           tmp[128];
+//clock_t        start_c, end_c;
+//double         total_c;
+//pack_buffer_t  buffer;
+//pack_size_t    size;
+//pack_index_t   ind;
+//pack_key_t     key;
+//int            valueI;
+//pack_buffer_t  valueS;
+//float          valueF;
 //==============================================================================
 int test_pack();
 int test_gps();

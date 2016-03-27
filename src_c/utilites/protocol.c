@@ -80,8 +80,7 @@ int unlock(pack_type_t out, pack_protocol_t *protocol)
 int pack_validation_buffer_init(pack_validation_buffer_t *validation_buffer)
 {
   validation_buffer->size = 0;
-
-  memset(validation_buffer->buffer, 0, PACK_BUFFER_SIZE);
+  memset(validation_buffer->buffer, '\0', PACK_BUFFER_SIZE);
 
   return ERROR_NONE;
 }

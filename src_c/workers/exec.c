@@ -390,8 +390,8 @@ int handle_command_str(char *command)
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      cmd_server_activate_all(STATE_STOP);
-      cmd_server_activate(id, state);
+      cmd_remote_clients_activate_all(STATE_STOP);
+      cmd_remote_clients_activate(id, state);
 
       return EXEC_DONE;
     }

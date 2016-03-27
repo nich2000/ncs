@@ -14,6 +14,7 @@
 #include "ncs_log.h"
 #include "protocol.h"
 #include "protocol_types.h"
+#include "ncs_pack_utils.h"
 //==============================================================================
 int cmd_server_init (cmd_server_t *server);
 int cmd_server_start(cmd_server_t *server, sock_port_t port);
@@ -23,7 +24,8 @@ int cmd_server_resume(cmd_server_t *server);
 //==============================================================================
 void *cmd_server_worker(void *arg);
 //==============================================================================
-custom_remote_client_t *_cmd_remote_clients_next(cmd_server_t *cmd_server);
+custom_remote_client_t *_cmd_remote_clients_next (cmd_server_t *cmd_server);
+int                     _cmd_remote_clients_count(cmd_server_t *cmd_server);
 //==============================================================================
 int cmd_client_init (cmd_client_t *client);
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host);
@@ -242,6 +244,11 @@ custom_remote_client_t *_cmd_remote_clients_next(cmd_server_t *cmd_server)
   return tmp_client;
 }
 //==============================================================================
+int _cmd_remote_clients_count(cmd_server_t *cmd_server)
+{
+  return _custom_remote_clients_count(&cmd_server->custom_remote_clients_list);
+}
+//==============================================================================
 int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
@@ -256,8 +263,6 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   tmp_client->custom_worker.on_state = on_cmd_state;
 
   tmp_client->custom_worker.state = STATE_STARTING;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_STARTING);
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -321,8 +326,6 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
   strcpy((char*)client->custom_client.custom_remote_client.custom_worker.host, (char*)host);
 
   client->custom_client.custom_remote_client.custom_worker.state = STATE_STARTING;
-  if(client->custom_client.custom_remote_client.custom_worker.on_state != NULL)
-    client->custom_client.custom_remote_client.custom_worker.on_state(client, STATE_STARTING);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -413,6 +416,7 @@ void *cmd_send_worker(void *arg)
 
   log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_send_worker, socket: %d", tmp_sock);
 
+  // TODO - analog on_connect - need to send clients list to ws - govnokod
   tmp_client->custom_worker.state = STATE_START;
   if(tmp_client->custom_worker.on_state != NULL)
     tmp_client->custom_worker.on_state(tmp_client, STATE_START);
@@ -459,8 +463,6 @@ void *cmd_send_worker(void *arg)
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_STOP);
 
   log_add_fmt(LOG_DEBUG, "[END] cmd_send_worker, socket: %d", tmp_sock);
 
@@ -485,11 +487,8 @@ int on_cmd_send(void *sender)
 {
   #ifdef PRINT_SND_PACK
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
-
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
-
   pack_packet_t *tmp_packet = _protocol_current_pack(PACK_OUT, tmp_protocol);
-
   print_pack(tmp_packet, "cmd_send", 1, 0, 1, 0);
   #endif
 
@@ -650,20 +649,25 @@ int on_cmd_new_data(void *sender, void *data)
 //==============================================================================
 int on_cmd_state(void *sender, sock_state_t state)
 {
+  // TODO - govnocode - ws вызывает cmd_remote_clients_list
   if(state == STATE_START)
+  {
     ws_server_send_clients();
+  }
+
+  return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_list(pack_packet_t *pack)
+int cmd_remote_clients_list(pack_packet_t *pack)
 {
   if(pack == NULL)
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_NORMAL, errno, "cmd_remote_clients_list, pack == NULL");
 
   pack_init(pack);
-
   pack_add_cmd(pack, (unsigned char*)"clients");
 
-  char tmp[128];
+  if(_cmd_remote_clients_count(&_cmd_server) == 0)
+    return make_last_error(ERROR_NONE, errno, "cmd_remote_clients_list, no cmd clients connected");
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -673,20 +677,19 @@ int cmd_server_list(pack_packet_t *pack)
     {
       pack_packet_t tmp_pack;
       pack_init(&tmp_pack);
-
-      sprintf(tmp, "%d", tmp_custom_worker->id);
-      pack_add_param(&tmp_pack, (unsigned char*)tmp);
-
-      pack_add_param(&tmp_pack, tmp_custom_worker->name);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)PACK_PARAM_KEY, tmp_custom_worker->id);
+      pack_add_as_string(&tmp_pack, (unsigned char*)PACK_PARAM_KEY, tmp_custom_worker->name);
 
       pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
     }
   };
 
+  print_pack(pack, "clients", FALSE, FALSE, TRUE, TRUE);
+
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_activate(sock_id_t id, sock_state_t state)
+int cmd_remote_clients_activate(sock_id_t id, sock_state_t state)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -709,7 +712,7 @@ int cmd_server_activate(sock_id_t id, sock_state_t state)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_server_activate_all(sock_state_t state)
+int cmd_remote_clients_activate_all(sock_state_t state)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {

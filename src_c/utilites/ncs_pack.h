@@ -10,18 +10,18 @@
 #define PACK_CMD_KEY             "CMD\0"
 #define PACK_PARAM_KEY           "PAR\0"
 //==============================================================================
+#define PACK_KEY_SIZE            4
+#define PACK_VERSION_SIZE        4
+//==============================================================================
 #ifdef DEMS_DEVICE
 #define PACK_BUFFER_SIZE         256
 #define PACK_VALUE_SIZE          12
 #define PACK_WORDS_COUNT         20
 #else
-#define PACK_BUFFER_SIZE         102400
+#define PACK_BUFFER_SIZE         1024
 #define PACK_VALUE_SIZE          128
 #define PACK_WORDS_COUNT         64
 #endif
-//==============================================================================
-#define PACK_KEY_SIZE            4
-#define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_WORD_NONE           0
 #define PACK_WORD_INT            1
@@ -113,6 +113,7 @@ pack_string_t _pack_next_param   (pack_packet_t *pack, pack_index_t *index);
 //==============================================================================
 int pack_word_as_pack            (pack_word_t *word, pack_packet_t *pack);
 //==============================================================================
+int pack_buffer_to_pack          (pack_buffer_t buffer, pack_size_t size, pack_packet_t *pack);
 int pack_buffer_to_words         (pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count);
 //==============================================================================
 #endif //PACKET_H

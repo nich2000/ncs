@@ -46,7 +46,8 @@
 #define SOCK_VERSION_SIZE        8
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
 //==============================================================================
-#define SOCK_BUFFER_SIZE         100
+#define SOCK_PART_SIZE           100
+#define SOCK_BUFFER_SIZE         102400
 #define SOCK_WORKERS_COUNT       256
 #define SOCK_ERRORS_COUNT        10
 //==============================================================================
@@ -64,6 +65,7 @@ typedef unsigned char  sock_name_t[PACK_VALUE_SIZE];
 typedef unsigned char  sock_data_t[PACK_VALUE_SIZE];
 typedef unsigned short sock_index_t;
 typedef unsigned short sock_state_t;
+typedef unsigned char  sock_buffer_t[SOCK_BUFFER_SIZE];
 //==============================================================================
 
 #endif //SOCKET_TYPES_H

@@ -43,7 +43,8 @@ int ws_server_resume(ws_server_t *server);
 //==============================================================================
 void *ws_server_worker(void *arg);
 //==============================================================================
-custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server);
+custom_remote_client_t *_ws_remote_clients_next (ws_server_t *ws_server);
+int                     _ws_remote_clients_count(ws_server_t *ws_server);
 //==============================================================================
 void *ws_recv_worker(void *arg);
 void *ws_send_worker(void *arg);
@@ -126,8 +127,6 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
 
   server->custom_server.custom_worker.port  = port;
   server->custom_server.custom_worker.state = STATE_STARTING;
-  if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_STARTING);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -146,8 +145,6 @@ int ws_server_work(ws_server_t *server)
 int ws_server_stop(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_STOPPING;
-  if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_STOPPING);
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
@@ -159,8 +156,6 @@ int ws_server_stop(ws_server_t *server)
 int ws_server_pause(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_PAUSING;
-  if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_PAUSING);
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
@@ -172,8 +167,6 @@ int ws_server_pause(ws_server_t *server)
 int ws_server_resume(ws_server_t *server)
 {
   server->custom_server.custom_worker.state = STATE_RESUMING;
-  if(server->custom_server.custom_worker.on_state != NULL)
-    server->custom_server.custom_worker.on_state(server, STATE_RESUMING);
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
     if(server->custom_remote_clients_list.items[i].custom_worker.state == STATE_PAUSE)
@@ -231,6 +224,11 @@ custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server)
   return tmp_client;
 }
 //==============================================================================
+int _ws_remote_clients_count(ws_server_t *ws_server)
+{
+  return _custom_remote_clients_count(&ws_server->custom_remote_clients_list);
+}
+//==============================================================================
 int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _ws_remote_clients_next(&_ws_server);
@@ -244,8 +242,6 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   }
 
   tmp_client->custom_worker.state = STATE_STARTING;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_STARTING);
 
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
@@ -287,12 +283,13 @@ int ws_server_send_config()
 int ws_server_send_clients()
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
-  {
-    return make_last_error(ERROR_NORMAL, errno, "ws_server_send_clients, server not started");
-  }
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_clients, ws server not started");
+
+  if(_ws_remote_clients_count(&_ws_server) == 0)
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_clients, no ws clients connected");
 
   pack_packet_t tmp_packet;
-  cmd_server_list(&tmp_packet);
+  cmd_remote_clients_list(&tmp_packet);
 
   return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
 }
@@ -406,8 +403,6 @@ void *ws_send_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[BEGIN] ws_send_worker, socket: %d", tmp_sock);
 
   tmp_client->custom_worker.state = STATE_START;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_START);
 
   int tmp_errors = 0;
 
@@ -434,8 +429,6 @@ void *ws_send_worker(void *arg)
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
-  if(tmp_client->custom_worker.on_state != NULL)
-    tmp_client->custom_worker.on_state(tmp_client, STATE_STOP);
 
   log_add_fmt(LOG_DEBUG, "[END] ws_send_worker, socket: %d", tmp_sock);
 
@@ -518,10 +511,10 @@ json_t *pack_to_json(pack_packet_t *packet)
     json_t *tmp_json_value;
     if(tmp_word->type == PACK_WORD_PACK)
     {
-      pack_packet_t *tmp_pack;
-      pack_word_as_pack(tmp_word, tmp_pack);
+      pack_packet_t tmp_pack;
+      pack_word_as_pack(tmp_word, &tmp_pack);
 
-      tmp_json_value = pack_to_json(tmp_pack);
+      tmp_json_value = pack_to_json(&tmp_pack);
     }
     else
     {
@@ -662,7 +655,7 @@ int ws_server_send_pack(int session_id, pack_packet_t *pack)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, SOCK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);
@@ -720,7 +713,7 @@ int ws_server_send_cmd(int session_id, int argc, ...)
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;
-        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, PACK_BUFFER_SIZE);
+        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, SOCK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size+1);

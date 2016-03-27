@@ -188,7 +188,7 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
 //      {
 //        if(i == sock)
 //        {
-          *size = recv(sock, buffer, PACK_BUFFER_SIZE, 0);
+          *size = recv(sock, buffer, SOCK_BUFFER_SIZE, 0);
           if(*size == SOCKET_ERROR)
           {
             char tmp[256];
@@ -228,7 +228,7 @@ int sock_send(SOCKET sock, char *buffer, int size)
 {
   #ifdef SOCK_RANDOM_BUFFER
   int tmp_index = 0;
-  int real_buffer_size = rand() % SOCK_BUFFER_SIZE + 1;
+  int real_buffer_size = rand() % SOCK_PART_SIZE + 1;
   char tmp_buffer[real_buffer_size];
 
   while(tmp_index < size)
