@@ -1,6 +1,7 @@
 //==============================================================================
 //==============================================================================
 #include <string.h>
+#include <stdlib.h>
 
 #include "ncs_pack_utils.h"
 #include "ncs_error.h"
@@ -107,15 +108,15 @@ char *do_print_pack(pack_packet_t *packet, int indent)
   pack_key_t    tmp_key;
   pack_value_t  tmp_value;
   pack_size_t   tmp_words_count = _pack_words_count(packet);
-  pack_buffer_t tmp;
+  pack_string_t tmp = (char*)malloc(1024);
   memset(tmp, '\0', PACK_BUFFER_SIZE);
 
-  char *indent_str[128];
+  char indent_str[128];
   memset(indent_str, '\0', 128);
   for(int i = 0; i < indent; i++)
     sprintf(indent_str, "%s%s", indent_str, " ");
 
-  sprintf(tmp, "\n%swords_count: %d", indent_str, tmp_words_count);
+  sprintf(tmp, "\n%swords_count: %d", (char*)indent_str, tmp_words_count);
 
   for(pack_size_t i = 0; i < tmp_words_count; i++)
   {

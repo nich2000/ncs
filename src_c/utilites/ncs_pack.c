@@ -747,8 +747,9 @@ int pack_buffer_to_pack(pack_buffer_t buffer, pack_size_t size, pack_packet_t *p
 
   // TODO - maybe govnocode
   int init_index = PACK_VERSION_SIZE + PACK_SIZE_SIZE;
+  int init_size  = size - init_index - PACK_CRC_SIZE;
 
-  return pack_buffer_to_words(&buffer[init_index], size-init_index, pack->words, &pack->words_count);
+  return pack_buffer_to_words(&buffer[init_index], init_size, pack->words, &pack->words_count);
 }
 //==============================================================================
 int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count)

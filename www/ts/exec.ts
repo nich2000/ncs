@@ -32,19 +32,17 @@ class exec_t
 
   public doOnMessage(message: any)
   {
-    var data: string;
+    var data: any;
     data = JSON.parse(message);
 
     if (data.length == 0)
       return;
-    if (data[0].length == 0)
-      return;
 
-    if (data[0][0] == "CMD") 
+    if (data[0].CMD != undefined) 
     {
-      $("#last_cmd").text("Command: " + data[0][1]);
+      $("#last_cmd").text("Command: " + data[0].CMD);
 
-      switch (data[0][1]) 
+      switch (data[0].CMD) 
       {
         case "clients":
         {
@@ -56,11 +54,11 @@ class exec_t
     }
     else 
     {
-      for (var i = 0; i < data.length; i++) 
-      {
-        if(this.static_filter.indexOf(data[i][0]) != -1)
-          Signal.emit("add_data", data[i]);
-      }
+      // for (var i = 0; i < data.length; i++) 
+      // {
+        // if(this.static_filter.indexOf(data[i][0]) != -1)
+          // Signal.emit("add_data", data[i]);
+      // }
     }
   }
 }
