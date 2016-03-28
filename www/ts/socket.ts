@@ -1,14 +1,12 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
-class web_socket_t 
-{
+class web_socket_t {
   socket: WebSocket;
   host: string;
   is_connected: boolean;
 
-  constructor(host: string)
-  {
+  constructor(host: string) {
     console.log("constructor: web_socket_t");
 
     this.host = host;
@@ -16,14 +14,13 @@ class web_socket_t
 
     Signal.bind("doSend", this.doSend, this);
 
-    var timerConnect = setInterval(() =>{
+    var timerConnect = setInterval(() => {
       this.createWebSocket();
     },
-    3000);
+      3000);
   }
 
-  public createWebSocket() 
-  {
+  public createWebSocket() {
     if ((this.socket) && (this.is_connected))
       return;
 
@@ -34,8 +31,7 @@ class web_socket_t
     this.socket.onerror = (evt) => { this.onError(evt) };
   }
 
-  doSend(message: any) 
-  {
+  doSend(message: any) {
     console.log("doSend: " + message);
 
     message = JSON.stringify(message);
@@ -43,8 +39,7 @@ class web_socket_t
     this.socket.send(message);
   }
 
-  onOpen(evt: any) 
-  {
+  onOpen(evt: any) {
     console.log("onOpen");
 
     this.is_connected = true;
@@ -55,8 +50,7 @@ class web_socket_t
     $("#connection_status").text('Connection: open');
   }
 
-  onClose(evt: any) 
-  {
+  onClose(evt: any) {
     console.log("onClose");
 
     this.is_connected = false;
@@ -67,8 +61,7 @@ class web_socket_t
     $("#connection_status").text('Connection: close');
   }
 
-  onError(evt: any) 
-  {
+  onError(evt: any) {
     console.log(evt.data);
 
     this.is_connected = false;
@@ -79,8 +72,7 @@ class web_socket_t
     $("#connection_status").text('Connection: error');
   }
 
-  onMessage(evt: any) 
-  {
+  onMessage(evt: any) {
     console.log("onMessage: " + evt.data);
 
     Signal.emit('onMessage', evt.data);

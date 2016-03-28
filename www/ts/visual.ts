@@ -1,8 +1,7 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
-class cell_t
-{
+class cell_t {
   public owner: any;
   public cell: any;
   public id: string;
@@ -12,16 +11,14 @@ class cell_t
   public text: string;
   public html: string;
 
-  constructor(id: string, owner: any)
-  {
+  constructor(id: string, owner: any) {
     this.id = id;
     this.owner = owner;
     this.cell = $("#" + this.id);
   }
 }
 //==============================================================================
-class row_t
-{
+class row_t {
   public owner: any;
   public row: any;
   public id: string;
@@ -33,8 +30,7 @@ class row_t
 
   public cells: cell_t[];
 
-  constructor(id: string, owner: any)
-  {
+  constructor(id: string, owner: any) {
     this.id = id;
     this.owner = owner;
     this.row = $("#" + this.id);
@@ -46,7 +42,7 @@ class row_t
 
       this.row.click(function() {
         $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
-        
+
         let cell: any = $(this).find('td:last');
         let value = cell.text();
         Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
@@ -57,8 +53,7 @@ class row_t
     }
   }
 
-  public add_cell(id: string, text: string)
-  {
+  public add_cell(id: string, text: string) {
     let cell = $("#" + id);
     if (cell.length == 0) {
       cell = $("<td style='height:8px'></td>");
@@ -69,8 +64,7 @@ class row_t
   }
 }
 //==============================================================================
-class table_t
-{
+class table_t {
   public owner: any;
   public table: any;
   public id: string;
@@ -78,52 +72,47 @@ class table_t
   public cols_count: number;
   public rows_count: number;
 
-  public rows: row_t[]; 
+  public rows: row_t[];
 
-  constructor(id: string, cols: number, owner: any)
-  {
+  constructor(id: string, cols: number, owner: any) {
     console.log("constructor: table_t, id: " + id);
 
     this.id = id;
     this.owner = owner;
 
     this.table = $("#" + id);
-    
+
     this.cols_count = cols;
     this.rows_count = 0;
   }
 }
 //==============================================================================
-class clients_table_t extends table_t
-{
-  constructor(id: string, cols: number, owner: any)
-  {
+class clients_table_t extends table_t {
+  constructor(id: string, cols: number, owner: any) {
     super(id, cols, owner);
 
     Signal.bind("add_client", this.add_client, this);
   }
 
-  add_client(data: any)
-  {
-    if(data.PAR == undefined)
+  add_client(data: any) {
+    if (data.PAR == undefined)
       return;
 
     let client: client_t = data.PAR;
-    
+
   }
 
-  add_row(data: any) 
-  {
+  add_row(data: any) {
 
 
-    
+
 
     let id: string = client[0].PAR;
     let name: string = client[1].PAR;
 
     let row_id: string = "client_" + id + "_" + name;
     let row: row_t = new row_t(row_id, this.table);
-    if(row.new_row)
+    if (row.new_row)
       this.rows.push(row);
 
     let cell_id: string = "name_" + row_id;
@@ -134,10 +123,8 @@ class clients_table_t extends table_t
   }
 }
 //==============================================================================
-class data_table_t extends table_t 
-{
-  constructor(id: string, cols: number, owner: any) 
-  {
+class data_table_t extends table_t {
+  constructor(id: string, cols: number, owner: any) {
     super(id, cols, owner);
 
     Signal.bind("add_data", this.add_row, this);

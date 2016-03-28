@@ -19,43 +19,35 @@ class OtherClass
 }
 */
 
-interface ISignal 
-{
+interface ISignal {
     signal: string;
     method: Function;
     context?: any;
 }
 
-class Signal 
-{
+class Signal {
   private static signals: Array<ISignal> = [];
 
-  public static bind(signal: string, method: Function, context?: any): void 
-  {
-      let tmp: ISignal = 
+  public static bind(signal: string, method: Function, context?: any): void {
+    let tmp: ISignal =
       {
         signal: signal,
         method: method
       }
 
-      if (context) 
-        tmp.context = context;
+    if (context)
+      tmp.context = context;
 
-      this.signals.push(tmp);
+    this.signals.push(tmp);
   }
 
-  public static emit(signal: string, data: any): void 
-  {
-    for (let key in this.signals) 
-    {
-      if (this.signals[key].signal == signal) 
-      {
-        if(this.signals[key].context)
-        {
+  public static emit(signal: string, data: any): void {
+    for (let key in this.signals) {
+      if (this.signals[key].signal == signal) {
+        if (this.signals[key].context) {
           this.signals[key].method.call(this.signals[key].context, data);
         }
-        else
-        {
+        else {
           this.signals[key].method(data);
         }
       }

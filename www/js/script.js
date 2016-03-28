@@ -90,7 +90,7 @@ var cell_t = (function () {
     function cell_t(id, owner) {
         this.id = id;
         this.owner = owner;
-        this.cell = $();
+        this.cell = $("#" + this.id);
     }
     return cell_t;
 })();
@@ -99,7 +99,29 @@ var row_t = (function () {
         this.id = id;
         this.owner = owner;
         this.row = $("#" + this.id);
+        this.new_row = false;
+        if (this.row.length == 0) {
+            this.row = $("<tr></tr>");
+            this.row.attr("id", this.id);
+            this.row.click(function () {
+                $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
+                var cell = $(this).find('td:last');
+                var value = cell.text();
+                Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
+            });
+            this.new_row = true;
+            owner.append(this.row);
+        }
     }
+    row_t.prototype.add_cell = function (id, text) {
+        var cell = $("#" + id);
+        if (cell.length == 0) {
+            cell = $("<td style='height:8px'></td>");
+            cell.attr("id", cell_id);
+            line.append(cell);
+        }
+        cell.text();
+    };
     return row_t;
 })();
 var table_t = (function () {
@@ -117,45 +139,24 @@ var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
     function clients_table_t(id, cols, owner) {
         _super.call(this, id, cols, owner);
-        Signal.bind("add_client", this.add_row, this);
+        Signal.bind("add_client", this.add_client, this);
     }
-    clients_table_t.prototype.add_row = function (data) {
+    clients_table_t.prototype.add_client = function (data) {
         if (data.PAR == undefined)
             return;
         var client = data.PAR;
+    };
+    clients_table_t.prototype.add_row = function (data) {
         var id = client[0].PAR;
         var name = client[1].PAR;
-        var line_id = "client_" + id + "_" + name;
-        var row = new row_t(line_id, this);
-        if (line.length == 0) {
-            line = $("<tr></tr>");
-            line.attr("id", line_id);
-            line.click(function () {
-                $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
-                var cell;
-                cell = $(this).find('td:last');
-                var value = cell.text();
-                Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
-            });
-            this.table.append(line);
-            this.rows_count++;
-        }
-        var cell_id = "name_" + line_id;
-        var cell = $("#" + cell_id);
-        if (cell.length == 0) {
-            cell = $("<td style='height:8px'></td>");
-            cell.attr("id", cell_id);
-            line.append(cell);
-        }
-        cell.text(name);
-        var cell_id = "id_" + line_id;
-        var cell = $("#" + cell_id);
-        if (cell.length == 0) {
-            cell = $("<td style='height:8px'></td>");
-            cell.attr("id", cell_id);
-            line.append(cell);
-        }
-        cell.text(id);
+        var row_id = "client_" + id + "_" + name;
+        var row = new row_t(row_id, this.table);
+        if (row.new_row)
+            this.rows.push(row);
+        var cell_id = "name_" + row_id;
+        row.add_cell(cell_id, name);
+        cell_id = "id_" + row_id;
+        row.add_cell(cell_id, id);
     };
     return clients_table_t;
 })(table_t);
@@ -192,6 +193,14 @@ var data_table_t = (function (_super) {
     };
     return data_table_t;
 })(table_t);
+var state_t;
+(function (state_t) {
+})(state_t || (state_t = {}));
+var client_t = (function () {
+    function client_t() {
+    }
+    return client_t;
+})();
 var exec_t = (function () {
     function exec_t() {
         this.static_filter = [

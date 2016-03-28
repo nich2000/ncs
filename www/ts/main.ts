@@ -8,8 +8,7 @@ var clientsTable: clients_table_t;
 var map: map_t;
 var exec: exec_t;
 //=============================================================================
-function init() 
-{
+function init() {
   console.log("init");
 
   exec = new exec_t();
@@ -26,15 +25,13 @@ function init()
   map.test_draw();
 }
 //=============================================================================
-$(window).load(function()
-{
+$(window).load(function() {
   // console.log("load");
   $('body').height($(window).height());
   init();
 });
 //=============================================================================
-$(window).resize(function()
-{
+$(window).resize(function() {
   // console.log("resize");
   $('body').height($(window).height());
 });
