@@ -8,6 +8,19 @@
 #define TRUE 1
 #endif
 //==============================================================================
+enum state_t
+{
+  state_none,
+  state_start,
+  state_starting,
+  state_stop,
+  state_stopping,
+  state_pause,
+  state_pausing,
+  state_resume,
+  state_resuming
+};
+//==============================================================================
 #define STATE_NONE          0
 #define STATE_START         1
 #define STATE_STARTING      2
