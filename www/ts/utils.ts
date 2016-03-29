@@ -1,3 +1,4 @@
+//==============================================================================
 function asInt(value: any) {
     var result = [
         (value & 0x000000ff),
@@ -8,7 +9,7 @@ function asInt(value: any) {
 
     return result;
 }
-
+//==============================================================================
 function toInt(value: any) {
     var result = 0;
 
@@ -19,7 +20,7 @@ function toInt(value: any) {
 
     return result;
 }
-
+//==============================================================================
 function asDouble(value: any) {
   var result: any[];
   var binary = new Float64Array([value]);
@@ -31,12 +32,12 @@ function asDouble(value: any) {
 
   return result;
 }
-
+//==============================================================================
 function toDouble(value: any) {
   var array = new Uint8Array(value);
   return new Float64Array(array.buffer)[0];
 }
-
+//==============================================================================
 function toNumbersArray(value: any) {
   var buffer: any[];
 
@@ -46,8 +47,9 @@ function toNumbersArray(value: any) {
 
   return buffer;
 }
-
+//==============================================================================
 function toNumberToByte(value: any) {
   var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
   return arr[value >> 4] + '' + arr[value & 0xF];
 }
+//==============================================================================

@@ -12,7 +12,7 @@ class OtherClass
   {
     Signal.bind('onmessage', proceedData);
   }
-  public proceedData(data: any) 
+  public proceedData(data: any)
   {
     console.log(data);
   }

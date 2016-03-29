@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 var exec_t = (function () {
     function exec_t() {
         this.static_filter = [
@@ -31,7 +36,7 @@ var exec_t = (function () {
         }
     };
     return exec_t;
-})();
+}());
 var state_t;
 (function (state_t) {
     state_t[state_t["state_none"] = 0] = "state_none";
@@ -77,13 +82,12 @@ var client_t = (function () {
         configurable: true
     });
     return client_t;
-})();
+}());
 var clients_t = (function () {
     function clients_t() {
     }
     return clients_t;
-})();
-/// <reference path="./jquery.d.ts"/>
+}());
 var ws;
 var data_table_first;
 var data_table_second;
@@ -107,7 +111,6 @@ $(window).load(function () {
 $(window).resize(function () {
     $('body').height($(window).height());
 });
-/// <reference path="./jquery.d.ts"/>
 var map_t = (function () {
     function map_t(id) {
         this._is_init = false;
@@ -173,27 +176,7 @@ var map_t = (function () {
         this._ctx.stroke();
     };
     return map_t;
-})();
-/*
-class Socket
-{
-  public onmessage(data: any): void
-  {
-    Signal.emit('onmessage', data);
-  }
-}
-class OtherClass
-{
-  public constructor()
-  {
-    Signal.bind('onmessage', proceedData);
-  }
-  public proceedData(data: any)
-  {
-    console.log(data);
-  }
-}
-*/
+}());
 var Signal = (function () {
     function Signal() {
     }
@@ -220,8 +203,7 @@ var Signal = (function () {
     };
     Signal.signals = [];
     return Signal;
-})();
-/// <reference path="./jquery.d.ts"/>
+}());
 var web_socket_t = (function () {
     function web_socket_t(host) {
         var _this = this;
@@ -277,7 +259,7 @@ var web_socket_t = (function () {
         Signal.emit('onMessage', evt.data);
     };
     return web_socket_t;
-})();
+}());
 function asInt(value) {
     var result = [
         (value & 0x000000ff),
@@ -318,13 +300,20 @@ function toNumberToByte(value) {
     var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
     return arr[value >> 4] + '' + arr[value & 0xF];
 }
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
-/// <reference path="./jquery.d.ts"/>
+var element = (function () {
+    function element() {
+    }
+    element.add_element = function () {
+    };
+    element.del_element = function () {
+    };
+    element.find_by_id = function () {
+    };
+    element.exists_by_id = function (id) {
+        return $("#" + id).length > 0;
+    };
+    return element;
+}());
 var custom_t = (function () {
     function custom_t(id, owner) {
         this._id = id;
@@ -338,12 +327,12 @@ var custom_t = (function () {
         configurable: true
     });
     return custom_t;
-})();
+}());
 var cell_t = (function (_super) {
     __extends(cell_t, _super);
     function cell_t(id, owner) {
         _super.call(this, id, owner);
-        this._cell = $("<tr></tr>");
+        this._cell = $("<td></td>");
         this._cell.attr("id", this.id);
     }
     Object.defineProperty(cell_t.prototype, "text", {
@@ -357,7 +346,7 @@ var cell_t = (function (_super) {
         configurable: true
     });
     return cell_t;
-})(custom_t);
+}(custom_t));
 var row_t = (function (_super) {
     __extends(row_t, _super);
     function row_t(id, owner) {
@@ -380,11 +369,8 @@ var row_t = (function (_super) {
     });
     row_t.prototype.add_cell = function (id, text) {
     };
-    row_t.prototype.exists_cell = function (id) {
-        return $("#" + id).length > 0;
-    };
     return row_t;
-})(custom_t);
+}(custom_t));
 var table_t = (function (_super) {
     __extends(table_t, _super);
     function table_t(id, owner, cols_count) {
@@ -402,11 +388,8 @@ var table_t = (function (_super) {
     });
     table_t.prototype.add_row = function (data) {
     };
-    table_t.prototype.exists_row = function (id) {
-        return $("#" + this.id).length > 0;
-    };
     return table_t;
-})(custom_t);
+}(custom_t));
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
     function clients_table_t(id, owner, cols_count) {
@@ -414,18 +397,11 @@ var clients_table_t = (function (_super) {
         Signal.bind("add_client", this.add_client, this);
     }
     clients_table_t.prototype.add_client = function (data) {
-        if (data.PAR == undefined)
-            return;
-        this.add_row(data.PAR);
     };
     clients_table_t.prototype.add_row = function (data) {
-        var client = new client_t(data[0].PAR, data[1].PAR);
-        var row_id = "client_" + client.id + "_" + client.name;
-        if (!this.exists_row(row_id)) {
-        }
     };
     return clients_table_t;
-})(table_t);
+}(table_t));
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
     function data_table_t(id, owner, cols_count) {
@@ -433,14 +409,7 @@ var data_table_t = (function (_super) {
         Signal.bind("add_data", this.add_row, this);
     }
     data_table_t.prototype.add_row = function (data) {
-        // var line_id = data[0];
-        // var line = $("#" + line_id);
-        // if (line.length == 0) {
-        //   line = $("<tr></tr>");
-        //   line.attr("id", line_id);
-        //   this.table.append(line);
-        // }
     };
     return data_table_t;
-})(table_t);
+}(table_t));
 //# sourceMappingURL=script.js.map

@@ -1,9 +1,29 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
+class element {
+  public static add_element(){
+    this._cell = $("<td></td>");
+    this._cell.attr("id", this.id);
+    this.table.append(line);
+  }
+
+  public static del_element(){
+
+  }
+
+  public static find_by_id(){
+
+  }
+
+  public static exists_by_id(id: string): boolean {
+    return $("#" + id).length > 0;
+  }
+}
+//==============================================================================
 class custom_t {
-  private _id: string;
-  private _owner: any;
+  protected _id: string;
+  protected _owner: any;
 
   constructor(id: string, owner: any) {
     this._id = id;
@@ -21,7 +41,7 @@ class cell_t extends custom_t {
   constructor(id: string, owner: any) {
     super(id, owner);
 
-    this._cell = $("<tr></tr>");
+    this._cell = $("<td></td>");
     this._cell.attr("id", this.id);
   }
 
@@ -47,7 +67,7 @@ class row_t extends custom_t {
     this._row.click(function() {
       $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
       let cell: any = $(this).find('td:last');
-      let value = cell.text();
+      let value: string = cell.text();
       Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
     });
   }
@@ -57,23 +77,13 @@ class row_t extends custom_t {
   }
 
   public add_cell(id: string, text: string) {
-  //   if (!this.exists_cell(id)) {
-  //     cell = $("<td style='height:8px'></td>");
-  //     cell.attr("id", cell_id);
-  //     line.append(cell);
-  //   }
-  //   cell.text();
-  }
-
-  public exists_cell(id: string): boolean {
-    return $("#" + id).length > 0;
   }
 }
 //==============================================================================
 class table_t extends custom_t {
-  private _table: any;
-  private _cols_count: number;
-  private _rows: row_t[];
+  protected _table: any;
+  protected _cols_count: number;
+  protected _rows: row_t[];
 
   constructor(id: string, owner: any, cols_count: number) {
     console.log("constructor: table_t, id: " + id);
@@ -90,11 +100,6 @@ class table_t extends custom_t {
   }
 
   public add_row(data: any) {
-
-  }
-
-  public exists_row(id: string): boolean {
-    return $("#" + this.id).length > 0;
   }
 }
 //==============================================================================
@@ -106,29 +111,18 @@ class clients_table_t extends table_t {
   }
 
   add_client(data: any) {
-    if (data.PAR == undefined)
-      return;
+    // if (data.PAR == undefined)
+    //   return;
 
-    this.add_row(data.PAR);
+    // let client: client_t = new client_t(data[0].PAR, data[1].PAR);
+    // let row_id: string = "client_" + client.id + "_" + client.name;
+
+    // if (!this.exists_row(row_id)) {
+    //   this.add_row(data.PAR);
+    // }
   }
 
   add_row(data: any) {
-    let client: client_t = new client_t(data[0].PAR, data[1].PAR);
-
-    let row_id: string = "client_" + client.id + "_" + client.name;
-
-    if(!this.exists_row(row_id)) {
-      // let row: row_t = new row_t(row_id, this.table);
-      // this.rows.push(row);
-
-      // this.table.append(row.row);
-
-      // let cell_id: string = "name_" + row_id;
-      // row.add_cell(cell_id, name);
-
-      // cell_id = "id_" + row_id;
-      // row.add_cell(cell_id, id);
-    }
   }
 }
 //==============================================================================

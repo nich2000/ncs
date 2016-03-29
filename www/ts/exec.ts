@@ -48,7 +48,7 @@ class exec_t {
       }
     }
     else {
-      // for (var i = 0; i < data.length; i++) 
+      // for (var i = 0; i < data.length; i++)
       // {
       // if(this.static_filter.indexOf(data[i][0]) != -1)
       // Signal.emit("add_data", data[i]);

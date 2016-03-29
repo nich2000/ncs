@@ -11,9 +11,9 @@ enum state_t {
 }
 
 class client_t {
-	private _id: string;
-	private _name: string;
-	private _state: state_t;
+  private _id: string;
+  private _name: string;
+  private _state: state_t;
 
   public constructor(id: string, name: string) {
     this._id = id;
@@ -42,5 +42,4 @@ class client_t {
 }
 
 class clients_t {
-
 }
