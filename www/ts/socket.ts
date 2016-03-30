@@ -2,15 +2,15 @@
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
 class web_socket_t {
-  socket: WebSocket;
-  host: string;
-  is_connected: boolean;
+  private _socket: WebSocket;
+  private _host: string;
+  private _is_connected: boolean;
 
   constructor(host: string) {
     console.log("constructor: web_socket_t");
 
-    this.host = host;
-    this.is_connected = false;
+    this._host = host;
+    this._is_connected = false;
 
     Signal.bind("doSend", this.doSend, this);
 
@@ -20,29 +20,29 @@ class web_socket_t {
       3000);
   }
 
-  public createWebSocket() {
-    if ((this.socket) && (this.is_connected))
+  private createWebSocket() {
+    if ((this._socket) && (this._is_connected))
       return;
 
-    this.socket = new WebSocket(this.host);
-    this.socket.onopen = (evt) => { this.onOpen(evt) };
-    this.socket.onclose = (evt) => { this.onClose(evt) };
-    this.socket.onmessage = (evt) => { this.onMessage(evt) };
-    this.socket.onerror = (evt) => { this.onError(evt) };
+    this._socket = new WebSocket(this._host);
+    this._socket.onopen = (evt) => { this.onOpen(evt) };
+    this._socket.onclose = (evt) => { this.onClose(evt) };
+    this._socket.onmessage = (evt) => { this.onMessage(evt) };
+    this._socket.onerror = (evt) => { this.onError(evt) };
   }
 
-  doSend(message: any) {
+  private doSend(message: any) {
     console.log("doSend: " + message);
 
     message = JSON.stringify(message);
 
-    this.socket.send(message);
+    this._socket.send(message);
   }
 
-  onOpen(evt: any) {
+  private onOpen(evt: any) {
     console.log("onOpen");
 
-    this.is_connected = true;
+    this._is_connected = true;
 
     $('#connection_status').removeClass('label-danger');
     $('#connection_status').removeClass('label-warning');
@@ -50,10 +50,10 @@ class web_socket_t {
     $("#connection_status").text('Connection: open');
   }
 
-  onClose(evt: any) {
+  private onClose(evt: any) {
     console.log("onClose");
 
-    this.is_connected = false;
+    this._is_connected = false;
 
     $('#connection_status').removeClass('label-danger');
     $('#connection_status').removeClass('label-success');
@@ -61,10 +61,10 @@ class web_socket_t {
     $("#connection_status").text('Connection: close');
   }
 
-  onError(evt: any) {
+  private onError(evt: any) {
     console.log(evt.data);
 
-    this.is_connected = false;
+    this._is_connected = false;
 
     $('#connection_status').removeClass('label-success');
     $('#connection_status').removeClass('label-warning');
@@ -72,7 +72,7 @@ class web_socket_t {
     $("#connection_status").text('Connection: error');
   }
 
-  onMessage(evt: any) {
+  private onMessage(evt: any) {
     console.log("onMessage: " + evt.data);
 
     Signal.emit('onMessage', evt.data);

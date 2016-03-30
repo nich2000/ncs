@@ -1,33 +1,16 @@
 //==============================================================================
-/// <reference path="./jquery.d.ts"/>
-//==============================================================================
-class element {
-  public static add_element(){
-    this._cell = $("<td></td>");
-    this._cell.attr("id", this.id);
-    this.table.append(line);
-  }
-
-  public static del_element(){
-
-  }
-
-  public static find_by_id(){
-
-  }
-
-  public static exists_by_id(id: string): boolean {
-    return $("#" + id).length > 0;
-  }
-}
-//==============================================================================
 class custom_t {
   protected _id: string;
   protected _owner: any;
+  protected _self: any;
 
-  constructor(id: string, owner: any) {
+  constructor(id: string, tag: string, owner: any) {
     this._id = id;
     this._owner = owner;
+
+    this._self = element.find_by_id(id);
+    if(this._self == undefined)
+      this._self = element.add(id, tag, owner);
   }
 
   public get id() : string {
@@ -36,35 +19,29 @@ class custom_t {
 }
 //==============================================================================
 class cell_t extends custom_t {
-  private _cell: any;
 
-  constructor(id: string, owner: any) {
-    super(id, owner);
+  constructor(id: string, owner: row_t) {
+    super(id, "<td/>", owner);
 
-    this._cell = $("<td></td>");
-    this._cell.attr("id", this.id);
+    // this._self = element.add(this.id, "<td/>", owner._self);
   }
 
-  public get text() : string {
-    return this._cell.text();
-  }
+  // public get text() : string {
+    // return this._cell.text();
+  // }
 
-  public set text(v : string) {
-    this._cell.text(v);
-  }
+  // public set text(v : string) {
+    // this._cell.text(v);
+  // }
 }
 //==============================================================================
 class row_t extends custom_t {
-  private _row: any;
   private _cells: cell_t[];
 
   constructor(id: string, owner: any) {
-    super(id, owner);
+    super(id, "<tr/>", owner);
 
-    this._row = $("<tr></tr>");
-    this._row.attr("id", this.id);
-
-    this._row.click(function() {
+    this._self.click(function() {
       $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
       let cell: any = $(this).find('td:last');
       let value: string = cell.text();
@@ -81,16 +58,13 @@ class row_t extends custom_t {
 }
 //==============================================================================
 class table_t extends custom_t {
-  protected _table: any;
   protected _cols_count: number;
   protected _rows: row_t[];
 
   constructor(id: string, owner: any, cols_count: number) {
     console.log("constructor: table_t, id: " + id);
 
-    super(id, owner);
-
-    this._table = $("#" + this.id);
+    super(id, "<table/>", owner);
 
     this._cols_count = cols_count;
   }
@@ -98,39 +72,24 @@ class table_t extends custom_t {
   public get rows() : row_t[] {
     return this._rows;
   }
-
-  public add_row(data: any) {
-  }
 }
 //==============================================================================
 class clients_table_t extends table_t {
-  constructor(id: string, owner: any, cols_count: number) {
-    super(id, owner, cols_count);
 
-    Signal.bind("add_client", this.add_client, this);
+  constructor(id: string, cols_count: number) {
+    super(id, $(window), cols_count);
   }
 
-  add_client(data: any) {
-    // if (data.PAR == undefined)
-    //   return;
+  add_row(id: number, name: string) {
 
-    // let client: client_t = new client_t(data[0].PAR, data[1].PAR);
-    // let row_id: string = "client_" + client.id + "_" + client.name;
-
-    // if (!this.exists_row(row_id)) {
-    //   this.add_row(data.PAR);
-    // }
-  }
-
-  add_row(data: any) {
   }
 }
 //==============================================================================
 class data_table_t extends table_t {
-  constructor(id: string, owner: any, cols_count: number) {
-    super(id, owner, cols_count);
 
-    Signal.bind("add_data", this.add_row, this);
+  constructor(id: string, cols_count: number) {
+    super(id, $(window), cols_count);
+    // Signal.bind("add_data", this.add_row, this);
   }
 
   add_row(data: any) {

@@ -12,6 +12,7 @@
   [
     "exec.ts",
     "func.ts",
+    "jquery.wrapper.ts",
     "main.ts",
     "map.ts",
     "signal.ts",

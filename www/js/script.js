@@ -1,8 +1,3 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 var exec_t = (function () {
     function exec_t() {
         this.static_filter = [
@@ -36,7 +31,7 @@ var exec_t = (function () {
         }
     };
     return exec_t;
-}());
+})();
 var state_t;
 (function (state_t) {
     state_t[state_t["state_none"] = 0] = "state_none";
@@ -82,27 +77,63 @@ var client_t = (function () {
         configurable: true
     });
     return client_t;
-}());
+})();
 var clients_t = (function () {
     function clients_t() {
+        this._table = new clients_table_t("remote_clients", 2);
+        Signal.bind("add_client", this.add_client, this);
     }
+    Object.defineProperty(clients_t.prototype, "items", {
+        get: function () {
+            return this._clients;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    clients_t.prototype.add_client = function (data) {
+        var id = data[0].PAR;
+        var name = data[1].PAR;
+        if (!this.exists_by_id(id)) {
+            var client = new client_t(id, name);
+            this._clients.push(client);
+            this._table.add_row(id, name);
+        }
+    };
+    clients_t.prototype.get_by_id = function (id) {
+    };
+    clients_t.prototype.exists_by_id = function (id) {
+    };
     return clients_t;
-}());
+})();
+/// <reference path="./jquery.d.ts"/>
+var element = (function () {
+    function element() {
+    }
+    element.add = function (id, tag, owner) {
+        var tmp = $(tag);
+        tmp.attr("id", id);
+        owner.append(tmp);
+        return tmp;
+    };
+    element.delete = function () {
+    };
+    element.find_by_id = function (id) {
+        return $("#" + id)[0];
+    };
+    element.exists_by_id = function (id) {
+        return $("#" + id).length > 0;
+    };
+    return element;
+})();
+/// <reference path="./jquery.d.ts"/>
 var ws;
-var data_table_first;
-var data_table_second;
-var clientsTable;
-var map;
+var clients;
 var exec;
 function init() {
     console.log("init");
     exec = new exec_t();
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
-    clientsTable = new clients_table_t("remote_clients", $(window), 2);
-    data_table_first = new data_table_t("remote_data_first", $(window), 2);
-    data_table_second = new data_table_t("remote_data_second", $(window), 2);
-    map = new map_t('canvas');
-    map.test_draw();
+    clients = new clients_t();
 }
 $(window).load(function () {
     $('body').height($(window).height());
@@ -111,6 +142,7 @@ $(window).load(function () {
 $(window).resize(function () {
     $('body').height($(window).height());
 });
+/// <reference path="./jquery.d.ts"/>
 var map_t = (function () {
     function map_t(id) {
         this._is_init = false;
@@ -176,7 +208,7 @@ var map_t = (function () {
         this._ctx.stroke();
     };
     return map_t;
-}());
+})();
 var Signal = (function () {
     function Signal() {
     }
@@ -203,13 +235,14 @@ var Signal = (function () {
     };
     Signal.signals = [];
     return Signal;
-}());
+})();
+/// <reference path="./jquery.d.ts"/>
 var web_socket_t = (function () {
     function web_socket_t(host) {
         var _this = this;
         console.log("constructor: web_socket_t");
-        this.host = host;
-        this.is_connected = false;
+        this._host = host;
+        this._is_connected = false;
         Signal.bind("doSend", this.doSend, this);
         var timerConnect = setInterval(function () {
             _this.createWebSocket();
@@ -217,22 +250,22 @@ var web_socket_t = (function () {
     }
     web_socket_t.prototype.createWebSocket = function () {
         var _this = this;
-        if ((this.socket) && (this.is_connected))
+        if ((this._socket) && (this._is_connected))
             return;
-        this.socket = new WebSocket(this.host);
-        this.socket.onopen = function (evt) { _this.onOpen(evt); };
-        this.socket.onclose = function (evt) { _this.onClose(evt); };
-        this.socket.onmessage = function (evt) { _this.onMessage(evt); };
-        this.socket.onerror = function (evt) { _this.onError(evt); };
+        this._socket = new WebSocket(this._host);
+        this._socket.onopen = function (evt) { _this.onOpen(evt); };
+        this._socket.onclose = function (evt) { _this.onClose(evt); };
+        this._socket.onmessage = function (evt) { _this.onMessage(evt); };
+        this._socket.onerror = function (evt) { _this.onError(evt); };
     };
     web_socket_t.prototype.doSend = function (message) {
         console.log("doSend: " + message);
         message = JSON.stringify(message);
-        this.socket.send(message);
+        this._socket.send(message);
     };
     web_socket_t.prototype.onOpen = function (evt) {
         console.log("onOpen");
-        this.is_connected = true;
+        this._is_connected = true;
         $('#connection_status').removeClass('label-danger');
         $('#connection_status').removeClass('label-warning');
         $('#connection_status').addClass('label-success');
@@ -240,7 +273,7 @@ var web_socket_t = (function () {
     };
     web_socket_t.prototype.onClose = function (evt) {
         console.log("onClose");
-        this.is_connected = false;
+        this._is_connected = false;
         $('#connection_status').removeClass('label-danger');
         $('#connection_status').removeClass('label-success');
         $('#connection_status').addClass('label-warning');
@@ -248,7 +281,7 @@ var web_socket_t = (function () {
     };
     web_socket_t.prototype.onError = function (evt) {
         console.log(evt.data);
-        this.is_connected = false;
+        this._is_connected = false;
         $('#connection_status').removeClass('label-success');
         $('#connection_status').removeClass('label-warning');
         $('#connection_status').addClass('label-danger');
@@ -259,7 +292,7 @@ var web_socket_t = (function () {
         Signal.emit('onMessage', evt.data);
     };
     return web_socket_t;
-}());
+})();
 function asInt(value) {
     var result = [
         (value & 0x000000ff),
@@ -300,24 +333,19 @@ function toNumberToByte(value) {
     var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
     return arr[value >> 4] + '' + arr[value & 0xF];
 }
-var element = (function () {
-    function element() {
-    }
-    element.add_element = function () {
-    };
-    element.del_element = function () {
-    };
-    element.find_by_id = function () {
-    };
-    element.exists_by_id = function (id) {
-        return $("#" + id).length > 0;
-    };
-    return element;
-}());
+var __extends = this.__extends || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    __.prototype = b.prototype;
+    d.prototype = new __();
+};
 var custom_t = (function () {
-    function custom_t(id, owner) {
+    function custom_t(id, tag, owner) {
         this._id = id;
         this._owner = owner;
+        this._self = element.find_by_id(id);
+        if (this._self == undefined)
+            this._self = element.add(id, tag, owner);
     }
     Object.defineProperty(custom_t.prototype, "id", {
         get: function () {
@@ -327,33 +355,19 @@ var custom_t = (function () {
         configurable: true
     });
     return custom_t;
-}());
+})();
 var cell_t = (function (_super) {
     __extends(cell_t, _super);
     function cell_t(id, owner) {
-        _super.call(this, id, owner);
-        this._cell = $("<td></td>");
-        this._cell.attr("id", this.id);
+        _super.call(this, id, "<td/>", owner);
     }
-    Object.defineProperty(cell_t.prototype, "text", {
-        get: function () {
-            return this._cell.text();
-        },
-        set: function (v) {
-            this._cell.text(v);
-        },
-        enumerable: true,
-        configurable: true
-    });
     return cell_t;
-}(custom_t));
+})(custom_t);
 var row_t = (function (_super) {
     __extends(row_t, _super);
     function row_t(id, owner) {
-        _super.call(this, id, owner);
-        this._row = $("<tr></tr>");
-        this._row.attr("id", this.id);
-        this._row.click(function () {
+        _super.call(this, id, "<tr/>", owner);
+        this._self.click(function () {
             $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
             var cell = $(this).find('td:last');
             var value = cell.text();
@@ -370,13 +384,12 @@ var row_t = (function (_super) {
     row_t.prototype.add_cell = function (id, text) {
     };
     return row_t;
-}(custom_t));
+})(custom_t);
 var table_t = (function (_super) {
     __extends(table_t, _super);
     function table_t(id, owner, cols_count) {
         console.log("constructor: table_t, id: " + id);
-        _super.call(this, id, owner);
-        this._table = $("#" + this.id);
+        _super.call(this, id, "<table/>", owner);
         this._cols_count = cols_count;
     }
     Object.defineProperty(table_t.prototype, "rows", {
@@ -386,30 +399,31 @@ var table_t = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    table_t.prototype.add_row = function (data) {
-    };
     return table_t;
-}(custom_t));
+})(custom_t);
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
-    function clients_table_t(id, owner, cols_count) {
-        _super.call(this, id, owner, cols_count);
-        Signal.bind("add_client", this.add_client, this);
+    function clients_table_t(id, cols_count) {
+        _super.call(this, id, $(window), cols_count);
     }
-    clients_table_t.prototype.add_client = function (data) {
-    };
-    clients_table_t.prototype.add_row = function (data) {
+    clients_table_t.prototype.add_row = function (id, name) {
     };
     return clients_table_t;
-}(table_t));
+})(table_t);
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
-    function data_table_t(id, owner, cols_count) {
-        _super.call(this, id, owner, cols_count);
-        Signal.bind("add_data", this.add_row, this);
+    function data_table_t(id, cols_count) {
+        _super.call(this, id, $(window), cols_count);
     }
     data_table_t.prototype.add_row = function (data) {
+        // var line_id = data[0];
+        // var line = $("#" + line_id);
+        // if (line.length == 0) {
+        //   line = $("<tr></tr>");
+        //   line.attr("id", line_id);
+        //   this.table.append(line);
+        // }
     };
     return data_table_t;
-}(table_t));
+})(table_t);
 //# sourceMappingURL=script.js.map

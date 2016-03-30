@@ -2,10 +2,11 @@
 /// <reference path="./jquery.d.ts"/>
 //=============================================================================
 var ws: web_socket_t;
-var data_table_first: data_table_t;
-var data_table_second: data_table_t;
-var clientsTable: clients_table_t;
-var map: map_t;
+// var data_table_first: data_table_t;
+// var data_table_second: data_table_t;
+// var clientsTable: clients_table_t;
+// var map: map_t;
+var clients: clients_t;
 var exec: exec_t;
 //=============================================================================
 function init() {
@@ -15,14 +16,15 @@ function init() {
 
   ws = new web_socket_t("ws://" + location.hostname + ":5800");
 
-  clientsTable = new clients_table_t("remote_clients", $(window), 2);
+  clients = new clients_t();
 
-  data_table_first = new data_table_t("remote_data_first", $(window), 2);
+  // clientsTable = new clients_table_t("remote_clients", $(window), 2);
 
-  data_table_second = new data_table_t("remote_data_second", $(window), 2);
+  // data_table_first = new data_table_t("remote_data_first", $(window), 2);
+  // data_table_second = new data_table_t("remote_data_second", $(window), 2);
 
-  map = new map_t('canvas');
-  map.test_draw();
+  // map = new map_t('canvas');
+  // map.test_draw();
 }
 //=============================================================================
 $(window).load(function() {
