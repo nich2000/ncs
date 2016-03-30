@@ -44,7 +44,7 @@ class exec_t {
         case "clients":
           {
             for (var i = 1; i < data.length; i++)
-              Signal.emit("add_client", data[i]);
+              Signal.emit("add_client", data[i].PAR);
             break;
           }
       }

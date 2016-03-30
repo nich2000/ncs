@@ -16,7 +16,7 @@ class client_t {
   private _name: string;
   private _state: state_t;
 
-  public constructor(id: number, name: string) {
+  constructor(id: number, name: string) {
     this._id = id;
     this._name = name;
   }
@@ -43,35 +43,43 @@ class client_t {
 }
 //==============================================================================
 class clients_t {
-  private _clients: client_t[];
+  private _clients: Array<client_t> = [];
   private _table: clients_table_t;
 
   constructor() {
     this._table = new clients_table_t("remote_clients", 2);
 
-    Signal.bind("add_client", this.add_client, this);
+    Signal.bind("add_client", this.add, this);
   }
 
-  public get items() : client_t[] {
+  public get items(): client_t[] {
     return this._clients;
   }
 
-  public add_client(data: any) {
-    let id = data[0].PAR;
-    let name = data[1].PAR;
+  public add(data: any): void {
+    let id: number = data[0].PAR;
+    let name: string = data[1].PAR;
 
     if(!this.exists_by_id(id)){
       let client = new client_t(id, name);
       this._clients.push(client);
 
-      this._table.add_row(id, name);
+      this._table.add_row(client.id, client.name);
     }
   }
 
-  public get_by_id(id: number) {
+  public get_by_id(id: number): client_t {
+    for (let i = 0; i < this._clients.length; i++)
+      if (this._clients[i].id == id)
+        return this._clients[i];
+    return undefined;
   }
 
-  public exists_by_id(id: number) {
+  public exists_by_id(id: number): boolean {
+    for (let i = 0; i < this._clients.length; i++)
+      if (this._clients[i].id == id)
+        return true;
+    return false;
   }
 }
 //==============================================================================

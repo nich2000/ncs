@@ -13,11 +13,26 @@ class element {
   }
 
   public static find_by_id(id: string): any{
-    return $("#" + id)[0];
+    let res: any = $("#" + id);
+    if(res.length > 0)
+      return res;
+    else
+      return undefined;
   }
 
   public static exists_by_id(id: string): boolean {
-    return $("#" + id).length > 0;
+    let res: any = $("#" + id);
+    return res.length > 0;
+  }
+
+  public static get_text(id: string): string {
+    let res: any = $("#" + id);
+    return res.text();
+  }
+
+  public static set_text(id: string, text: string): void {
+    let res: any = $("#" + id);
+    res.text(text);
   }
 }
 //==============================================================================

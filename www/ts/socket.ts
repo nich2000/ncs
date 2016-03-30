@@ -47,7 +47,7 @@ class web_socket_t {
     $('#connection_status').removeClass('label-danger');
     $('#connection_status').removeClass('label-warning');
     $('#connection_status').addClass('label-success');
-    $("#connection_status").text('Connection: open');
+    element.set_text("connection_status", 'Connection: open');
   }
 
   private onClose(evt: any) {
@@ -58,7 +58,7 @@ class web_socket_t {
     $('#connection_status').removeClass('label-danger');
     $('#connection_status').removeClass('label-success');
     $('#connection_status').addClass('label-warning');
-    $("#connection_status").text('Connection: close');
+    element.set_text("connection_status", 'Connection: close');
   }
 
   private onError(evt: any) {
@@ -69,7 +69,7 @@ class web_socket_t {
     $('#connection_status').removeClass('label-success');
     $('#connection_status').removeClass('label-warning');
     $('#connection_status').addClass('label-danger');
-    $("#connection_status").text('Connection: error');
+    element.set_text("connection_status", 'Connection: error');
   }
 
   private onMessage(evt: any) {
