@@ -18,7 +18,8 @@ enum state_t
   state_pause,
   state_pausing,
   state_resume,
-  state_resuming
+  state_resuming,
+  state_step
 };
 //==============================================================================
 #define STATE_NONE          0
@@ -30,6 +31,7 @@ enum state_t
 #define STATE_PAUSING       6
 #define STATE_RESUME        7
 #define STATE_RESUMING      8
+#define STATE_STEP          9
 //==============================================================================
 typedef int BOOL;
 //==============================================================================

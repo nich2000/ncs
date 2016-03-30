@@ -19,11 +19,6 @@ function init() {
 
   ws = new web_socket_t("ws://" + location.hostname + ":5800");
 
-// clientsTable = new clients_table_t("remote_clients", $(window), 2);
-
-// data_table_first = new data_table_t("remote_data_first", $(window), 2);
-// data_table_second = new data_table_t("remote_data_second", $(window), 2);
-
 // map = new map_t('canvas');
 // map.test_draw();
 }

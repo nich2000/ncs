@@ -40,12 +40,12 @@ class row_t extends custom_t {
   constructor(id: string, owner: any) {
     super(id, "<tr/>", owner);
 
-    // this._self.click(function() {
-    //   $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
-    //   let cell: any = $(this).find('td:last');
-    //   let value: string = cell.text();
-    //   Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
-    // });
+    this._self.click(function() {
+      $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
+      let cell: any = $(this).find('td:last');
+      let value: string = cell.text();
+      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
+    });
   }
 
   public get cells(): cell_t[] {
@@ -109,35 +109,18 @@ class clients_table_t extends table_t {
 class data_table_t extends table_t {
   constructor(id: string, cols_count: number) {
     super(id, $(window), cols_count);
-    // Signal.bind("add_data", this.add_row, this);
   }
 
-  add_row(data: any) {
-    // var line_id = data[0];
-    // var line = $("#" + line_id);
-    // if (line.length == 0) {
-    //   line = $("<tr></tr>");
-    //   line.attr("id", line_id);
-    //   this.table.append(line);
-    // }
+  add_row(prefix: string, key: string, value: string) {
+    let row_id: string = 'data_' + prefix + '_' + key + '_' + value;
 
-    // var cell_id = "key_" + data[0];
-    // var cell = $("#" + cell_id);
-    // if (cell.length == 0) {
-    //   cell = $("<td style='height:8px'></td>");
-    //   cell.attr("id", cell_id);
-    //   line.append(cell);
-    // }
-    // cell.text(data[1]);
+    let row: row_t = super.do_add_row(row_id);
 
-    // cell_id = "value_" + data[0];
-    // cell = $("#" + cell_id);
-    // if (cell.length == 0) {
-    //   cell = $("<td style='height:8px'></td>");
-    //   cell.attr("id", cell_id);
-    //   line.append(cell);
-    // }
-    // cell.text(data[2]);
+    let cell_id: string = 'data_' + prefix + '_key_' + key;
+    row.add_cell(cell_id, key);
+
+    cell_id = 'data_' + prefix + '_value_' + key;
+    row.add_cell(cell_id, value);
   }
 }
 //==============================================================================

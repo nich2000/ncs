@@ -47,6 +47,7 @@
 #define CMD_STOP            "off"
 #define CMD_PAUSE           "pause"
 #define CMD_RESUME          "resume"
+#define CMD_STEP            "step"
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -68,6 +69,10 @@ sock_state_t cmd_state(char *cmd)
   else if(strcmp(CMD_RESUME, cmd) == 0)
   {
     return STATE_RESUME;
+  }
+  else if(strcmp(CMD_STEP, cmd) == 0)
+  {
+    return STATE_STEP;
   }
   else
     return STATE_NONE;

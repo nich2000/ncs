@@ -21,24 +21,43 @@ const char *state_to_string(sock_state_t state)
   case STATE_NONE:
     return "STATE_NONE";
     break;
+
   case STATE_START:
     return "STATE_START";
     break;
-    case STATE_STARTING:
-      return "STATE_STARTING";
-      break;
+
+  case STATE_STARTING:
+    return "STATE_STARTING";
+     break;
+
   case STATE_STOP:
     return "STATE_STOP";
     break;
-    case STATE_STOPPING:
-      return "STATE_STOPPING";
-      break;
+
+  case STATE_STOPPING:
+    return "STATE_STOPPING";
+    break;
+
   case STATE_PAUSE:
     return "STATE_PAUSE";
     break;
-    case STATE_PAUSING:
-      return "STATE_PAUSING";
-      break;
+
+  case STATE_PAUSING:
+    return "STATE_PAUSING";
+    break;
+
+  case STATE_RESUME:
+    return "STATE_RESUME";
+    break;
+
+  case STATE_RESUMING:
+    return "STATE_RESUMING";
+    break;
+
+  case STATE_STEP:
+    return "STATE_STEP";
+    break;
+
   default:
     return "STATE_UNKNOWN";
     break;
