@@ -628,7 +628,7 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
   }
 }
 //==============================================================================
-int ws_server_send_pack(int session_id, pack_packet_t *pack)
+int ws_server_send_pack(int session_id,  pack_packet_t *pack)
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
     return ERROR_NORMAL;

@@ -33,6 +33,17 @@ enum state_t
 #define STATE_RESUMING      8
 #define STATE_STEP          9
 //==============================================================================
+enum active_t
+{
+  active_none,
+  active_first,
+  active_second
+};
+//==============================================================================
+#define ACTIVE_NONE          0
+#define ACTIVE_FIRST         1
+#define ACTIVE_SECOND        2
+//==============================================================================
 typedef int BOOL;
 //==============================================================================
 #define PACK_STRUCT_VAL_COUNT   19

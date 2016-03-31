@@ -49,6 +49,9 @@
 #define CMD_RESUME          "resume"
 #define CMD_STEP            "step"
 //==============================================================================
+#define CMD_FIRST           "first"
+#define CMD_SECOND          "second"
+//==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
   if(cmd[strlen(cmd)-1] == '\n')
@@ -76,6 +79,23 @@ sock_state_t cmd_state(char *cmd)
   }
   else
     return STATE_NONE;
+}
+//==============================================================================
+sock_active_t cmd_active(char *cmd)
+{
+  if(cmd[strlen(cmd)-1] == '\n')
+    cmd[strlen(cmd)-1] = '\0';
+
+  if(strcmp(CMD_FIRST, cmd) == 0)
+  {
+    return ACTIVE_FIRST;
+  }
+  else if(strcmp(CMD_SECOND, cmd) == 0)
+  {
+    return ACTIVE_SECOND;
+  }
+  else
+    return ACTIVE_NONE;
 }
 //==============================================================================
 int handle_command_pack(pack_packet_t *packet)
@@ -390,13 +410,19 @@ int handle_command_str(char *command)
       if(id_str != NULL)
         id = atoi(id_str);
 
-      sock_state_t state = STATE_START;
-      char *state_str = strtok(NULL, " ");
-      if(state_str != NULL)
-        state = cmd_state(state_str);
+      sock_active_t active = ACTIVE_NONE;
+      char *active_str = strtok(NULL, " ");
+      if(active_str != NULL)
+        active = cmd_active(active_str);
 
-      cmd_remote_clients_activate_all(STATE_STOP);
-      cmd_remote_clients_activate(id, state);
+      if(active == ACTIVE_FIRST)
+        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_SECOND);
+      else if(active == ACTIVE_SECOND)
+        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_FIRST);
+      else
+        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NONE);
+
+      cmd_remote_clients_activate(id, active);
 
       return EXEC_DONE;
     }

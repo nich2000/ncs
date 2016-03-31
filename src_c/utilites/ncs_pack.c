@@ -265,6 +265,16 @@ int pack_add_as_pack(pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_p
   return ERROR_NONE;
 }
 //==============================================================================
+int pack_insert_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_set_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
 int pack_add_cmd(pack_packet_t *pack, const pack_string_t command)
 {
   pack_key_t tmp_key = PACK_CMD_KEY;

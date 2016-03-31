@@ -47,7 +47,7 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   custom_remote_client->send_thread      = 0;
   custom_remote_client->recv_thread      = 0;
 
-  custom_remote_client->active           = FALSE;
+  custom_remote_client->active           = ACTIVE_NONE;
 
   // TODO Временное явление 1
   protocol_init(&custom_remote_client->protocol);

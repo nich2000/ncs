@@ -88,6 +88,10 @@ int pack_add_as_string           (pack_packet_t *pack, pack_key_t key, pack_stri
 int pack_add_as_bytes            (pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size, pack_type_t type);
 int pack_add_as_pack             (pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_pack);
 //==============================================================================
+int pack_insert_as_int           (pack_packet_t *pack, pack_index_t index, pack_key_t key, int value);
+//==============================================================================
+int pack_set_as_int              (pack_packet_t *pack, pack_index_t index, pack_key_t key, int value);
+//==============================================================================
 int pack_assign_pack             (pack_packet_t *dst, pack_packet_t *src);
 //==============================================================================
 int pack_val_by_index_as_int     (pack_packet_t *pack, pack_index_t index, pack_key_t key, int           *value);

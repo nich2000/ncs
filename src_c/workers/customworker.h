@@ -49,7 +49,7 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
-  BOOL            active;
+  sock_active_t   active;
 
   // TODO Временное явление 1
   pack_protocol_t protocol;

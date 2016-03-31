@@ -639,9 +639,13 @@ int on_cmd_new_data(void *sender, void *data)
       }
     }
 
-    // TODO first-second
+    // ACTIVE_FIRST or ACTIVE_SECOND
     if(tmp_client->active)
+    {
+      pack_insert_as_int(tmp_packet, 0, "ACT", tmp_client->active);
+
       ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
+    }
   }
 
   return ERROR_NONE;
@@ -689,39 +693,43 @@ int cmd_remote_clients_list(pack_packet_t *pack)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_remote_clients_activate(sock_id_t id, sock_state_t state)
+int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
     if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
-        if(state == STATE_START)
+        switch (active)
         {
-          log_add_fmt(LOG_INFO, "acivate - %d", id);
-          _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
+          case ACTIVE_FIRST:
+            log_add_fmt(LOG_INFO, "acivate first - %d", id);
+            break;
+          case ACTIVE_SECOND:
+            log_add_fmt(LOG_INFO, "acivate second - %d", id);
+            break;
+          default:
+            log_add_fmt(LOG_INFO, "deacivate - %d", id);
+            break;
         }
-        else
-        {
-          log_add_fmt(LOG_INFO, "deacivate - %d", id);
-          _cmd_server.custom_remote_clients_list.items[i].active = FALSE;
-        }
+
+        _cmd_server.custom_remote_clients_list.items[i].active = active;
       }
   }
 
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_remote_clients_activate_all(sock_state_t state)
+int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
     if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
     {
-      if(state == STATE_START)
-        _cmd_server.custom_remote_clients_list.items[i].active = TRUE;
-      else
-        _cmd_server.custom_remote_clients_list.items[i].active = FALSE;
+      if(_cmd_server.custom_remote_clients_list.items[i].active == except)
+        continue;
+
+      _cmd_server.custom_remote_clients_list.items[i].active = active;
     }
   }
 
