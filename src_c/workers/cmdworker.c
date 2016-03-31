@@ -642,7 +642,7 @@ int on_cmd_new_data(void *sender, void *data)
     // ACTIVE_FIRST or ACTIVE_SECOND
     if(tmp_client->active)
     {
-      pack_insert_as_int(tmp_packet, 0, "ACT", tmp_client->active);
+      pack_add_as_int(tmp_packet, "ACT", tmp_client->active);
 
       ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
     }

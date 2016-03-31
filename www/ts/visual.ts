@@ -40,11 +40,12 @@ class row_t extends custom_t {
   constructor(id: string, owner: any) {
     super(id, "<tr/>", owner);
 
+    let value: string = '1234';
     this._self.click(function() {
       $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
-      let cell: any = $(this).find('td:last');
-      let value: string = cell.text();
-      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
+      // let cell: any = $(this).find('td:last');
+      // let value: string = cell.text();
+      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "first"]]);
     });
   }
 

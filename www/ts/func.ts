@@ -152,9 +152,23 @@ class clients_t {
   }
 
   private add_data(data: any): void{
-    let current: current_t = data[0][1];
+    let current: current_t = current_t.none;
+    for(let i = 0; i < data.length; i++){
+      if(data[i].ACT != undefined){
+        current = data[i].ACT;
+        break;
+      }
+    }
 
-    let client: client_t = this.get_by_id(data[1][1]);
+    let id: number = -1;
+    for(let i = 0; i < data.length; i++){
+      if(data[i]._ID != undefined){
+        id = data[i]._ID;
+        break;
+      }
+    }
+
+    let client: client_t = this.get_by_id(id);
     if(client == undefined)
       return;
     else

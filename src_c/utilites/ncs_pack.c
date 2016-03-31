@@ -133,7 +133,19 @@ int pack_add_as_int(pack_packet_t *pack, pack_key_t key, int value)
   if(pack->words_count >= PACK_WORDS_COUNT)
     return ERROR_NORMAL;
 
-  pack_word_t *tmp_word = &pack->words[pack->words_count];
+  pack_set_as_int(pack, pack->words_count, key, value);
+
+  pack->words_count++;
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_set_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
+{
+  if(index >= PACK_WORDS_COUNT)
+    return ERROR_NORMAL;
+
+  pack_word_t *tmp_word = &pack->words[index];
 
   // Key
   memcpy(tmp_word->key, key, PACK_KEY_SIZE);
@@ -151,9 +163,11 @@ int pack_add_as_int(pack_packet_t *pack, pack_key_t key, int value)
   tmp_word->value[i++] = (value >> 8 ) & 0xff;
   tmp_word->value[i++] = (value      ) & 0xff;
 
-  // Words counter
-  pack->words_count++;
-
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_insert_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
+{
   return ERROR_NONE;
 }
 //==============================================================================
@@ -262,16 +276,6 @@ int pack_add_as_pack(pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_p
 
   pack_add_as_bytes(pack, key, tmp_buffer, tmp_size, PACK_WORD_PACK);
 
-  return ERROR_NONE;
-}
-//==============================================================================
-int pack_insert_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
-{
-  return ERROR_NONE;
-}
-//==============================================================================
-int pack_set_as_int(pack_packet_t *pack, pack_index_t index, pack_key_t key, int value)
-{
   return ERROR_NONE;
 }
 //==============================================================================

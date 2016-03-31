@@ -151,8 +151,21 @@ var clients_t = (function () {
         return false;
     };
     clients_t.prototype.add_data = function (data) {
-        var current = data[0][1];
-        var client = this.get_by_id(data[1][1]);
+        var current = current_t.none;
+        for (var i_1 = 0; i_1 < data.length; i_1++) {
+            if (data[i_1].ACT != undefined) {
+                current = data[i_1].ACT;
+                break;
+            }
+        }
+        var id = -1;
+        for (var i_2 = 0; i_2 < data.length; i_2++) {
+            if (data[i_2]._ID != undefined) {
+                id = data[i_2]._ID;
+                break;
+            }
+        }
+        var client = this.get_by_id(id);
         if (client == undefined)
             return;
         else
@@ -457,11 +470,10 @@ var row_t = (function (_super) {
     function row_t(id, owner) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
+        var value = '1234';
         this._self.click(function () {
             $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
-            var cell = $(this).find('td:last');
-            var value = cell.text();
-            Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "on"]]);
+            Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "first"]]);
         });
     }
     Object.defineProperty(row_t.prototype, "cells", {

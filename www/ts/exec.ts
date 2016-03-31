@@ -8,7 +8,7 @@ class exec_t {
   }
 
   public doOnMessage(message: any) {
-    var data: any;
+    let data: any;
     data = JSON.parse(message);
 
     if (data.length == 0)
@@ -20,7 +20,7 @@ class exec_t {
       switch (data[0].CMD) {
         case "clients":
           {
-            for (var i = 1; i < data.length; i++)
+            for (let i = 1; i < data.length; i++)
               Signal.emit("add_client", data[i].PAR);
             break;
           }
