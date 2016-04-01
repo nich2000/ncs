@@ -29,7 +29,6 @@ typedef struct
 {
   sock_id_t       id;
   sock_name_t     name;
-//  sock_data_t     data;
   sock_type_t     type;
   sock_mode_t     mode;
   sock_port_t     port;
@@ -49,7 +48,8 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
-  sock_active_t   active;
+  sock_active_t   active_state;
+  sock_register_t register_state;
 
   // TODO Временное явление 1
   pack_protocol_t protocol;

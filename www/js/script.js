@@ -144,6 +144,12 @@ var clients_t = (function () {
                 return this._clients[i];
         return undefined;
     };
+    clients_t.prototype.get_by_name = function (name) {
+        for (var i = 0; i < this._clients.length; i++)
+            if (this._clients[i].name == name)
+                return this._clients[i];
+        return undefined;
+    };
     clients_t.prototype.exists_by_id = function (id) {
         for (var i = 0; i < this._clients.length; i++)
             if (this._clients[i].id == id)
@@ -158,25 +164,26 @@ var clients_t = (function () {
                 break;
             }
         }
-        var id = -1;
+        var id = '';
         for (var i_2 = 0; i_2 < data.length; i_2++) {
             if (data[i_2]._ID != undefined) {
                 id = data[i_2]._ID;
                 break;
             }
         }
-        var client = this.get_by_id(id);
+        var client = this.get_by_name(id);
         if (client == undefined)
             return;
         else
             this.switch_current(current, client);
-        if (static_filter.indexOf(data[i][0]) != -1) {
-            for (var i = 2; i < data.length; i++) {
-                client.add_data(data);
+        for (var i = 0; i < data.length; i++) {
+            if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
+                var param = Object.keys(data[i])[0];
+                var value = data[i][param];
                 if (current == current_t.first)
-                    this._data_first_table.add_row('first', data[i][0], data[i][1]);
+                    this._data_first_table.add_row('first', param, value);
                 else
-                    this._data_second_table.add_row('second', data[i][0], data[i][1]);
+                    this._data_second_table.add_row('second', param, value);
             }
         }
     };
@@ -470,9 +477,10 @@ var row_t = (function (_super) {
     function row_t(id, owner) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
-        var value = '1234';
         this._self.click(function () {
             $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
+            var cell = $(this).find('td:last');
+            var value = cell.text();
             Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "first"]]);
         });
     }

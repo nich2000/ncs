@@ -42,6 +42,7 @@
 #define CMD_WEB_SERVER_INFO "webserverinfo"  // 0
 #define CMD_WS_SERVER_INFO  "wsserverinfo"   // 0
 #define CMD_CLIENT_INFO     "clientinfo"     // 0
+#define CMD_REGISTER        "register"       // 1 remote id
 //==============================================================================
 #define CMD_START           "on"
 #define CMD_STOP            "off"
@@ -98,7 +99,7 @@ sock_active_t cmd_active(char *cmd)
     return ACTIVE_NONE;
 }
 //==============================================================================
-int handle_command_pack(pack_packet_t *packet)
+int handle_command_pack(void *sender, pack_packet_t *packet)
 {
   pack_value_t cmd;
   if(pack_command(packet, cmd) == ERROR_NONE)
@@ -115,13 +116,13 @@ int handle_command_pack(pack_packet_t *packet)
       strcat(command, tmp);
     }
 
-    return handle_command_str(command);
+    return handle_command_str(sender, command);
   };
 
   return ERROR_NORMAL;
 }
 //==============================================================================
-int handle_command_str(char *command)
+int handle_command_str(void *sender, char *command)
 {
   char *token = strtok(command, " ");
   if(token != NULL)
@@ -425,6 +426,18 @@ int handle_command_str(char *command)
       cmd_remote_clients_activate(id, active);
 
       return EXEC_DONE;
+    }
+    else if(strcmp(token, CMD_REGISTER) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_REGISTER);
+
+      char *name_str = strtok(NULL, " ");
+      if(name_str != NULL)
+      {
+        sock_id_t id = ((custom_worker_t*)sender)->id;
+
+        cmd_remote_clients_register(id, name_str);
+      }
     }
     //--------------------------------------------------------------------------
   }

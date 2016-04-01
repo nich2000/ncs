@@ -15,9 +15,9 @@ int random_range(int min, int max)
   return val;
 }
 //==============================================================================
-const char *state_to_string(sock_state_t state)
+const char *state_to_string(sock_state_t value)
 {
-  switch (state) {
+  switch (value) {
   case STATE_NONE:
     return "STATE_NONE";
     break;
@@ -60,6 +60,44 @@ const char *state_to_string(sock_state_t state)
 
   default:
     return "STATE_UNKNOWN";
+    break;
+  }
+}
+//==============================================================================
+const char *active_to_string(sock_active_t value)
+{
+  switch (value) {
+  case ACTIVE_NONE:
+    return "ACTIVE_NONE";
+    break;
+
+  case ACTIVE_FIRST:
+    return "ACTIVE_FIRST";
+    break;
+
+  case ACTIVE_SECOND:
+    return "ACTIVE_SECOND";
+     break;
+
+  default:
+    return "ACTIVE_UNKNOWN";
+    break;
+  }
+}
+//==============================================================================
+const char *register_to_string(sock_register_t value)
+{
+  switch (value) {
+  case REGISTER_NONE:
+    return "REGISTER_NONE";
+    break;
+
+  case REGISTER_OK:
+    return "REGISTER_OK";
+    break;
+
+  default:
+    return "REGISTER_UNKNOWN";
     break;
   }
 }
@@ -171,6 +209,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "%s\n"                                  \
           "addr:                            %d\n" \
           "id:                              %d\n" \
+          "name:                            %s\n" \
           "type:                            %s\n" \
           "mode:                            %s\n" \
           "port:                            %d\n" \
@@ -181,6 +220,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           prefix,
           (int)&worker,
           worker->id,
+          worker->name,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
           worker->port,
@@ -192,15 +232,37 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
   sprintf(tmp_info,
           "%s\n"                                  \
           "id:                              %d\n" \
+          "name:                            %s\n" \
           "type:                            %s\n" \
           "mode:                            %s\n" \
           "state:                           %s\n",
           prefix,
           worker->id,
+          worker->name,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
           state_to_string(worker->state));
   #endif
+
+  log_add(tmp_info, LOG_INFO);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix)
+{
+  if(remote_client == NULL)
+    return 1;
+
+  char tmp_info[1024];
+
+  sprintf(tmp_info,
+          "%s\n"                                  \
+          "active_state:                    %s\n" \
+          "register_state:                  %s\n",
+          prefix,
+          active_to_string(remote_client->active_state),
+          register_to_string(remote_client->register_state));
 
   log_add(tmp_info, LOG_INFO);
 
@@ -216,10 +278,14 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
-    custom_worker_t *tmp_worker = &clients_list->items[i].custom_worker;
+    custom_remote_client_t *tmp_remote_client = &clients_list->items[i];
+    custom_worker_t *tmp_worker = &tmp_remote_client->custom_worker;
 
     if(tmp_worker->state == STATE_START)
+    {
+      print_remote_client_info(tmp_remote_client, prefix);
       print_custom_worker_info(tmp_worker, prefix);
+    };
   }
 
   return ERROR_NONE;

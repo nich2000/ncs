@@ -347,7 +347,7 @@ void *ws_recv_worker(void *arg)
         pack_packet_t tmp_pack;
         if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
-          handle_command_pack(&tmp_pack);
+          handle_command_pack(tmp_client, &tmp_pack);
         }
         else
         {

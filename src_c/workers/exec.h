@@ -18,7 +18,7 @@
 //==============================================================================
 typedef int (*exec_func)(int, ...);
 //==============================================================================
-int handle_command_str(char *command);
-int handle_command_pack(pack_packet_t *packet);
+int handle_command_str (void *sender, char          *command);
+int handle_command_pack(void *sender, pack_packet_t *packet);
 //==============================================================================
 #endif //EXEC_H

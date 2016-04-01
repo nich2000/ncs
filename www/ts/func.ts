@@ -144,6 +144,13 @@ class clients_t {
     return undefined;
   }
 
+  public get_by_name(name: string): client_t {
+    for (let i = 0; i < this._clients.length; i++)
+      if (this._clients[i].name == name)
+        return this._clients[i];
+    return undefined;
+  }
+
   public exists_by_id(id: number): boolean {
     for (let i = 0; i < this._clients.length; i++)
       if (this._clients[i].id == id)
@@ -160,7 +167,7 @@ class clients_t {
       }
     }
 
-    let id: number = -1;
+    let id: string = '';
     for(let i = 0; i < data.length; i++){
       if(data[i]._ID != undefined){
         id = data[i]._ID;
@@ -168,20 +175,23 @@ class clients_t {
       }
     }
 
-    let client: client_t = this.get_by_id(id);
+    let client: client_t = this.get_by_name(id);
     if(client == undefined)
       return;
     else
       this.switch_current(current, client);
 
-    if(static_filter.indexOf(data[i][0]) != -1){
-      for (var i = 2; i < data.length; i++){
-        client.add_data(data);
+    for (var i = 0; i < data.length; i++){
+      if(static_filter.indexOf(Object.keys(data[i])[0]) != -1){
+        // client.add_data(data[i]);
+
+        let param = Object.keys(data[i])[0];
+        let value = data[i][param];
 
         if(current == current_t.first)
-          this._data_first_table.add_row('first', data[i][0], data[i][1]);
+          this._data_first_table.add_row('first', param, value);
         else
-          this._data_second_table.add_row('second', data[i][0], data[i][1]);
+          this._data_second_table.add_row('second', param, value);
       }
     }
   }

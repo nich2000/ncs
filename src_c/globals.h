@@ -22,16 +22,16 @@ enum state_t
   state_step
 };
 //==============================================================================
-#define STATE_NONE          0
-#define STATE_START         1
-#define STATE_STARTING      2
-#define STATE_STOP          3
-#define STATE_STOPPING      4
-#define STATE_PAUSE         5
-#define STATE_PAUSING       6
-#define STATE_RESUME        7
-#define STATE_RESUMING      8
-#define STATE_STEP          9
+#define STATE_NONE              0
+#define STATE_START             1
+#define STATE_STARTING          2
+#define STATE_STOP              3
+#define STATE_STOPPING          4
+#define STATE_PAUSE             5
+#define STATE_PAUSING           6
+#define STATE_RESUME            7
+#define STATE_RESUMING          8
+#define STATE_STEP              9
 //==============================================================================
 enum active_t
 {
@@ -40,9 +40,18 @@ enum active_t
   active_second
 };
 //==============================================================================
-#define ACTIVE_NONE          0
-#define ACTIVE_FIRST         1
-#define ACTIVE_SECOND        2
+#define ACTIVE_NONE             0
+#define ACTIVE_FIRST            1
+#define ACTIVE_SECOND           2
+//==============================================================================
+enum register_t
+{
+  register_none,
+  register_ok
+};
+//==============================================================================
+#define REGISTER_NONE           0
+#define REGISTER_OK             1
 //==============================================================================
 typedef int BOOL;
 //==============================================================================
