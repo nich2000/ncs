@@ -50,10 +50,6 @@ var register_t;
 var static_filter = [
     "_ID",
     "TIM",
-    "SPD",
-    "HEA",
-    "LAT",
-    "LON"
 ];
 var client_t = (function () {
     function client_t(id, name) {
@@ -413,8 +409,13 @@ var web_socket_t = (function () {
         element.set_text("connection_status", 'Connection: error');
     };
     web_socket_t.prototype.onMessage = function (evt) {
-        console.log("onMessage: " + evt.data);
-        Signal.emit('onMessage', evt.data);
+        // console.log("onMessage: " + evt.data);
+        try {
+            Signal.emit('onMessage', evt.data);
+        }
+        catch (e) {
+            console.log("onMessage: " + e.data);
+        }
     };
     return web_socket_t;
 })();
@@ -523,12 +524,20 @@ var row_t = (function (_super) {
         enumerable: true,
         configurable: true
     });
-    row_t.prototype.add_cell = function (id, text) {
-        if (!element.exists_by_id(id)) {
-            var cell = new cell_t(id, this._self);
-            this._cells.push(cell);
-            cell.text = text;
+    row_t.prototype.find_by_id = function (id) {
+        for (var i = 0; i < this._cells.length; i++) {
+            if (this._cells[i].id == id)
+                return this._cells[i];
         }
+        return undefined;
+    };
+    row_t.prototype.add_cell = function (id, text) {
+        var cell = this.find_by_id(id);
+        if (cell == undefined) {
+            cell = new cell_t(id, this._self);
+            this._cells.push(cell);
+        }
+        cell.text = text;
     };
     return row_t;
 })(custom_t);
@@ -554,11 +563,12 @@ var table_t = (function (_super) {
         return undefined;
     };
     table_t.prototype.do_add_row = function (id) {
-        if (!element.exists_by_id(id)) {
-            var row = new row_t(id, this._self);
+        var row = this.find_row(id);
+        if (row == undefined) {
+            row = new row_t(id, this._self);
             this._rows.push(row);
-            return row;
         }
+        return row;
     };
     return table_t;
 })(custom_t);

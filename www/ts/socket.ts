@@ -74,9 +74,14 @@ class web_socket_t {
   }
 
   private onMessage(evt: any) {
-    console.log("onMessage: " + evt.data);
+    // console.log("onMessage: " + evt.data);
 
-    Signal.emit('onMessage', evt.data);
+    try{
+      Signal.emit('onMessage', evt.data);
+    }
+    catch(e){
+      console.log("onMessage: " + e.data);
+    }
   }
 }
 //==============================================================================

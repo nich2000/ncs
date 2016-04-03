@@ -29,10 +29,10 @@ let static_filter: string[] = [
   "TIM",                 // 2
   // "T_S",                 // 3
   // "CNT",                 // 4
-  "SPD",                 // 5
-  "HEA",                 // 6
-  "LAT",                 // 7
-  "LON"                  // 8
+  // "SPD",                 // 5
+  // "HEA",                 // 6
+  // "LAT",                 // 7
+  // "LON"                  // 8
   // "UN1",                 // 9
   // "UN2",                 // 10
   // "AZ1",                 // 11

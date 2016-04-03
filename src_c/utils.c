@@ -216,7 +216,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "host:                            %s\n" \
           "sock:                            %d\n" \
           "state:                           %s\n" \
-          "is_locked:                       %d\n",
+          "is_locked:                       %d",
           prefix,
           (int)&worker,
           worker->id,
@@ -230,12 +230,12 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           worker->is_locked);
   #else
   sprintf(tmp_info,
-          "%s\n"                                  \
-          "id:                              %d\n" \
-          "name:                            %s\n" \
-          "type:                            %s\n" \
-          "mode:                            %s\n" \
-          "state:                           %s\n",
+          "%s\n"                                         \
+          "       id:                              %d\n" \
+          "       name:                            %s\n" \
+          "       type:                            %s\n" \
+          "       mode:                            %s\n" \
+          "       state:                           %s",
           prefix,
           worker->id,
           worker->name,
@@ -257,9 +257,9 @@ int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix
   char tmp_info[1024];
 
   sprintf(tmp_info,
-          "%s\n"                                  \
-          "active_state:                    %s\n" \
-          "register_state:                  %s\n",
+          "%s\n"                                         \
+          "       active_state:                    %s\n" \
+          "       register_state:                  %s",
           prefix,
           active_to_string(remote_client->active_state),
           register_to_string(remote_client->register_state));
@@ -274,7 +274,9 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
   if(clients_list == 0)
     return 1;
 
-  log_add_fmt(LOG_INFO, "clients count: %d", _custom_remote_clients_count(clients_list));
+  log_add("---------", LOG_INFO);
+  log_add_fmt(LOG_INFO, "clients count:                   %d", _custom_remote_clients_count(clients_list));
+  log_add("---------", LOG_INFO);
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -285,6 +287,7 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
     {
       print_custom_worker_info(tmp_worker, "remote client");
       print_remote_client_info(tmp_remote_client, "worker");
+      log_add("---------", LOG_INFO);
     };
   }
 

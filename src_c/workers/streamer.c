@@ -93,7 +93,7 @@ int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 {
   log_add_fmt(LOG_INFO, "%s", "cmd_streamer_start");
 
-  cmd_streamer_init(worker, &client);
+  cmd_streamer_init(worker, client);
 
   worker->is_work  = TRUE;
   worker->is_pause = FALSE;
@@ -140,8 +140,6 @@ void *cmd_streamer_worker_func(void *arg)
   log_add_fmt(LOG_DEBUG, "%s", "cmd_streamer_worker_func");
 
   streamer_worker *tmp_worker = (streamer_worker*)arg;
-
-  pack_protocol_t *tmp_protocol = &tmp_worker->client->protocol;
 
   while(tmp_worker->is_work)
   {

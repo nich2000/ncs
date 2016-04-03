@@ -682,10 +682,6 @@ int on_cmd_new_data(void *sender, void *data)
 //==============================================================================
 int on_server_cmd_state(void *sender, sock_state_t state)
 {
-  // TODO - govnocode - ws вызывает cmd_remote_clients_list
-  if(state == STATE_START)
-    ws_server_send_clients();
-
   return ERROR_NONE;
 }
 //==============================================================================
@@ -803,6 +799,8 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
         _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
       }
   }
+
+  ws_server_send_clients();
 
   return ERROR_NONE;
 }

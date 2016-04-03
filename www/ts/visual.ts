@@ -58,14 +58,24 @@ class row_t extends custom_t {
     return this._cells;
   }
 
-  public add_cell(id: string, text: string): void {
-    if(!element.exists_by_id(id)){
-      let cell: cell_t = new cell_t(id, this._self);
-
-      this._cells.push(cell);
-
-      cell.text = text;
+  private find_by_id(id: string): cell_t {
+    for(let i = 0; i < this._cells.length; i++){
+      if(this._cells[i].id == id)
+        return this._cells[i];
     }
+
+    return undefined;
+  }
+
+  public add_cell(id: string, text: string): void {
+    let cell: cell_t = this.find_by_id(id);
+
+    if(cell == undefined){
+      cell = new cell_t(id, this._self);
+      this._cells.push(cell);
+    }
+
+    cell.text = text;
   }
 }
 //==============================================================================
@@ -93,13 +103,14 @@ class table_t extends custom_t {
   }
 
   protected do_add_row(id: string): row_t {
-    if (!element.exists_by_id(id)) {
-      let row: row_t = new row_t(id, this._self);
+    let row: row_t = this.find_row(id);
 
+    if (row == undefined) {
+      row = new row_t(id, this._self);
       this._rows.push(row);
-
-      return row;
     }
+
+    return row;
   }
 }
 //==============================================================================
