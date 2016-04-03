@@ -33,6 +33,7 @@ class web_socket_t {
 
   private doSend(message: any) {
     console.log("doSend: " + message);
+    $("#last_send_cmd").text("Command: " + message);
 
     message = JSON.stringify(message);
 

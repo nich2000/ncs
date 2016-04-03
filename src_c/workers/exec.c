@@ -52,6 +52,7 @@
 //==============================================================================
 #define CMD_FIRST           "first"
 #define CMD_SECOND          "second"
+#define CMD_NEXT            "next"
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -94,6 +95,10 @@ sock_active_t cmd_active(char *cmd)
   else if(strcmp(CMD_SECOND, cmd) == 0)
   {
     return ACTIVE_SECOND;
+  }
+  else if(strcmp(CMD_NEXT, cmd) == 0)
+  {
+    return ACTIVE_NEXT;
   }
   else
     return ACTIVE_NONE;
@@ -416,17 +421,28 @@ int handle_command_str(void *sender, char *command)
       if(active_str != NULL)
         active = cmd_active(active_str);
 
-      if(active == ACTIVE_FIRST)
-        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_SECOND);
-      else if(active == ACTIVE_SECOND)
-        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_FIRST);
-      else
-        cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NONE);
+      switch(active)
+      {
+        case ACTIVE_FIRST:
+          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_SECOND);
+          break;
+        case ACTIVE_SECOND:
+          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_FIRST);
+          break;
+        case ACTIVE_NEXT:
+          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NEXT);
+          break;
+        case ACTIVE_NONE:
+        default:
+          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NONE);
+          break;
+      }
 
       cmd_remote_clients_activate(id, active);
 
       return EXEC_DONE;
     }
+    //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_REGISTER) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_REGISTER);

@@ -15,16 +15,11 @@ class exec_t {
       return;
 
     if (data[0].CMD != undefined) {
-      $("#last_cmd").text("Command: " + data[0].CMD);
+      let cmd: string = data[0].CMD;
+      $("#last_recv_cmd").text("Command: " + cmd);
+      data.shift();
 
-      switch (data[0].CMD) {
-        case "clients":
-          {
-            for (let i = 1; i < data.length; i++)
-              Signal.emit("add_client", data[i].PAR);
-            break;
-          }
-      }
+      Signal.emit(cmd, data);
     }
     else {
       Signal.emit("add_data", data);

@@ -9,15 +9,10 @@ var exec_t = (function () {
         if (data.length == 0)
             return;
         if (data[0].CMD != undefined) {
-            $("#last_cmd").text("Command: " + data[0].CMD);
-            switch (data[0].CMD) {
-                case "clients":
-                    {
-                        for (var i = 1; i < data.length; i++)
-                            Signal.emit("add_client", data[i].PAR);
-                        break;
-                    }
-            }
+            var cmd = data[0].CMD;
+            $("#last_recv_cmd").text("Command: " + cmd);
+            data.shift();
+            Signal.emit(cmd, data);
         }
         else {
             Signal.emit("add_data", data);
@@ -25,12 +20,14 @@ var exec_t = (function () {
     };
     return exec_t;
 })();
-var current_t;
-(function (current_t) {
-    current_t[current_t["none"] = 0] = "none";
-    current_t[current_t["first"] = 1] = "first";
-    current_t[current_t["second"] = 2] = "second";
-})(current_t || (current_t = {}));
+var active_t;
+(function (active_t) {
+    active_t[active_t["none"] = 0] = "none";
+    active_t[active_t["first"] = 1] = "first";
+    active_t[active_t["second"] = 2] = "second";
+    active_t[active_t["next"] = 3] = "next";
+})(active_t || (active_t = {}));
+;
 var state_t;
 (function (state_t) {
     state_t[state_t["none"] = 0] = "none";
@@ -44,6 +41,12 @@ var state_t;
     state_t[state_t["resuming"] = 8] = "resuming";
     state_t[state_t["step"] = 9] = "step";
 })(state_t || (state_t = {}));
+var register_t;
+(function (register_t) {
+    register_t[register_t["none"] = 0] = "none";
+    register_t[register_t["ok"] = 1] = "ok";
+})(register_t || (register_t = {}));
+;
 var static_filter = [
     "_ID",
     "TIM",
@@ -54,7 +57,11 @@ var static_filter = [
 ];
 var client_t = (function () {
     function client_t(id, name) {
+        this._id = -1;
+        this._name = "unnamed";
         this._state = state_t.none;
+        this._active = active_t.none;
+        this._register = register_t.none;
         this._data = [];
         this._id = id;
         this._name = name;
@@ -62,16 +69,6 @@ var client_t = (function () {
     Object.defineProperty(client_t.prototype, "id", {
         get: function () {
             return this._id;
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(client_t.prototype, "state", {
-        get: function () {
-            return this._state;
-        },
-        set: function (v) {
-            this._state = v;
         },
         enumerable: true,
         configurable: true
@@ -86,30 +83,43 @@ var client_t = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(client_t.prototype, "state", {
+        get: function () {
+            return this._state;
+        },
+        set: function (v) {
+            this._state = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(client_t.prototype, "active", {
+        get: function () {
+            return this._active;
+        },
+        set: function (v) {
+            this._active = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(client_t.prototype, "register", {
+        get: function () {
+            return this._register;
+        },
+        set: function (v) {
+            this._register = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
     client_t.prototype.exists_data_key = function (key) {
-        for (var i = void 0; i < this._data.length; i++)
-            if (this._data[i].key == key)
-                return true;
         return false;
     };
     client_t.prototype.get_data_by_key = function (key) {
-        for (var i = 0; i < this._data.length; i++)
-            if (this._data[i].key == key)
-                return this._data[i];
         return undefined;
     };
     client_t.prototype.add_data = function (data) {
-        var d = this.get_data_by_key(data[0]);
-        if (d == undefined) {
-            d = {
-                key: data[0],
-                value: data[1]
-            };
-            this._data.push(d);
-        }
-        else {
-            d.value = data[1];
-        }
     };
     return client_t;
 })();
@@ -119,7 +129,7 @@ var clients_t = (function () {
         this._clients_table = new clients_table_t("remote_clients", 2);
         this._data_first_table = new data_table_t("remote_data_first", 2);
         this._data_second_table = new data_table_t("remote_data_second", 2);
-        Signal.bind("add_client", this.add_client, this);
+        Signal.bind("clients", this.refresh_clients, this);
         Signal.bind("add_data", this.add_data, this);
     }
     Object.defineProperty(clients_t.prototype, "items", {
@@ -129,35 +139,50 @@ var clients_t = (function () {
         enumerable: true,
         configurable: true
     });
-    clients_t.prototype.add_client = function (data) {
-        var id = data[0].PAR;
-        var name = data[1].PAR;
-        if (!this.exists_by_id(id)) {
-            var client = new client_t(id, name);
-            this._clients.push(client);
-            this._clients_table.add_row(client.id, client.name);
+    clients_t.prototype.refresh_clients = function (data) {
+        for (var i = 0; i < data.length; i++) {
+            this.add_client(data[i].PAR);
         }
     };
-    clients_t.prototype.get_by_id = function (id) {
+    clients_t.prototype.add_client = function (data) {
+        var id = data[0]._ID;
+        var name = data[1].NAM;
+        var state = parseInt(data[2].STA);
+        var active = parseInt(data[3].ACT);
+        var register = parseInt(data[4].REG);
+        var client = this.get_client_by_id(id);
+        if (client == undefined) {
+            client = new client_t(id, name);
+            this._clients.push(client);
+            this._clients_table.add_client(client);
+        }
+        client.state = state;
+        client.active = active;
+        client.register = register;
+        this._clients_table.state_client(client, state);
+        this._clients_table.active_client(client, active);
+        this._clients_table.register_client(client, register);
+    };
+    clients_t.prototype.get_client_by_id = function (id) {
         for (var i = 0; i < this._clients.length; i++)
             if (this._clients[i].id == id)
                 return this._clients[i];
         return undefined;
     };
-    clients_t.prototype.get_by_name = function (name) {
+    clients_t.prototype.get_client_by_name = function (name) {
         for (var i = 0; i < this._clients.length; i++)
             if (this._clients[i].name == name)
                 return this._clients[i];
         return undefined;
     };
-    clients_t.prototype.exists_by_id = function (id) {
+    clients_t.prototype.exists_client_by_id = function (id) {
         for (var i = 0; i < this._clients.length; i++)
             if (this._clients[i].id == id)
                 return true;
         return false;
     };
     clients_t.prototype.add_data = function (data) {
-        var current = current_t.none;
+        var current = active_t.none;
         for (var i_1 = 0; i_1 < data.length; i_1++) {
             if (data[i_1].ACT != undefined) {
                 current = data[i_1].ACT;
@@ -171,7 +196,7 @@ var clients_t = (function () {
                 break;
             }
         }
-        var client = this.get_by_name(id);
+        var client = this.get_client_by_name(id);
         if (client == undefined)
             return;
         else
@@ -180,7 +205,7 @@ var clients_t = (function () {
             if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
                 var param = Object.keys(data[i])[0];
                 var value = data[i][param];
-                if (current == current_t.first)
+                if (current == active_t.first)
                     this._data_first_table.add_row('first', param, value);
                 else
                     this._data_second_table.add_row('second', param, value);
@@ -359,6 +384,7 @@ var web_socket_t = (function () {
     };
     web_socket_t.prototype.doSend = function (message) {
         console.log("doSend: " + message);
+        $("#last_send_cmd").text("Command: " + message);
         message = JSON.stringify(message);
         this._socket.send(message);
     };
@@ -453,6 +479,13 @@ var custom_t = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(custom_t.prototype, "self", {
+        get: function () {
+            return this._self;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return custom_t;
 })();
 var cell_t = (function (_super) {
@@ -478,10 +511,9 @@ var row_t = (function (_super) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
         this._self.click(function () {
-            $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
             var cell = $(this).find('td:last');
             var value = cell.text();
-            Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "first"]]);
+            Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "next"]]);
         });
     }
     Object.defineProperty(row_t.prototype, "cells", {
@@ -514,6 +546,13 @@ var table_t = (function (_super) {
         enumerable: true,
         configurable: true
     });
+    table_t.prototype.find_row = function (id) {
+        for (var i = 0; i < this._rows.length; i++) {
+            if (this._rows[i].id == id)
+                return this._rows[i];
+        }
+        return undefined;
+    };
     table_t.prototype.do_add_row = function (id) {
         if (!element.exists_by_id(id)) {
             var row = new row_t(id, this._self);
@@ -528,13 +567,64 @@ var clients_table_t = (function (_super) {
     function clients_table_t(id, cols_count) {
         _super.call(this, id, $(window), cols_count);
     }
+    clients_table_t.prototype.get_id = function (id) {
+        return 'client_' + String(id);
+    };
     clients_table_t.prototype.add_row = function (id, name) {
-        var row_id = 'client_' + String(id) + '_' + name;
+        var row_id = this.get_id(id);
         var row = _super.prototype.do_add_row.call(this, row_id);
         var cell_id = 'client_name_' + String(id);
         row.add_cell(cell_id, name);
+        cell_id = 'client_act_' + String(id);
+        row.add_cell(cell_id, "");
         cell_id = 'client_id_' + String(id);
         row.add_cell(cell_id, String(id));
+    };
+    clients_table_t.prototype.active_row = function (row, active) {
+        switch (active) {
+            case active_t.first: {
+                row.self.removeClass('dems-second');
+                row.self.addClass('dems-first').siblings().removeClass('dems-first');
+                break;
+            }
+            case active_t.second: {
+                row.self.removeClass('dems-first');
+                row.self.addClass('dems-second').siblings().removeClass('dems-second');
+                break;
+            }
+        }
+    };
+    clients_table_t.prototype.state_row = function (row, state) {
+        if (state == state_t.start)
+            row.self.addClass('dems-active').siblings().removeClass('dems-active');
+        else
+            row.self.removeClass('dems-active');
+    };
+    clients_table_t.prototype.register_row = function (row, register) {
+        if (register == register_t.ok)
+            row.self.addClass('dems-register').siblings().removeClass('dems-register');
+        else
+            row.self.removeClass('dems-register');
+    };
+    clients_table_t.prototype.add_client = function (client) {
+        this.add_row(client.id, client.name);
+    };
+    clients_table_t.prototype.active_client = function (client, active) {
+        var id = this.get_id(client.id);
+        var row = this.find_row(id);
+        this.active_row(row, active);
+        var cell_id = 'client_act_' + String(client.id);
+        element.set_text(cell_id, active_t[active]);
+    };
+    clients_table_t.prototype.state_client = function (client, state) {
+        var id = this.get_id(client.id);
+        var row = this.find_row(id);
+        this.state_row(row, state);
+    };
+    clients_table_t.prototype.register_client = function (client, register) {
+        var id = this.get_id(client.id);
+        var row = this.find_row(id);
+        this.register_row(row, register);
     };
     return clients_table_t;
 })(table_t);

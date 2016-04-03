@@ -108,7 +108,7 @@ char *do_print_pack(pack_packet_t *packet, int indent)
   pack_key_t    tmp_key;
   pack_value_t  tmp_value;
   pack_size_t   tmp_words_count = _pack_words_count(packet);
-  pack_string_t tmp = (char*)malloc(1024);
+  pack_string_t tmp = (char*)malloc(PACK_BUFFER_SIZE);
   memset(tmp, '\0', PACK_BUFFER_SIZE);
 
   char indent_str[128];
@@ -128,7 +128,11 @@ char *do_print_pack(pack_packet_t *packet, int indent)
     {
       pack_packet_t tmp_pack;
       if(pack_word_as_pack(tmp_word, &tmp_pack) == ERROR_NONE)
-        sprintf(tmp, "%s\n%s    value: %s",                tmp, indent_str, do_print_pack(&tmp_pack, indent+4));
+      {
+        char *tmp_output = do_print_pack(&tmp_pack, indent+4);
+        sprintf(tmp, "%s\n%s    value: %s",                tmp, indent_str, tmp_output);
+        free(tmp_output);
+      }
       else
         sprintf(tmp, "%s\n%s    value: error parse value", tmp, indent_str);
     }
@@ -170,9 +174,11 @@ int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOO
 
   if(pack)
   {
-    char tmp[1024];
-    sprintf(tmp, "%s", do_print_pack(packet, 4));
-    log_add(tmp, LOG_INFO);
+    // TODO тут выскакивает ошибка, к примеру если подключть 3-х клиентов
+    // Я так думаю, что из за большого пакета
+//    char *tmp = do_print_pack(packet, 4);
+//    log_add(tmp, LOG_INFO);
+//    free(tmp);
   }
 
   if(csv)

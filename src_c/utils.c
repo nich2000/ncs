@@ -283,8 +283,8 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
 
     if(tmp_worker->state == STATE_START)
     {
-      print_remote_client_info(tmp_remote_client, prefix);
-      print_custom_worker_info(tmp_worker, prefix);
+      print_custom_worker_info(tmp_worker, "remote client");
+      print_remote_client_info(tmp_remote_client, "worker");
     };
   }
 

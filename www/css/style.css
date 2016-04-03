@@ -45,20 +45,36 @@
 
 .dems-table
 {
-  overflow-y: auto; 
+  overflow-y: auto;
   /*overflow-y: scroll; */
   overflow-x: hidden;
 }
 
-.dems-selected 
+.dems-active
 {
-  background-color: brown!important;
+  font: bold;
+}
+
+.dems-register
+{
+  font: italic;
+}
+
+.dems-first
+{
+  background-color: green!important;
   color: #FFF;
 }
 
-td 
+.dems-second
 {
-  border: 1px #DDD solid; 
-  padding: 5px; 
+  background-color: red!important;
+  color: #FFF;
+}
+
+td
+{
+  border: 1px #DDD solid;
+  padding: 5px;
   cursor: pointer;
 }

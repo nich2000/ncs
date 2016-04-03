@@ -1,12 +1,13 @@
 //==============================================================================
-enum current_t{
-  none,
+enum active_t {
+  none = 0,
   first,
-  second
-}
+  second,
+  next
+};
 //==============================================================================
 enum state_t {
-  none,
+  none = 0,
   start,
   starting,
   stop,
@@ -17,6 +18,11 @@ enum state_t {
   resuming,
   step
 }
+//==============================================================================
+enum register_t {
+  none = 0,
+  ok
+};
 //==============================================================================
 let static_filter: string[] = [
   "_ID",                 // 1
@@ -41,15 +47,21 @@ let static_filter: string[] = [
 ];
 //==============================================================================
 interface data_i {
-  key: string;
+  key  : string;
   value: string;
 }
 //==============================================================================
+interface data_list_i {
+  items: Array<data_i>;
+}
+//==============================================================================
 class client_t {
-  private _id: number;
-  private _name: string;
-  private _state: state_t = state_t.none;
-  private _data: Array<data_i> = [];
+  private _id      : number             = -1;
+  private _name    : string             = "unnamed";
+  private _state   : state_t            = state_t.none;
+  private _active  : active_t           = active_t.none;
+  private _register: register_t         = register_t.none;
+  private _data    : Array<data_list_i> = [];
 
   constructor(id: number, name: string) {
     this._id = id;
@@ -60,14 +72,6 @@ class client_t {
     return this._id;
   }
 
-  public get state() : state_t {
-    return this._state;
-  }
-
-  public set state(v : state_t) {
-    this._state = v;
-  }
-
   public get name() : string {
     return this._name;
   }
@@ -76,32 +80,56 @@ class client_t {
     this._name = v;
   }
 
+  public get state() : state_t {
+    return this._state;
+  }
+
+  public set state(v : state_t) {
+    this._state = v;
+  }
+
+  public get active() : active_t {
+    return this._active
+  }
+
+  public set active(v : active_t) {
+    this._active = v;
+  }
+
+  public get register() : register_t {
+    return this._register;
+  }
+
+  public set register(v : register_t) {
+    this._register = v;
+  }
+
   private exists_data_key(key: string): boolean{
-    for(let i: number; i < this._data.length; i++)
-      if(this._data[i].key == key)
-        return true;
+    // for(let i: number; i < this._data.length; i++)
+    //   if(this._data[i].key == key)
+    //     return true;
     return false;
   }
 
   private get_data_by_key(key: string): data_i{
-    for(let i = 0; i < this._data.length; i++)
-      if(this._data[i].key == key)
-        return this._data[i];
+    // for(let i = 0; i < this._data.length; i++)
+    //   if(this._data[i].key == key)
+    //     return this._data[i];
     return undefined;
   }
 
   public add_data(data: any): void{
-    let d: data_i = this.get_data_by_key(data[0]);
-    if(d == undefined){
-      d = {
-        key: data[0],
-        value: data[1]
-      }
-      this._data.push(d);
-    }
-    else{
-      d.value = data[1];
-    }
+    // let d: data_i = this.get_data_by_key(data[0]);
+    // if(d == undefined){
+    //   d = {
+    //     key: data[0],
+    //     value: data[1]
+    //   }
+    //   this._data.push(d);
+    // }
+    // else{
+    //   d.value = data[1];
+    // }
   }
 
 }
@@ -113,53 +141,71 @@ class clients_t {
   private _data_second_table: data_table_t;
 
   constructor() {
-    this._clients_table = new clients_table_t("remote_clients", 2);
-    this._data_first_table = new data_table_t("remote_data_first", 2);
-    this._data_second_table = new data_table_t("remote_data_second", 2);
+    this._clients_table     = new clients_table_t("remote_clients",     2);
+    this._data_first_table  = new data_table_t   ("remote_data_first",  2);
+    this._data_second_table = new data_table_t   ("remote_data_second", 2);
 
-    Signal.bind("add_client", this.add_client, this);
-    Signal.bind("add_data", this.add_data, this);
+    Signal.bind("clients",  this.refresh_clients, this);
+    Signal.bind("add_data", this.add_data,        this);
   }
 
   public get items(): client_t[] {
     return this._clients;
   }
 
-  public add_client(data: any): void {
-    let id: number = data[0].PAR;
-    let name: string = data[1].PAR;
-
-    if(!this.exists_by_id(id)){
-      let client = new client_t(id, name);
-      this._clients.push(client);
-
-      this._clients_table.add_row(client.id, client.name);
+  private refresh_clients(data: any): void {
+    for(let i = 0; i < data.length; i++){
+      this.add_client(data[i].PAR);
     }
   }
 
-  public get_by_id(id: number): client_t {
+  private add_client(data: any): void {
+    let id      : number     = data[0]._ID;
+    let name    : string     = data[1].NAM;
+    let state   : state_t    = parseInt(data[2].STA);
+    let active  : active_t   = parseInt(data[3].ACT);
+    let register: register_t = parseInt(data[4].REG);
+
+    let client: client_t = this.get_client_by_id(id);
+    if(client == undefined){
+      client = new client_t(id, name);
+
+      this._clients.push(client);
+      this._clients_table.add_client(client);
+    }
+
+    client.state    = state;
+    client.active   = active;
+    client.register = register;
+
+    this._clients_table.state_client   (client, state);
+    this._clients_table.active_client  (client, active);
+    this._clients_table.register_client(client, register);
+  }
+
+  private get_client_by_id(id: number): client_t {
     for (let i = 0; i < this._clients.length; i++)
       if (this._clients[i].id == id)
         return this._clients[i];
     return undefined;
   }
 
-  public get_by_name(name: string): client_t {
+  private get_client_by_name(name: string): client_t {
     for (let i = 0; i < this._clients.length; i++)
       if (this._clients[i].name == name)
         return this._clients[i];
     return undefined;
   }
 
-  public exists_by_id(id: number): boolean {
+  private exists_client_by_id(id: number): boolean {
     for (let i = 0; i < this._clients.length; i++)
       if (this._clients[i].id == id)
         return true;
     return false;
   }
 
-  private add_data(data: any): void{
-    let current: current_t = current_t.none;
+  private add_data(data: any): void {
+    let current: active_t = active_t.none;
     for(let i = 0; i < data.length; i++){
       if(data[i].ACT != undefined){
         current = data[i].ACT;
@@ -175,7 +221,7 @@ class clients_t {
       }
     }
 
-    let client: client_t = this.get_by_name(id);
+    let client: client_t = this.get_client_by_name(id);
     if(client == undefined)
       return;
     else
@@ -183,12 +229,10 @@ class clients_t {
 
     for (var i = 0; i < data.length; i++){
       if(static_filter.indexOf(Object.keys(data[i])[0]) != -1){
-        // client.add_data(data[i]);
-
         let param = Object.keys(data[i])[0];
         let value = data[i][param];
 
-        if(current == current_t.first)
+        if(current == active_t.first)
           this._data_first_table.add_row('first', param, value);
         else
           this._data_second_table.add_row('second', param, value);
@@ -196,7 +240,7 @@ class clients_t {
     }
   }
 
-  private switch_current(current: current_t, client: client_t): void{
+  private switch_current(current: active_t, client: client_t): void{
   }
 }
 //==============================================================================

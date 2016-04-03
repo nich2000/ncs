@@ -16,6 +16,10 @@ class custom_t {
   public get id(): string {
     return this._id;
   }
+
+  public get self() : any {
+    return this._self;
+  }
 }
 //==============================================================================
 class cell_t extends custom_t {
@@ -40,13 +44,13 @@ class row_t extends custom_t {
   constructor(id: string, owner: any) {
     super(id, "<tr/>", owner);
 
-    // Пример замыкания, Signal emit вызовет эту переменную
+    // Пример замыкания, Signal.emit вызовет эту переменную
     // let value: string = '1234';
     this._self.click(function() {
-      $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
+      // $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
       let cell: any = $(this).find('td:last');
       let value: string = cell.text();
-      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "first"]]);
+      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "next"]]);
     });
   }
 
@@ -79,7 +83,16 @@ class table_t extends custom_t {
     return this._rows;
   }
 
-  protected do_add_row(id: string): row_t{
+  protected find_row(id: string): row_t {
+    for(let i: number = 0; i < this._rows.length; i++){
+      if(this._rows[i].id == id)
+        return this._rows[i];
+    }
+
+    return undefined;
+  }
+
+  protected do_add_row(id: string): row_t {
     if (!element.exists_by_id(id)) {
       let row: row_t = new row_t(id, this._self);
 
@@ -95,16 +108,79 @@ class clients_table_t extends table_t {
     super(id, $(window), cols_count);
   }
 
-  add_row(id: number, name: string) {
-    let row_id: string = 'client_' + String(id) + '_' + name;
+  private get_id(id: number): string {
+    return 'client_' + String(id);
+  }
 
+  private add_row(id: number, name: string): void {
+    let row_id: string = this.get_id(id);
     let row: row_t = super.do_add_row(row_id);
 
     let cell_id: string = 'client_name_' + String(id);
     row.add_cell(cell_id, name);
 
+    cell_id = 'client_act_' + String(id);
+    row.add_cell(cell_id, "");
+
     cell_id = 'client_id_' + String(id);
     row.add_cell(cell_id, String(id));
+  }
+
+  private active_row(row: row_t, active: active_t): void {
+    switch(active){
+      case active_t.first: {
+        row.self.removeClass('dems-second');
+        row.self.addClass('dems-first').siblings().removeClass('dems-first');
+        break;
+      }
+      case active_t.second: {
+        row.self.removeClass('dems-first');
+        row.self.addClass('dems-second').siblings().removeClass('dems-second');
+        break;
+      }
+    }
+  }
+
+  private state_row(row: row_t, state: state_t): void {
+    if(state == state_t.start)
+      row.self.addClass('dems-active').siblings().removeClass('dems-active');
+    else
+      row.self.removeClass('dems-active');
+  }
+
+  private register_row(row: row_t, register: register_t): void {
+    if(register == register_t.ok)
+      row.self.addClass('dems-register').siblings().removeClass('dems-register');
+    else
+      row.self.removeClass('dems-register');
+  }
+
+  public add_client(client: client_t): void {
+    this.add_row(client.id, client.name);
+  }
+
+  public active_client(client: client_t, active: active_t): void {
+    let id: string = this.get_id(client.id);
+    let row: row_t = this.find_row(id);
+
+    this.active_row(row, active);
+
+    let cell_id: string = 'client_act_' + String(client.id);
+    element.set_text(cell_id, active_t[active]);
+  }
+
+  public state_client(client: client_t, state: state_t): void {
+    let id: string = this.get_id(client.id);
+    let row: row_t = this.find_row(id);
+
+    this.state_row(row, state);
+  }
+
+  public register_client(client: client_t, register: register_t): void {
+    let id: string = this.get_id(client.id);
+    let row: row_t = this.find_row(id);
+
+    this.register_row(row, register);
   }
 }
 //==============================================================================
@@ -113,7 +189,7 @@ class data_table_t extends table_t {
     super(id, $(window), cols_count);
   }
 
-  add_row(prefix: string, key: string, value: string) {
+  add_row(prefix: string, key: string, value: string) : void {
     let row_id: string = 'data_' + prefix + '_' + key + '_' + value;
 
     let row: row_t = super.do_add_row(row_id);
