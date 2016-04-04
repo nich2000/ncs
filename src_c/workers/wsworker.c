@@ -260,40 +260,6 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   return ERROR_NONE;
 }
 //==============================================================================
-/*
- *
-*/
-//==============================================================================
-int ws_server_send_config()
-{
-  if(_ws_server.custom_server.custom_worker.state != STATE_START)
-    return ERROR_NORMAL;
-
-  pack_packet_t tmp_packet;
-
-  ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
-
-  return ERROR_NONE;
-}
-//==============================================================================
-/*
- *
-*/
-//==============================================================================
-int ws_server_send_clients()
-{
-  if(_ws_server.custom_server.custom_worker.state != STATE_START)
-    return make_last_error(ERROR_WARNING, errno, "ws_server_send_clients, ws server not started");
-
-  if(_ws_remote_clients_count(&_ws_server) == 0)
-    return make_last_error(ERROR_WARNING, errno, "ws_server_send_clients, no ws clients connected");
-
-  pack_packet_t tmp_packet;
-  cmd_remote_clients_list(&tmp_packet);
-
-  return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
-}
-//==============================================================================
 void *ws_recv_worker(void *arg)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
@@ -313,10 +279,6 @@ void *ws_recv_worker(void *arg)
     int res = sock_recv(tmp_sock, request, &tmp_size);
     if(res == ERROR_NONE)
     {
-//      if(tmp_size > 0)
-//        if(tmp_client->on_recv != 0)
-//          tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);
-
       if(tmp_client->hand_shake == FALSE)
       {
         ws_hand_shake(request, response, &tmp_size);
@@ -326,8 +288,12 @@ void *ws_recv_worker(void *arg)
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
 
-          ws_server_send_config();
-          ws_server_send_clients();
+          pack_packet_t config_packet;
+          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+
+          pack_packet_t clients_packet;
+          cmd_remote_clients_list(&clients_packet);
+          ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
         }
         else
         {
@@ -540,50 +506,6 @@ int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size)
   return json_to_buffer(tmp_json, buffer, size);
 }
 //==============================================================================
-//https://jansson.readthedocs.org/en/2.7/apiref.html
-// TODO deprecated
-//int packet_to_json(pack_packet_t *packet, char *buffer, int *size)
-//{
-//  json_t *tmp_words = json_array();
-
-//  for(int i = 0; i < packet->words_count; i++)
-//  {
-//    pack_key_t tmp_key;
-//    strcpy((char*)tmp_key, (char*)packet->words[i].key);
-
-//    pack_value_t tmp_value;
-//    pack_word_as_string(&packet->words[i], tmp_value);
-
-//    json_t *tmp_word = json_array();
-
-//    json_t *tmp_json_key     = json_string((char*)tmp_key);
-//    json_t *tmp_json_value   = json_string((char*)tmp_value);
-//    json_t *tmp_json_caption = json_string(caption_by_key((char*)tmp_key));
-
-//    json_array_append_new(tmp_word, tmp_json_key);
-//    json_array_append_new(tmp_word, tmp_json_value);
-//    json_array_append_new(tmp_word, tmp_json_caption);
-
-//    json_array_append_new(tmp_words, tmp_word);
-//  }
-
-//  char *tmp_json = json_dumps(tmp_words, JSON_ENCODE_ANY);
-//  strcpy((char*)buffer, tmp_json);
-//  *size = strlen((char*)buffer);
-//  free(tmp_json);
-
-//  size_t tmp_index_word;
-//  json_t *tmp_word;
-//  json_array_foreach(tmp_words, tmp_index_word, tmp_word)
-//  {
-//    json_array_clear(tmp_word);
-//  }
-//  json_array_clear(tmp_words);
-//  json_decref(tmp_words);
-
-//  return ERROR_NONE;
-//}
-//==============================================================================
 int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
 {
   pack_init(packet);
@@ -602,7 +524,7 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
       {
         if(json_array_size(tmp_word) == 2)
         {
-//          json_t *tmp_key   = json_array_get(tmp_word, 0);
+          // json_t *tmp_key   = json_array_get(tmp_word, 0);
           json_t *tmp_value = json_array_get(tmp_word, 1);
 
           if(line == 0)
@@ -628,10 +550,18 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
   }
 }
 //==============================================================================
+// TODO: https://computing.llnl.gov/tutorials/pthreads/
+//==============================================================================
 int ws_server_send_pack(int session_id,  pack_packet_t *pack)
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_pack, ws server not started");
+
+  if(_ws_remote_clients_count(&_ws_server) == 0)
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_pack, no ws clients connected");
+
+  mutex enter
+  _ws_server.is_locked = TRUE;
 
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
@@ -645,8 +575,6 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
       if(tmp_client->custom_worker.state == STATE_START)
       {
         tmp_client->custom_worker.is_locked = TRUE;
-        if(tmp_client->custom_worker.on_lock != 0)
-          tmp_client->custom_worker.on_lock(tmp_client, TRUE);
 
         pack_buffer_t json_buffer;
         int           json_size = 0;
@@ -662,11 +590,12 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
         tmp_client->custom_worker.is_locked = FALSE;
-        if(tmp_client->custom_worker.on_lock != 0)
-          tmp_client->custom_worker.on_lock(tmp_client, FALSE);
       }
     }
   }
+
+  _ws_server.is_locked = FALSE;
+  mutex exit
 
   return ERROR_NONE;
 }
@@ -674,7 +603,10 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
 int ws_server_send_cmd(int session_id, int argc, ...)
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
-    return ERROR_NORMAL;
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_cmd, ws server not started");
+
+  if(_ws_remote_clients_count(&_ws_server) == 0)
+    return make_last_error(ERROR_WARNING, errno, "ws_server_send_cmd, no ws clients connected");
 
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
@@ -688,8 +620,6 @@ int ws_server_send_cmd(int session_id, int argc, ...)
       if(tmp_client->custom_worker.state == STATE_START)
       {
         tmp_client->custom_worker.is_locked = TRUE;
-        if(tmp_client->custom_worker.on_lock != 0)
-          tmp_client->custom_worker.on_lock(tmp_client, TRUE);
 
         pack_packet_t tmp_pack;
         pack_init(&tmp_pack);
@@ -722,8 +652,6 @@ int ws_server_send_cmd(int session_id, int argc, ...)
         memcpy(tmp_client->out_message, tmp_buffer, tmp_client->out_message_size);
 
         tmp_client->custom_worker.is_locked = FALSE;
-        if(tmp_client->custom_worker.on_lock != 0)
-          tmp_client->custom_worker.on_lock(tmp_client, FALSE);
       }
     }
   }

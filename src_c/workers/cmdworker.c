@@ -16,27 +16,27 @@
 #include "protocol_types.h"
 #include "ncs_pack_utils.h"
 //==============================================================================
-int cmd_server_init    (cmd_server_t *server);
-int cmd_server_start   (cmd_server_t *server, sock_port_t port);
-int cmd_server_stop    (cmd_server_t *server);
-int cmd_server_pause   (cmd_server_t *server);
-int cmd_server_resume  (cmd_server_t *server);
+int cmd_server_init     (cmd_server_t *server);
+int cmd_server_start    (cmd_server_t *server, sock_port_t port);
+int cmd_server_stop     (cmd_server_t *server);
+int cmd_server_pause    (cmd_server_t *server);
+int cmd_server_resume   (cmd_server_t *server);
 //==============================================================================
-void *cmd_server_worker(void *arg);
+void *cmd_server_worker (void *arg);
 //==============================================================================
 custom_remote_client_t *_cmd_remote_clients_next (cmd_server_t *cmd_server);
 int                     _cmd_remote_clients_count(cmd_server_t *cmd_server);
 //==============================================================================
-int cmd_client_init    (cmd_client_t *client);
-int cmd_client_start   (cmd_client_t *client, sock_port_t port, sock_host_t host);
-int cmd_client_stop    (cmd_client_t *client);
-int cmd_client_pause   (cmd_client_t *client);
-int cmd_client_resume  (cmd_client_t *client);
-int cmd_client_register(cmd_client_t *client);
+int cmd_client_init     (cmd_client_t *client);
+int cmd_client_start    (cmd_client_t *client, sock_port_t port, sock_host_t host);
+int cmd_client_stop     (cmd_client_t *client);
+int cmd_client_pause    (cmd_client_t *client);
+int cmd_client_resume   (cmd_client_t *client);
+int cmd_client_register (cmd_client_t *client);
 //==============================================================================
-void *cmd_client_worker(void *arg);
+void *cmd_client_worker (void *arg);
 //==============================================================================
-void *cmd_send_worker(void *arg);
+void *cmd_send_worker   (void *arg);
 //==============================================================================
 int on_cmd_accept       (void *sender, SOCKET socket, sock_host_t host);
 int on_cmd_connect      (void *sender);
@@ -673,7 +673,7 @@ int on_cmd_new_data(void *sender, void *data)
     {
       pack_add_as_int(tmp_packet, "ACT", tmp_client->active_state);
 
-      ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
+      return ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
     }
   }
 
@@ -715,6 +715,7 @@ int cmd_remote_clients_list(pack_packet_t *pack)
       pack_init(&tmp_pack);
       pack_add_as_int   (&tmp_pack, "_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, "NAM", tmp_custom_worker->name);
+      pack_add_as_string(&tmp_pack, "CAP", tmp_custom_worker->caption);
       pack_add_as_int   (&tmp_pack, "STA", tmp_custom_worker->state);
       pack_add_as_int   (&tmp_pack, "ACT", tmp_remote_client->active_state);
       pack_add_as_int   (&tmp_pack, "REG", tmp_remote_client->register_state);
@@ -742,6 +743,8 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
         else
           cur_active = active;
 
+        _cmd_server.custom_remote_clients_list.items[i].active_state = cur_active;
+
         switch (cur_active)
         {
           case ACTIVE_FIRST:
@@ -755,13 +758,13 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
             break;
         }
 
-        _cmd_server.custom_remote_clients_list.items[i].active_state = cur_active;
+        pack_packet_t tmp_packet;
+        cmd_remote_clients_list(&tmp_packet);
+        return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
   }
 
-  ws_server_send_clients();
-
-  return ERROR_NONE;
+  return make_last_error();
 }
 //==============================================================================
 int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except)
@@ -796,12 +799,17 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
         strcpy(_cmd_server.custom_remote_clients_list.items[i].custom_worker.name, name);
+
         _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
+
+        log_add_fmt(LOG_INFO, "register(%d)", id);
+
+        pack_packet_t tmp_packet;
+        cmd_remote_clients_list(&tmp_packet);
+        return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
   }
 
-  ws_server_send_clients();
-
-  return ERROR_NONE;
+  return make_last_error();
 }
 //==============================================================================
