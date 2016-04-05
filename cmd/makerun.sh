@@ -9,5 +9,5 @@ cd ./cmake
 cmake ../src_c
 make
 
-cd ../bin
-./SocketTestC
+#cd ../bin
+#./SocketTestC

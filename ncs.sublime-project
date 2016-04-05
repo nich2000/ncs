@@ -1,0 +1,47 @@
+{
+  "folders":
+  [
+    {
+      "path": "cmd",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
+      "path": "config",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
+      "path": "src_c",
+      "file_exclude_patterns": ["*.user", "*.bak"]
+    },
+    {
+      "path": "todo",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
+      "path": "tracks",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
+      "path": "www",
+      "file_exclude_patterns": ["*.bak"],
+      "folder_exclude_patterns": ["bootstrap-3.3.6-dist", "jquery-ui-1.11.4", "wsbyajke", "js"]
+    }
+  ],
+  "settings":
+  {
+  },
+  "build_systems":
+  [
+    {
+      "name": "CMake",
+      "windows":
+      {
+        "cmd": ["$project_path\\cmd\\makerun.cmd"]
+      },
+      "linux":
+      {
+        "cmd": ["$project_path\\cmd\\makerun.sh"]
+      }
+    }
+  ]
+}
