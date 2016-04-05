@@ -24,6 +24,8 @@ typedef int (*on_error_t)     (void *sender, error_t *error);
 error_t make_error (int level, int number, const char *message);
 //==============================================================================
 int make_last_error(int level, int number, const char *message);
+int make_last_error_fmt(int level, int number, const char *message, ...);
+//==============================================================================
 error_t *last_error();
 //==============================================================================
 #endif //ERROR_H

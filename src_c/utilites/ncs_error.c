@@ -1,6 +1,7 @@
 //==============================================================================
 //==============================================================================
 #include <string.h>
+#include <stdarg.h>
 
 #include "ncs_error.h"
 //==============================================================================
@@ -43,6 +44,22 @@ int make_last_error(int level, int number, const char *message)
   _error_.level = level;
   _error_.number = number;
   strcpy(_error_.message, message);
+
+  return level;
+}
+//==============================================================================
+int make_last_error_fmt(int level, int number, const char *message, ...)
+{
+  char tmp[1024];
+
+  va_list params;
+  va_start(params, message);
+  vsprintf(tmp, message, params);
+  va_end(params);
+
+  _error_.level = level;
+  _error_.number = number;
+  strcpy(_error_.message, tmp);
 
   return level;
 }

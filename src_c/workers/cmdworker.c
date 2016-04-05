@@ -55,14 +55,24 @@ cmd_server_t  _cmd_server;
 int          _cmd_client_count = 0;
 cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
-sock_active_t _cmd_active = ACTIVE_FIRST;
+sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
 sock_active_t _cmd_active_next()
-{
-  if(_cmd_active == ACTIVE_FIRST)
-    _cmd_active = ACTIVE_SECOND;
-  else
+{ 
+  switch (_cmd_active) {
+  case ACTIVE_NONE:
+  case ACTIVE_SECOND:
     _cmd_active = ACTIVE_FIRST;
+    break;
+
+  case ACTIVE_FIRST:
+    _cmd_active = ACTIVE_SECOND;
+    break;
+
+  default:
+    _cmd_active = ACTIVE_NONE;
+    break;
+  }
 
   return _cmd_active;
 }
@@ -715,7 +725,7 @@ int cmd_remote_clients_list(pack_packet_t *pack)
       pack_init(&tmp_pack);
       pack_add_as_int   (&tmp_pack, "_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, "NAM", tmp_custom_worker->name);
-      pack_add_as_string(&tmp_pack, "CAP", tmp_custom_worker->caption);
+//      pack_add_as_string(&tmp_pack, "CAP", tmp_custom_worker->caption);
       pack_add_as_int   (&tmp_pack, "STA", tmp_custom_worker->state);
       pack_add_as_int   (&tmp_pack, "ACT", tmp_remote_client->active_state);
       pack_add_as_int   (&tmp_pack, "REG", tmp_remote_client->register_state);
@@ -764,7 +774,7 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
       }
   }
 
-  return make_last_error();
+  return make_last_error_fmt(ERROR_NORMAL, errno, "to activate the client not found, id: %d", id);
 }
 //==============================================================================
 int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except)
@@ -802,7 +812,7 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
 
         _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "register(%d)", id);
+        log_add_fmt(LOG_INFO, "register, id: %d, name: %s", id, name);
 
         pack_packet_t tmp_packet;
         cmd_remote_clients_list(&tmp_packet);
@@ -810,6 +820,6 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
       }
   }
 
-  return make_last_error();
+  return make_last_error_fmt(ERROR_NORMAL, errno, "to register the client not found, id: %d, name: %s", id, name);
 }
 //==============================================================================

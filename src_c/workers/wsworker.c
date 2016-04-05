@@ -234,12 +234,10 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   custom_remote_client_t *tmp_client = _ws_remote_clients_next(&_ws_server);
 
   if(tmp_client == 0)
-  {
-    log_add_fmt(LOG_ERROR_CRITICAL,
-            "ws_accept, no available clients, socket: %d, host: %s",
-            socket, host);
-    return ERROR_NORMAL;
-  }
+    return make_last_error_fmt(LOG_ERROR_CRITICAL,
+                               errno,
+                               "ws_accept, no available clients, socket: %d, host: %s",
+                               socket, host);
 
   tmp_client->custom_worker.state = STATE_STARTING;
 
@@ -371,6 +369,13 @@ void *ws_send_worker(void *arg)
   tmp_client->custom_worker.state = STATE_START;
 
   int tmp_errors = 0;
+
+  // TODO: maybe deadlock
+  // В этом цикле, отправляю собщения от не lock клиента
+  // Пока я отправляю, может прийти команда на пополнение данных
+  // А тут делается free, как минимум потеря данных, возможен непредсказуемый результат
+  // ИМХО нужна очередь
+  // NIch 05.04.2016
 
   while(tmp_client->custom_worker.state == STATE_START)
   {
@@ -560,8 +565,8 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
   if(_ws_remote_clients_count(&_ws_server) == 0)
     return make_last_error(ERROR_WARNING, errno, "ws_server_send_pack, no ws clients connected");
 
-  mutex enter
-  _ws_server.is_locked = TRUE;
+//  mutex enter
+//  _ws_server.is_locked = TRUE;
 
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
@@ -594,8 +599,8 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
     }
   }
 
-  _ws_server.is_locked = FALSE;
-  mutex exit
+//  _ws_server.is_locked = FALSE;
+//  mutex exit
 
   return ERROR_NONE;
 }

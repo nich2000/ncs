@@ -50,6 +50,12 @@ var register_t;
 var static_filter = [
     "_ID",
     "TIM",
+    "T_S",
+    "CNT",
+    "SPD",
+    "HEA",
+    "LAT",
+    "LON"
 ];
 var client_t = (function () {
     function client_t(id, name) {
