@@ -587,7 +587,7 @@ pack_size_t _pack_words_size(pack_packet_t *pack)
 //==============================================================================
 int pack_word_as_int(pack_word_t *word, int *value)
 {
-  // TODO этот метод не работает
+  // TODO: этот метод не работает
 //  bytes_to_int(word->value, value);
 
   *value = 0;
@@ -610,7 +610,7 @@ const char *_pack_word_as_string(pack_word_t *word)
 
   pack_word_as_string(word, tmp_value);
 
-  // TODO - возможна утечка
+  // TODO: возможна утечка
   char *tmp_string = (char*)malloc(strlen((char*)tmp_value)+1);
   tmp_string[strlen((char*)tmp_value)] = '\0';
 
@@ -759,7 +759,7 @@ int pack_buffer_to_pack(pack_buffer_t buffer, pack_size_t size, pack_packet_t *p
 {
   pack_init(pack);
 
-  // TODO - maybe govnocode
+  // TODO: maybe govnocode
   int init_index = PACK_VERSION_SIZE + PACK_SIZE_SIZE;
   int init_size  = size - init_index - PACK_CRC_SIZE;
 

@@ -40,7 +40,7 @@
       },
       "linux":
       {
-        "cmd": ["$project_path\\cmd\\makerun.sh"]
+        "cmd": ["sh", "$project_path/cmd/makerun.sh"]
       }
     }
   ]

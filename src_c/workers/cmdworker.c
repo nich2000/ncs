@@ -58,7 +58,7 @@ cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
 sock_active_t _cmd_active_next()
-{ 
+{
   switch (_cmd_active) {
   case ACTIVE_NONE:
   case ACTIVE_SECOND:
@@ -462,7 +462,7 @@ void *cmd_send_worker(void *arg)
 
   log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_send_worker, socket: %d", tmp_sock);
 
-  // TODO - analog on_connect - need to send clients list to ws - govnokod
+  // TODO: analog on_connect - need to send clients list to ws - govnokod
   tmp_client->custom_worker.state = STATE_START;
   if(tmp_client->custom_worker.on_state != NULL)
     tmp_client->custom_worker.on_state(tmp_client, STATE_START);

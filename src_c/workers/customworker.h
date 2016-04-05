@@ -51,14 +51,14 @@ typedef struct
   sock_active_t   active_state;
   sock_register_t register_state;
 
-  // TODO Временное явление 1
+  // TODO: Временное явление 1
   pack_protocol_t protocol;
-  // TODO Временное явление 2
+  // TODO: Временное явление 2
   char           *out_message;
   int             out_message_size;
-  // TODO Временное явление 3
+  // TODO: Временное явление 3
   BOOL            hand_shake;
-  // TODO Временное явление 4
+  // TODO: Временное явление 4
   FILE           *report;
 
   on_error_t      on_error;

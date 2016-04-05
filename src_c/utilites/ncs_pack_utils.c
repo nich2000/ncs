@@ -174,7 +174,7 @@ int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOO
 
   if(pack)
   {
-    // TODO тут выскакивает ошибка, к примеру если подключть 3-х клиентов
+    // TODO: тут выскакивает ошибка, к примеру если подключть 3-х клиентов
     // Я так думаю, что из за большого пакета
 //    char *tmp = do_print_pack(packet, 4);
 //    log_add(tmp, LOG_INFO);

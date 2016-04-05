@@ -50,15 +50,15 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   custom_remote_client->active_state     = ACTIVE_NONE;
   custom_remote_client->register_state   = REGISTER_NONE;
 
-  // TODO Временное явление 1
+  // TODO: Временное явление 1
   protocol_init(&custom_remote_client->protocol);
 
-  // TODO Временное явление 2
+  // TODO: Временное явление 2
   custom_remote_client->out_message      = NULL;
   custom_remote_client->out_message_size = 0;
-  //TODO  Временное явление 3
+  //TODO: Временное явление 3
   custom_remote_client->hand_shake       = FALSE;
-  //TODO  Временное явление 4
+  //TODO: Временное явление 4
   custom_remote_client->report           = 0;
 
   custom_remote_client->on_error         = NULL;
