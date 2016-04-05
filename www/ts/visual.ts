@@ -1,9 +1,11 @@
 //==============================================================================
+//==============================================================================
 class custom_t {
+  //----------------------------------------------------------------------------
   protected _id: string;
   protected _owner: any;
   protected _self: any;
-
+  //----------------------------------------------------------------------------
   constructor(id: string, tag: string, owner: any) {
     this._id = id;
     this._owner = owner;
@@ -12,52 +14,54 @@ class custom_t {
     if(this._self == undefined)
       this._self = element.add(id, tag, owner);
   }
-
+  //----------------------------------------------------------------------------
   public get id(): string {
     return this._id;
   }
-
+  //----------------------------------------------------------------------------
   public get self() : any {
     return this._self;
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
 class cell_t extends custom_t {
+  //----------------------------------------------------------------------------
   private _text: string;
-
+  //----------------------------------------------------------------------------
   constructor(id: string, owner: row_t) {
     super(id, "<td/>", owner);
   }
-
+  //----------------------------------------------------------------------------
   public get text() : string {
     return this._self.text();
   }
-
+  //----------------------------------------------------------------------------
   public set text(v : string) {
     this._self.text(v);
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
 class row_t extends custom_t {
+  //----------------------------------------------------------------------------
   private _cells: Array<cell_t> = [];
-
+  //----------------------------------------------------------------------------
   constructor(id: string, owner: any) {
     super(id, "<tr/>", owner);
 
     // Пример замыкания, Signal.emit вызовет эту переменную
     // let value: string = '1234';
     this._self.click(function() {
-      // $(this).addClass('dems-selected').siblings().removeClass('dems-selected');
       let cell: any = $(this).find('td:last');
-      let value: string = cell.text();
-      Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "next"]]);
+      Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
     });
   }
-
+  //----------------------------------------------------------------------------
   public get cells(): cell_t[] {
     return this._cells;
   }
-
+  //----------------------------------------------------------------------------
   private find_by_id(id: string): cell_t {
     for(let i = 0; i < this._cells.length; i++){
       if(this._cells[i].id == id)
@@ -66,7 +70,7 @@ class row_t extends custom_t {
 
     return undefined;
   }
-
+  //----------------------------------------------------------------------------
   public add_cell(id: string, text: string): void {
     let cell: cell_t = this.find_by_id(id);
 
@@ -77,22 +81,24 @@ class row_t extends custom_t {
 
     cell.text = text;
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
 class table_t extends custom_t {
+  //----------------------------------------------------------------------------
   protected _cols_count: number;
   protected _rows: Array<row_t> = [];
-
+  //----------------------------------------------------------------------------
   constructor(id: string, owner: any, cols_count: number) {
     super(id, "<table/>", owner);
 
     this._cols_count = cols_count;
   }
-
+  //----------------------------------------------------------------------------
   public get rows(): row_t[] {
     return this._rows;
   }
-
+  //----------------------------------------------------------------------------
   protected find_row(id: string): row_t {
     for(let i: number = 0; i < this._rows.length; i++){
       if(this._rows[i].id == id)
@@ -101,7 +107,7 @@ class table_t extends custom_t {
 
     return undefined;
   }
-
+  //----------------------------------------------------------------------------
   protected do_add_row(id: string): row_t {
     let row: row_t = this.find_row(id);
 
@@ -112,17 +118,19 @@ class table_t extends custom_t {
 
     return row;
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
 class clients_table_t extends table_t {
+  //----------------------------------------------------------------------------
   constructor(id: string, cols_count: number) {
     super(id, $(window), cols_count);
   }
-
+  //----------------------------------------------------------------------------
   private get_id(id: number): string {
     return 'client_' + String(id);
   }
-
+  //----------------------------------------------------------------------------
   private add_row(id: number, name: string): void {
     let row_id: string = this.get_id(id);
     let row: row_t = super.do_add_row(row_id);
@@ -136,7 +144,7 @@ class clients_table_t extends table_t {
     cell_id = 'client_id_' + String(id);
     row.add_cell(cell_id, String(id));
   }
-
+  //----------------------------------------------------------------------------
   private active_row(row: row_t, active: active_t): void {
     switch(active){
       case active_t.first: {
@@ -151,25 +159,25 @@ class clients_table_t extends table_t {
       }
     }
   }
-
+  //----------------------------------------------------------------------------
   private state_row(row: row_t, state: state_t): void {
     if(state == state_t.start)
       row.self.addClass('dems-active').siblings().removeClass('dems-active');
     else
       row.self.removeClass('dems-active');
   }
-
+  //----------------------------------------------------------------------------
   private register_row(row: row_t, register: register_t): void {
     if(register == register_t.ok)
       row.self.addClass('dems-register').siblings().removeClass('dems-register');
     else
       row.self.removeClass('dems-register');
   }
-
+  //----------------------------------------------------------------------------
   public add_client(client: client_t): void {
     this.add_row(client.id, client.name);
   }
-
+  //----------------------------------------------------------------------------
   public active_client(client: client_t, active: active_t): void {
     let id: string = this.get_id(client.id);
     let row: row_t = this.find_row(id);
@@ -179,27 +187,29 @@ class clients_table_t extends table_t {
     let cell_id: string = 'client_act_' + String(client.id);
     element.set_text(cell_id, active_t[active]);
   }
-
+  //----------------------------------------------------------------------------
   public state_client(client: client_t, state: state_t): void {
     let id: string = this.get_id(client.id);
     let row: row_t = this.find_row(id);
 
     this.state_row(row, state);
   }
-
+  //----------------------------------------------------------------------------
   public register_client(client: client_t, register: register_t): void {
     let id: string = this.get_id(client.id);
     let row: row_t = this.find_row(id);
 
     this.register_row(row, register);
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
 class data_table_t extends table_t {
+  //----------------------------------------------------------------------------
   constructor(id: string, cols_count: number) {
     super(id, $(window), cols_count);
   }
-
+  //----------------------------------------------------------------------------
   add_row(prefix: string, key: string, value: string) : void {
     let row_id: string = 'data_' + prefix + '_' + key + '_' + value;
 
@@ -211,5 +221,6 @@ class data_table_t extends table_t {
     cell_id = 'data_' + prefix + '_value_' + key;
     row.add_cell(cell_id, value);
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================

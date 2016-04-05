@@ -37,4 +37,6 @@ int ws_server_status();
 int ws_server_send_cmd (int session_id, int argc, ...);
 int ws_server_send_pack(int session_id, pack_packet_t *pack);
 //==============================================================================
+int ws_remote_clients_register(sock_id_t id, sock_name_t name);
+//==============================================================================
 #endif //WSWORKER_H

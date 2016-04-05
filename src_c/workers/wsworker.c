@@ -435,6 +435,8 @@ int on_ws_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
+int ws_remote_clients_register(sock_id_t id, sock_name_t name);
+//==============================================================================
 /*
   [
     ["key", "value"],

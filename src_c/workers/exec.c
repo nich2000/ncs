@@ -31,7 +31,6 @@
 #define CMD_WEB_SERVER      "webserver"      // 1 - 2(state, port)
 #define CMD_WS_SERVER       "wsserver"       // 1 - 2(state, port)
 #define CMD_CLIENT          "client"         // 1 - 3(state, host, port)
-#define CMD_ACTIVATE        "activate"       // 0
 #define CMD_SND_TO_SERVER   "sndtosr"        // 1 - n
 #define CMD_SND_TO_WSSERVER "sndtows"        // 1 - n
 #define CMD_SND_TO_CLIENT   "sndtocl"        // 1 - n
@@ -42,7 +41,10 @@
 #define CMD_WEB_SERVER_INFO "webserverinfo"  // 0
 #define CMD_WS_SERVER_INFO  "wsserverinfo"   // 0
 #define CMD_CLIENT_INFO     "clientinfo"     // 0
-#define CMD_REGISTER        "register"       // 1 remote id
+#define CMD_CMD_REGISTER     "register"       //
+#define CMD_CMD_ACTIVATE     "activate"       //
+#define CMD_WS_REGISTER      "ws_register"    //
+#define CMD_WS_ACTIVATE      "ws_activate"    //
 //==============================================================================
 #define CMD_START           "on"
 #define CMD_STOP            "off"
@@ -407,9 +409,9 @@ int handle_command_str(void *sender, char *command)
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
-    else if(strcmp(token, CMD_ACTIVATE) == 0)
+    else if(strcmp(token, CMD_CMD_ACTIVATE) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_ACTIVATE);
+      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_ACTIVATE);
 
       sock_id_t id = -1;
       char *id_str = strtok(NULL, " ");
@@ -443,9 +445,9 @@ int handle_command_str(void *sender, char *command)
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
-    else if(strcmp(token, CMD_REGISTER) == 0)
+    else if(strcmp(token, CMD_CMD_REGISTER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_REGISTER);
+      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_REGISTER);
 
       char *name_str = strtok(NULL, " ");
       if(name_str != NULL)
@@ -453,6 +455,24 @@ int handle_command_str(void *sender, char *command)
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
         cmd_remote_clients_register(id, name_str);
+      }
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_ACTIVATE);
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_WS_REGISTER) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_REGISTER);
+
+      char *name_str = strtok(NULL, " ");
+      if(name_str != NULL)
+      {
+        sock_id_t id = ((custom_worker_t*)sender)->id;
+
+        ws_remote_clients_register(id, name_str);
       }
     }
     //--------------------------------------------------------------------------

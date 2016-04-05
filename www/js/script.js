@@ -386,6 +386,7 @@ var web_socket_t = (function () {
     };
     web_socket_t.prototype.doSend = function (message) {
         console.log("doSend: " + message);
+        message.splice(1, 0, ["par", this.session_id]);
         $("#last_send_cmd").text("Command: " + message);
         message = JSON.stringify(message);
         this._socket.send(message);
@@ -393,10 +394,12 @@ var web_socket_t = (function () {
     web_socket_t.prototype.onOpen = function (evt) {
         console.log("onOpen");
         this._is_connected = true;
+        this.session_id = String(new Date().getTime());
         $('#connection_status').removeClass('label-danger');
         $('#connection_status').removeClass('label-warning');
         $('#connection_status').addClass('label-success');
         element.set_text("connection_status", 'Connection: open');
+        Signal.emit("doSend", [["cmd", "ws_register"], ["par", this.session_id]]);
     };
     web_socket_t.prototype.onClose = function (evt) {
         console.log("onClose");
@@ -423,6 +426,26 @@ var web_socket_t = (function () {
             console.log("onMessage: " + e.data);
         }
     };
+    Object.defineProperty(web_socket_t.prototype, "is_connected", {
+        get: function () {
+            return this._is_connected;
+        },
+        set: function (v) {
+            this._is_connected = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(web_socket_t.prototype, "session_id", {
+        get: function () {
+            return this._session_id;
+        },
+        set: function (v) {
+            this._session_id = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return web_socket_t;
 })();
 function asInt(value) {
@@ -519,8 +542,7 @@ var row_t = (function (_super) {
         this._cells = [];
         this._self.click(function () {
             var cell = $(this).find('td:last');
-            var value = cell.text();
-            Signal.emit("doSend", [["cmd", "activate"], ["par", value], ["par", "next"]]);
+            Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
         });
     }
     Object.defineProperty(row_t.prototype, "cells", {

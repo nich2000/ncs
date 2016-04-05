@@ -2,6 +2,7 @@
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
 class map_t {
+  //----------------------------------------------------------------------------
   private _id: string;
   private _canvas: any;
   private _ctx: any;
@@ -9,7 +10,7 @@ class map_t {
   private _height: number;
   private _width: number;
   private _scale: number;
-
+  //----------------------------------------------------------------------------
   constructor(id: string) {
     console.log("constructor: map_t, id: " + id);
 
@@ -33,27 +34,27 @@ class map_t {
 
     this.clear();
   }
-
+  //----------------------------------------------------------------------------
   public get_height(): number {
     return this._height;
   }
-
+  //----------------------------------------------------------------------------
   public set_height(height: number) {
     this._height = height;
   }
-
+  //----------------------------------------------------------------------------
   public get_width(): number {
     return this._width;
   }
-
+  //----------------------------------------------------------------------------
   public set_width(width: number) {
     this._width = width;
   }
-
+  //----------------------------------------------------------------------------
   public get_scale(): number {
     return this._scale;
   }
-
+  //----------------------------------------------------------------------------
   public set_scale(height: number, width: number) {
     let tmp_scale_h: number = height / this._height;
     let tmp_scale_w: number = width / this._width;
@@ -63,14 +64,14 @@ class map_t {
     else
       this._scale = tmp_scale_w;
   }
-
+  //----------------------------------------------------------------------------
   public clear() {
     if (!this._is_init)
       return;
 
     this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
   }
-
+  //----------------------------------------------------------------------------
   public test_draw() {
     if (!this._is_init)
       return;
@@ -91,5 +92,6 @@ class map_t {
     this._ctx.strokeStyle = 'blue';
     this._ctx.stroke();
   }
+  //----------------------------------------------------------------------------
 }
 //==============================================================================
