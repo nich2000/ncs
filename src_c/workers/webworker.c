@@ -41,7 +41,7 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host);
 void *web_handle_connection(void *arg);
 int web_get_response(char *request, char *response, int *size);
 //==============================================================================
-web_server_t _web_server;
+static web_server_t _web_server;
 //==============================================================================
 int web_server(sock_state_t state, sock_port_t port)
 {
@@ -83,8 +83,10 @@ int web_server_init(web_server_t *server)
 {
   custom_server_init(STATIC_WEB_SERVER_ID, &server->custom_server);
 
+  strcpy((char*)server->custom_server.custom_worker.name, STATIC_WEB_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
+
   server->custom_server.on_accept          = &on_web_accept;
 
   return ERROR_NONE;

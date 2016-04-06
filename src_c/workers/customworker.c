@@ -50,6 +50,11 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   custom_remote_client->active_state     = ACTIVE_NONE;
   custom_remote_client->register_state   = REGISTER_NONE;
 
+  custom_remote_client->connect_time     = 0;
+  custom_remote_client->disconnect_time  = 0;
+  custom_remote_client->active_time      = 0;
+  custom_remote_client->register_time    = 0;
+
   // TODO: Временное явление 1
   protocol_init(&custom_remote_client->protocol);
 

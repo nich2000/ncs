@@ -85,6 +85,11 @@ const char *active_to_string(sock_active_t value)
   }
 }
 //==============================================================================
+const char *time_to_string(sock_time_t value)
+{
+  return asctime(localtime(&value));
+}
+//==============================================================================
 const char *register_to_string(sock_register_t value)
 {
   switch (value) {
@@ -258,11 +263,17 @@ int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix
 
   sprintf(tmp_info,
           "%s\n"                                         \
+          "       connect_time:                    %s\n" \
           "       active_state:                    %s\n" \
-          "       register_state:                  %s",
+          "       active_time:                     %s\n" \
+          "       register_state:                  %s\n" \
+          "       register_time:                   %s",
           prefix,
+          time_to_string(remote_client->connect_time),
           active_to_string(remote_client->active_state),
-          register_to_string(remote_client->register_state));
+          time_to_string(remote_client->active_time),
+          register_to_string(remote_client->register_state),
+          time_to_string(remote_client->register_time));
 
   log_add(tmp_info, LOG_INFO);
 

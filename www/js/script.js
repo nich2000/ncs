@@ -399,7 +399,7 @@ var web_socket_t = (function () {
         $('#connection_status').removeClass('label-warning');
         $('#connection_status').addClass('label-success');
         element.set_text("connection_status", 'Connection: open');
-        Signal.emit("doSend", [["cmd", "ws_register"], ["par", this.session_id]]);
+        Signal.emit("doSend", [["cmd", "ws_register"]]);
     };
     web_socket_t.prototype.onClose = function (evt) {
         console.log("onClose");

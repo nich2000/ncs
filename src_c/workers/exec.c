@@ -413,6 +413,29 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_ACTIVATE);
 
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_CMD_REGISTER) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_REGISTER);
+
+      char *name_str = strtok(NULL, " ");
+      if(name_str != NULL)
+      {
+        sock_id_t id = ((custom_worker_t*)sender)->id;
+
+        cmd_remote_clients_register(id, (unsigned char*)name_str);
+      }
+
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
+    {
+      char *name_str = strtok(NULL, " ");
+      log_add_fmt(LOG_INFO, "token: %s, sender: %s", CMD_WS_ACTIVATE, name_str);
+
       sock_id_t id = -1;
       char *id_str = strtok(NULL, " ");
       if(id_str != NULL)
@@ -445,24 +468,6 @@ int handle_command_str(void *sender, char *command)
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
-    else if(strcmp(token, CMD_CMD_REGISTER) == 0)
-    {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_REGISTER);
-
-      char *name_str = strtok(NULL, " ");
-      if(name_str != NULL)
-      {
-        sock_id_t id = ((custom_worker_t*)sender)->id;
-
-        cmd_remote_clients_register(id, (unsigned char*)name_str);
-      }
-    }
-    //--------------------------------------------------------------------------
-    else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
-    {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_ACTIVATE);
-    }
-    //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_REGISTER) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_WS_REGISTER);
@@ -474,224 +479,11 @@ int handle_command_str(void *sender, char *command)
 
         ws_remote_clients_register(id, (unsigned char*)name_str);
       }
+
+      return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
   }
   return EXEC_UNKNOWN;
 }
-//==============================================================================
-/*
-char token [128];
-char param1[128];
-char param2[128];
-char param3[128];
-char param4[128];
-char param5[128];
-int res = sscanf(command, "%s %s %s %s %s %s", token, param1, param2, param3, param4, param5);
-if(res == 1)
-{
-  if(strcmp(token, "exit") == 0)
-  {
-    return RESULT_NONE;
-  }
-  else if(strcmp(token, "all") == 0)
-  {
-    log_set_name("all_log.txt");
-
-//      cmd_server(SOCK_STATE_START, cmd_server_port);
-//      ws_server (SOCK_STATE_START, ws_server_port);
-//      web_server(SOCK_STATE_START, web_server_port);
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "client") == 0)
-  {
-    log_set_name("client_log.txt");
-
-//      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host, 1);
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "server") == 0)
-  {
-    log_set_name("server_log.txt");
-
-//      cmd_server(SOCK_STATE_START, cmd_server_port);
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "wsserver") == 0)
-  {
-    log_set_name("ws_server_log.txt");
-
-//      ws_server(SOCK_STATE_START, ws_server_port);
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "webserver") == 0)
-  {
-    log_set_name("web_server_log.txt");
-
-//      web_server(SOCK_STATE_START, web_server_port);
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "test") == 0)
-  {
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "clear") == 0)
-  {
-    clr_scr();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "typesinfo") == 0)
-  {
-    print_types_info();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "definesinfo") == 0)
-  {
-    print_defines_info();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "serverinfo") == 0)
-  {
-    cmd_server_status();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "webserverinfo") == 0)
-  {
-    web_server_status();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "wsserverinfo") == 0)
-  {
-    ws_server_status();
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "clientinfo") == 0)
-  {
-    cmd_client_status();
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else if(res == 2)
-{
-  if(strcmp(token, "sndtocl") == 0)
-  {
-    cmd_server_send(1, param1);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtosr") == 0)
-  {
-    cmd_client_send(1, param1);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtows") == 0)
-  {
-    ws_server_send_cmd(1, param1);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "client") == 0)
-  {
-    log_set_name("client_log.txt");
-
-//      cmd_client(SOCK_STATE_START, cmd_server_port, cmd_server_host, atoi(param1));
-
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "stream") == 0)
-  {
-    if(strcmp(param1, "on") == 0)
-      cmd_streamer(SOCK_STATE_START);
-    else if(strcmp(param1, "off") == 0)
-      cmd_streamer(SOCK_STATE_STOP);
-    else if(strcmp(param1, "pause") == 0)
-      cmd_streamer(SOCK_STATE_PAUSE);
-    else if(strcmp(param1, "resume") == 0)
-      cmd_streamer(SOCK_STATE_RESUME);
-    else
-      return RESULT_UNKNOWN;
-
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else if(res == 3)
-{
-  if(strcmp(token, "sndtocl") == 0)
-  {
-    cmd_server_send(2, param1, param2);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtosr") == 0)
-  {
-    cmd_client_send(2, param1, param2);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtows") == 0)
-  {
-    ws_server_send_cmd(2, param1, param2);
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else if(res == 4)
-{
-  if(strcmp(token, "sndtocl") == 0)
-  {
-    cmd_server_send(3, param1, param2, param3);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtosr") == 0)
-  {
-    cmd_client_send(3, param1, param2, param3);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtows") == 0)
-  {
-    ws_server_send_cmd(3, param1, param2, param3);
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else if(res == 5)
-{
-  if(strcmp(token, "sndtocl") == 0)
-  {
-    cmd_server_send(4, param1, param2, param3, param4);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtosr") == 0)
-  {
-    cmd_client_send(4, param1, param2, param3, param4);
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else if(res == 6)
-{
-  if(strcmp(token, "sndtocl") == 0)
-  {
-    cmd_server_send(5, param1, param2, param3, param4, param5);
-    return RESULT_DONE;
-  }
-  else if(strcmp(token, "sndtosr") == 0)
-  {
-    cmd_client_send(5, param1, param2, param3, param4, param5);
-    return RESULT_DONE;
-  }
-
-  return RESULT_UNKNOWN;
-}
-else
-  return RESULT_UNKNOWN;
-*/
 //==============================================================================

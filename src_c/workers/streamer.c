@@ -19,12 +19,13 @@ void *cmd_streamer_worker_func(void *arg);
 int cmd_streamer_make_random(custom_remote_client_t *client);
 int cmd_streamer_make       (custom_remote_client_t *client);
 //==============================================================================
-int counter = 0;
-int             _cmd_streamer_count;
-streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
+static int             _counter = 0;
+static int             _cmd_streamer_count;
+static streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
 //==============================================================================
 extern int          _cmd_client_count;
 extern cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
+//==============================================================================
 extern char *pack_struct_keys[];
 //==============================================================================
 int cmd_streamer(sock_state_t state)
@@ -225,7 +226,7 @@ int cmd_streamer_make_random(custom_remote_client_t *client)
 
     protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)client->custom_worker.name, &client->protocol);
 
-    protocol_add_as_int((unsigned char*)"CNT", counter++, &client->protocol);
+    protocol_add_as_int((unsigned char*)"CNT", _counter++, &client->protocol);
 
     for(pack_size_t i = 0; i < TEST_WORD_COUNT; i++)
     {

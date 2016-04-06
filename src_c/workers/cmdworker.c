@@ -2,6 +2,7 @@
 //==============================================================================
 #include <stdarg.h>
 #include <string.h>
+#include <time.h>
 
 #include "streamer.h"
 #include "exec.h"
@@ -49,13 +50,13 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
-int           _cmd_server_id = 0;
-cmd_server_t  _cmd_server;
+static cmd_server_t  _cmd_server;
 //==============================================================================
+// Visible onli in streamer.c
 int          _cmd_client_count = 0;
 cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
-sock_active_t _cmd_active = ACTIVE_NONE;
+static sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
 sock_active_t _cmd_active_next()
 {
@@ -140,10 +141,7 @@ int cmd_server_status()
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count)
 {
   if(count >= SOCK_WORKERS_COUNT)
-  {
-    log_add("cmd_client, too match count", LOG_ERROR_CRITICAL);
-    return ERROR_CRITICAL;
-  }
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_client, too match count(%d)", count);
 
   sock_print_client_header(port, host);
 
@@ -200,8 +198,10 @@ int cmd_server_init(cmd_server_t *server)
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
 
+  strcpy((char*)server->custom_server.custom_worker.name, STATIC_CMD_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_CMD_SERVER;
+
   server->custom_server.on_accept          = &on_cmd_accept;
 
   return ERROR_NONE;
@@ -291,14 +291,13 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
   if(tmp_client == 0)
-  {
-    log_add_fmt(LOG_ERROR_CRITICAL,
-                "cmd_accept, no available clients, socket: %d, host: %s",
-                socket, host);
-    return ERROR_CRITICAL;
-  }
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_accept, no available clients, socket: %d, host: %s", socket, host);
 
   tmp_client->custom_worker.on_state = on_server_cmd_state;
+
+  time_t rawtime;
+  time (&rawtime);
+  tmp_client->connect_time = rawtime;
 
   tmp_client->custom_worker.state = STATE_STARTING;
 
@@ -432,6 +431,10 @@ int on_cmd_connect(void *sender)
 
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
+  time_t rawtime;
+  time (&rawtime);
+  tmp_client->custom_remote_client.connect_time = rawtime;
+
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
@@ -520,6 +523,12 @@ void *cmd_send_worker(void *arg)
 int on_cmd_disconnect(void *sender)
 {
   log_add("cmd_disconnect, disconnected from server", LOG_INFO);
+
+  custom_client_t *tmp_client = (custom_client_t*)sender;
+
+  time_t rawtime;
+  time (&rawtime);
+  tmp_client->custom_remote_client.connect_time = rawtime;
 
   return ERROR_NONE;
 }
@@ -755,6 +764,10 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
         else
           cur_active = active;
 
+        time_t rawtime;
+        time (&rawtime);
+        _cmd_server.custom_remote_clients_list.items[i].active_time = rawtime;
+
         _cmd_server.custom_remote_clients_list.items[i].active_state = cur_active;
 
         switch (cur_active)
@@ -812,9 +825,13 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
       {
         strcpy((char*)_cmd_server.custom_remote_clients_list.items[i].custom_worker.name, (char*)name);
 
+        time_t rawtime;
+        time (&rawtime);
+        _cmd_server.custom_remote_clients_list.items[i].register_time = rawtime;
+
         _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "register, id: %d, name: %s", id, name);
+        log_add_fmt(LOG_INFO, "cmd_remote_clients_register, id: %d, name: %s", id, name);
 
         pack_packet_t tmp_packet;
         cmd_remote_clients_list(&tmp_packet);
@@ -822,6 +839,6 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
       }
   }
 
-  return make_last_error_fmt(ERROR_NORMAL, errno, "to register the client not found, id: %d, name: %s", id, name);
+  return make_last_error_fmt(ERROR_NORMAL, errno, "cmd_remote_clients_register, the client not found, id: %d, name: %s", id, name);
 }
 //==============================================================================

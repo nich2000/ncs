@@ -65,7 +65,7 @@ int ws_hand_shake(char *request, char *response, int *size);
 int       ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length, unsigned char* buffer, int buffer_size);
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
-ws_server_t _ws_server;
+static ws_server_t _ws_server;
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
 //==============================================================================
@@ -111,8 +111,10 @@ int ws_server_init(ws_server_t *server)
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
 
+  strcpy((char*)server->custom_server.custom_worker.name, STATIC_WS_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
+
   server->custom_server.on_accept          = &on_ws_accept;
 
   return ERROR_NONE;
@@ -238,6 +240,10 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
                                errno,
                                "ws_accept, no available clients, socket: %d, host: %s",
                                socket, host);
+
+  time_t rawtime;
+  time (&rawtime);
+  tmp_client->connect_time = rawtime;
 
   tmp_client->custom_worker.state = STATE_STARTING;
 
@@ -415,6 +421,12 @@ int on_ws_disconnect(void *sender)
 {
   log_add("ws_disconnect, disconnected from server", LOG_INFO);
 
+  custom_client_t *tmp_client = (custom_client_t*)sender;
+
+  time_t rawtime;
+  time (&rawtime);
+  tmp_client->custom_remote_client.connect_time = rawtime;
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -437,7 +449,24 @@ int on_ws_send(void *sender)
 //==============================================================================
 int ws_remote_clients_register(sock_id_t id, sock_name_t name)
 {
-  return ERROR_NONE;
+  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  {
+    if(_ws_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
+      if(_ws_server.custom_remote_clients_list.items[i].custom_worker.id == id)
+      {
+        strcpy((char*)_ws_server.custom_remote_clients_list.items[i].custom_worker.name, (char*)name);
+
+        time_t rawtime;
+        time (&rawtime);
+        _ws_server.custom_remote_clients_list.items[i].register_time = rawtime;
+
+        _ws_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
+
+        log_add_fmt(LOG_INFO, "ws_remote_clients_register, id: %d, name: %s", id, name);
+      }
+  }
+
+  return make_last_error_fmt(ERROR_NORMAL, errno, "ws_remote_clients_register, the client not found, id: %d, name: %s", id, name);
 }
 //==============================================================================
 /*

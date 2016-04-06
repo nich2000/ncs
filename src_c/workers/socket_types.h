@@ -11,6 +11,8 @@
   #include <winsock.h>
 #else
 #endif
+
+#include <time.h>
 //==============================================================================
 #include "defines.h"
 #include "globals.h"
@@ -68,6 +70,7 @@ typedef unsigned short sock_state_t;
 typedef unsigned short sock_active_t;
 typedef unsigned short sock_register_t;
 typedef unsigned char  sock_buffer_t[SOCK_BUFFER_SIZE];
+typedef time_t         sock_time_t;
 //==============================================================================
 
 #endif //SOCKET_TYPES_H

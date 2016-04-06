@@ -17,6 +17,10 @@
 #define STATIC_WEB_SERVER_ID 2
 #define STATIC_WS_SERVER_ID  3
 //==============================================================================
+#define STATIC_CMD_SERVER_NAME "CMD_SERVER\0"
+#define STATIC_WEB_SERVER_NAME "WEB_SERVER\0"
+#define STATIC_WS_SERVER_NAME  "WS_SERVER\0"
+//==============================================================================
 typedef int (*on_state_t)     (void *sender, sock_state_t state);
 typedef int (*on_lock_t)      (void *sender, int is_locked);
 typedef int (*on_accept_t)    (void *sender, SOCKET socket, sock_host_t host);
@@ -27,8 +31,8 @@ typedef int (*on_recv_t)      (void *sender, char *buffer, int size);
 //==============================================================================
 typedef struct
 {
-  sock_id_t       id;
-  sock_name_t     name;
+  sock_id_t       id;   // local id unique
+  sock_name_t     name; // server name/outer name/session id unique
   sock_type_t     type;
   sock_mode_t     mode;
   sock_port_t     port;
@@ -50,6 +54,11 @@ typedef struct
 
   sock_active_t   active_state;
   sock_register_t register_state;
+
+  sock_time_t     connect_time;
+  sock_time_t     disconnect_time;
+  sock_time_t     active_time;
+  sock_time_t     register_time;
 
   // TODO: Временное явление 1
   pack_protocol_t protocol;

@@ -56,7 +56,7 @@ class web_socket_t {
     $('#connection_status').addClass('label-success');
     element.set_text("connection_status", 'Connection: open');
 
-    Signal.emit("doSend", [["cmd", "ws_register"], ["par", this.session_id]]);
+    Signal.emit("doSend", [["cmd", "ws_register"]]);
   }
   //----------------------------------------------------------------------------
   private onClose(evt: any) {

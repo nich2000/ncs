@@ -17,12 +17,7 @@
 
 #include "ncs_log.h"
 //==============================================================================
-#if defined(__linux__) || defined(_WIN32)
-  time_t rawtime;
-  struct tm *timeinfo;
-#endif
-//==============================================================================
-char log_def_name[64] = "log.txt";
+static char log_def_name[64] = "log.txt";
 //==============================================================================
 void clr_scr()
 {
@@ -109,11 +104,16 @@ void log_add(char *message, int log_type)
 
   log_make_dir();
 
-//   time(&rawtime);
-//   timeinfo = localtime(&rawtime);
-
   char *t = "";
+#if defined(__linux__) || defined(_WIN32)
+//  time_t rawtime;
+//  struct tm *timeinfo;
+
+//  time(&rawtime);
+//  timeinfo = localtime(&rawtime);
+
 //  strftime(t, 128, "%T", timeinfo);
+#endif
 
   const char *prefix = log_type_to_string(log_type);
 
