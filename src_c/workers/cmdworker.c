@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "streamer.h"
 #include "exec.h"
@@ -17,6 +18,20 @@
 #include "protocol_types.h"
 #include "ncs_pack_utils.h"
 //==============================================================================
+typedef struct
+{
+  char id[32];
+  char name[32];
+} map_item_t;
+//==============================================================================
+typedef map_item_t map_items_t[128];
+//==============================================================================
+typedef struct
+{
+  int         count;
+  map_items_t items;
+} names_map_t;
+//==============================================================================
 int cmd_server_init     (cmd_server_t *server);
 int cmd_server_start    (cmd_server_t *server, sock_port_t port);
 int cmd_server_stop     (cmd_server_t *server);
@@ -27,6 +42,8 @@ void *cmd_server_worker (void *arg);
 //==============================================================================
 custom_remote_client_t *_cmd_remote_clients_next (cmd_server_t *cmd_server);
 int                     _cmd_remote_clients_count(cmd_server_t *cmd_server);
+//==============================================================================
+int load_names_map();
 //==============================================================================
 int cmd_client_init     (cmd_client_t *client);
 int cmd_client_start    (cmd_client_t *client, sock_port_t port, sock_host_t host);
@@ -50,7 +67,8 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
-static cmd_server_t  _cmd_server;
+static cmd_server_t _cmd_server;
+static names_map_t  _names_map;
 //==============================================================================
 // Visible onli in streamer.c
 int          _cmd_client_count = 0;
@@ -89,6 +107,44 @@ sock_active_t _cmd_active_neg()
      return ACTIVE_SECOND;
   else
     return ACTIVE_FIRST;
+}
+//==============================================================================
+int load_names_map()
+{
+  char *file_name = "../config/names.ejn";
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  _names_map.count = 0;
+
+  FILE *f = fopen(file_name, "r");
+  if(f == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names_map, can not open file %s", file_name);
+
+  while ((read = getline(&line, &len, f)) != -1)
+  {
+    _names_map.count++;
+
+    char *token = strtok(line, "=");
+    strcpy(_names_map.items[_names_map.count-1].id, token);
+
+    token = strtok(NULL, "=");
+    if(token[strlen(token)-1] == '\n')
+      token[strlen(token)-1] = '\0';
+    strcpy(_names_map.items[_names_map.count-1].name, token);
+  }
+
+  for(int i = 0; i < _names_map.count; i++)
+    printf("%s=%s\n",
+           _names_map.items[i].id,
+           _names_map.items[i].name);
+
+  fclose(f);
+  if(line)
+    free(line);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port)
@@ -211,6 +267,8 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
 {
   if(server->custom_server.custom_worker.state == STATE_START)
     return make_last_error(ERROR_NORMAL, errno, "cmd_server_start, server already started");
+
+  load_names_map();
 
   cmd_server_init(server);
 
