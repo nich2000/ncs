@@ -20,11 +20,11 @@
 //==============================================================================
 typedef struct
 {
-  char id[32];
-  char name[32];
+  char session_id[PACK_VALUE_SIZE];
+  char name[PACK_VALUE_SIZE];
 } map_item_t;
 //==============================================================================
-typedef map_item_t map_items_t[128];
+typedef map_item_t map_items_t[SOCK_WORKERS_COUNT];
 //==============================================================================
 typedef struct
 {
@@ -127,7 +127,7 @@ int load_names_map()
     _names_map.count++;
 
     char *token = strtok(line, "=");
-    strcpy(_names_map.items[_names_map.count-1].id, token);
+    strcpy(_names_map.items[_names_map.count-1].session_id, token);
 
     token = strtok(NULL, "=");
     if(token[strlen(token)-1] == '\n')
@@ -137,7 +137,7 @@ int load_names_map()
 
   for(int i = 0; i < _names_map.count; i++)
     printf("%s=%s\n",
-           _names_map.items[i].id,
+           _names_map.items[i].session_id,
            _names_map.items[i].name);
 
   fclose(f);
@@ -145,6 +145,15 @@ int load_names_map()
     free(line);
 
   return ERROR_NONE;
+}
+//==============================================================================
+const char *get_name_by_session_id(char *session_id)
+{
+  for(int i = 0; i < _names_map.count; i++)
+    if(strcmp(_names_map.items[i].session_id, session_id) == 0)
+      return (char*)_names_map.items[i].name;
+
+  return session_id;
 }
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port)
@@ -254,7 +263,7 @@ int cmd_server_init(cmd_server_t *server)
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
 
-  strcpy((char*)server->custom_server.custom_worker.name, STATIC_CMD_SERVER_NAME);
+  strcpy((char*)server->custom_server.custom_worker.session_id, STATIC_CMD_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_CMD_SERVER;
 
@@ -456,7 +465,7 @@ int cmd_client_resume(cmd_client_t *client)
 int cmd_client_register(cmd_client_t *client)
 {
   char tmp[128];
-  sprintf(tmp, "sndtosr register %s", client->custom_client.custom_remote_client.custom_worker.name);
+  sprintf(tmp, "sndtosr register %s", client->custom_client.custom_remote_client.custom_worker.session_id);
   handle_command_str(client, tmp);
 
   return ERROR_NONE;
@@ -772,7 +781,7 @@ int on_client_cmd_state (void *sender, sock_state_t state)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_remote_clients_list(pack_packet_t *pack)
+int cmd_remote_client_list(pack_packet_t *pack)
 {
   if(pack == NULL)
     return make_last_error(ERROR_NORMAL, errno, "cmd_remote_clients_list, pack == NULL");
@@ -794,7 +803,6 @@ int cmd_remote_clients_list(pack_packet_t *pack)
       pack_init(&tmp_pack);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, (unsigned char*)"NAM", tmp_custom_worker->name);
-//      pack_add_as_string(&tmp_pack, (unsigned char*)"CAP", tmp_custom_worker->caption);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"STA", tmp_custom_worker->state);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"ACT", tmp_remote_client->active_state);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"REG", tmp_remote_client->register_state);
@@ -808,7 +816,7 @@ int cmd_remote_clients_list(pack_packet_t *pack)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
+int cmd_remote_client_activate(sock_id_t id, sock_active_t active)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -842,7 +850,7 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
         }
 
         pack_packet_t tmp_packet;
-        cmd_remote_clients_list(&tmp_packet);
+        cmd_remote_client_list(&tmp_packet);
         return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
   }
@@ -850,7 +858,7 @@ int cmd_remote_clients_activate(sock_id_t id, sock_active_t active)
   return make_last_error_fmt(ERROR_NORMAL, errno, "to activate the client not found, id: %d", id);
 }
 //==============================================================================
-int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except)
+int cmd_remote_client_activate_all(sock_active_t active, sock_active_t except)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -874,29 +882,45 @@ int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except)
   return ERROR_NONE;
 }
 //==============================================================================
-int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
+int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
     if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
-        strcpy((char*)_cmd_server.custom_remote_clients_list.items[i].custom_worker.name, (char*)name);
+        custom_remote_client_t *client = &_cmd_server.custom_remote_clients_list.items[i];
 
+        // session_id
+        strcpy((char*)client->custom_worker.session_id, (char*)session_id);
+
+        // name
+        strcpy((char*)client->custom_worker.name, get_name_by_session_id((char*)session_id));
+
+        // time
         time_t rawtime;
         time (&rawtime);
-        _cmd_server.custom_remote_clients_list.items[i].register_time = rawtime;
+        client->register_time = rawtime;
 
-        _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
+        // state
+        client->register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "cmd_remote_clients_register, id: %d, name: %s", id, name);
+        log_add_fmt(LOG_INFO,
+                    "cmd_remote_clients_register, id: %d, session_id: %s, name: %s",
+                    client->custom_worker.id,
+                    client->custom_worker.session_id,
+                    client->custom_worker.name);
 
         pack_packet_t tmp_packet;
-        cmd_remote_clients_list(&tmp_packet);
+        cmd_remote_client_list(&tmp_packet);
         return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
   }
 
-  return make_last_error_fmt(ERROR_NORMAL, errno, "cmd_remote_clients_register, the client not found, id: %d, name: %s", id, name);
+  return make_last_error_fmt(ERROR_NORMAL,
+                             errno,
+                             "cmd_remote_clients_register, client not found, id: %d, session_id: %s",
+                             id,
+                             session_id);
 }
 //==============================================================================

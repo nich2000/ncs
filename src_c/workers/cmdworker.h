@@ -22,10 +22,10 @@ int cmd_server_status();
 int cmd_server_send_cmd (int argc, ...);
 int cmd_server_send_pack(pack_packet_t *pack);
 //==============================================================================
-int cmd_remote_clients_list(pack_packet_t *pack);
-int cmd_remote_clients_activate(sock_id_t id, sock_active_t active);
-int cmd_remote_clients_activate_all(sock_active_t active, sock_active_t except);
-int cmd_remote_clients_register(sock_id_t id, sock_name_t name);
+int cmd_remote_client_list(pack_packet_t *pack);
+int cmd_remote_client_activate(sock_id_t id, sock_active_t active);
+int cmd_remote_client_activate_all(sock_active_t active, sock_active_t except);
+int cmd_remote_client_register(sock_id_t id, sock_name_t session_id);
 //==============================================================================
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count);
 int cmd_client_status();

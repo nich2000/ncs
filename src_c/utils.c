@@ -243,7 +243,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "       state:                           %s",
           prefix,
           worker->id,
-          worker->name,
+          worker->session_id,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
           state_to_string(worker->state));

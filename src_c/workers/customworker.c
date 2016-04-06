@@ -28,14 +28,17 @@ int custom_worker_init(int id, custom_worker_t *worker)
   worker->state              = STATE_STOP;
   worker->is_locked          = FALSE;
 
-  char tmp[32];
-  sprintf(tmp, "%s_%d", SOCK_NAME_DEFAULT, worker->id);
-  strcpy((char*)worker->name, tmp);
-
-  memset(worker->host, 0, SOCK_HOST_SIZE);
+  memset(worker->session_id, 0, PACK_VALUE_SIZE);
+  memset(worker->name,       0, PACK_VALUE_SIZE);
+  memset(worker->host,       0, SOCK_HOST_SIZE);
 
   worker->on_state           = NULL;
   worker->on_lock            = NULL;
+
+  sock_name_t tmp;
+  sprintf((char*)tmp, "%s_%d", SOCK_NAME_DEFAULT, worker->id);
+  strcpy((char*)worker->session_id, (char*)tmp);
+  strcpy((char*)worker->name,       (char*)tmp);
 
   return ERROR_NONE;
 }

@@ -163,7 +163,7 @@ void *cmd_streamer_worker_func(void *arg)
 int cmd_streamer_make(custom_remote_client_t *client)
 {
   pack_struct_t tmp_pack;
-  strcpy(tmp_pack._ID, (char*)client->custom_worker.name);
+  strcpy(tmp_pack._ID, (char*)client->custom_worker.session_id);
   tmp_pack.GPStime         = rand();
   tmp_pack.GPStime_s       = rand();
   tmp_pack.TickCount       = rand();
@@ -224,7 +224,7 @@ int cmd_streamer_make_random(custom_remote_client_t *client)
   {
     protocol_begin(&client->protocol);
 
-    protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)client->custom_worker.name, &client->protocol);
+    protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)client->custom_worker.session_id, &client->protocol);
 
     protocol_add_as_int((unsigned char*)"CNT", _counter++, &client->protocol);
 

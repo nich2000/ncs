@@ -31,8 +31,9 @@ typedef int (*on_recv_t)      (void *sender, char *buffer, int size);
 //==============================================================================
 typedef struct
 {
-  sock_id_t       id;   // local id unique
-  sock_name_t     name; // server name/outer name/session id unique
+  sock_id_t       id;
+  sock_name_t     session_id;
+  sock_name_t     name;
   sock_type_t     type;
   sock_mode_t     mode;
   sock_port_t     port;

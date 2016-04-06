@@ -83,7 +83,7 @@ int web_server_init(web_server_t *server)
 {
   custom_server_init(STATIC_WEB_SERVER_ID, &server->custom_server);
 
-  strcpy((char*)server->custom_server.custom_worker.name, STATIC_WEB_SERVER_NAME);
+  strcpy((char*)server->custom_server.custom_worker.session_id, STATIC_WEB_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WEB_SERVER;
 
@@ -177,9 +177,7 @@ void *web_handle_connection(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
-  char tmp[256];
-  sprintf(tmp, "[BEGIN] web_handle_connection, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] web_handle_connection, socket: %d", tmp_sock);
 
   char *request  = (char *)malloc(1024);
   char *response = (char *)malloc(1024*1024);
@@ -189,9 +187,10 @@ void *web_handle_connection(void *arg)
   {
     if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
     {
-      web_get_response(request, response, &size);
-
-      sock_send(tmp_sock, response, size);
+      if(web_get_response(request, response, &size) == ERROR_NONE)
+        sock_send(tmp_sock, response, size);
+      else
+        log_add(last_error()->message, LOG_ERROR);
 
       break;
     }
@@ -202,8 +201,7 @@ void *web_handle_connection(void *arg)
   free(request);
   free(response);
 
-  sprintf(tmp, "[END] web_handle_connection, socket: %d", tmp_sock);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[END] web_handle_connection, socket: %d", tmp_sock);
 
   return NULL;
 }
@@ -232,6 +230,14 @@ int web_get_response(char *request, char *response, int *size)
     log_add(tmp_full_name, LOG_DEBUG);
 
     FILE *f = fopen(tmp_full_name, "rb");
+    if(f == NULL)
+    {
+      sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, "/404.html");
+      log_add(tmp_full_name, LOG_DEBUG);
+
+      f = fopen(tmp_full_name, "rb");
+    }
+
     if(f != NULL)
     {
       fseek(f, 0, SEEK_END);
@@ -274,12 +280,11 @@ int web_get_response(char *request, char *response, int *size)
     }
     else
     {
-      strcpy(response, "HTTP/1.0 404 Not Found\r\n");
-      *size = strlen(response);
+      return make_last_error_fmt(ERROR_NORMAL, errno, "web_get_response, file not found: %s", tmp_full_name);
     }
   }
 
-  return 0;
+  return ERROR_NONE;
 }
 //==============================================================================
 int web_server_status()

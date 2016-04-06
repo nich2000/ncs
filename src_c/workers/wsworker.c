@@ -111,7 +111,7 @@ int ws_server_init(ws_server_t *server)
 
   custom_remote_clients_init(&server->custom_remote_clients_list);
 
-  strcpy((char*)server->custom_server.custom_worker.name, STATIC_WS_SERVER_NAME);
+  strcpy((char*)server->custom_server.custom_worker.session_id, STATIC_WS_SERVER_NAME);
   server->custom_server.custom_worker.type = SOCK_TYPE_SERVER;
   server->custom_server.custom_worker.mode = SOCK_MODE_WS_SERVER;
 
@@ -296,7 +296,7 @@ void *ws_recv_worker(void *arg)
           ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
 
           pack_packet_t clients_packet;
-          cmd_remote_clients_list(&clients_packet);
+          cmd_remote_client_list(&clients_packet);
           ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
         }
         else
@@ -454,7 +454,7 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t name)
     if(_ws_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
       if(_ws_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
-        strcpy((char*)_ws_server.custom_remote_clients_list.items[i].custom_worker.name, (char*)name);
+        strcpy((char*)_ws_server.custom_remote_clients_list.items[i].custom_worker.session_id, (char*)name);
 
         time_t rawtime;
         time (&rawtime);

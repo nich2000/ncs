@@ -425,7 +425,7 @@ int handle_command_str(void *sender, char *command)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
-        cmd_remote_clients_register(id, (unsigned char*)name_str);
+        cmd_remote_client_register(id, (unsigned char*)name_str);
       }
 
       return EXEC_DONE;
@@ -449,21 +449,21 @@ int handle_command_str(void *sender, char *command)
       switch(active)
       {
         case ACTIVE_FIRST:
-          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_SECOND);
+          cmd_remote_client_activate_all(ACTIVE_NONE, ACTIVE_SECOND);
           break;
         case ACTIVE_SECOND:
-          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_FIRST);
+          cmd_remote_client_activate_all(ACTIVE_NONE, ACTIVE_FIRST);
           break;
         case ACTIVE_NEXT:
-          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NEXT);
+          cmd_remote_client_activate_all(ACTIVE_NONE, ACTIVE_NEXT);
           break;
         case ACTIVE_NONE:
         default:
-          cmd_remote_clients_activate_all(ACTIVE_NONE, ACTIVE_NONE);
+          cmd_remote_client_activate_all(ACTIVE_NONE, ACTIVE_NONE);
           break;
       }
 
-      cmd_remote_clients_activate(id, active);
+      cmd_remote_client_activate(id, active);
 
       return EXEC_DONE;
     }

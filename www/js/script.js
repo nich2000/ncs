@@ -158,6 +158,7 @@ var clients_t = (function () {
             this._clients.push(client);
             this._clients_table.add_client(client);
         }
+        this.switch_current(active, client);
         client.state = state;
         client.active = active;
         client.register = register;
@@ -184,10 +185,10 @@ var clients_t = (function () {
         return false;
     };
     clients_t.prototype.add_data = function (data) {
-        var current = active_t.none;
+        var active = active_t.none;
         for (var i_1 = 0; i_1 < data.length; i_1++) {
             if (data[i_1].ACT != undefined) {
-                current = data[i_1].ACT;
+                active = data[i_1].ACT;
                 break;
             }
         }
@@ -198,16 +199,11 @@ var clients_t = (function () {
                 break;
             }
         }
-        var client = this.get_client_by_name(id);
-        if (client == undefined)
-            return;
-        else
-            this.switch_current(current, client);
         for (var i = 0; i < data.length; i++) {
             if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
                 var param = Object.keys(data[i])[0];
                 var value = data[i][param];
-                if (current == active_t.first)
+                if (active == active_t.first)
                     this._data_first_table.add_row('first', param, value);
                 else
                     this._data_second_table.add_row('second', param, value);
@@ -215,6 +211,16 @@ var clients_t = (function () {
         }
     };
     clients_t.prototype.switch_current = function (current, client) {
+        var photo = "/pilots/" + client.name + '.jpg';
+        var info = "/pilots/" + client.name + '_info.dat';
+        if (current == active_t.first) {
+            element.set_src("first_pilot_photo", photo);
+            element.set_src("first_pilot_info", info);
+        }
+        else if (current == active_t.second) {
+            element.set_src("second_pilot_photo", photo);
+            element.set_src("second_pilot_info", info);
+        }
     };
     return clients_t;
 })();
@@ -248,6 +254,10 @@ var element = (function () {
     element.set_text = function (id, text) {
         var res = $("#" + id);
         res.text(text);
+    };
+    element.set_src = function (id, src) {
+        var res = $("#" + id);
+        res.attr("src", src);
     };
     return element;
 })();
