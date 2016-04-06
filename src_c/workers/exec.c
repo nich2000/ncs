@@ -454,7 +454,7 @@ int handle_command_str(void *sender, char *command)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
-        cmd_remote_clients_register(id, name_str);
+        cmd_remote_clients_register(id, (unsigned char*)name_str);
       }
     }
     //--------------------------------------------------------------------------
@@ -472,7 +472,7 @@ int handle_command_str(void *sender, char *command)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
-        ws_remote_clients_register(id, name_str);
+        ws_remote_clients_register(id, (unsigned char*)name_str);
       }
     }
     //--------------------------------------------------------------------------

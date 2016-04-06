@@ -450,24 +450,18 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t name)
 //==============================================================================
 const char *caption_by_key(const char *key)
 {
-  char tmp[32];
-  memset(tmp, '\0', 32);
-
   for(int i = 0; i < PACK_STRUCT_VAL_COUNT; i++)
     if(strcmp(key, pack_struct_keys[i]) == 0)
-    {
-      strcpy(tmp, pack_struct_captions[i]);
-      break;
-    }
+      return pack_struct_captions[i];
 
-  return tmp;
+  return NULL;
 }
 //==============================================================================
 int json_to_buffer(json_t *json, pack_buffer_t buffer, int *size)
 {
-  strcpy(buffer, json_dumps(json, JSON_ENCODE_ANY));
+  strcpy((char*)buffer, json_dumps(json, JSON_ENCODE_ANY));
 
-  *size = strlen(buffer);
+  *size = strlen((char*)buffer);
 
   return ERROR_NONE;
 }
@@ -497,11 +491,11 @@ json_t *pack_to_json(pack_packet_t *packet)
       pack_value_t tmp_value;
       pack_word_as_string(tmp_word, tmp_value);
 
-      tmp_json_value = json_string(tmp_value);
+      tmp_json_value = json_string((char*)tmp_value);
     }
 
     json_t *tmp_json_word = json_object();
-    json_object_set_new(tmp_json_word, tmp_key, tmp_json_value);
+    json_object_set_new(tmp_json_word, (char*)tmp_key, tmp_json_value);
 
     json_array_append_new(tmp_json_words, tmp_json_word);
   }
@@ -513,7 +507,7 @@ int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size)
 {
   json_t *tmp_json = pack_to_json(packet);
 
-  return json_to_buffer(tmp_json, buffer, size);
+  return json_to_buffer(tmp_json, (unsigned char*)buffer, size);
 }
 //==============================================================================
 int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
@@ -540,11 +534,11 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
           if(line == 0)
           {
             line++;
-            pack_add_cmd(packet, json_string_value(tmp_value));
+            pack_add_cmd(packet, (unsigned char*)json_string_value(tmp_value));
           }
           else
           {
-            pack_add_param(packet, json_string_value(tmp_value));
+            pack_add_param(packet, (unsigned char*)json_string_value(tmp_value));
           }
         }
       }

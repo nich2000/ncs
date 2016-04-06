@@ -398,9 +398,11 @@ int cmd_client_resume(cmd_client_t *client)
 //==============================================================================
 int cmd_client_register(cmd_client_t *client)
 {
-  char *tmp[128];
+  char tmp[128];
   sprintf(tmp, "sndtosr register %s", client->custom_client.custom_remote_client.custom_worker.name);
   handle_command_str(client, tmp);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 void *cmd_client_worker(void *arg)
@@ -681,7 +683,7 @@ int on_cmd_new_data(void *sender, void *data)
     // ACTIVE_FIRST or ACTIVE_SECOND
     if(tmp_client->active_state)
     {
-      pack_add_as_int(tmp_packet, "ACT", tmp_client->active_state);
+      pack_add_as_int(tmp_packet, (unsigned char*)"ACT", tmp_client->active_state);
 
       return ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
     }
@@ -723,12 +725,12 @@ int cmd_remote_clients_list(pack_packet_t *pack)
     {
       pack_packet_t tmp_pack;
       pack_init(&tmp_pack);
-      pack_add_as_int   (&tmp_pack, "_ID", tmp_custom_worker->id);
-      pack_add_as_string(&tmp_pack, "NAM", tmp_custom_worker->name);
-//      pack_add_as_string(&tmp_pack, "CAP", tmp_custom_worker->caption);
-      pack_add_as_int   (&tmp_pack, "STA", tmp_custom_worker->state);
-      pack_add_as_int   (&tmp_pack, "ACT", tmp_remote_client->active_state);
-      pack_add_as_int   (&tmp_pack, "REG", tmp_remote_client->register_state);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)"_ID", tmp_custom_worker->id);
+      pack_add_as_string(&tmp_pack, (unsigned char*)"NAM", tmp_custom_worker->name);
+//      pack_add_as_string(&tmp_pack, (unsigned char*)"CAP", tmp_custom_worker->caption);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)"STA", tmp_custom_worker->state);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)"ACT", tmp_remote_client->active_state);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)"REG", tmp_remote_client->register_state);
 
       pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
     }
@@ -808,7 +810,7 @@ int cmd_remote_clients_register(sock_id_t id, sock_name_t name)
     if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
       if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
       {
-        strcpy(_cmd_server.custom_remote_clients_list.items[i].custom_worker.name, name);
+        strcpy((char*)_cmd_server.custom_remote_clients_list.items[i].custom_worker.name, (char*)name);
 
         _cmd_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
 

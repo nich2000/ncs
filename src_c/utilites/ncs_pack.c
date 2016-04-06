@@ -270,8 +270,8 @@ int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, p
 //==============================================================================
 int pack_add_as_pack(pack_packet_t *pack, pack_key_t key, pack_packet_t *inner_pack)
 {
-  pack_size_t tmp_size;
-  char        tmp_buffer[1024];
+  pack_size_t   tmp_size;
+  pack_buffer_t tmp_buffer;
   pack_to_bytes(inner_pack, tmp_buffer, &tmp_size);
 
   pack_add_as_bytes(pack, key, tmp_buffer, tmp_size, PACK_WORD_PACK);

@@ -2,6 +2,7 @@
 //==============================================================================
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "streamer.h"
 #include "ncs_log.h"
@@ -161,7 +162,7 @@ void *cmd_streamer_worker_func(void *arg)
 int cmd_streamer_make(custom_remote_client_t *client)
 {
   pack_struct_t tmp_pack;
-  strcpy(tmp_pack._ID, client->custom_worker.name);
+  strcpy(tmp_pack._ID, (char*)client->custom_worker.name);
   tmp_pack.GPStime         = rand();
   tmp_pack.GPStime_s       = rand();
   tmp_pack.TickCount       = rand();

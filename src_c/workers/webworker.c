@@ -260,7 +260,7 @@ int web_get_response(char *request, char *response, int *size)
         strcat(response, "Content-Transfer-Encoding: binary\r\n");
       }
 
-      sprintf(tmp, "Content-Length: %u\r\n\r\n", tmp_file_size);
+      sprintf(tmp, "Content-Length: %u\r\n\r\n", (unsigned int)tmp_file_size);
       strcat(response, tmp);
 
       *size = strlen(response);

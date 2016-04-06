@@ -108,7 +108,7 @@ char *do_print_pack(pack_packet_t *packet, int indent)
   pack_key_t    tmp_key;
   pack_value_t  tmp_value;
   pack_size_t   tmp_words_count = _pack_words_count(packet);
-  pack_string_t tmp = (char*)malloc(PACK_BUFFER_SIZE);
+  pack_string_t tmp = (unsigned char*)malloc(PACK_BUFFER_SIZE);
   memset(tmp, '\0', PACK_BUFFER_SIZE);
 
   char indent_str[128];
@@ -116,13 +116,13 @@ char *do_print_pack(pack_packet_t *packet, int indent)
   for(int i = 0; i < indent; i++)
     sprintf(indent_str, "%s%s", indent_str, " ");
 
-  sprintf(tmp, "\n%swords_count: %d", (char*)indent_str, tmp_words_count);
+  sprintf((char*)tmp, "\n%swords_count: %d", (char*)indent_str, tmp_words_count);
 
   for(pack_size_t i = 0; i < tmp_words_count; i++)
   {
     pack_word_t *tmp_word = &packet->words[i];
 
-    sprintf(tmp, "%s\n%sword: %d, type: %d, key: %s", tmp, indent_str, i, tmp_word->type, tmp_word->key);
+    sprintf((char*)tmp, "%s\n%sword: %d, type: %d, key: %s", tmp, (char*)indent_str, i, tmp_word->type, tmp_word->key);
 
     if(tmp_word->type == PACK_WORD_PACK)
     {
@@ -130,22 +130,22 @@ char *do_print_pack(pack_packet_t *packet, int indent)
       if(pack_word_as_pack(tmp_word, &tmp_pack) == ERROR_NONE)
       {
         char *tmp_output = do_print_pack(&tmp_pack, indent+4);
-        sprintf(tmp, "%s\n%s    value: %s",                tmp, indent_str, tmp_output);
+        sprintf((char*)tmp, "%s\n%s    value: %s", tmp, (char*)indent_str, tmp_output);
         free(tmp_output);
       }
       else
-        sprintf(tmp, "%s\n%s    value: error parse value", tmp, indent_str);
+        sprintf((char*)tmp, "%s\n%s    value: error parse value", (char*)tmp, (char*)indent_str);
     }
     else
     {
       if(pack_val_by_index_as_string(packet, i, tmp_key, tmp_value) == ERROR_NONE)
-        sprintf(tmp, "%s\n%s    value: %s",                tmp, indent_str, tmp_value);
+        sprintf((char*)tmp, "%s\n%s    value: %s", (char*)tmp, (char*)indent_str, tmp_value);
       else
-        sprintf(tmp, "%s\n%s    value: error parse value", tmp, indent_str);
+        sprintf((char*)tmp, "%s\n%s    value: error parse value", (char*)tmp, (char*)indent_str);
     }
   }
 
-  return tmp;
+  return (char*)tmp;
 }
 //==============================================================================
 int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOOL pack, BOOL csv)
@@ -160,13 +160,13 @@ int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOO
   {
     pack_buffer_t tmp_buffer;
     pack_size_t   tmp_size;
-    pack_buffer_t tmp;
 
     pack_to_buffer(packet, tmp_buffer, &tmp_size);
 
     #ifdef SOCK_PACK_MODE
+    pack_buffer_t tmp;
     bytes_to_hex((unsigned char*)tmp_buffer, (pack_size_t)tmp_size, (unsigned char*)tmp);
-    log_add(tmp, LOG_DEBUG);
+    log_add((char*)tmp, LOG_DEBUG);
     #else
     log_add(tmp_buffer, LOG_DEBUG);
     #endif
