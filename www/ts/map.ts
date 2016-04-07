@@ -1,15 +1,40 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
+class map_item_t {
+  //----------------------------------------------------------------------------
+  private _kind:   string;
+  private _number: number;
+  private _index:  number;
+  private _lat_f:  number;
+  private _lon_f:  number;
+  private _lat:    number;
+  private _lon:    number;
+  //----------------------------------------------------------------------------
+  constructor(line: any) {
+    console.log(line);
+
+    this._kind   = line[0].KND;
+    this._number = line[1].NUM;
+    this._index  = line[2].IND;
+    this._lat_f  = line[3].LAF;
+    this._lon_f  = line[4].LOF;
+    this._lat    = line[5]._LA;
+    this._lon    = line[6]._LO;
+  }
+  //----------------------------------------------------------------------------
+}
+//==============================================================================
 class map_t {
   //----------------------------------------------------------------------------
-  private _id: string;
-  private _canvas: any;
-  private _ctx: any;
+  private _id:      string  = "";
+  private _canvas:  any     = undefined;
+  private _ctx:     any     = undefined;
   private _is_init: boolean = false;
-  private _height: number;
-  private _width: number;
-  private _scale: number;
+  private _height:  number  = 1;
+  private _width:   number  = 1;
+  private _scale:   number  = 1;
+  private _items:   Array<map_item_t> = [];
   //----------------------------------------------------------------------------
   constructor(id: string) {
     console.log("constructor: map_t, id: " + id);
@@ -33,29 +58,11 @@ class map_t {
     }
 
     this.clear();
+
+    Signal.bind("map",  this.load_map, this);
   }
   //----------------------------------------------------------------------------
-  public get_height(): number {
-    return this._height;
-  }
-  //----------------------------------------------------------------------------
-  public set_height(height: number) {
-    this._height = height;
-  }
-  //----------------------------------------------------------------------------
-  public get_width(): number {
-    return this._width;
-  }
-  //----------------------------------------------------------------------------
-  public set_width(width: number) {
-    this._width = width;
-  }
-  //----------------------------------------------------------------------------
-  public get_scale(): number {
-    return this._scale;
-  }
-  //----------------------------------------------------------------------------
-  public set_scale(height: number, width: number) {
+  private set_scale(height: number, width: number) {
     let tmp_scale_h: number = height / this._height;
     let tmp_scale_w: number = width / this._width;
 
@@ -65,14 +72,23 @@ class map_t {
       this._scale = tmp_scale_w;
   }
   //----------------------------------------------------------------------------
-  public clear() {
+  private clear() {
     if (!this._is_init)
       return;
 
     this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
   }
   //----------------------------------------------------------------------------
-  public test_draw() {
+  private load_map(data: any): void {
+    for(let i: number = 0; i < data.length; i++){
+      let map_item: map_item_t = new map_item_t(data[i].PAR);
+    }
+  }
+  //----------------------------------------------------------------------------
+  private draw_map(): void {
+  }
+  //----------------------------------------------------------------------------
+  public test_draw(): void {
     if (!this._is_init)
       return;
 

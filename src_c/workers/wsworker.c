@@ -292,8 +292,12 @@ void *ws_recv_worker(void *arg)
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "handshake success, socket: %d", tmp_sock);
 
-          pack_packet_t config_packet;
-          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+//          pack_packet_t config_packet;
+//          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+
+          pack_packet_t map_packet;
+          cmd_map(&map_packet);
+          ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
 
           pack_packet_t clients_packet;
           cmd_remote_client_list(&clients_packet);
@@ -609,14 +613,14 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
       {
         tmp_client->custom_worker.is_locked = TRUE;
 
-        pack_buffer_t json_buffer;
+        sock_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(pack, (char*)json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
-        pack_buffer_t tmp_buffer;
-        pack_size_t   tmp_size = 0;
-        tmp_size = ws_set_frame(TEXT_FRAME, (unsigned char*)json_buffer, json_size, (unsigned char*)tmp_buffer, SOCK_BUFFER_SIZE);
+        sock_buffer_t tmp_buffer;
+        int           tmp_size = 0;
+        tmp_size = ws_set_frame(TEXT_FRAME, json_buffer, json_size, tmp_buffer, SOCK_BUFFER_SIZE);
 
         tmp_client->out_message_size = tmp_size;
         tmp_client->out_message = (char*)malloc(tmp_size);

@@ -19,8 +19,8 @@
 #define PACK_WORDS_COUNT         20
 #else
 #define PACK_BUFFER_SIZE         1024
-#define PACK_VALUE_SIZE          128
-#define PACK_WORDS_COUNT         64
+#define PACK_VALUE_SIZE          256
+#define PACK_WORDS_COUNT         2048
 #endif
 //==============================================================================
 #define PACK_WORD_NONE           0

@@ -265,10 +265,13 @@ var element = (function () {
 var exec;
 var clients;
 var ws;
+var map;
 function init() {
     console.log("init");
     exec = new exec_t();
     clients = new clients_t();
+    map = new map_t('canvas');
+    map.test_draw();
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 $(window).load(function () {
@@ -279,9 +282,29 @@ $(window).resize(function () {
     $('body').height($(window).height());
 });
 /// <reference path="./jquery.d.ts"/>
+var map_item_t = (function () {
+    function map_item_t(line) {
+        console.log(line);
+        this._kind = line[0].KND;
+        this._number = line[1].NUM;
+        this._index = line[2].IND;
+        this._lat_f = line[3].LAF;
+        this._lon_f = line[4].LOF;
+        this._lat = line[5]._LA;
+        this._lon = line[6]._LO;
+    }
+    return map_item_t;
+})();
 var map_t = (function () {
     function map_t(id) {
+        this._id = "";
+        this._canvas = undefined;
+        this._ctx = undefined;
         this._is_init = false;
+        this._height = 1;
+        this._width = 1;
+        this._scale = 1;
+        this._items = [];
         console.log("constructor: map_t, id: " + id);
         this._id = id;
         this._canvas = $("#" + id)[0];
@@ -297,22 +320,8 @@ var map_t = (function () {
             this._is_init = false;
         }
         this.clear();
+        Signal.bind("map", this.load_map, this);
     }
-    map_t.prototype.get_height = function () {
-        return this._height;
-    };
-    map_t.prototype.set_height = function (height) {
-        this._height = height;
-    };
-    map_t.prototype.get_width = function () {
-        return this._width;
-    };
-    map_t.prototype.set_width = function (width) {
-        this._width = width;
-    };
-    map_t.prototype.get_scale = function () {
-        return this._scale;
-    };
     map_t.prototype.set_scale = function (height, width) {
         var tmp_scale_h = height / this._height;
         var tmp_scale_w = width / this._width;
@@ -325,6 +334,13 @@ var map_t = (function () {
         if (!this._is_init)
             return;
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    };
+    map_t.prototype.load_map = function (data) {
+        for (var i = 0; i < data.length; i++) {
+            var map_item = new map_item_t(data[i].PAR);
+        }
+    };
+    map_t.prototype.draw_map = function () {
     };
     map_t.prototype.test_draw = function () {
         if (!this._is_init)

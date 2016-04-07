@@ -4,13 +4,7 @@
 var exec: exec_t;
 var clients: clients_t;
 var ws: web_socket_t;
-
-// var data_table_first: data_table_t;
-// var data_table_second: data_table_t;
-// var clientsTable: clients_table_t;
-// var map: map_t;
-//=============================================================================
-
+var map: map_t;
 //=============================================================================
 function init() {
   console.log("init");
@@ -19,10 +13,10 @@ function init() {
 
   clients = new clients_t();
 
-  ws = new web_socket_t("ws://" + location.hostname + ":5800");
+  map = new map_t('canvas');
+  map.test_draw();
 
-// map = new map_t('canvas');
-// map.test_draw();
+  ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 //=============================================================================
 $(window).load(function() {

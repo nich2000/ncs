@@ -22,15 +22,39 @@ typedef struct
 {
   char session_id[PACK_VALUE_SIZE];
   char name[PACK_VALUE_SIZE];
+} name_item_t;
+//==============================================================================
+typedef name_item_t name_items_t[SOCK_WORKERS_COUNT];
+//==============================================================================
+typedef struct
+{
+  int         count;
+  name_items_t items;
+} names_t;
+//==============================================================================
+// map item example
+// bs1;-1;1;52,130010000000000;23,771370000000000;5796596,462;1622429,742
+//==============================================================================
+#define MAP_SIZE 102400
+#define MAP_ITEM_SIZE 32
+typedef struct
+{
+  char kind[MAP_ITEM_SIZE];
+  char number[MAP_ITEM_SIZE];
+  char index[MAP_ITEM_SIZE];
+  char lat_f[MAP_ITEM_SIZE];
+  char lon_f[MAP_ITEM_SIZE];
+  char lat[MAP_ITEM_SIZE];
+  char lon[MAP_ITEM_SIZE];
 } map_item_t;
 //==============================================================================
-typedef map_item_t map_items_t[SOCK_WORKERS_COUNT];
+typedef map_item_t map_items_t[MAP_SIZE];
 //==============================================================================
 typedef struct
 {
   int         count;
   map_items_t items;
-} names_map_t;
+} map_t;
 //==============================================================================
 int cmd_server_init     (cmd_server_t *server);
 int cmd_server_start    (cmd_server_t *server, sock_port_t port);
@@ -43,7 +67,7 @@ void *cmd_server_worker (void *arg);
 custom_remote_client_t *_cmd_remote_clients_next (cmd_server_t *cmd_server);
 int                     _cmd_remote_clients_count(cmd_server_t *cmd_server);
 //==============================================================================
-int load_names_map();
+int load_names();
 //==============================================================================
 int cmd_client_init     (cmd_client_t *client);
 int cmd_client_start    (cmd_client_t *client, sock_port_t port, sock_host_t host);
@@ -68,9 +92,10 @@ int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
 static cmd_server_t _cmd_server;
-static names_map_t  _names_map;
+static names_t      _names;
+static map_t        _map;
 //==============================================================================
-// Visible onli in streamer.c
+// Visible only in streamer.c
 int          _cmd_client_count = 0;
 cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
 //==============================================================================
@@ -109,36 +134,106 @@ sock_active_t _cmd_active_neg()
     return ACTIVE_FIRST;
 }
 //==============================================================================
-int load_names_map()
+int load_names()
 {
   char *file_name = "../config/names.ejn";
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
 
-  _names_map.count = 0;
+  _names.count = 0;
 
   FILE *f = fopen(file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names_map, can not open file %s", file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
-    _names_map.count++;
+    _names.count++;
 
     char *token = strtok(line, "=");
-    strcpy(_names_map.items[_names_map.count-1].session_id, token);
+    strcpy(_names.items[_names.count-1].session_id, token);
 
     token = strtok(NULL, "=");
     if(token[strlen(token)-1] == '\n')
       token[strlen(token)-1] = '\0';
-    strcpy(_names_map.items[_names_map.count-1].name, token);
+    strcpy(_names.items[_names.count-1].name, token);
   }
 
-  for(int i = 0; i < _names_map.count; i++)
+  for(int i = 0; i < _names.count; i++)
     printf("%s=%s\n",
-           _names_map.items[i].session_id,
-           _names_map.items[i].name);
+           _names.items[i].session_id,
+           _names.items[i].name);
+
+  fclose(f);
+  if(line)
+    free(line);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int load_map()
+{
+  char *file_name = "../tracks/Brest.map";
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  _map.count = 0;
+
+  FILE *f = fopen(file_name, "r");
+  if(f == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_map, can not open file %s", file_name);
+
+  while ((read = getline(&line, &len, f)) != -1)
+  {
+    _map.count++;
+
+    map_item_t *map_item = &_map.items[_map.count-1];
+
+    char *token = strtok(line, ";");
+    memset(map_item->kind, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->kind, token);
+
+    token = strtok(NULL, ";");
+    memset(map_item->number, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->number, token);
+
+    token = strtok(NULL, ";");
+    memset(map_item->index, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->index, token);
+
+    token = strtok(NULL, ";");
+    memset(map_item->lat_f, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->lat_f, token);
+
+    token = strtok(NULL, ";");
+    memset(map_item->lon_f, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->lon_f, token);
+
+    token = strtok(NULL, ";");
+    memset(map_item->lat, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->lat, token);
+
+    token = strtok(NULL, "=");
+    if(token[strlen(token)-1] == '\n')
+      token[strlen(token)-1] = '\0';
+    memset(map_item->lon, 0, MAP_ITEM_SIZE);
+    strcpy(map_item->lon, token);
+
+    if(_map.count >= 10)
+      break;
+  }
+
+  for(int i = 0; i < _map.count; i++)
+    printf("%s  %s  %s  %s  %s  %s  %s\n",
+           _map.items[i].kind,
+           _map.items[i].number,
+           _map.items[i].index,
+           _map.items[i].lat_f,
+           _map.items[i].lon_f,
+           _map.items[i].lat,
+           _map.items[i].lon);
 
   fclose(f);
   if(line)
@@ -149,9 +244,9 @@ int load_names_map()
 //==============================================================================
 const char *get_name_by_session_id(char *session_id)
 {
-  for(int i = 0; i < _names_map.count; i++)
-    if(strcmp(_names_map.items[i].session_id, session_id) == 0)
-      return (char*)_names_map.items[i].name;
+  for(int i = 0; i < _names.count; i++)
+    if(strcmp(_names.items[i].session_id, session_id) == 0)
+      return (char*)_names.items[i].name;
 
   return session_id;
 }
@@ -277,7 +372,9 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   if(server->custom_server.custom_worker.state == STATE_START)
     return make_last_error(ERROR_NORMAL, errno, "cmd_server_start, server already started");
 
-  load_names_map();
+  load_names();
+
+  load_map();
 
   cmd_server_init(server);
 
@@ -812,6 +909,32 @@ int cmd_remote_client_list(pack_packet_t *pack)
   };
 
   print_pack(pack, "clients", FALSE, FALSE, TRUE, TRUE);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int cmd_map(pack_packet_t *pack)
+{
+  if(pack == NULL)
+    return make_last_error(ERROR_NORMAL, errno, "cmd_map, pack == NULL");
+
+  pack_init(pack);
+  pack_add_cmd(pack, (unsigned char*)"map");
+
+  for(int i = 0; i < _map.count; i++)
+  {
+    pack_packet_t tmp_pack;
+    pack_init(&tmp_pack);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"KND", (unsigned char*)_map.items[i].kind);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"NUM", (unsigned char*)_map.items[i].number);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"IND", (unsigned char*)_map.items[i].index);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"LAF", (unsigned char*)_map.items[i].lat_f);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"LOF", (unsigned char*)_map.items[i].lon_f);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"_LA", (unsigned char*)_map.items[i].lat);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"_LO", (unsigned char*)_map.items[i].lon);
+
+    pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
+  }
 
   return ERROR_NONE;
 }
