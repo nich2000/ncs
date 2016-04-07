@@ -174,7 +174,9 @@ int load_names()
 //==============================================================================
 int load_map()
 {
-  char *file_name = "../tracks/Brest.map";
+//  char *file_name = "../tracks/Brest.map";
+//  char *file_name = "../tracks/Hungaroring.map";
+  char *file_name = "../tracks/Mogilev.map";
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
@@ -221,8 +223,8 @@ int load_map()
     memset(map_item->lon, 0, MAP_ITEM_SIZE);
     strcpy(map_item->lon, token);
 
-    if(_map.count >= 10)
-      break;
+//    if(_map.count >= 10)
+//      break;
   }
 
   for(int i = 0; i < _map.count; i++)

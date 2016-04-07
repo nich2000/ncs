@@ -44,7 +44,7 @@ void log_set_name(char *name)
 //==============================================================================
 void log_add_fmt(int log_type, char *message, ...)
 {
-  char tmp[10240];
+  char tmp[102400];
 
   va_list params;
   va_start(params, message);

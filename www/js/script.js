@@ -279,7 +279,6 @@ function init() {
     exec = new exec_t();
     clients = new clients_t();
     map = new map_t('canvas');
-    map.test_draw();
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 $(window).load(function () {
@@ -321,9 +320,13 @@ var map_t = (function () {
         this._is_init = false;
         this._height = 1;
         this._width = 1;
+        this._scale = 1;
+        this._min_h = 1000000000;
+        this._max_h = -1000000000;
+        this._min_w = 1000000000;
+        this._max_w = -1000000000;
         this._height_map = 1;
         this._width_map = 1;
-        this._scale = 1;
         this._map_items = [];
         this._position_first = [];
         this._position_second = [];
@@ -348,29 +351,42 @@ var map_t = (function () {
     map_t.prototype.load_map = function (data) {
         this._map_items = [];
         for (var i = 0; i < data.length; i++) {
-            var map_item = new map_item_t(data[i].PAR[3].LAF, data[i].PAR[4].LOF);
+            var lon_s = data[i].PAR[3].LAF;
+            lon_s = lon_s.replace(/\,/, ".");
+            var lon = parseFloat(lon_s);
+            var lat_s = data[i].PAR[4].LOF;
+            lat_s = lat_s.replace(/\,/, ".");
+            var lat = parseFloat(lat_s);
+            var map_item = new map_item_t(lat, lon);
             this._map_items.push(map_item);
         }
-        var min_h = 1000000000;
-        var max_h = -1000000000;
-        var min_w = 1000000000;
-        var max_w = -1000000000;
+        this.set_bounds();
+        this.set_scale();
+        this.refresh();
+    };
+    map_t.prototype.set_bounds = function () {
         for (var i = 0; i < this._map_items.length; i++) {
             var lat = this._map_items[i].lat;
             var lon = this._map_items[i].lon;
-            if (lat > max_h)
-                max_h = lat;
-            if (lat < min_h)
-                min_h = lat;
-            if (lon > max_w)
-                max_w = lon;
-            if (lon < min_w)
-                min_w = lon;
+            if (lat > this._max_h)
+                this._max_h = lat;
+            if (lat < this._min_h)
+                this._min_h = lat;
+            if (lon > this._max_w)
+                this._max_w = lon;
+            if (lon < this._min_w)
+                this._min_w = lon;
         }
-        this._height_map = max_h - min_h;
-        this._width_map = max_w - min_w;
-        this.set_scale();
-        this.refresh();
+        this._height_map = this._max_h - this._min_h;
+        this._width_map = this._max_w - this._min_w;
+    };
+    map_t.prototype.set_scale = function () {
+        var tmp_scale_h = this._height / this._height_map;
+        var tmp_scale_w = this._width / this._width_map;
+        if (tmp_scale_h < tmp_scale_w)
+            this._scale = tmp_scale_h;
+        else
+            this._scale = tmp_scale_w;
     };
     map_t.prototype.add_position = function (lat, lon, active) {
         var map_item = new map_item_t(lat, lon);
@@ -379,14 +395,6 @@ var map_t = (function () {
         else if (active = active_t.second)
             this._position_second.push(map_item);
         this.refresh();
-    };
-    map_t.prototype.set_scale = function () {
-        var tmp_scale_h = this._height_map / this._height;
-        var tmp_scale_w = this._width_map / this._width;
-        if (tmp_scale_h < tmp_scale_w)
-            this._scale = tmp_scale_h;
-        else
-            this._scale = tmp_scale_w;
     };
     map_t.prototype.clear = function () {
         if (!this._is_init)
@@ -401,16 +409,16 @@ var map_t = (function () {
     };
     map_t.prototype.draw_map = function () {
         for (var i = 0; i < this._map_items.length; i++) {
-            var lat = this._map_items[i].lat * this._scale;
-            var lon = this._map_items[i].lon * this._scale;
-            this._ctx.arc(lat, lon, 2, 0, 2 * Math.PI);
+            var lat = (this._map_items[i].lat - this._min_h) * this._scale;
+            var lon = (this._map_items[i].lon - this._min_w) * this._scale;
+            this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
         }
     };
     map_t.prototype.draw_client = function () {
         for (var i = 0; i < this._position_first.length; i++) {
-            var lat = this._position_first[i].lat * this._scale;
-            var lon = this._position_first[i].lon * this._scale;
-            this._ctx.arc(lat, lon, 1, 0, 2 * Math.PI);
+            var lat = (this._position_first[i].lat - this._min_h) * this._scale;
+            var lon = (this._position_first[i].lon - this._min_w) * this._scale;
+            this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
         }
     };
     map_t.prototype.refresh = function () {

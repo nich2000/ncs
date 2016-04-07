@@ -295,10 +295,16 @@ void *ws_recv_worker(void *arg)
 //          pack_packet_t config_packet;
 //          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
 
+          // TODO: тут создали буффер, начали отправку
           pack_packet_t map_packet;
           cmd_map(&map_packet);
           ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
 
+          // TODO: костыль
+          usleep(10000);
+
+          // TODO: пришли сюда, но отправка еще идет,
+          // после отправки буффер чистится и ...
           pack_packet_t clients_packet;
           cmd_remote_client_list(&clients_packet);
           ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
@@ -616,7 +622,7 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
         sock_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(pack, (char*)json_buffer, &json_size);
-        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "json:\n%s", json_buffer);
 
         sock_buffer_t tmp_buffer;
         int           tmp_size = 0;
