@@ -226,23 +226,27 @@ class clients_t {
       }
     }
 
-    // let client: client_t = this.get_client_by_name(id);
-    // if(client == undefined)
-    //   return;
-    // else
-    //   this.switch_current(active, client);
+    let data_table: data_table_t = undefined;
+    let prefix: string;
+    if(active == active_t.first){
+      data_table = this._data_first_table;
+      prefix = "first";
+    }
+    else{
+      data_table = this._data_second_table;
+      prefix = "second";
+    }
 
     for (var i = 0; i < data.length; i++){
       if(static_filter.indexOf(Object.keys(data[i])[0]) != -1){
         let param = Object.keys(data[i])[0];
         let value = data[i][param];
 
-        if(active == active_t.first)
-          this._data_first_table.add_row('first', param, value);
-        else
-          this._data_second_table.add_row('second', param, value);
+        data_table.add_row(prefix, param, value);
       }
     }
+
+    Signal.emit("add_position", data);
   }
   //----------------------------------------------------------------------------
   private switch_current(current: active_t, client: client_t): void{

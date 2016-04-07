@@ -199,16 +199,24 @@ var clients_t = (function () {
                 break;
             }
         }
+        var data_table = undefined;
+        var prefix;
+        if (active == active_t.first) {
+            data_table = this._data_first_table;
+            prefix = "first";
+        }
+        else {
+            data_table = this._data_second_table;
+            prefix = "second";
+        }
         for (var i = 0; i < data.length; i++) {
             if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
                 var param = Object.keys(data[i])[0];
                 var value = data[i][param];
-                if (active == active_t.first)
-                    this._data_first_table.add_row('first', param, value);
-                else
-                    this._data_second_table.add_row('second', param, value);
+                data_table.add_row(prefix, param, value);
             }
         }
+        Signal.emit("add_position", data);
     };
     clients_t.prototype.switch_current = function (current, client) {
         var photo = "/pilots/" + client.name + '.jpg';
@@ -283,16 +291,26 @@ $(window).resize(function () {
 });
 /// <reference path="./jquery.d.ts"/>
 var map_item_t = (function () {
-    function map_item_t(line) {
-        console.log(line);
-        this._kind = line[0].KND;
-        this._number = line[1].NUM;
-        this._index = line[2].IND;
-        this._lat_f = line[3].LAF;
-        this._lon_f = line[4].LOF;
-        this._lat = line[5]._LA;
-        this._lon = line[6]._LO;
+    function map_item_t(lat, lon) {
+        this.lat_f = 0;
+        this.lon_f = 0;
+        this.lat_f = lat;
+        this.lon_f = lon;
     }
+    Object.defineProperty(map_item_t.prototype, "lat", {
+        get: function () {
+            return this.lat_f;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(map_item_t.prototype, "lon", {
+        get: function () {
+            return this.lon_f;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return map_item_t;
 })();
 var map_t = (function () {
@@ -303,8 +321,12 @@ var map_t = (function () {
         this._is_init = false;
         this._height = 1;
         this._width = 1;
+        this._height_map = 1;
+        this._width_map = 1;
         this._scale = 1;
-        this._items = [];
+        this._map_items = [];
+        this._position_first = [];
+        this._position_second = [];
         console.log("constructor: map_t, id: " + id);
         this._id = id;
         this._canvas = $("#" + id)[0];
@@ -321,10 +343,46 @@ var map_t = (function () {
         }
         this.clear();
         Signal.bind("map", this.load_map, this);
+        Signal.bind("add_position", this.add_position, this);
     }
-    map_t.prototype.set_scale = function (height, width) {
-        var tmp_scale_h = height / this._height;
-        var tmp_scale_w = width / this._width;
+    map_t.prototype.load_map = function (data) {
+        this._map_items = [];
+        for (var i = 0; i < data.length; i++) {
+            var map_item = new map_item_t(data[i].PAR[3].LAF, data[i].PAR[4].LOF);
+            this._map_items.push(map_item);
+        }
+        var min_h = 1000000000;
+        var max_h = -1000000000;
+        var min_w = 1000000000;
+        var max_w = -1000000000;
+        for (var i = 0; i < this._map_items.length; i++) {
+            var lat = this._map_items[i].lat;
+            var lon = this._map_items[i].lon;
+            if (lat > max_h)
+                max_h = lat;
+            if (lat < min_h)
+                min_h = lat;
+            if (lon > max_w)
+                max_w = lon;
+            if (lon < min_w)
+                min_w = lon;
+        }
+        this._height_map = max_h - min_h;
+        this._width_map = max_w - min_w;
+        this.set_scale();
+        this.refresh();
+    };
+    map_t.prototype.add_position = function (lat, lon, active) {
+        var map_item = new map_item_t(lat, lon);
+        if (active == active_t.first)
+            this._position_first.push(map_item);
+        else if (active = active_t.second)
+            this._position_second.push(map_item);
+        this.refresh();
+    };
+    map_t.prototype.set_scale = function () {
+        var tmp_scale_h = this._height_map / this._height;
+        var tmp_scale_w = this._width_map / this._width;
         if (tmp_scale_h < tmp_scale_w)
             this._scale = tmp_scale_h;
         else
@@ -335,17 +393,36 @@ var map_t = (function () {
             return;
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     };
-    map_t.prototype.load_map = function (data) {
-        for (var i = 0; i < data.length; i++) {
-            var map_item = new map_item_t(data[i].PAR);
-        }
+    map_t.prototype.begin_draw = function () {
+        this.clear();
+    };
+    map_t.prototype.end_draw = function () {
+        this._ctx.stroke();
     };
     map_t.prototype.draw_map = function () {
+        for (var i = 0; i < this._map_items.length; i++) {
+            var lat = this._map_items[i].lat * this._scale;
+            var lon = this._map_items[i].lon * this._scale;
+            this._ctx.arc(lat, lon, 2, 0, 2 * Math.PI);
+        }
+    };
+    map_t.prototype.draw_client = function () {
+        for (var i = 0; i < this._position_first.length; i++) {
+            var lat = this._position_first[i].lat * this._scale;
+            var lon = this._position_first[i].lon * this._scale;
+            this._ctx.arc(lat, lon, 1, 0, 2 * Math.PI);
+        }
+    };
+    map_t.prototype.refresh = function () {
+        this.begin_draw();
+        this.draw_map();
+        this.draw_client();
+        this.end_draw();
     };
     map_t.prototype.test_draw = function () {
         if (!this._is_init)
             return;
-        this.clear();
+        this.begin_draw();
         this._ctx.beginPath();
         this._ctx.moveTo(170, 80);
         this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
@@ -357,7 +434,7 @@ var map_t = (function () {
         this._ctx.closePath();
         this._ctx.lineWidth = 5;
         this._ctx.strokeStyle = 'blue';
-        this._ctx.stroke();
+        this.end_draw();
     };
     return map_t;
 })();
