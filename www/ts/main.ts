@@ -14,7 +14,6 @@ function init() {
   clients = new clients_t();
 
   map = new map_t('canvas');
-  // map.test_draw();
 
   ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }

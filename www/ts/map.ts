@@ -41,6 +41,7 @@ class map_item_t {
 class map_t {
   //----------------------------------------------------------------------------
   private _id:         string  = "";
+  private _cnv:        any     = "";
   private _canvas:     any     = undefined;
   private _ctx:        any     = undefined;
   private _is_init:    boolean = false;
@@ -63,24 +64,35 @@ class map_t {
     console.log("constructor: map_t, id: " + id);
 
     this._id = id;
-    this._canvas = $("#" + id)[0];
+    this._cnv = $("#" + id);
+    this._canvas = this._cnv[0];
 
     let canvasSupported: boolean = !!document.createElement("canvas").getContext;
-
     if (canvasSupported) {
       this._ctx = this._canvas.getContext('2d');
 
       this._height = this._canvas.height;
       this._width = this._canvas.width;
 
+      this.clear();
+
       this._is_init = true;
     }
     else {
       console.error('Can not get context');
       this._is_init = false;
+      return;
     }
 
-    this.clear();
+    // TODO: http://jquery-howto.blogspot.ru/2010/02/dynamically-create-iframe-with-jquery.html
+    this._cnv.click(function() {
+      let modal = element.add("modal_map", "<iframe/>", $("body"));
+      element.set_src("modal_map", "modal_map.html");
+      modal.onclick = function () {
+        this.parentElement.removeChild(this);
+      };
+      // this.parentNode.insertBefore(modal, this.nextSibling);
+    });
 
     Signal.bind("map", this.load_map, this);
     Signal.bind("add_position", this.add_position, this);
@@ -158,6 +170,7 @@ class map_t {
   }
   //----------------------------------------------------------------------------
   // TOOD: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial
+  // http://shpargalkablog.ru/2011/02/modalnoe-okno-css.html
   //----------------------------------------------------------------------------
   private clear(): void {
     if (!this._is_init)
@@ -191,33 +204,14 @@ class map_t {
   }
   //----------------------------------------------------------------------------
   public refresh(): void {
-    this.begin_draw();
-
-    this.draw_map();
-    this.draw_client();
-    // this.draw_client();
-
-    this.end_draw();
-  }
-  //----------------------------------------------------------------------------
-  public test_draw(): void {
     if (!this._is_init)
       return;
 
     this.begin_draw();
 
-    this._ctx.beginPath();
-    this._ctx.moveTo(170, 80);
-    this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
-    this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
-    this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
-    this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
-    this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
-    this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
-    this._ctx.closePath();
-
-    this._ctx.lineWidth = 5;
-    this._ctx.strokeStyle = 'blue';
+    this.draw_map();
+    this.draw_client();
+    // this.draw_client();
 
     this.end_draw();
   }

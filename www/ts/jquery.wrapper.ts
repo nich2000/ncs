@@ -4,9 +4,14 @@
 class element {
   //----------------------------------------------------------------------------
   public static add(id: string, tag: string, owner: any): any{
+    // TODO: document.createElement('iframe'); what is it
+
     let tmp = $(tag);
     tmp.attr("id", id);
-    owner.append(tmp);
+
+    owner.prepend(tmp);
+    // owner.append(tmp);
+
     return tmp;
   }
   //----------------------------------------------------------------------------

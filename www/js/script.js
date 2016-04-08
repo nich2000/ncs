@@ -237,9 +237,10 @@ var element = (function () {
     function element() {
     }
     element.add = function (id, tag, owner) {
+        // TODO: document.createElement('iframe'); what is it
         var tmp = $(tag);
         tmp.attr("id", id);
-        owner.append(tmp);
+        owner.prepend(tmp);
         return tmp;
     };
     element.delete = function () {
@@ -315,6 +316,7 @@ var map_item_t = (function () {
 var map_t = (function () {
     function map_t(id) {
         this._id = "";
+        this._cnv = "";
         this._canvas = undefined;
         this._ctx = undefined;
         this._is_init = false;
@@ -332,19 +334,28 @@ var map_t = (function () {
         this._position_second = [];
         console.log("constructor: map_t, id: " + id);
         this._id = id;
-        this._canvas = $("#" + id)[0];
+        this._cnv = $("#" + id);
+        this._canvas = this._cnv[0];
         var canvasSupported = !!document.createElement("canvas").getContext;
         if (canvasSupported) {
             this._ctx = this._canvas.getContext('2d');
             this._height = this._canvas.height;
             this._width = this._canvas.width;
+            this.clear();
             this._is_init = true;
         }
         else {
             console.error('Can not get context');
             this._is_init = false;
+            return;
         }
-        this.clear();
+        this._cnv.click(function () {
+            var modal = element.add("modal_map", "<iframe/>", $("body"));
+            element.set_src("modal_map", "modal_map.html");
+            modal.onclick = function () {
+                this.parentElement.removeChild(this);
+            };
+        });
         Signal.bind("map", this.load_map, this);
         Signal.bind("add_position", this.add_position, this);
     }
@@ -422,26 +433,11 @@ var map_t = (function () {
         }
     };
     map_t.prototype.refresh = function () {
-        this.begin_draw();
-        this.draw_map();
-        this.draw_client();
-        this.end_draw();
-    };
-    map_t.prototype.test_draw = function () {
         if (!this._is_init)
             return;
         this.begin_draw();
-        this._ctx.beginPath();
-        this._ctx.moveTo(170, 80);
-        this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
-        this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
-        this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
-        this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
-        this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
-        this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
-        this._ctx.closePath();
-        this._ctx.lineWidth = 5;
-        this._ctx.strokeStyle = 'blue';
+        this.draw_map();
+        this.draw_client();
         this.end_draw();
     };
     return map_t;
