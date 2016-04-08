@@ -91,7 +91,6 @@ class map_t {
       modal.onclick = function () {
         this.parentElement.removeChild(this);
       };
-      // this.parentNode.insertBefore(modal, this.nextSibling);
     });
 
     Signal.bind("map", this.load_map, this);
