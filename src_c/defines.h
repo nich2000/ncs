@@ -1,7 +1,14 @@
+//==============================================================================
+/*
+ * NIch CLient Server Project
+ * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
+ *
+ * <filename>
+*/
+//==============================================================================
 #ifndef DEFINES_H
 #define DEFINES_H
-
-//#define DEMS_DEVICE
+//==============================================================================
 #define USE_BINARY_PROTOCOL
 
 #if defined(__linux__) || defined(_WIN32)
@@ -29,5 +36,5 @@
   //#define SERVER_MODE
   //#define CLIENT_MODE
 #endif
-
+//==============================================================================
 #endif //DEFINES_H

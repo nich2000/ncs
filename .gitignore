@@ -1,0 +1,6 @@
+cmake/
+bin/
+logs/
+reports/
+ncs.sublime-workspace
+src_c/CMakeLists.txt.user

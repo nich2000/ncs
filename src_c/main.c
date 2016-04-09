@@ -1,14 +1,12 @@
 //==============================================================================
+/*
+ * NIch CLient Server Project
+ * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
+ *
+ * <filename>
+*/
 //==============================================================================
-#include <stdlib.h>
-#include <string.h>
-
-#include "defines.h"
-#include "globals.h"
-#include "socket.h"
-#include "ncs_log.h"
-#include "ncs_error.h"
-#include "exec.h"
+#include "main.h"
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
