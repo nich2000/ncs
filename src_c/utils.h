@@ -11,11 +11,16 @@
 //==============================================================================
 #include "defines.h"
 #include "globals.h"
-#include "customworker.h"
+
+#include "socket_types.h"
+#include "worker_types.h"
 //==============================================================================
-const char *state_to_string(sock_state_t state);
+int random_range(int min, int max);
 //==============================================================================
-int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex);
+const char *state_to_string   (sock_state_t    value);
+const char *active_to_string  (sock_active_t   value);
+const char *time_to_string    (sock_time_t     value);
+const char *register_to_string(sock_register_t value);
 //==============================================================================
 int print_types_info();
 int print_defines_info();

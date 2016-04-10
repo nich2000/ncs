@@ -9,9 +9,11 @@
 #ifndef LOG_H
 #define LOG_H
 //==============================================================================
-#include <stdio.h>
-
 #include "defines.h"
+#include "globals.h"
+
+// for FILE
+#include <stdio.h>
 //==============================================================================
 #define LOG_INITIAL_PATH    "../logs"
 #define REPORT_INITIAL_PATH "../reports"

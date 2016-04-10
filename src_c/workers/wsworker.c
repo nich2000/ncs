@@ -10,12 +10,13 @@
 #include <string.h>
 
 #include "jansson.h"
-
-#include "wsworker.h"
-#include "cmdworker.h"
-#include "ncs_log.h"
 #include "sha1.h"
 #include "base64.h"
+
+#include "wsworker.h"
+
+#include "cmdworker.h"
+#include "ncs_log.h"
 #include "protocol_types.h"
 #include "protocol.h"
 #include "utils.h"

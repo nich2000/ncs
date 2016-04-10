@@ -9,5 +9,7 @@
 #ifndef PROTOCOL_UTILS_H
 #define PROTOCOL_UTILS_H
 //==============================================================================
+#include "defines.h"
+#include "globals.h"
 //==============================================================================
 #endif //PROTOCOL_UTILS_H

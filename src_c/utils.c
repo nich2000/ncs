@@ -6,19 +6,17 @@
  * <filename>
 */
 //==============================================================================
+// for random_range
 #include <stdlib.h>
-#include <string.h>
 
 #include "utils.h"
+
 #include "socket_utils.h"
-#include "protocol_types.h"
 #include "ncs_log.h"
 //==============================================================================
 int random_range(int min, int max)
 {
-  int val = (rand() % (max + 1 - min)) + min;
-
-  return val;
+  return (rand() % (max + 1 - min)) + min;
 }
 //==============================================================================
 const char *state_to_string(sock_state_t value)

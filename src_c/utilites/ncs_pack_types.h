@@ -9,5 +9,7 @@
 #ifndef NCS_PACK_TYPES_H
 #define NCS_PACK_TYPES_H
 //==============================================================================
+#include "defines.h"
+#include "globals.h"
 //==============================================================================
 #endif //NCS_PACK_TYPES_H

@@ -13,6 +13,8 @@
 #include <pthread.h>
 
 #include "defines.h"
+#include "globals.h"
+
 #include "socket_types.h"
 //==============================================================================
 const char *_sock_version();

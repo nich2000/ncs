@@ -6,16 +6,17 @@
  * <filename>
 */
 //==============================================================================
-#include <math.h>
-#include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
-#include <string.h>
-
-#include "ncs_log.h"
-#include "protocol.h"
+//#include <math.h>
+//#include <stdlib.h>
+//#include <time.h>
+//#include <unistd.h>
+//#include <string.h>
 
 #include "test.h"
+
+#include "ncs_error.h"
+//#include "ncs_log.h"
+//#include "protocol.h"
 //==============================================================================
 #define TEST_PACK_COUNT 1
 #define TEST_WORD_COUNT 5

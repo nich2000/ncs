@@ -9,12 +9,12 @@
 #ifndef MAIN_H
 #define MAIN_H
 //==============================================================================
-#include "defines.h"
-
 #include <stdlib.h>
 #include <string.h>
 
+#include "defines.h"
 #include "globals.h"
+
 #include "socket.h"
 #include "ncs_log.h"
 #include "ncs_error.h"

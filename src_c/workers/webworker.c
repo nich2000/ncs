@@ -10,8 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "utils.h"
 #include "webworker.h"
+
+#include "utils.h"
 #include "socket.h"
 #include "socket_types.h"
 #include "socket_utils.h"

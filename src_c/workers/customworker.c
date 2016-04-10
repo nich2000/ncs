@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "customworker.h"
+
 #include "socket.h"
 #include "ncs_log.h"
 #include "protocol.h"

@@ -12,6 +12,8 @@
 #include <pthread.h>
 
 #include "defines.h"
+#include "globals.h"
+
 #include "protocol_types.h"
 #include "socket_types.h"
 #include "cmdworker.h"

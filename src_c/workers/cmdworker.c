@@ -11,10 +11,11 @@
 #include <time.h>
 #include <stdlib.h>
 
+#include "cmdworker.h"
+
 #include "streamer.h"
 #include "exec.h"
 #include "customworker.h"
-#include "cmdworker.h"
 #include "wsworker.h"
 #include "socket_utils.h"
 #include "socket.h"

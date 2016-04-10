@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "ncs_pack_utils.h"
+
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================

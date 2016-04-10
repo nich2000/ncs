@@ -11,9 +11,10 @@
 //==============================================================================
 #include "defines.h"
 #include "globals.h"
+
 #include "socket_types.h"
 #include "customworker.h"
-
+//==============================================================================
 const char *sock_mode_to_string(sock_mode_t mode);
 const char *sock_type_to_string(sock_type_t type);
 

@@ -2,5 +2,6 @@ cmake/
 bin/
 logs/
 reports/
+.directory
 ncs.sublime-workspace
 src_c/CMakeLists.txt.user

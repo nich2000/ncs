@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "socket.h"
+
 #include "ncs_log.h"
 #include "ncs_error.h"
 #include "protocol_types.h"

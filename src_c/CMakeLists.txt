@@ -25,6 +25,7 @@ set(CMAKE_C_FLAGS "-Wall")
 #set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
 include_directories(../libs/jansson/src)
+include_directories(../libs/AVRCryptoLib)
 include_directories(./utilites)
 include_directories(./workers)
 include_directories(./)
@@ -42,6 +43,11 @@ set(_JANSSON  ../libs/jansson/src/dump.c
               ../libs/jansson/src/value.c)
 add_library(jansson SHARED ${_JANSSON})
 set_property(TARGET jansson PROPERTY C_STANDARD 99)
+#-------------------------------------------------------------------------------
+set(_CRYPTO   ../libs/AVRCryptoLib/sha1.c
+              ../libs/AVRCryptoLib/base64.c)
+add_library(crypto SHARED ${_CRYPTO})
+set_property(TARGET crypto PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
 set(_LOG      defines.h
               globals.h
@@ -84,15 +90,14 @@ set(_SOCKET   defines.h
               workers/socket.c
               workers/socket_utils.c
               workers/streamer.c
+              workers/worker_types.h
               workers/customworker.c
               workers/cmdworker.c
               workers/webworker.c
-              workers/wsworker.c
-              workers/base64.c
-              workers/sha1.c)
+              workers/wsworker.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
-target_link_libraries(socket protocol jansson log error)
+target_link_libraries(socket protocol log error jansson crypto)
 IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
@@ -110,6 +115,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log socket error jansson Threads::Threads)
+target_link_libraries(${PROJECT_NAME} protocol log socket error Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

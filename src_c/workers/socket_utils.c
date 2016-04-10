@@ -7,6 +7,7 @@
 */
 //==============================================================================
 #include "socket_utils.h"
+
 #include "ncs_log.h"
 #include "protocol.h"
 #include "socket.h"

@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "streamer.h"
+
 #include "ncs_log.h"
 #include "protocol.h"
 //==============================================================================

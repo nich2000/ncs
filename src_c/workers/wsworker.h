@@ -11,9 +11,10 @@
 //==============================================================================
 #include "defines.h"
 #include "globals.h"
+
 #include "protocol_types.h"
 #include "socket_types.h"
-#include "customworker.h"
+#include "worker_types.h"
 //==============================================================================
 typedef enum
 {

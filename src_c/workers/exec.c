@@ -19,6 +19,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "exec.h"
+
 #include "test.h"
 #include "utils.h"
 #include "socket.h"
@@ -28,7 +30,6 @@
 #include "streamer.h"
 #include "ncs_log.h"
 #include "ncs_error.h"
-#include "exec.h"
 //==============================================================================
 #define CMD_TEST            "test"           // 0
 #define CMD_CLEAR           "clear"          // 0
