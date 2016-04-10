@@ -6,10 +6,7 @@
  * <filename>
 */
 //==============================================================================
-#ifdef __linux__
-  #include <sys/select.h>
-#endif
-
+// strcpy
 #include <string.h>
 
 #include "socket.h"

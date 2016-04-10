@@ -9,9 +9,6 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 //==============================================================================
-#include <unistd.h>
-#include <pthread.h>
-
 #include "defines.h"
 #include "globals.h"
 

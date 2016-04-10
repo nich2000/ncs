@@ -6,7 +6,9 @@
  * <filename>
 */
 //==============================================================================
+// memset
 #include <string.h>
+// malloc
 #include <stdlib.h>
 
 #include "ncs_pack_utils.h"

@@ -6,8 +6,9 @@
  * <filename>
 */
 //==============================================================================
-#include <stdarg.h>
 #include <string.h>
+#include <pthread.h>
+#include <unistd.h>
 
 #include "jansson.h"
 #include "sha1.h"

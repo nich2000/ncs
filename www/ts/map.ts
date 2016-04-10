@@ -86,11 +86,11 @@ class map_t {
 
     // TODO: http://jquery-howto.blogspot.ru/2010/02/dynamically-create-iframe-with-jquery.html
     this._cnv.click(function() {
-      let modal = element.add("modal_map", "<iframe/>", $("body"));
-      element.set_src("modal_map", "modal_map.html");
-      modal.onclick = function () {
-        this.parentElement.removeChild(this);
-      };
+      // let modal = element.add("modal_map", "<iframe/>", $("body"));
+      // element.set_src("modal_map", "modal_map.html");
+      // modal.onclick = function () {
+        // this.parentElement.removeChild(this);
+      // };
     });
 
     Signal.bind("map", this.load_map, this);

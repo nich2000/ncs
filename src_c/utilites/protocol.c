@@ -7,9 +7,11 @@
 */
 //==============================================================================
 #include <limits.h>
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
+// atoi
+#include <stdlib.h>
+// memcpy
+#include <string.h>
 
 #include "protocol.h"
 

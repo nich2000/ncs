@@ -6,8 +6,9 @@
  * <filename>
 */
 //==============================================================================
-#include <stdio.h>
+// strcpy
 #include <string.h>
+#include <unistd.h>
 
 #include "customworker.h"
 

@@ -237,7 +237,6 @@ var element = (function () {
     function element() {
     }
     element.add = function (id, tag, owner) {
-        // TODO: document.createElement('iframe'); what is it
         var tmp = $(tag);
         tmp.attr("id", id);
         owner.prepend(tmp);
@@ -279,7 +278,7 @@ function init() {
     console.log("init");
     exec = new exec_t();
     clients = new clients_t();
-    map = new map_t('canvas');
+    map = new map_t('canvas_map');
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 $(window).load(function () {
@@ -350,11 +349,6 @@ var map_t = (function () {
             return;
         }
         this._cnv.click(function () {
-            var modal = element.add("modal_map", "<iframe/>", $("body"));
-            element.set_src("modal_map", "modal_map.html");
-            modal.onclick = function () {
-                this.parentElement.removeChild(this);
-            };
         });
         Signal.bind("map", this.load_map, this);
         Signal.bind("add_position", this.add_position, this);

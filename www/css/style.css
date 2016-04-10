@@ -72,6 +72,33 @@
   color: #FFF;
 }
 
+.dems-map
+{
+  height: 100%;
+  width: 100%;
+}
+
+.dems-mini-map
+{
+  background-color: Gold;
+  height: 100%;
+}
+
+.dems-show
+{
+  display: block;
+}
+
+.dems-hide
+{
+  display: none;
+}
+
+.dems-maxi-map
+{
+}
+
+/*
 iframe
 {
   position: fixed;
@@ -84,6 +111,7 @@ iframe
   border: solid rgba(0,0,0,.3);
   border-width: 5vh 5vw;
 }
+*/
 
 td
 {

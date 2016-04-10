@@ -6,12 +6,10 @@
  * <filename>
 */
 //==============================================================================
-#if defined(__linux__) || defined(_WIN32)
-#include <unistd.h>
-#endif
-
 #ifdef __linux__
+// mkdir
 #include <sys/stat.h>
+// system
 #include <stdlib.h>
 #elif _WIN32
 #include <windows.h>

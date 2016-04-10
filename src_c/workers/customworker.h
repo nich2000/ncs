@@ -9,9 +9,6 @@
 #ifndef CUSTOMWORKER_H
 #define CUSTOMWORKER_H
 //==============================================================================
-#include <stdio.h>
-#include <pthread.h>
-
 #include "defines.h"
 #include "globals.h"
 

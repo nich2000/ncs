@@ -126,8 +126,8 @@
           <!-- Map -->
           <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: blue; height: 35%;">
 
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Gold; height: 100%;">
-              <canvas id="canvas" style="height: 100%; width: 100%;">
+            <div id="mini_map" class="col-lg-6 col-md-6 col-sm-6 col-xs-6 dems-mini-map">
+              <canvas id="canvas_map" class="dems-map">
                 <p>Ваш браузер не поддерживает canvas</p>
               </canvas>
             </div>
@@ -139,7 +139,6 @@
         </div>
 
       </div>
-
       <!-- ================================================ -->
       <!-- Footer -->
       <div class="row dems-footer">
@@ -147,6 +146,10 @@
         <span class="label label-info"    id="last_recv_cmd">Command: none</span>
         <span class="label label-info"    id="last_send_cmd">Command: none</span>
       </div>
+    </div>
+    <!-- ================================================ -->
+    <!-- Modal map -->
+    <div id="maxi_map" class="dems-maxi-map dems-hide">
     </div>
   </body>
   <!-- ================================================ -->

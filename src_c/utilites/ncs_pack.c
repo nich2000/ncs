@@ -45,19 +45,20 @@
 * si = (b[0] << 8) | b[1];
 */
 //==============================================================================
+// malloc
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <limits.h>
 #include <errno.h>
 
 #include "ncs_pack.h"
 
-#ifndef DEMS_DEVICE
-#include "ncs_log.h"
-#endif
-#include "ncs_error.h"
 #include "ncs_pack_utils.h"
+#include "ncs_error.h"
+
+#ifndef DEMS_DEVICE
+  #include "ncs_log.h"
+#endif
 //==============================================================================
 pack_size_t _pack_params_count   (pack_packet_t *pack);
 //==============================================================================
