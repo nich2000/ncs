@@ -141,6 +141,57 @@ sock_active_t _cmd_active_neg()
     return ACTIVE_FIRST;
 }
 //==============================================================================
+#ifndef __linux__
+/*
+ * getline.c
+ * Copyright (C) 1991 Free Software Foundation, Inc.
+ * This file is part of the GNU C Library.
+ * Read up to (and including) a newline from STREAM into *LINEPTR
+ * (and null-terminate it). *LINEPTR is a pointer returned from malloc (or
+ * NULL), pointing to *N characters of space.  It is realloc'd as
+ * necessary.  Returns the number of characters read (not including the
+ * null terminator), or -1 on error or EOF.
+*/
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+  static char line[256];
+  char *ptr;
+  unsigned int len;
+
+  if (lineptr == NULL || n == NULL)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (ferror (stream))
+    return -1;
+
+  if (feof(stream))
+    return -1;
+
+  fgets(line,256,stream);
+
+  ptr = strchr(line,'\n');
+  if (ptr)
+    *ptr = '\0';
+
+  len = strlen(line);
+
+  if ((len+1) < 256)
+  {
+    ptr = realloc(*lineptr, 256);
+    if (ptr == NULL)
+      return(-1);
+    *lineptr = ptr;
+    *n = 256;
+  }
+
+  strcpy(*lineptr,line);
+  return(len);
+}
+#endif
+//==============================================================================
 int load_names()
 {
   char *file_name = "../config/names.ejn";
@@ -167,10 +218,12 @@ int load_names()
     strcpy(_names.items[_names.count-1].name, token);
   }
 
-  for(int i = 0; i < _names.count; i++)
-    printf("%s=%s\n",
-           _names.items[i].session_id,
-           _names.items[i].name);
+  log_add_fmt(LOG_INFO, "names count: %d", _names.count);
+
+//  for(int i = 0; i < _names.count; i++)
+//    printf("%s=%s\n",
+//           _names.items[i].session_id,
+//           _names.items[i].name);
 
   fclose(f);
   if(line)
@@ -229,20 +282,19 @@ int load_map()
       token[strlen(token)-1] = '\0';
     memset(map_item->lon, 0, MAP_ITEM_SIZE);
     strcpy(map_item->lon, token);
-
-//    if(_map.count >= 10)
-//      break;
   }
 
-  for(int i = 0; i < _map.count; i++)
-    printf("%s  %s  %s  %s  %s  %s  %s\n",
-           _map.items[i].kind,
-           _map.items[i].number,
-           _map.items[i].index,
-           _map.items[i].lat_f,
-           _map.items[i].lon_f,
-           _map.items[i].lat,
-           _map.items[i].lon);
+  log_add_fmt(LOG_INFO, "map loaded, file: %s, points count: %d", file_name, _map.count);
+
+//  for(int i = 0; i < _map.count; i++)
+//    printf("%s  %s  %s  %s  %s  %s  %s\n",
+//           _map.items[i].kind,
+//           _map.items[i].number,
+//           _map.items[i].index,
+//           _map.items[i].lat_f,
+//           _map.items[i].lon_f,
+//           _map.items[i].lat,
+//           _map.items[i].lon);
 
   fclose(f);
   if(line)

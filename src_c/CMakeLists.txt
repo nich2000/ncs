@@ -20,7 +20,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-set(CMAKE_C_FLAGS "-Wall")
+#set(CMAKE_C_FLAGS "-Wall")
+set(CMAKE_C_FLAGS "-w -pedantic")
 #-------------------------------------------------------------------------------
 #set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
@@ -60,6 +61,7 @@ set(_ERROR    defines.h
               utilites/ncs_error.c)
 add_library(error SHARED ${_ERROR})
 set_property(TARGET error PROPERTY C_STANDARD 99)
+target_link_libraries(error log)
 #-------------------------------------------------------------------------------
 set(_PACK     defines.h
               globals.h
@@ -69,6 +71,7 @@ set(_PACK     defines.h
               utilites/ncs_error.c)
 add_library(pack SHARED ${_PACK})
 set_property(TARGET pack PROPERTY C_STANDARD 99)
+target_link_libraries(pack log error)
 #-------------------------------------------------------------------------------
 set(_PROTOCOL defines.h
               globals.h
