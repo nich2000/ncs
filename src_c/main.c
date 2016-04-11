@@ -17,6 +17,9 @@ sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
 //==============================================================================
 int main(int argc, char *argv[])
 {
+  log_add("-------------------", LOG_INFO);
+  log_add("application started", LOG_INFO);
+
   char command[256];
 
   sock_init();

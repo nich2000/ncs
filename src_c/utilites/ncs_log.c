@@ -7,14 +7,14 @@
 */
 //==============================================================================
 #ifdef __linux__
-// mkdir
 #include <sys/stat.h>
-// system
+#include <sys/time.h>
 #include <stdlib.h>
 #elif _WIN32
 #include <windows.h>
 #endif
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <time.h>
@@ -108,16 +108,25 @@ void log_add(char *message, int log_type)
 
   log_make_dir();
 
-  char *t = "";
-#if defined(__linux__) || defined(_WIN32)
+  char t[16];
+  t[0] = 0;
 //  time_t rawtime;
-//  struct tm *timeinfo;
-
 //  time(&rawtime);
-//  timeinfo = localtime(&rawtime);
+//  struct tm *timeinfo = localtime(&rawtime);
+//  sprintf(t, "%d:%d:%d",
+//    timeinfo->tm_hour,
+//    timeinfo->tm_min,
+//    timeinfo->tm_sec);
 
-//  strftime(t, 128, "%T", timeinfo);
-#endif
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+
+  time_t rawtime = tv.tv_sec;
+  struct tm * timeinfo = localtime(&rawtime);
+
+  char tmp[16];
+  strftime(tmp, 16, "%H:%M:%S", timeinfo);
+  snprintf(t, 16, "%s.%03li", tmp, tv.tv_usec/1000);
 
   const char *prefix = log_type_to_string(log_type);
 
@@ -131,10 +140,16 @@ void log_add(char *message, int log_type)
     )
     printf("%s %s\n", prefix, message);
 
-  FILE *log;
+  strftime(tmp, 16, "%y%m%d", timeinfo);
+
   char log_full_name[128];
-  sprintf(log_full_name, "%s/%s", LOG_INITIAL_PATH, log_def_name);
-  log = fopen(log_full_name, "a");
+  sprintf(log_full_name,
+          "%s/%s_%s",
+          LOG_INITIAL_PATH,
+          tmp,
+          log_def_name);
+
+  FILE *log = fopen(log_full_name, "a");
   if(log != NULL)
   {
     fprintf(log, "%s %s %s\n", t, prefix, message);

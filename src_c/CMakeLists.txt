@@ -20,8 +20,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
 # https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
-#set(CMAKE_C_FLAGS "-Wall")
-set(CMAKE_C_FLAGS "-w -pedantic")
+set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
 #set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
