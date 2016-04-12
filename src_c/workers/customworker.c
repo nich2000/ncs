@@ -130,24 +130,21 @@ int custom_worker_start(custom_worker_t *worker)
 {
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (worker->sock == INVALID_SOCKET)
-  {
-    char tmp[128];
-    sprintf(tmp, "custom_worker_start, socket: INVALID_SOCKET, Error: %d", sock_error());
-    log_add(tmp, LOG_ERROR_CRITICAL);
-    return make_last_error(ERROR_CRITICAL, INVALID_SOCKET, tmp);
-  }
+    return make_last_error_fmt(ERROR_CRITICAL, INVALID_SOCKET,
+                               "custom_worker_start, socket: INVALID_SOCKET, worker id: %d, error: %d",
+                               worker->id, sock_error());
 
   int reuse = 1;
   setsockopt(worker->sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
 
-  log_add_fmt(LOG_DEBUG, "custom_worker_start, socket: %d", worker->sock);
+  log_add_fmt(LOG_DEBUG, "custom_worker_start, socket: %d, worker id: %d", worker->sock, worker->id);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_server_start(custom_worker_t *worker)
 {
-  log_add_fmt(LOG_DEBUG, "custom_server_start, Port: %d", worker->port);
+  log_add_fmt(LOG_DEBUG, "custom_server_start, id: %d, port: %d", worker->id, worker->port);
 
   if(custom_worker_start(worker) >= ERROR_NORMAL)
     return ERROR_CRITICAL;
@@ -159,39 +156,40 @@ int custom_server_start(custom_worker_t *worker)
   if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "custom_server_start, bind, error: %d", sock_error());
+    sprintf(tmp, "custom_server_start, bind, server id: %d, error: %d", worker->id, sock_error());
     log_add(tmp, LOG_ERROR_CRITICAL);
     return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
-    log_add("custom_server_start, bind", LOG_DEBUG);
+    log_add_fmt(LOG_DEBUG, "custom_server_start, bind, server id: %d", worker->id);
 
   if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "custom_server_start, listen, error: %d", sock_error());
+    sprintf(tmp, "custom_server_start, bind, server id: %d, error: %d", worker->id, sock_error());
     log_add(tmp, LOG_ERROR_CRITICAL);
     return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
-    log_add("custom_server_start, listen", LOG_DEBUG);
+    log_add_fmt(LOG_DEBUG, "custom_server_start, listen, server id: %d", worker->id);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_client_start(custom_worker_t *worker)
 {
-  log_add_fmt(LOG_DEBUG, "custom_client_start, Port: %d, Host: %s", worker->port, worker->host);
+  log_add_fmt(LOG_DEBUG, "custom_client_start, id: %d, port: %d, host: %s",
+              worker->id, worker->port, worker->host);
 
   if(custom_worker_start(worker) >= ERROR_NORMAL)
-    return ERROR_CRITICAL;
+    return make_last_error(ERROR_CRITICAL, errno, "custom_client_start");
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_worker_stop(custom_worker_t *worker)
 {
-  log_add("custom_worker_stop", LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "custom_worker_stop, worker: %d", worker->id);
 
   closesocket(worker->sock);
 
@@ -200,11 +198,12 @@ int custom_worker_stop(custom_worker_t *worker)
 //==============================================================================
 int custom_server_work(custom_server_t *server)
 {
-  log_add("[BEGIN] custom_server_work", LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] custom_server_work, server id: %d", server->custom_worker.id);
 
   server->custom_worker.state = STATE_START;
 
-  log_add_fmt(LOG_INFO, "server started, port: %d...", server->custom_worker.port);
+  log_add_fmt(LOG_INFO, "server started, id: %d, port: %d...",
+              server->custom_worker.id, server->custom_worker.port);
 
   int errors = 0;
 
@@ -219,16 +218,18 @@ int custom_server_work(custom_server_t *server)
       if(server->on_accept != 0)
       {
         log_add_fmt(LOG_DEBUG,
-                    "custom_server_work, accepted, socket: %d, host: %s, port: %d",
-                    tmp_client, tmp_host, tmp_port);
+                    "custom_server_work, accepted, id: %d, socket: %d, host: %s, port: %d",
+                    server->custom_worker.id, tmp_client, tmp_host, tmp_port);
 
         if(server->on_accept((void*)server, tmp_client, tmp_host) >= ERROR_NORMAL)
-          log_add_fmt(LOG_ERROR, "custom_server_work, on_accept, error: %s", last_error()->message);
+          log_add_fmt(LOG_ERROR, "custom_server_work, on_accept, id: %d, error: %s",
+                      server->custom_worker.id, last_error()->message);
       }
     }
     else if(res >= ERROR_NORMAL)
     {
-      log_add_fmt(LOG_ERROR, "custom_server_work, sock_accept, error: %s", last_error()->message);
+      log_add_fmt(LOG_ERROR, "custom_server_work, sock_accept, id: %d, error: %s",
+                  server->custom_worker.id, last_error()->message);
       if(errors++ > SOCK_ERRORS_COUNT)
         server->custom_worker.state = STATE_STOPPING;
     }
@@ -238,22 +239,24 @@ int custom_server_work(custom_server_t *server)
 
   server->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_INFO, "server stopped, port: %d", server->custom_worker.port);
+  log_add_fmt(LOG_INFO, "server stopped, id: %d, port: %d",
+              server->custom_worker.id, server->custom_worker.port);
 
-  log_add("[END] custom_server_work", LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[END] custom_server_work, server id: %d",
+              server->custom_worker.id);
 
   return ERROR_NONE;
 }
 //==============================================================================
 int custom_client_work(custom_client_t *client)
 {
-  log_add("[BEGIN] custom_client_work", LOG_DEBUG);
-  log_add("client started", LOG_INFO);
-//  log_add("----------", LOG_INFO);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] custom_client_work, client id: %d",
+              client->custom_remote_client.custom_worker.id);
 
   client->custom_remote_client.custom_worker.state = STATE_START;
 
-  log_add("connecting to server...", LOG_INFO);
+  log_add_fmt(LOG_INFO, "custom_client_work, connecting to server, client id: %d...",
+          client->custom_remote_client.custom_worker.id);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
   {
     if(sock_connect(client->custom_remote_client.custom_worker.sock,
@@ -261,7 +264,8 @@ int custom_client_work(custom_client_t *client)
                     client->custom_remote_client.custom_worker.host) >= ERROR_NORMAL)
     {
       char tmp[256];
-      sprintf(tmp, "custom_client_work, sock_connect, try in %d seconds, Error: %d", SOCK_WAIT_CONNECT, sock_error());
+      sprintf(tmp, "custom_client_work, sock_connect, client id: %d, try in %d seconds, Error: %d",
+              client->custom_remote_client.custom_worker.id, SOCK_WAIT_CONNECT, sock_error());
       make_last_error(ERROR_WARNING, ERROR_WARNING, tmp);
       log_add(tmp, LOG_EXTRA);
       sleep(SOCK_WAIT_CONNECT);
@@ -278,7 +282,8 @@ int custom_client_work(custom_client_t *client)
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
 
-  log_add("[END] custom_client_work", LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[END] custom_client_work, client id: %d",
+              client->custom_remote_client.custom_worker.id);
 
   return ERROR_NONE;
 }
@@ -288,13 +293,15 @@ void *custom_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] custom_recv_worker, socket: %d", tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] custom_recv_worker, worker id: %d, socket: %d",
+              tmp_client->custom_worker.id, tmp_sock);
 
   tmp_client->custom_worker.state = STATE_START;
 
-  char tmp_report_name[256];
-  sprintf(tmp_report_name, "report_%d.txt", tmp_client->custom_worker.id);
-  tmp_client->report = report_open(tmp_report_name);
+//  char tmp_report_name[256];
+//  sprintf(tmp_report_name, "report_%d", tmp_client->custom_worker.id);
+//  gen_log_name(tmp_report_name);
+//  tmp_client->report = report_open();
 
   sock_buffer_t tmp_buffer;
   int           tmp_size = 0;
@@ -334,7 +341,8 @@ void *custom_recv_worker(void *arg)
 
   report_close(tmp_client->report);
 
-  log_add_fmt(LOG_DEBUG, "[END] custom_recv_worker, socket: %d", tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[END] custom_recv_worker, worker id: %d, socket: %d",
+              tmp_client->custom_worker.id, tmp_sock);
 
   return NULL;
 }

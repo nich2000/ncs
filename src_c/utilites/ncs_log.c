@@ -32,6 +32,27 @@ void clr_scr()
   #endif
 }
 //==============================================================================
+const char *gen_log_name(const char *prefix)
+{
+//  time_t rawtime;
+//  time(&rawtime);
+//  struct tm *timeinfo = localtime(&rawtime);
+//  sprintf(t, "%d:%d:%d",
+//    timeinfo->tm_hour,
+//    timeinfo->tm_min,
+//    timeinfo->tm_sec);
+
+//  struct timeval tv;
+//  gettimeofday(&tv, NULL);
+
+//  time_t rawtime = tv.tv_sec;
+//  struct tm * timeinfo = localtime(&rawtime);
+
+//  char tmp[16];
+//  strftime(tmp, 16, "%H:%M:%S", timeinfo);
+//  snprintf(t, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+}
+//==============================================================================
 void log_make_dir()
 {
   #ifdef __linux__
@@ -108,25 +129,7 @@ void log_add(char *message, int log_type)
 
   log_make_dir();
 
-  char t[16];
-  t[0] = 0;
-//  time_t rawtime;
-//  time(&rawtime);
-//  struct tm *timeinfo = localtime(&rawtime);
-//  sprintf(t, "%d:%d:%d",
-//    timeinfo->tm_hour,
-//    timeinfo->tm_min,
-//    timeinfo->tm_sec);
-
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-
-  time_t rawtime = tv.tv_sec;
-  struct tm * timeinfo = localtime(&rawtime);
-
-  char tmp[16];
-  strftime(tmp, 16, "%H:%M:%S", timeinfo);
-  snprintf(t, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+//  char *t;
 
   const char *prefix = log_type_to_string(log_type);
 
@@ -140,23 +143,22 @@ void log_add(char *message, int log_type)
     )
     printf("%s %s\n", prefix, message);
 
-  strftime(tmp, 16, "%y%m%d", timeinfo);
+//  strftime(tmp, 16, "%y%m%d", timeinfo);
 
-  char log_full_name[128];
-  sprintf(log_full_name,
-          "%s/%s_%s",
-          LOG_INITIAL_PATH,
-          tmp,
-          log_def_name);
+//  char log_full_name[128];
+//  sprintf(log_full_name,
+//          "%s/%s_%s",
+//          LOG_INITIAL_PATH,
+//          gen_log_name(log_def_name));
 
-  FILE *log = fopen(log_full_name, "a");
-  if(log != NULL)
-  {
-    fprintf(log, "%s %s %s\n", t, prefix, message);
-    fclose(log);
-  }
-  else
-    printf("[WARNING] Can not open log file, %s\n", log_full_name);
+//  FILE *log = fopen(log_full_name, "a");
+//  if(log != NULL)
+//  {
+//    fprintf(log, "%s %s %s\n", t, prefix, message);
+//    fclose(log);
+//  }
+//  else
+//    printf("[WARNING] Can not open log file, %s\n", log_full_name);
 }
 //==============================================================================
 void report_make_dir()

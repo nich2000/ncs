@@ -32,6 +32,7 @@
 #define LOG_RAW_DATA        14
 //==============================================================================
 void clr_scr();
+const char *gen_log_name(const char *prefix);
 //==============================================================================
 void log_set_name(char *name);
 void log_add(char *message, int log_type);
