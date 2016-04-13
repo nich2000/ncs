@@ -32,12 +32,12 @@
 #define LOG_RAW_DATA        14
 //==============================================================================
 void clr_scr();
-const char *gen_log_name(const char *prefix);
 //==============================================================================
-void log_set_name(char *name);
+void log_gen_name(const char *name, char *result);
+void log_set_name(const char *name);
 //==============================================================================
-void log_add    (int log_type, char *message);
-void log_add_fmt(int log_type, char *message, ...);
+void log_add    (int log_type, const char *message     );
+void log_add_fmt(int log_type, const char *message, ...);
 //==============================================================================
 FILE *report_open(char *report_name);
 int   report_add(FILE *file, char *message);

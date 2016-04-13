@@ -447,7 +447,7 @@ int on_ws_disconnect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_INFO, "on_ws_disconnect, disconnected from server, client: %d",
+  log_add_fmt(LOG_INFO, "on_ws_disconnect, disconnected from server, client id: %d",
               tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
@@ -489,13 +489,13 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t name)
 
         _ws_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "ws_remote_clients_register, success, id: %d, name: %s",
+        log_add_fmt(LOG_INFO, "ws_remote_clients_register, success, client id: %d, name: %s",
                     id, name);
       }
   }
 
   return make_last_error_fmt(ERROR_NORMAL, errno,
-                             "ws_remote_clients_register, the client not found, id: %d, name: %s",
+                             "ws_remote_clients_register, the client not found, client id: %d, name: %s",
                              id, name);
 }
 //==============================================================================

@@ -32,25 +32,36 @@ void clr_scr()
   #endif
 }
 //==============================================================================
-const char *gen_log_name(const char *prefix)
+void get_cur_date_str(char *result)
 {
-//  time_t rawtime;
-//  time(&rawtime);
-//  struct tm *timeinfo = localtime(&rawtime);
-//  sprintf(t, "%d:%d:%d",
-//    timeinfo->tm_hour,
-//    timeinfo->tm_min,
-//    timeinfo->tm_sec);
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
 
-//  struct timeval tv;
-//  gettimeofday(&tv, NULL);
+  time_t rawtime = tv.tv_sec;
+  struct tm * timeinfo = localtime(&rawtime);
 
-//  time_t rawtime = tv.tv_sec;
-//  struct tm * timeinfo = localtime(&rawtime);
+  strftime(result, sizeof(result), "%y%m%d", timeinfo);
+}
+//==============================================================================
+void get_cur_time_str(char *result)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
 
-//  char tmp[16];
-//  strftime(tmp, 16, "%H:%M:%S", timeinfo);
-//  snprintf(t, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+  time_t rawtime = tv.tv_sec;
+  struct tm * timeinfo = localtime(&rawtime);
+
+  char tmp[16];
+  strftime(tmp, 16, "%H:%M:%S", timeinfo);
+  snprintf(result, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+}
+//==============================================================================
+void log_gen_name(const char *name, char *result)
+{
+  char date_str[16];
+  get_cur_date_str(date_str);
+
+  sprintf(result, "%s_%s", date_str, name);
 }
 //==============================================================================
 void log_make_dir()
@@ -62,12 +73,12 @@ void log_make_dir()
   #endif
 }
 //==============================================================================
-void log_set_name(char *name)
+void log_set_name(const char *name)
 {
   strncpy(log_def_name, name, 64);
 }
 //==============================================================================
-void log_add_fmt(int log_type, char *message, ...)
+void log_add_fmt(int log_type, const char *message, ...)
 {
   char tmp[102400];
 
@@ -110,7 +121,7 @@ const char *log_type_to_string(int log_type)
   return "";
 }
 //==============================================================================
-void log_add(int log_type, char *message)
+void log_add(int log_type, const char *message)
 {
   #ifndef DEBUG_MODE
   if(log_type == LOG_DEBUG)
@@ -129,9 +140,7 @@ void log_add(int log_type, char *message)
 
   log_make_dir();
 
-//  char *t;
-
-  const char *prefix = log_type_to_string(log_type);
+  const char *log_type_str = log_type_to_string(log_type);
 
   if(
      (log_type == LOG_INFO)
@@ -141,24 +150,25 @@ void log_add(int log_type, char *message)
      || (log_type >= LOG_ERROR_CRITICAL)
      #endif
     )
-    printf("%s %s\n", prefix, message);
+    printf("%s %s\n", log_type_str, message);
 
-//  strftime(tmp, 16, "%y%m%d", timeinfo);
+  char log_full_name[256];
+  log_gen_name(log_def_name, log_full_name);
+  sprintf(log_full_name, "%s/%s",
+          LOG_INITIAL_PATH, log_full_name);
 
-//  char log_full_name[128];
-//  sprintf(log_full_name,
-//          "%s/%s_%s",
-//          LOG_INITIAL_PATH,
-//          gen_log_name(log_def_name));
+  FILE *log = fopen(log_full_name, "a");
+  if(log != NULL)
+  {
+    char time_str[16];
+    get_cur_time_str(time_str);
 
-//  FILE *log = fopen(log_full_name, "a");
-//  if(log != NULL)
-//  {
-//    fprintf(log, "%s %s %s\n", t, prefix, message);
-//    fclose(log);
-//  }
-//  else
-//    printf("[WARNING] Can not open log file, %s\n", log_full_name);
+    fprintf(log, "%s %s %s\n", time_str, log_type_str, message);
+
+    fclose(log);
+  }
+  else
+    printf("[WARNING] Can not open log file, %s\n", log_full_name);
 }
 //==============================================================================
 void report_make_dir()
@@ -173,7 +183,9 @@ void report_make_dir()
 FILE *report_open(char *report_name)
 {
   char report_full_name[256];
-  sprintf(report_full_name, "%s/%s", REPORT_INITIAL_PATH, report_name);
+  log_gen_name(report_name, report_full_name);
+  sprintf(report_full_name, "%s/%s",
+          REPORT_INITIAL_PATH, report_full_name);
 
   report_make_dir();
 
@@ -187,7 +199,6 @@ int report_add(FILE *file, char *message)
   int res = -1;
   if(file != NULL)
   {
-//    res = fputs(message, file);
     res = fprintf(file, "%s\n", message);
     fflush(file);
   }

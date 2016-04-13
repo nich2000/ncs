@@ -33,22 +33,21 @@ int sock_error()
 int sock_init()
 {
 #ifdef __linux__
+  // linux
 #elif _WIN32
   WSADATA wsaData;
 
   if (WSAStartup(WINSOCK_VERSION, &wsaData))
   {
-    char tmp[128];
-    sprintf(tmp, "sock_init, WSAStartup, Error: %d", sock_error());
-    log_add(tmp, LOG_ERROR);
-
     WSACleanup();
 
-    return 1;
+    log_add_fmt(LOG_INFO, "sock_init, WSAStartup, error: %d", sock_error());
+    return make_last_error_fmt(ERROR_NORMAL, errno, "sock_init, WSAStartup, error: %d", sock_error());
   }
   else
-    log_add("sock_init, WSAStartup OK", LOG_DEBUG);
+    log_add(LOG_DEBUG, "sock_init, WSAStartup OK");
 #else
+  // other
 #endif
 
   return ERROR_NONE;
@@ -57,17 +56,17 @@ int sock_init()
 int sock_deinit()
 {
 #ifdef __linux__
+  // linux
 #elif _WIN32
   if (WSACleanup())
   {
-    char tmp[128];
-    sprintf(tmp, "sock_deinit, WSACleanup, Error: %d", sock_error());
-    log_add(tmp, LOG_ERROR);
-    return 1;
+    log_add_fmt(LOG_INFO, "sock_deinit, WSACleanup, error: %d", sock_error());
+    return make_last_error_fmt(ERROR_NORMAL, errno, "sock_deinit, WSACleanup, error: %d", sock_error());
   }
   else
-    log_add("sock_deinit, WSACleanup OK", LOG_DEBUG);
+    log_add(LOG_DEBUG, "sock_deinit, WSACleanup OK");
 #else
+  // other
 #endif
 
   return ERROR_NONE;
@@ -100,7 +99,8 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
   }
   else if(res == 0)
   {
-    log_add_fmt(LOG_WAIT, "sock_accept, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
+    log_add_fmt(LOG_WAIT, "sock_accept, select, socket: %d, empty for %d seconds",
+                sock, SOCK_WAIT_SELECT);
 
     return ERROR_WAIT;
   }
@@ -119,7 +119,7 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
           {
             char tmp[256];
             int error = sock_error();
-            sprintf(tmp, "sock_accept, select, accept: %d, error: %d", sock, error);
+            sprintf(tmp, "sock_accept, select, socket: %d, error: %d", sock, error);
             log_add(LOG_ERROR, tmp);
             return make_last_error(ERROR_NORMAL, error, tmp);
           }
@@ -180,7 +180,8 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   else if(res == 0)
   {
     char tmp[256];
-    sprintf(tmp,  "sock_recv, select, socket: %d, empty for %d seconds", sock, SOCK_WAIT_SELECT);
+    sprintf(tmp,  "sock_recv, select, socket: %d, empty for %d seconds",
+            sock, SOCK_WAIT_SELECT);
     log_add(ERROR_WAIT, tmp);
     return make_last_error(ERROR_WAIT, errno, tmp);
   }
@@ -249,7 +250,7 @@ int sock_send(SOCKET sock, char *buffer, int size)
     if(res == SOCKET_ERROR)
     {
       char tmp[128];
-      sprintf(tmp, "sock_send, send, Error: %u", sock_get_error());
+      sprintf(tmp, "sock_send, send, error: %u", sock_get_error());
       log_add(tmp, LOG_ERROR);
     }
     else

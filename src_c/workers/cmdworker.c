@@ -218,7 +218,8 @@ int load_names()
     strcpy(_names.items[_names.count-1].name, token);
   }
 
-  log_add_fmt(LOG_INFO, "names loaded, file: %s, names count: %d", file_name, _names.count);
+  log_add_fmt(LOG_INFO, "load_names, file: %s, names count: %d",
+              file_name, _names.count);
 
 //  for(int i = 0; i < _names.count; i++)
 //    printf("%s=%s\n",
@@ -284,7 +285,8 @@ int load_map()
     strcpy(map_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "map loaded, file: %s, points count: %d", file_name, _map.count);
+  log_add_fmt(LOG_INFO, "load_map, file: %s, points count: %d",
+              file_name, _map.count);
 
 //  for(int i = 0; i < _map.count; i++)
 //    printf("%s  %s  %s  %s  %s  %s  %s\n",
@@ -516,7 +518,8 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
   if(tmp_client == 0)
-    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_accept, no available clients, socket: %d, host: %s", socket, host);
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_accept, no available clients, server id: %d, socket: %d, host: %s",
+                               _cmd_server.custom_server.custom_worker.id, socket, host);
 
   tmp_client->custom_worker.on_state = on_server_cmd_state;
 
@@ -529,9 +532,8 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  log_add_fmt(LOG_DEBUG,
-              "cmd_accept, socket: %d, host: %s, port: %d",
-              tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
+  log_add_fmt(LOG_DEBUG, "cmd_accept, server id: %d, socket: %d, host: %s, port: %d",
+              _cmd_server.custom_server.custom_worker.id, tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -547,13 +549,15 @@ void *cmd_server_worker(void *arg)
 {
   cmd_server_t *tmp_server = (cmd_server_t*)arg;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_server_worker, server id: %d", tmp_server->custom_server.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_server_worker, server id: %d",
+              tmp_server->custom_server.custom_worker.id);
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add_fmt(LOG_DEBUG, "[END] cmd_server_worker, server id: %d", tmp_server->custom_server.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[END] cmd_server_worker, server id: %d",
+              tmp_server->custom_server.custom_worker.id);
 
   return NULL;
 }
@@ -633,7 +637,8 @@ void *cmd_client_worker(void *arg)
 {
   cmd_client_t *tmp_client = (cmd_client_t*)arg;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_client_worker, client id: %d", tmp_client->custom_client.custom_remote_client.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_client_worker, client id: %d",
+              tmp_client->custom_client.custom_remote_client.custom_worker.id);
 
   do
   {
@@ -643,7 +648,8 @@ void *cmd_client_worker(void *arg)
   }
   while(tmp_client->custom_client.custom_remote_client.custom_worker.state == STATE_START);
 
-  log_add_fmt(LOG_DEBUG, "[END] cmd_client_worker, client id: %d", tmp_client->custom_client.custom_remote_client.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[END] cmd_client_worker, client id: %d",
+              tmp_client->custom_client.custom_remote_client.custom_worker.id);
 
   return NULL;
 }
@@ -652,7 +658,8 @@ int on_cmd_connect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_connect, client id: %d", tmp_client->custom_remote_client.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_connect, client id: %d",
+              tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
   time (&rawtime);
@@ -678,7 +685,8 @@ int on_cmd_connect(void *sender)
   int status_recv;
   pthread_join(tmp_client->custom_remote_client.send_thread, (void**)&status_recv);
 
-  log_add_fmt(LOG_DEBUG, "[END] cmd_connect, client id: %d", tmp_client->custom_remote_client.custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[END] cmd_connect, client id: %d",
+              tmp_client->custom_remote_client.custom_worker.id);
 
   return ERROR_NONE;
 }
@@ -688,7 +696,8 @@ void *cmd_send_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_send_worker, client id: %d", tmp_client->custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] cmd_send_worker, client id: %d",
+              tmp_client->custom_worker.id);
 
   // TODO: analog on_connect - need to send clients list to ws - govnokod
   tmp_client->custom_worker.state = STATE_START;
@@ -722,12 +731,14 @@ void *cmd_send_worker(void *arg)
         }
         else
         {
-          log_add_fmt(LOG_ERROR, "cmd_send_worker, client id: %d, error: %s", tmp_client->custom_worker.id, last_error()->message);
+          log_add_fmt(LOG_ERROR, "cmd_send_worker, client id: %d, error: %s",
+                      tmp_client->custom_worker.id, last_error()->message);
         }
       }
       else
       {
-        log_add_fmt(LOG_ERROR, "cmd_send_worker, client id: %d, error: %s", tmp_client->custom_worker.id, last_error()->message);
+        log_add_fmt(LOG_ERROR, "cmd_send_worker, client id: %d, error: %s",
+                    tmp_client->custom_worker.id, last_error()->message);
       }
 
       tmp_pack = _protocol_next_pack(tmp_protocol);
@@ -738,7 +749,8 @@ void *cmd_send_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[END] cmd_send_worker, client id: %d", tmp_client->custom_worker.id);
+  log_add_fmt(LOG_DEBUG, "[END] cmd_send_worker, client id: %d",
+              tmp_client->custom_worker.id);
 
   return NULL;
 }
@@ -747,7 +759,7 @@ int on_cmd_disconnect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_INFO, "on_cmd_disconnect, disconnected from server, client: %d",
+  log_add_fmt(LOG_INFO, "on_cmd_disconnect, disconnected from server, client id: %d",
               tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
@@ -759,7 +771,8 @@ int on_cmd_disconnect(void *sender)
 //==============================================================================
 int on_cmd_error(void *sender, error_t *error)
 {
-  log_add_fmt(LOG_INFO, "cmd_error, message: %s", error->message);
+  log_add_fmt(LOG_INFO, "cmd_error, message: %s",
+              error->message);
 
   return ERROR_NONE;
 }
@@ -898,7 +911,8 @@ int on_cmd_new_data(void *sender, void *data)
     int result = pack_values_to_csv(tmp_packet, ';', csv);
     if(result != ERROR_NONE)
     {
-      log_add_fmt(LOG_ERROR, "cmd_new_data, pack_values_to_csv, client id: %d, result: %d", tmp_client->custom_worker.id, result);
+      log_add_fmt(LOG_ERROR, "cmd_new_data, pack_values_to_csv, client id: %d, result: %d",
+                  tmp_client->custom_worker.id, result);
     }
     else
     {
@@ -907,7 +921,8 @@ int on_cmd_new_data(void *sender, void *data)
       int wrote = report_add(tmp_client->report, (char*)csv);
       if(wrote != (len+1))
       {
-        log_add_fmt(LOG_ERROR, "cmd_new_data, report_add, client id: %d, len: %d, wrote: %d", tmp_client->custom_worker.id, len, wrote);
+        log_add_fmt(LOG_ERROR, "cmd_new_data, report_add, client id: %d, len: %d, wrote: %d",
+                    tmp_client->custom_worker.id, len, wrote);
       }
     }
 
@@ -1020,13 +1035,16 @@ int cmd_remote_client_activate(sock_id_t id, sock_active_t active)
         switch (cur_active)
         {
           case ACTIVE_FIRST:
-            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, acivate first, id: %d", id);
+            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, acivate first, client id: %d",
+                        id);
             break;
           case ACTIVE_SECOND:
-            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, acivate second, id: %d", id);
+            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, acivate second, client id: %d",
+                        id);
             break;
           default:
-            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, deacivate, id: %d", id);
+            log_add_fmt(LOG_INFO, "cmd_remote_client_activate, deacivate, client id: %d",
+                        id);
             break;
         }
 
@@ -1086,8 +1104,7 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
         // state
         client->register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO,
-                    "cmd_remote_clients_register, client id: %d, session_id: %s, name: %s",
+        log_add_fmt(LOG_INFO, "cmd_remote_clients_register, client id: %d, session_id: %s, name: %s",
                     client->custom_worker.id,
                     client->custom_worker.session_id,
                     client->custom_worker.name);

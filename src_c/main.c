@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      log_add_fmt(LOG_INFO, "unknown mode", LOG_INFO);
+      log_add(LOG_INFO, "unknown mode");
       return 1;
     }
   }
@@ -73,10 +73,10 @@ int main(int argc, char *argv[])
         case EXEC_NONE:
           return 0;
         case EXEC_UNKNOWN:
-          log_add_fmt(LOG_CMD, "unknown: %s\n", command);
+          log_add_fmt(LOG_CMD, "unknown command: %s\n", command);
           break;
         case EXEC_DONE:
-          log_add_fmt(LOG_CMD, "done: %s\n", command);
+          log_add_fmt(LOG_CMD, "done command: %s\n", command);
           break;
       }
     }

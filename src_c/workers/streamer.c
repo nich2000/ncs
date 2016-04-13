@@ -150,9 +150,10 @@ int cmd_streamer_work(streamer_worker *worker)
 //==============================================================================
 void *cmd_streamer_worker_func(void *arg)
 {
-  log_add_fmt(LOG_DEBUG, "%s", "cmd_streamer_worker_func");
-
   streamer_worker *tmp_worker = (streamer_worker*)arg;
+
+  log_add_fmt(LOG_DEBUG, "cmd_streamer_worker_func, worker id: %d",
+              tmp_worker->id);
 
   while(tmp_worker->is_work)
   {
@@ -221,8 +222,6 @@ int cmd_streamer_make(custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_make_random(custom_remote_client_t *client)
 {
-//  log_add_fmt(LOG_DEBUG, "%s", "[BEGIN] cmd_streamer_make");
-
   #define TEST_SEND_COUNT  1
   #define TEST_PACK_COUNT  1
   #define TEST_WORD_COUNT  5
@@ -274,8 +273,6 @@ int cmd_streamer_make_random(custom_remote_client_t *client)
     }
     protocol_end(&client->protocol);
   }
-
-//  log_add_fmt(LOG_DEBUG, "%s", "[END] cmd_streamer_make");
 
   return ERROR_NONE;
 }
