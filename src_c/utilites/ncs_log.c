@@ -76,7 +76,7 @@ void log_add_fmt(int log_type, char *message, ...)
   vsprintf(tmp, message, params);
   va_end(params);
 
-  log_add(tmp, log_type);
+  log_add(log_type, tmp);
 }
 //==============================================================================
 const char *log_type_to_string(int log_type)
@@ -110,7 +110,7 @@ const char *log_type_to_string(int log_type)
   return "";
 }
 //==============================================================================
-void log_add(char *message, int log_type)
+void log_add(int log_type, char *message)
 {
   #ifndef DEBUG_MODE
   if(log_type == LOG_DEBUG)

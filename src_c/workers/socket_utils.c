@@ -77,7 +77,7 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port)
     sprintf(tmp, "Server(WEB_SERVER), port: %d", port);
     break;
   }
-  log_add(tmp, LOG_INFO);
+  log_add(LOG_INFO, tmp);
 
 //  log_add("----------", LOG_INFO);
 

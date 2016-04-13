@@ -157,7 +157,7 @@ int custom_server_start(custom_worker_t *worker)
   {
     char tmp[128];
     sprintf(tmp, "custom_server_start, bind, server id: %d, error: %d", worker->id, sock_error());
-    log_add(tmp, LOG_ERROR_CRITICAL);
+    log_add(LOG_ERROR_CRITICAL, tmp);
     return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
@@ -167,7 +167,7 @@ int custom_server_start(custom_worker_t *worker)
   {
     char tmp[128];
     sprintf(tmp, "custom_server_start, bind, server id: %d, error: %d", worker->id, sock_error());
-    log_add(tmp, LOG_ERROR_CRITICAL);
+    log_add(LOG_ERROR_CRITICAL, tmp);
     return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
   }
   else
@@ -267,7 +267,7 @@ int custom_client_work(custom_client_t *client)
       sprintf(tmp, "custom_client_work, sock_connect, client id: %d, try in %d seconds, Error: %d",
               client->custom_remote_client.custom_worker.id, SOCK_WAIT_CONNECT, sock_error());
       make_last_error(ERROR_WARNING, ERROR_WARNING, tmp);
-      log_add(tmp, LOG_EXTRA);
+      log_add(LOG_EXTRA, tmp);
       sleep(SOCK_WAIT_CONNECT);
       continue;
     }

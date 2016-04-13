@@ -100,7 +100,8 @@ int cmd_streamer_init(streamer_worker *worker, custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 {
-  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_start");
+  log_add_fmt(LOG_INFO, "cmd_streamer_start, worker id: %d",
+              worker->id);
 
   cmd_streamer_init(worker, client);
 
@@ -114,7 +115,8 @@ int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_stop(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_stop");
+  log_add_fmt(LOG_INFO, "cmd_streamer_stop, worker id: %d",
+              worker->id);
 
   worker->is_work = FALSE;
 
@@ -123,7 +125,8 @@ int cmd_streamer_stop(streamer_worker *worker)
 //==============================================================================
 int cmd_streamer_pause(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_pause");
+  log_add_fmt(LOG_INFO, "cmd_streamer_pause, worker id: %d",
+              worker->id);
 
   worker->is_pause = TRUE;
 
@@ -132,7 +135,8 @@ int cmd_streamer_pause(streamer_worker *worker)
 //==============================================================================
 int cmd_streamer_resume(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "%s", "cmd_streamer_resume");
+  log_add_fmt(LOG_INFO, "cmd_streamer_resume, worker id: %d",
+              worker->id);
 
   worker->is_pause = FALSE;
 

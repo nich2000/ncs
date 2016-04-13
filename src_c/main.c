@@ -17,8 +17,8 @@ sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
 //==============================================================================
 int main(int argc, char *argv[])
 {
-  log_add("-------------------", LOG_INFO);
-  log_add("application started", LOG_INFO);
+  log_add(LOG_INFO, "-------------------");
+  log_add(LOG_INFO, "application started");
 
   char command[256];
 
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     if(strcmp(argv[1], "-s") == 0)
     {
-      log_add("server mode", LOG_INFO);
+      log_add(LOG_INFO, "server mode");
 
       sprintf(command, "server on %d", cmd_server_port);
       handle_command_str(NULL, command);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     }
     else if(strcmp(argv[1], "-c") == 0)
     {
-      log_add("client mode", LOG_INFO);
+      log_add(LOG_INFO, "client mode");
 
       if(argc > 5)
         if(strcmp(argv[4], "-h") == 0)
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    log_add("command mode", LOG_INFO);
+    log_add(LOG_INFO, "command mode");
     while(1)
     {
       fgets(command, sizeof(command), stdin);

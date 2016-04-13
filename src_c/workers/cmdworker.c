@@ -747,12 +747,12 @@ int on_cmd_disconnect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_INFO, "cmd_disconnect, disconnected from server, client: %d",
+  log_add_fmt(LOG_INFO, "on_cmd_disconnect, disconnected from server, client: %d",
               tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
   time (&rawtime);
-  tmp_client->custom_remote_client.connect_time = rawtime;
+  tmp_client->custom_remote_client.disconnect_time = rawtime;
 
   return ERROR_NONE;
 }

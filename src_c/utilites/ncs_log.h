@@ -35,7 +35,8 @@ void clr_scr();
 const char *gen_log_name(const char *prefix);
 //==============================================================================
 void log_set_name(char *name);
-void log_add(char *message, int log_type);
+//==============================================================================
+void log_add    (int log_type, char *message);
 void log_add_fmt(int log_type, char *message, ...);
 //==============================================================================
 FILE *report_open(char *report_name);
