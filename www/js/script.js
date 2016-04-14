@@ -279,7 +279,7 @@ function init() {
     exec = new exec_t();
     clients = new clients_t();
     map = new map_t('canvas_map');
-    ws = new web_socket_t("ws://" + location.hostname + ":5800");
+    map.test_mode = true;
 }
 $(window).load(function () {
     $('body').height($(window).height());
@@ -314,6 +314,7 @@ var map_item_t = (function () {
 })();
 var map_t = (function () {
     function map_t(id) {
+        this._test_mode = false;
         this._id = "";
         this._cnv = "";
         this._canvas = undefined;
@@ -322,6 +323,7 @@ var map_t = (function () {
         this._height = 1;
         this._width = 1;
         this._scale = 1;
+        this._maximaize = false;
         this._min_h = 1000000000;
         this._max_h = -1000000000;
         this._min_w = 1000000000;
@@ -349,10 +351,51 @@ var map_t = (function () {
             return;
         }
         this._cnv.click(function () {
+            this._maximaize = !this._maximaize;
+            if (this._maximaize) {
+                $("#maxi_map").append($("#canvas_map"));
+                $("#maxi_map").removeClass("dems-hide");
+                $("#maxi_map").addClass("dems-show");
+            }
+            else {
+                $("#mini_map").append($("#canvas_map"));
+                $("#maxi_map").removeClass("dems-show");
+                $("#maxi_map").addClass("dems-hide");
+            }
+            this.refresh();
         });
         Signal.bind("map", this.load_map, this);
         Signal.bind("add_position", this.add_position, this);
     }
+    Object.defineProperty(map_t.prototype, "test_mode", {
+        get: function () {
+            return this._test_mode;
+        },
+        set: function (v) {
+            this._test_mode = v;
+            this.refresh();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    map_t.prototype.debug_draw = function () {
+        this._ctx.font = "10px Courier";
+        this._ctx.fillText("h: " + this._height, 10, 20);
+        this._ctx.fillText("w: " + this._width, 10, 40);
+    };
+    map_t.prototype.test_draw = function () {
+        this._ctx.beginPath();
+        this._ctx.moveTo(170, 80);
+        this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
+        this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
+        this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
+        this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
+        this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
+        this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
+        this._ctx.closePath();
+        this._ctx.lineWidth = 5;
+        this._ctx.strokeStyle = 'blue';
+    };
     map_t.prototype.load_map = function (data) {
         this._map_items = [];
         for (var i = 0; i < data.length; i++) {
@@ -430,8 +473,14 @@ var map_t = (function () {
         if (!this._is_init)
             return;
         this.begin_draw();
-        this.draw_map();
-        this.draw_client();
+        this.debug_draw();
+        if (this._test_mode)
+            this.test_draw();
+        else {
+            this.draw_map();
+            this.draw_client();
+            this.draw_client();
+        }
         this.end_draw();
     };
     return map_t;

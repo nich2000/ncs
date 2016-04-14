@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #elif _WIN32
+#include <sys/time.h>
 #include <windows.h>
 #endif
 
