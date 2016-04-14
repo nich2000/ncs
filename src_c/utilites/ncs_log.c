@@ -56,8 +56,21 @@ void get_cur_time_str(char *result)
   snprintf(result, 16, "%s.%03li", tmp, tv.tv_usec/1000);
 }
 //==============================================================================
-void log_gen_name(const char *name, char *result)
+void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
 {
+  switch(time_tag)
+  {
+    case LOG_NAME_DATE:
+    break;
+    case LOG_NAME_TIME:
+    break;
+    case LOG_NAME_DATE_TIME:
+    break;
+    case LOG_NAME_ONLY:
+    default:
+    break;
+  }
+
   char date_str[16];
   get_cur_date_str(date_str);
 
@@ -153,7 +166,7 @@ void log_add(int log_type, const char *message)
     printf("%s %s\n", log_type_str, message);
 
   char log_full_name[256];
-  log_gen_name(log_def_name, log_full_name);
+  log_gen_name(LOG_NAME_DATE, log_def_name, log_full_name);
   sprintf(log_full_name, "%s/%s",
           LOG_INITIAL_PATH, log_full_name);
 
@@ -183,7 +196,7 @@ void report_make_dir()
 FILE *report_open(char *report_name)
 {
   char report_full_name[256];
-  log_gen_name(report_name, report_full_name);
+  log_gen_name(LOG_NAME_DATE_TIME, report_name, report_full_name);
   sprintf(report_full_name, "%s/%s",
           REPORT_INITIAL_PATH, report_full_name);
 

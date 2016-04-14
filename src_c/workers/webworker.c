@@ -158,13 +158,15 @@ void *web_server_worker(void *arg)
 //==============================================================================
 int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  log_add_fmt(LOG_DEBUG, "web_accept, server id: %d",
-              _web_server.custom_server.custom_worker.id);
+  custom_server_t *tmp_server = (custom_server_t*)sender;
+
+  log_add_fmt(LOG_DEBUG, "web_accept, server id: %d, host: %s",
+              tmp_server->custom_worker.id, (char*)host);
 
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
     return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, memcpy == NULL, server id: %d",
-                               _web_server.custom_server.custom_worker.id);
+                               tmp_server->custom_worker.id);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -173,7 +175,7 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_t tmp_pthread;
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
     return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, pthread_create != 0, server id: %d",
-                               _web_server.custom_server.custom_worker.id);
+                               tmp_server->custom_worker.id);
 
   return ERROR_NONE;
 }

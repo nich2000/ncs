@@ -10,20 +10,58 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
-sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
-sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
-sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
-sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
+extern sock_port_t web_server_port;
+extern sock_port_t ws_server_port;
+extern sock_port_t cmd_server_port;
+extern sock_host_t cmd_server_host;
+extern char *log_path;
+extern char *stat_path;
+extern char *map_path;
+extern char *map_file;
+//==============================================================================
+
+//==============================================================================
+int read_config()
+{
+  dictionary *config = iniparser_load("../config/config.ini");
+  if(config == NULL)
+    return make_last_error(ERROR_NORMAL, errno, "read_config, iniparser_load");
+
+  log_add(LOG_INFO, "read_config");
+
+  int s_count = iniparser_getnsec(config);
+  for(int i = 0; i < s_count; i++)
+  {
+    const char *s_name = iniparser_getsecname(config, i);
+    log_add_fmt(LOG_INFO, "  section: %s", s_name);
+
+    int k_count = iniparser_getsecnkeys(config, s_name);
+
+    const char
+    const char **k_names = iniparser_getseckeys(config, s_name);
+
+    for(int j = 0; j < k_count; j++)
+    {
+
+      log_add_fmt(LOG_INFO, "  section: %s", s_name);
+    }
+  }
+
+  iniparser_freedict(config);
+
+  return ERROR_NONE;
+}
 //==============================================================================
 int main(int argc, char *argv[])
 {
   log_add(LOG_INFO, "-------------------");
   log_add(LOG_INFO, "application started");
 
-  char command[256];
-
   sock_init();
 
+  read_config();
+
+  char command[256];
   if(argc > 1)
   {
     // 0     1  2 3     4 5

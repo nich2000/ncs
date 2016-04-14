@@ -18,6 +18,11 @@
 #define LOG_INITIAL_PATH    "../logs"
 #define REPORT_INITIAL_PATH "../reports"
 //==============================================================================
+#define LOG_NAME_ONLY       0
+#define LOG_NAME_DATE       1
+#define LOG_NAME_TIME       2
+#define LOG_NAME_DATE_TIME  3
+//==============================================================================
 #define LOG_INFO            100
 #define LOG_WAIT            101
 #define LOG_WARNING         102
@@ -31,9 +36,11 @@
 #define LOG_DATA            13
 #define LOG_RAW_DATA        14
 //==============================================================================
+typedef int log_time_tag_t;
+//==============================================================================
 void clr_scr();
 //==============================================================================
-void log_gen_name(const char *name, char *result);
+void log_gen_name(log_time_tag_t time_tag, const char *name, char *result);
 void log_set_name(const char *name);
 //==============================================================================
 void log_add    (int log_type, const char *message     );

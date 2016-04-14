@@ -24,11 +24,17 @@ set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
 #set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
+include_directories(../libs/iniparser/src)
 include_directories(../libs/jansson/src)
 include_directories(../libs/AVRCryptoLib)
 include_directories(./utilites)
 include_directories(./workers)
 include_directories(./)
+#-------------------------------------------------------------------------------
+set(_INI      ../libs/iniparser/src/iniparser.c
+              ../libs/iniparser/src/dictionary.c)
+add_library(ini SHARED ${_INI})
+set_property(TARGET ini PROPERTY C_STANDARD 99)
 #-------------------------------------------------------------------------------
 set(_JANSSON  ../libs/jansson/src/dump.c
               ../libs/jansson/src/error.c
@@ -117,6 +123,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log socket error Threads::Threads)
+target_link_libraries(${PROJECT_NAME} ini protocol log socket error Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

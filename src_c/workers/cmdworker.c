@@ -516,10 +516,12 @@ int _cmd_remote_clients_count(cmd_server_t *cmd_server)
 //==============================================================================
 int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
+  custom_server_t *tmp_server = (custom_server_t*)sender;
+
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
   if(tmp_client == 0)
     return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_accept, no available clients, server id: %d, socket: %d, host: %s",
-                               _cmd_server.custom_server.custom_worker.id, socket, host);
+                               tmp_server->custom_worker.id, socket, host);
 
   tmp_client->custom_worker.on_state = on_server_cmd_state;
 
@@ -533,7 +535,8 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
   log_add_fmt(LOG_DEBUG, "cmd_accept, server id: %d, socket: %d, host: %s, port: %d",
-              _cmd_server.custom_server.custom_worker.id, tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
+              tmp_server->custom_worker.id,
+              tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);

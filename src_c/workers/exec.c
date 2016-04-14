@@ -65,6 +65,11 @@
 #define CMD_SECOND          "second"
 #define CMD_NEXT            "next"
 //==============================================================================
+sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
+sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
+sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
+sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
+//==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
   if(cmd[strlen(cmd)-1] == '\n')

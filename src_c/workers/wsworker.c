@@ -243,14 +243,14 @@ int _ws_remote_clients_count(ws_server_t *ws_server)
 //==============================================================================
 int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  // TODO: sender
+  custom_server_t *tmp_server = (custom_server_t*)sender;
   custom_remote_client_t *tmp_client = _ws_remote_clients_next(&_ws_server);
 
   if(tmp_client == 0)
     return make_last_error_fmt(LOG_ERROR_CRITICAL,
                                errno,
                                "ws_accept, server id: %d, no available clients, socket: %d, host: %s",
-                               _ws_server.custom_server.custom_worker.id,
+                               tmp_server->custom_worker.id,
                                socket, host);
 
   time_t rawtime;
@@ -263,7 +263,7 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
   log_add_fmt(LOG_DEBUG, "ws_accept, server id: %d, socket: %d, host: %s, port: %d",
-              _ws_server.custom_server.custom_worker.id,
+              tmp_server->custom_worker.id,
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
   pthread_attr_t tmp_attr;
