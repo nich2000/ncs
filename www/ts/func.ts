@@ -251,7 +251,7 @@ class clients_t {
   //----------------------------------------------------------------------------
   private switch_current(current: active_t, client: client_t): void{
     let photo: string = "/pilots/" + client.name + '.jpg';
-    let info: string  = "/pilots/" + client.name + '_info.dat';
+    let info: string  = "/pilots/" + client.name + '_info.html';
 
     if(current == active_t.first)
     {

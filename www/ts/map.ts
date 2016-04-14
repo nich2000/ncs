@@ -118,10 +118,13 @@ class map_t {
     this.refresh();
   }
   //----------------------------------------------------------------------------
+  private debug_draw(): void {
+    this._ctx.font = "10px Courier";
+    this._ctx.fillText("h: " + this._height, 10, 20);
+    this._ctx.fillText("w: " + this._width, 10, 40);
+  }
+  //----------------------------------------------------------------------------
   private test_draw(): void {
-    if (!this._is_init)
-      return;
-    this.begin_draw();
     this._ctx.beginPath();
     this._ctx.moveTo(170, 80);
     this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
@@ -133,7 +136,6 @@ class map_t {
     this._ctx.closePath();
     this._ctx.lineWidth = 5;
     this._ctx.strokeStyle = 'blue';
-    this.end_draw();
   }
   //----------------------------------------------------------------------------
   private load_map(data: any): void {
@@ -213,7 +215,6 @@ class map_t {
   private clear(): void {
     if (!this._is_init)
       return;
-
     this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
   }
   //----------------------------------------------------------------------------
@@ -245,17 +246,19 @@ class map_t {
     if (!this._is_init)
       return;
 
+    this.begin_draw();
+
+    this.debug_draw();
+
     if(this._test_mode)
       this.test_draw()
     else{
-      this.begin_draw();
-
       this.draw_map();
       this.draw_client();
       this.draw_client();
-
-      this.end_draw();
     }
+
+    this.end_draw();
   }
   //----------------------------------------------------------------------------
 }

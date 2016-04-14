@@ -378,10 +378,12 @@ var map_t = (function () {
         enumerable: true,
         configurable: true
     });
+    map_t.prototype.debug_draw = function () {
+        this._ctx.font = "10px Courier";
+        this._ctx.fillText("h: " + this._height, 10, 20);
+        this._ctx.fillText("w: " + this._width, 10, 40);
+    };
     map_t.prototype.test_draw = function () {
-        if (!this._is_init)
-            return;
-        this.begin_draw();
         this._ctx.beginPath();
         this._ctx.moveTo(170, 80);
         this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
@@ -393,7 +395,6 @@ var map_t = (function () {
         this._ctx.closePath();
         this._ctx.lineWidth = 5;
         this._ctx.strokeStyle = 'blue';
-        this.end_draw();
     };
     map_t.prototype.load_map = function (data) {
         this._map_items = [];
@@ -471,15 +472,16 @@ var map_t = (function () {
     map_t.prototype.refresh = function () {
         if (!this._is_init)
             return;
+        this.begin_draw();
+        this.debug_draw();
         if (this._test_mode)
             this.test_draw();
         else {
-            this.begin_draw();
             this.draw_map();
             this.draw_client();
             this.draw_client();
-            this.end_draw();
         }
+        this.end_draw();
     };
     return map_t;
 })();
