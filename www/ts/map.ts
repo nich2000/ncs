@@ -40,6 +40,8 @@ class map_item_t {
 //==============================================================================
 class map_t {
   //----------------------------------------------------------------------------
+  private _test_mode:  boolean = false;
+  //----------------------------------------------------------------------------
   private _id:         string  = "";
   private _cnv:        any     = "";
   private _canvas:     any     = undefined;
@@ -48,14 +50,15 @@ class map_t {
   private _height:     number  = 1;
   private _width:      number  = 1;
   private _scale:      number  = 1;
-
+  private _maximaize:  boolean = false;
+  //----------------------------------------------------------------------------
   private _min_h:      number  =  1000000000;
   private _max_h:      number  = -1000000000;
   private _min_w:      number  =  1000000000;
   private _max_w:      number  = -1000000000;
   private _height_map: number  = 1;
   private _width_map:  number  = 1;
-
+  //----------------------------------------------------------------------------
   private _map_items:       Array<map_item_t> = [];
   private _position_first:  Array<map_item_t> = [];
   private _position_second: Array<map_item_t> = [];
@@ -84,17 +87,53 @@ class map_t {
       return;
     }
 
-    // TODO: http://jquery-howto.blogspot.ru/2010/02/dynamically-create-iframe-with-jquery.html
     this._cnv.click(function() {
-      // let modal = element.add("modal_map", "<iframe/>", $("body"));
-      // element.set_src("modal_map", "modal_map.html");
-      // modal.onclick = function () {
-        // this.parentElement.removeChild(this);
-      // };
+      this._maximaize = !this._maximaize;
+
+      if(this._maximaize){
+        $("#maxi_map").append($("#canvas_map"));
+        $("#maxi_map").removeClass("dems-hide");
+        $("#maxi_map").addClass("dems-show");
+      }
+      else{
+        $("#mini_map").append($("#canvas_map"));
+        $("#maxi_map").removeClass("dems-show");
+        $("#maxi_map").addClass("dems-hide");
+      }
+
+      this.refresh();
     });
 
     Signal.bind("map", this.load_map, this);
     Signal.bind("add_position", this.add_position, this);
+  }
+  //----------------------------------------------------------------------------
+  public get test_mode() : boolean {
+    return this._test_mode;
+  }
+  //----------------------------------------------------------------------------
+  public set test_mode(v : boolean) {
+    this._test_mode = v;
+
+    this.refresh();
+  }
+  //----------------------------------------------------------------------------
+  private test_draw(): void {
+    if (!this._is_init)
+      return;
+    this.begin_draw();
+    this._ctx.beginPath();
+    this._ctx.moveTo(170, 80);
+    this._ctx.bezierCurveTo(130, 100, 130, 150, 230, 150);
+    this._ctx.bezierCurveTo(250, 180, 320, 180, 340, 150);
+    this._ctx.bezierCurveTo(420, 150, 420, 120, 390, 100);
+    this._ctx.bezierCurveTo(430, 40, 370, 30, 340, 50);
+    this._ctx.bezierCurveTo(320, 5, 250, 20, 250, 50);
+    this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
+    this._ctx.closePath();
+    this._ctx.lineWidth = 5;
+    this._ctx.strokeStyle = 'blue';
+    this.end_draw();
   }
   //----------------------------------------------------------------------------
   private load_map(data: any): void {
@@ -206,13 +245,17 @@ class map_t {
     if (!this._is_init)
       return;
 
-    this.begin_draw();
+    if(this._test_mode)
+      this.test_draw()
+    else{
+      this.begin_draw();
 
-    this.draw_map();
-    this.draw_client();
-    // this.draw_client();
+      this.draw_map();
+      this.draw_client();
+      this.draw_client();
 
-    this.end_draw();
+      this.end_draw();
+    }
   }
   //----------------------------------------------------------------------------
 }
