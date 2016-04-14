@@ -14,7 +14,6 @@
   #include <sys/socket.h>
   #include <netinet/ip.h>
   #include <arpa/inet.h>
-  #include <errno.h>
 #elif _WIN32
   #include <winsock.h>
 #else

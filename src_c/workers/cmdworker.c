@@ -24,6 +24,7 @@
 #include "protocol.h"
 #include "protocol_types.h"
 #include "ncs_pack_utils.h"
+#include "map.h"
 //==============================================================================
 typedef struct
 {
@@ -38,30 +39,6 @@ typedef struct
   int         count;
   name_items_t items;
 } names_t;
-//==============================================================================
-// map item example
-// bs1;-1;1;52,130010000000000;23,771370000000000;5796596,462;1622429,742
-//==============================================================================
-#define MAP_SIZE 102400
-#define MAP_ITEM_SIZE 32
-typedef struct
-{
-  char kind[MAP_ITEM_SIZE];
-  char number[MAP_ITEM_SIZE];
-  char index[MAP_ITEM_SIZE];
-  char lat_f[MAP_ITEM_SIZE];
-  char lon_f[MAP_ITEM_SIZE];
-  char lat[MAP_ITEM_SIZE];
-  char lon[MAP_ITEM_SIZE];
-} map_item_t;
-//==============================================================================
-typedef map_item_t map_items_t[MAP_SIZE];
-//==============================================================================
-typedef struct
-{
-  int         count;
-  map_items_t items;
-} map_t;
 //==============================================================================
 int cmd_server_init     (cmd_server_t *server);
 int cmd_server_start    (cmd_server_t *server, sock_port_t port);
@@ -100,11 +77,11 @@ int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
 static cmd_server_t _cmd_server;
 static names_t      _names;
-static map_t        _map;
 //==============================================================================
 // Visible only in streamer.c
 int          _cmd_client_count = 0;
 cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
+extern map_t _map;
 //==============================================================================
 static sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
@@ -225,78 +202,6 @@ int load_names()
 //    printf("%s=%s\n",
 //           _names.items[i].session_id,
 //           _names.items[i].name);
-
-  fclose(f);
-  if(line)
-    free(line);
-
-  return ERROR_NONE;
-}
-//==============================================================================
-int load_map()
-{
-//  char *file_name = "../tracks/Brest.map";
-//  char *file_name = "../tracks/Hungaroring.map";
-  char *file_name = "../tracks/Mogilev.map";
-  char * line = NULL;
-  size_t len = 0;
-  ssize_t read;
-
-  _map.count = 0;
-
-  FILE *f = fopen(file_name, "r");
-  if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_map, can not open file %s", file_name);
-
-  while ((read = getline(&line, &len, f)) != -1)
-  {
-    _map.count++;
-
-    map_item_t *map_item = &_map.items[_map.count-1];
-
-    char *token = strtok(line, ";");
-    memset(map_item->kind, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->kind, token);
-
-    token = strtok(NULL, ";");
-    memset(map_item->number, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->number, token);
-
-    token = strtok(NULL, ";");
-    memset(map_item->index, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->index, token);
-
-    token = strtok(NULL, ";");
-    memset(map_item->lat_f, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lat_f, token);
-
-    token = strtok(NULL, ";");
-    memset(map_item->lon_f, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lon_f, token);
-
-    token = strtok(NULL, ";");
-    memset(map_item->lat, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lat, token);
-
-    token = strtok(NULL, "=");
-    if(token[strlen(token)-1] == '\n')
-      token[strlen(token)-1] = '\0';
-    memset(map_item->lon, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lon, token);
-  }
-
-  log_add_fmt(LOG_INFO, "load_map, file: %s, points count: %d",
-              file_name, _map.count);
-
-//  for(int i = 0; i < _map.count; i++)
-//    printf("%s  %s  %s  %s  %s  %s  %s\n",
-//           _map.items[i].kind,
-//           _map.items[i].number,
-//           _map.items[i].index,
-//           _map.items[i].lat_f,
-//           _map.items[i].lon_f,
-//           _map.items[i].lat,
-//           _map.items[i].lon);
 
   fclose(f);
   if(line)

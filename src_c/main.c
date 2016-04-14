@@ -14,12 +14,10 @@ extern sock_port_t web_server_port;
 extern sock_port_t ws_server_port;
 extern sock_port_t cmd_server_port;
 extern sock_host_t cmd_server_host;
-extern char *log_path;
-extern char *stat_path;
-extern char *map_path;
-extern char *map_file;
-//==============================================================================
-
+extern char log_path[256];
+extern char stat_path[256];
+extern char map_path[256];
+extern char map_file[64];
 //==============================================================================
 int read_config()
 {
@@ -37,13 +35,50 @@ int read_config()
 
     int k_count = iniparser_getsecnkeys(config, s_name);
 
-    const char
-    const char **k_names = iniparser_getseckeys(config, s_name);
+    const char **keys = malloc(sizeof(char*) * k_count);
+    for(int j = 0; j < k_count; j++)
+      keys[i] = malloc(sizeof(char*) * 64);
 
+    iniparser_getseckeys(config, s_name, keys);
     for(int j = 0; j < k_count; j++)
     {
+      const char *value = iniparser_getstring(config, keys[j], "def");
+      log_add_fmt(LOG_INFO, "    key: %s", keys[j]);
+      log_add_fmt(LOG_INFO, "    value: %s", value);
 
-      log_add_fmt(LOG_INFO, "  section: %s", s_name);
+
+      if(strcmp("worker:cmd_server_port", keys[j]) == 0)
+      {
+        cmd_server_port = iniparser_getint(config, keys[j], 5700);
+      }
+      else if(strcmp("worker:ws_server_port", keys[j]) == 0)
+      {
+        ws_server_port = iniparser_getint(config, keys[j], 5800);
+      }
+      else if(strcmp("worker:web_server_port", keys[j]) == 0)
+      {
+        web_server_port = iniparser_getint(config, keys[j], 5900);
+      }
+      else if(strcmp("worker:cmd_server_host", keys[j]) == 0)
+      {
+        strcpy((char*)cmd_server_host, iniparser_getstring(config, keys[j], "127.0.0.1"));
+      }
+      else if(strcmp("log:log_path", keys[j]) == 0)
+      {
+        strcpy((char*)log_path, iniparser_getstring(config, keys[j], "../logs"));
+      }
+      else if(strcmp("stat:stat_path", keys[j]) == 0)
+      {
+        strcpy((char*)stat_path, iniparser_getstring(config, keys[j], "../stat"));
+      }
+      else if(strcmp("map:map_path", keys[j]) == 0)
+      {
+        strcpy((char*)map_path, iniparser_getstring(config, keys[j], "../maps"));
+      }
+      else if(strcmp("map:map_file", keys[j]) == 0)
+      {
+        strcpy((char*)map_file, iniparser_getstring(config, keys[j], "default.map"));
+      }
     }
   }
 

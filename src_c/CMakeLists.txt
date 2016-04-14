@@ -88,6 +88,13 @@ add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
 target_link_libraries(protocol log error pack)
 #-------------------------------------------------------------------------------
+set(_MAP      defines.h
+              globals.h
+              workers/map.c)
+add_library(map SHARED ${_MAP})
+set_property(TARGET map PROPERTY C_STANDARD 99)
+target_link_libraries(map log error)
+#-------------------------------------------------------------------------------
 set(_SOCKET   defines.h
               globals.h
               globals.c
@@ -105,7 +112,7 @@ set(_SOCKET   defines.h
               workers/wsworker.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
-target_link_libraries(socket protocol log error jansson crypto)
+target_link_libraries(socket protocol log error map jansson crypto)
 IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
@@ -123,6 +130,6 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} ini protocol log socket error Threads::Threads)
+target_link_libraries(${PROJECT_NAME} protocol log error map socket ini Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

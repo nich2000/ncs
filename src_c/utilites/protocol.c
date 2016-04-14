@@ -7,7 +7,6 @@
 */
 //==============================================================================
 #include <limits.h>
-#include <errno.h>
 // atoi
 #include <stdlib.h>
 // memcpy
