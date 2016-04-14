@@ -79,7 +79,7 @@ int test_pack()
     int res = pack_validate(buffer, size, 0);
     if(res != 0)
     {
-      sprintf(tmp, "pack_validate, Error: %u", res);
+      sprintf(tmp, "pack_validate, error: %u", res);
       log_add(tmp, LOG_ERROR);
       return 1;
     }
@@ -167,7 +167,7 @@ int test_validate_pack()
   res = pack_queue_next(buffer, &size);
   if(res != 0)
   {
-    sprintf(tmp, "pack_queue_next, Error: %u", res);
+    sprintf(tmp, "pack_queue_next, error: %u", res);
     log_add(tmp, LOG_ERROR);
     return 1;
   }
@@ -175,7 +175,7 @@ int test_validate_pack()
   res = pack_validate(buffer, size, 0);
   if(res != 0)
   {
-    sprintf(tmp, "pack_validate, Error: %u", res);
+    sprintf(tmp, "pack_validate, error: %u", res);
     log_add(tmp, LOG_ERROR);
     return 2;
   }

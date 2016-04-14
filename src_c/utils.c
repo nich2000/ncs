@@ -162,7 +162,7 @@ int print_types_info()
     sizeof(custom_worker_t),
     sizeof(custom_remote_clients_list_t)
   );
-  log_add(tmp, LOG_INFO);
+  log_add(LOG_INFO, tmp);
 
   return ERROR_NONE;
 }
@@ -201,7 +201,7 @@ int print_defines_info()
     SOCK_WAIT_SELECT,
     SOCK_WAIT_CONNECT
   );
-  log_add(tmp, LOG_INFO);
+  log_add(LOG_INFO, tmp);
 
   return ERROR_NONE;
 }
@@ -211,10 +211,10 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
   if(worker == NULL)
     return 1;
 
-  char tmp_info[1024];
+  char tmp[1024];
 
   #ifdef PRINT_ALL_INFO
-  sprintf(tmp_info,
+  sprintf(tmp,
           "%s\n"                                  \
           "addr:                            %d\n" \
           "id:                              %d\n" \
@@ -238,7 +238,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           state_to_string(worker->state),
           worker->is_locked);
   #else
-  sprintf(tmp_info,
+  sprintf(tmp,
           "%s\n"                                         \
           "       id:                              %d\n" \
           "       name:                            %s\n" \
@@ -253,7 +253,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           state_to_string(worker->state));
   #endif
 
-  log_add(tmp_info, LOG_INFO);
+  log_add(LOG_INFO, tmp);
 
   return ERROR_NONE;
 }
@@ -263,9 +263,9 @@ int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix
   if(remote_client == NULL)
     return 1;
 
-  char tmp_info[1024];
+  char tmp[1024];
 
-  sprintf(tmp_info,
+  sprintf(tmp,
           "%s\n"                                         \
           "       connect_time:                    %s\n" \
           "       active_state:                    %s\n" \
@@ -279,7 +279,7 @@ int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix
           register_to_string(remote_client->register_state),
           time_to_string(remote_client->register_time));
 
-  log_add(tmp_info, LOG_INFO);
+  log_add(LOG_INFO, tmp);
 
   return ERROR_NONE;
 }
@@ -289,9 +289,9 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
   if(clients_list == 0)
     return 1;
 
-  log_add("---------", LOG_INFO);
+  log_add(LOG_INFO, "---------");
   log_add_fmt(LOG_INFO, "clients count:                   %d", _custom_remote_clients_count(clients_list));
-  log_add("---------", LOG_INFO);
+  log_add(LOG_INFO, "---------");
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -302,7 +302,7 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
     {
       print_custom_worker_info(tmp_worker, "remote client");
       print_remote_client_info(tmp_remote_client, "worker");
-      log_add("---------", LOG_INFO);
+      log_add(LOG_INFO, "---------");
     };
   }
 

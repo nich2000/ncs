@@ -213,12 +213,8 @@ int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)
   pack_size_t tmp_size = strlen((char *)value);
 
   if(tmp_size >= PACK_VALUE_SIZE)
-  {
-    #ifndef DEMS_DEVICE
-    log_add_fmt(LOG_ERROR, "pack_add_as_string, value too big, size: %d", tmp_size);
-    #endif
-    return ERROR_NORMAL;
-  }
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_add_as_bytes, value too big, key: %s, size: %d of %d",
+                               key, tmp_size, PACK_VALUE_SIZE);
 
   if(pack->words_count >= PACK_WORDS_COUNT)
     return ERROR_NORMAL;
@@ -246,12 +242,8 @@ int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)
 int pack_add_as_bytes(pack_packet_t *pack, pack_key_t key, pack_bytes_t value, pack_size_t size, pack_type_t type)
 {
   if(size >= PACK_VALUE_SIZE)
-  {
-    #ifndef DEMS_DEVICE
-    log_add_fmt(LOG_ERROR, "pack_add_as_bytes, value too big, size: %d", size);
-    #endif
-    return ERROR_NORMAL;
-  }
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_add_as_bytes, value too big, key: %s, size: %d of %d",
+                               key, size, PACK_VALUE_SIZE);
 
   if(pack->words_count >= PACK_WORDS_COUNT)
   {
@@ -505,8 +497,6 @@ int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_
 
   pack_value_t valueS;
 
-//  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, words: %d", pack->words_count);
-
   for(pack_size_t i = 0; i < pack->words_count; i++)
   {
     pack_word_as_string(&pack->words[i], valueS);
@@ -518,12 +508,6 @@ int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_
   }
 
   buffer[tmp_pos] = '\0';
-
-//  log_add_fmt(LOG_DEBUG, "pack_values_to_csv, tmp_pos: %d, len: %d", tmp_pos, strlen(buffer));
-
-//  pack_buffer_t tmp_hex;
-//  bytes_to_hex(buffer, (pack_size_t)tmp_pos, tmp_hex);
-//  log_add(tmp_hex, LOG_DEBUG);
 
   return ERROR_NONE;
 }

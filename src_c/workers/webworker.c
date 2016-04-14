@@ -141,31 +141,30 @@ int web_server_resume(web_server_t *server)
 //==============================================================================
 void *web_server_worker(void *arg)
 {
-  log_add("[BEGIN] web_server_worker", LOG_DEBUG);
-
   web_server_t *tmp_server = (web_server_t*)arg;
+
+  log_add_fmt(LOG_DEBUG, "[BEGIN] web_server_worker, server id: %d",
+              tmp_server->custom_server.custom_worker.id);
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add("[END] web_server_worker", LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "[END] web_server_worker, server id: %d",
+              tmp_server->custom_server.custom_worker.id);
 
   return NULL;
 }
 //==============================================================================
 int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
-  char tmp[256];
-  sprintf(tmp, "web_accept, socket: %d", socket);
-  log_add(tmp, LOG_DEBUG);
+  log_add_fmt(LOG_DEBUG, "web_accept, server id: %d",
+              _web_server.custom_server.custom_worker.id);
 
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
-  {
-    log_add("web_accept, memcpy == NULL", LOG_ERROR);
-    return make_last_error(ERROR_NORMAL, 0, "web_accept, memcpy == NULL");
-  }
+    return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, memcpy == NULL, server id: %d",
+                               _web_server.custom_server.custom_worker.id);
 
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
@@ -173,10 +172,8 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 
   pthread_t tmp_pthread;
   if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
-  {
-    log_add("web_accept, pthread_create != 0", LOG_ERROR);
-    return make_last_error(ERROR_NORMAL, 0, "web_accept, pthread_create != 0");
-  }
+    return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, pthread_create != 0, server id: %d",
+                               _web_server.custom_server.custom_worker.id);
 
   return ERROR_NONE;
 }
@@ -186,7 +183,8 @@ void *web_handle_connection(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] web_handle_connection, socket: %d", tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[BEGIN] web_handle_connection, server id: %d",
+              _web_server.custom_server.custom_worker.id);
 
   char *request  = (char *)malloc(1024);
   char *response = (char *)malloc(1024*1024);
@@ -199,7 +197,7 @@ void *web_handle_connection(void *arg)
       if(web_get_response(request, response, &size) == ERROR_NONE)
         sock_send(tmp_sock, response, size);
       else
-        log_add(last_error()->message, LOG_ERROR);
+        log_add(LOG_ERROR, last_error()->message);
 
       break;
     }
@@ -210,7 +208,8 @@ void *web_handle_connection(void *arg)
   free(request);
   free(response);
 
-  log_add_fmt(LOG_DEBUG, "[END] web_handle_connection, socket: %d", tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[END] web_handle_connection, server id: %d",
+              _web_server.custom_server.custom_worker.id);
 
   return NULL;
 }
@@ -236,13 +235,13 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-    log_add(tmp_full_name, LOG_DEBUG);
+    log_add(LOG_DEBUG, tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
       sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, "/404.html");
-      log_add(tmp_full_name, LOG_DEBUG);
+      log_add(LOG_DEBUG, tmp_full_name);
 
       f = fopen(tmp_full_name, "rb");
     }
