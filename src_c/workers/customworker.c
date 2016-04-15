@@ -20,7 +20,7 @@
 // 1. для клиента
 // 2. для remote клиента, т.е. CMD и WS клиенты будут пересекаться
 // начинается с последнего статического ID
-int custom_id = STATIC_WS_SERVER_ID + 1;
+static int custom_id = STATIC_WS_SERVER_ID + 1;
 //==============================================================================
 int custom_worker_init(int id, custom_worker_t *worker)
 {

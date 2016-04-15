@@ -74,6 +74,7 @@ int       ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length,
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
 static ws_server_t _ws_server;
+//==============================================================================
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
 //==============================================================================

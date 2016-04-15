@@ -79,32 +79,38 @@ void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
   switch(time_tag)
   {
     case LOG_NAME_DATE:
-    break;
+    {
+      char date_str[16];
+      get_cur_date_str(date_str);
+      sprintf(result, "%s_%s", date_str, name);
+      break;
+    }
+
     case LOG_NAME_TIME:
-    break;
+    {
+      char time_str[16];
+      get_cur_time_str(time_str);
+      sprintf(result, "%s_%s", time_str, name);
+      break;
+    }
+
     case LOG_NAME_DATE_TIME:
-    break;
+    {
+      char date_str[16];
+      get_cur_date_str(date_str);
+      char time_str[16];
+      get_cur_time_str(time_str);
+      sprintf(result, "%s_%s_%s", date_str, time_str, name);
+      break;
+    }
+
     case LOG_NAME_ONLY:
     default:
-    break;
+    {
+      sprintf(result, "%s", name);
+      break;
+    }
   }
-
-  char date_str[16];
-  get_cur_date_str(date_str);
-
-  sprintf(result, "%s_%s", date_str, name);
-}
-//==============================================================================
-void log_add_fmt(int log_type, const char *message, ...)
-{
-  char tmp[102400];
-
-  va_list params;
-  va_start(params, message);
-  vsprintf(tmp, message, params);
-  va_end(params);
-
-  log_add(log_type, tmp);
 }
 //==============================================================================
 const char *log_type_to_string(int log_type)
@@ -136,6 +142,18 @@ const char *log_type_to_string(int log_type)
   }
 
   return "";
+}
+//==============================================================================
+void log_add_fmt(int log_type, const char *message, ...)
+{
+  char tmp[102400];
+
+  va_list params;
+  va_start(params, message);
+  vsprintf(tmp, message, params);
+  va_end(params);
+
+  log_add(log_type, tmp);
 }
 //==============================================================================
 void log_add(int log_type, const char *message)

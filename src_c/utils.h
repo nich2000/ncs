@@ -15,17 +15,20 @@
 #include "socket_types.h"
 #include "worker_types.h"
 //==============================================================================
+#ifndef __linux__
+ssize_t getline(char **lineptr, size_t *n, FILE *stream);
+#endif
+//==============================================================================
 int random_range(int min, int max);
 //==============================================================================
-const char *state_to_string   (sock_state_t    value);
-const char *active_to_string  (sock_active_t   value);
-const char *time_to_string    (sock_time_t     value);
-const char *register_to_string(sock_register_t value);
+const char *sock_mode_to_string(sock_mode_t     value);
+const char *sock_type_to_string(sock_type_t     value);
+const char *state_to_string    (sock_state_t    value);
+const char *active_to_string   (sock_active_t   value);
+const char *time_to_string     (sock_time_t     value);
+const char *register_to_string (sock_register_t value);
 //==============================================================================
 int print_types_info();
 int print_defines_info();
-//==============================================================================
-int print_custom_worker_info(custom_worker_t *worker, char *prefix);
-int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix);
 //==============================================================================
 #endif //UTILS_H

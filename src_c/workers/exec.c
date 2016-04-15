@@ -32,6 +32,7 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 //==============================================================================
+#define CMD_HELP            "help"           // 0 - 1 all - specifically
 #define CMD_TEST            "test"           // 0
 #define CMD_CLEAR           "clear"          // 0
 #define CMD_EXIT            "exit"           // 0
@@ -120,6 +121,48 @@ sock_active_t cmd_active(char *cmd)
     return ACTIVE_NONE;
 }
 //==============================================================================
+int help()
+{
+  char tmp[1024];
+
+  sprintf
+  (
+    tmp,
+    //           1    2    3    4    5    6    7    8    9    10
+    "commands:\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n" \
+    //           11   12   13   14   15   16   17   18   19   20
+                "%s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n" \
+    //           21   22   23
+                "%s\n %s\n %s\n",
+    CMD_HELP,             // 1
+    CMD_TEST,             // 2
+    CMD_CLEAR,            // 3
+    CMD_EXIT,             // 4
+    CMD_ALL,              // 5
+    CMD_SERVER,           // 6
+    CMD_WEB_SERVER,       // 7
+    CMD_WS_SERVER,        // 8
+    CMD_CLIENT,           // 9
+    CMD_SND_TO_SERVER,    // 10
+    CMD_SND_TO_WSSERVER,  // 11
+    CMD_SND_TO_CLIENT,    // 12
+    CMD_STREAM,           // 13
+    CMD_TYPES_INFO,       // 14
+    CMD_DEFINES_INFO,     // 15
+    CMD_SERVER_INFO,      // 16
+    CMD_WEB_SERVER_INFO,  // 17
+    CMD_WS_SERVER_INFO,   // 18
+    CMD_CLIENT_INFO,      // 19
+    CMD_CMD_REGISTER,     // 20
+    CMD_CMD_ACTIVATE,     // 21
+    CMD_WS_REGISTER,      // 22
+    CMD_WS_ACTIVATE       // 23
+  );
+  log_add(LOG_INFO, tmp);
+
+  return ERROR_NONE;
+}
+//==============================================================================
 int handle_command_pack(void *sender, pack_packet_t *packet)
 {
   pack_value_t cmd;
@@ -151,7 +194,14 @@ int handle_command_str(void *sender, char *command)
     if(token[strlen(token)-1] == '\n')
       token[strlen(token)-1] = '\0';
     //--------------------------------------------------------------------------
-    if(strcmp(token, CMD_TEST) == 0)
+    if(strcmp(token, CMD_HELP) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_HELP);
+      help();
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_TEST) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_TEST);
       test();

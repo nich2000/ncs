@@ -4,25 +4,28 @@
 #
 # <filename>
 #-------------------------------------------------------------------------------
+# https://cmake.org/Wiki/CMake_FAQ
+# http://www.vtk.org/Wiki/CMake_Useful_Variables
+# https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+#-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.1)
 #-------------------------------------------------------------------------------
-project(ncs C)
-#-------------------------------------------------------------------------------
 IF (WIN32)
-  # set(CMAKE_CC_COMPILER "c:/MinGW/bin/gcc.exe")
+  set(CMAKE_C_COMPILER "C:/Qt/Tools/mingw492_32/bin/gcc.exe")
 ELSE()
   # set stuff for other systems
 ENDIF()
+#-------------------------------------------------------------------------------
+project(ncs C)
 #-------------------------------------------------------------------------------
 add_definitions(-DTURN_ON_STDCALL)
 #-------------------------------------------------------------------------------
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 #-------------------------------------------------------------------------------
-# https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
 set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
-#set(CMAKE_EXE_LINKER_FLAGS  "-static")
+set(CMAKE_EXE_LINKER_FLAGS  "-static")
 #-------------------------------------------------------------------------------
 include_directories(../libs/iniparser/src)
 include_directories(../libs/jansson/src)
@@ -66,17 +69,15 @@ set(_ERROR    defines.h
               utilites/ncs_error.c)
 add_library(error SHARED ${_ERROR})
 set_property(TARGET error PROPERTY C_STANDARD 99)
-target_link_libraries(error log)
 #-------------------------------------------------------------------------------
 set(_PACK     defines.h
               globals.h
               utilites/ncs_pack_types.h
               utilites/ncs_pack.c
-              utilites/ncs_pack_utils.c
-              utilites/ncs_error.c)
+              utilites/ncs_pack_utils.c)
 add_library(pack SHARED ${_PACK})
 set_property(TARGET pack PROPERTY C_STANDARD 99)
-target_link_libraries(pack log error)
+target_link_libraries(pack error log)
 #-------------------------------------------------------------------------------
 set(_PROTOCOL defines.h
               globals.h
@@ -86,20 +87,26 @@ set(_PROTOCOL defines.h
               utilites/protocol_utils.c)
 add_library(protocol SHARED ${_PROTOCOL})
 set_property(TARGET protocol PROPERTY C_STANDARD 99)
-target_link_libraries(protocol log error pack)
+target_link_libraries(protocol error log pack)
+#-------------------------------------------------------------------------------
+set(_UTILS    defines.h
+              globals.h
+              utils.c
+              test.c)
+add_library(utils SHARED ${_UTILS})
+set_property(TARGET utils PROPERTY C_STANDARD 99)
+target_link_libraries(utils log)
 #-------------------------------------------------------------------------------
 set(_MAP      defines.h
               globals.h
               workers/map.c)
 add_library(map SHARED ${_MAP})
 set_property(TARGET map PROPERTY C_STANDARD 99)
-target_link_libraries(map log error)
+target_link_libraries(map error log utils)
 #-------------------------------------------------------------------------------
 set(_SOCKET   defines.h
               globals.h
               globals.c
-              utils.c
-              test.c
               workers/exec.c
               workers/socket_types.h
               workers/socket.c
@@ -112,24 +119,19 @@ set(_SOCKET   defines.h
               workers/wsworker.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
-target_link_libraries(socket protocol log error map jansson crypto)
+target_link_libraries(socket protocol log error map utils jansson crypto)
 IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
 #-------------------------------------------------------------------------------
 set(_PROG     defines.h
               globals.h
-              main.c
-              utils.c
-              workers/socket_utils.c
-              workers/exec.c
-              workers/streamer.c
-              utilites/protocol_utils.c)
+              main.c)
 #-------------------------------------------------------------------------------
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log error map socket ini Threads::Threads)
+target_link_libraries(${PROJECT_NAME} protocol log error map socket utils ini Threads::Threads)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

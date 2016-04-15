@@ -30,14 +30,12 @@ static int             _counter = 0;
 static int             _cmd_streamer_count;
 static streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
 //==============================================================================
-extern int          _cmd_client_count;
-extern cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
-//==============================================================================
 extern char *pack_struct_keys[];
+extern cmd_clients_t _cmd_clients;
 //==============================================================================
 int cmd_streamer(sock_state_t state)
 {
-  _cmd_streamer_count = _cmd_client_count;
+  _cmd_streamer_count = cmd_client_count();
 
   for(int i = 0; i < _cmd_streamer_count; i++)
   {
@@ -49,7 +47,7 @@ int cmd_streamer(sock_state_t state)
       }
       case STATE_START:
       {
-        cmd_streamer_start(&_cmd_streamer[i], &_cmd_client[i].custom_client.custom_remote_client);
+        cmd_streamer_start(&_cmd_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
         break;
       }
       case STATE_STOP:
@@ -70,7 +68,7 @@ int cmd_streamer(sock_state_t state)
       case STATE_STEP:
       {
       //    cmd_streamer_make_random(&_cmd_client[0].custom_client.custom_remote_client);
-          cmd_streamer_make(&_cmd_client[0].custom_client.custom_remote_client);
+          cmd_streamer_make(&_cmd_clients[0].custom_client.custom_remote_client);
         break;
       }
       default:;

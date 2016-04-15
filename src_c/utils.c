@@ -11,8 +11,58 @@
 
 #include "utils.h"
 
-#include "socket_utils.h"
 #include "ncs_log.h"
+//==============================================================================
+#ifndef __linux__
+/*
+ * getline.c
+ * Copyright (C) 1991 Free Software Foundation, Inc.
+ * This file is part of the GNU C Library.
+ * Read up to (and including) a newline from STREAM into *LINEPTR
+ * (and null-terminate it). *LINEPTR is a pointer returned from malloc (or
+ * NULL), pointing to *N characters of space.  It is realloc'd as
+ * necessary.  Returns the number of characters read (not including the
+ * null terminator), or -1 on error or EOF.
+*/
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+  static char line[256];
+  char *ptr;
+  unsigned int len;
+
+  if (lineptr == NULL || n == NULL)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (ferror (stream))
+    return -1;
+
+  if (feof(stream))
+    return -1;
+
+  fgets(line,256,stream);
+
+  ptr = strchr(line,'\n');
+  if (ptr)
+    *ptr = '\0';
+
+  len = strlen(line);
+
+  if ((len+1) < 256)
+  {
+    ptr = realloc(*lineptr, 256);
+    if (ptr == NULL)
+      return(-1);
+    *lineptr = ptr;
+    *n = 256;
+  }
+
+  strcpy(*lineptr,line);
+  return(len);
+}
+#endif
 //==============================================================================
 int random_range(int min, int max)
 {
@@ -21,71 +71,73 @@ int random_range(int min, int max)
 //==============================================================================
 const char *state_to_string(sock_state_t value)
 {
-  switch (value) {
-  case STATE_NONE:
-    return "STATE_NONE";
-    break;
+  switch (value)
+  {
+    case STATE_NONE:
+      return "STATE_NONE";
+      break;
 
-  case STATE_START:
-    return "STATE_START";
-    break;
+    case STATE_START:
+      return "STATE_START";
+      break;
 
-  case STATE_STARTING:
-    return "STATE_STARTING";
-     break;
+    case STATE_STARTING:
+      return "STATE_STARTING";
+       break;
 
-  case STATE_STOP:
-    return "STATE_STOP";
-    break;
+    case STATE_STOP:
+      return "STATE_STOP";
+      break;
 
-  case STATE_STOPPING:
-    return "STATE_STOPPING";
-    break;
+    case STATE_STOPPING:
+      return "STATE_STOPPING";
+      break;
 
-  case STATE_PAUSE:
-    return "STATE_PAUSE";
-    break;
+    case STATE_PAUSE:
+      return "STATE_PAUSE";
+      break;
 
-  case STATE_PAUSING:
-    return "STATE_PAUSING";
-    break;
+    case STATE_PAUSING:
+      return "STATE_PAUSING";
+      break;
 
-  case STATE_RESUME:
-    return "STATE_RESUME";
-    break;
+    case STATE_RESUME:
+      return "STATE_RESUME";
+      break;
 
-  case STATE_RESUMING:
-    return "STATE_RESUMING";
-    break;
+    case STATE_RESUMING:
+      return "STATE_RESUMING";
+      break;
 
-  case STATE_STEP:
-    return "STATE_STEP";
-    break;
+    case STATE_STEP:
+      return "STATE_STEP";
+      break;
 
-  default:
-    return "STATE_UNKNOWN";
-    break;
+    default:
+      return "STATE_UNKNOWN";
+      break;
   }
 }
 //==============================================================================
 const char *active_to_string(sock_active_t value)
 {
-  switch (value) {
-  case ACTIVE_NONE:
-    return "ACTIVE_NONE";
-    break;
+  switch (value)
+  {
+    case ACTIVE_NONE:
+      return "ACTIVE_NONE";
+      break;
 
-  case ACTIVE_FIRST:
-    return "ACTIVE_FIRST";
-    break;
+    case ACTIVE_FIRST:
+      return "ACTIVE_FIRST";
+      break;
 
-  case ACTIVE_SECOND:
-    return "ACTIVE_SECOND";
-     break;
+    case ACTIVE_SECOND:
+      return "ACTIVE_SECOND";
+       break;
 
-  default:
-    return "ACTIVE_UNKNOWN";
-    break;
+    default:
+      return "ACTIVE_UNKNOWN";
+      break;
   }
 }
 //==============================================================================
@@ -96,18 +148,19 @@ const char *time_to_string(sock_time_t value)
 //==============================================================================
 const char *register_to_string(sock_register_t value)
 {
-  switch (value) {
-  case REGISTER_NONE:
-    return "REGISTER_NONE";
-    break;
+  switch (value)
+  {
+    case REGISTER_NONE:
+      return "REGISTER_NONE";
+      break;
 
-  case REGISTER_OK:
-    return "REGISTER_OK";
-    break;
+    case REGISTER_OK:
+      return "REGISTER_OK";
+      break;
 
-  default:
-    return "REGISTER_UNKNOWN";
-    break;
+    default:
+      return "REGISTER_UNKNOWN";
+      break;
   }
 }
 //==============================================================================
@@ -206,106 +259,50 @@ int print_defines_info()
   return ERROR_NONE;
 }
 //==============================================================================
-int print_custom_worker_info(custom_worker_t *worker, char *prefix)
+const char *sock_mode_to_string(sock_mode_t mode)
 {
-  if(worker == NULL)
-    return 1;
-
-  char tmp[1024];
-
-  #ifdef PRINT_ALL_INFO
-  sprintf(tmp,
-          "%s\n"                                  \
-          "addr:                            %d\n" \
-          "id:                              %d\n" \
-          "name:                            %s\n" \
-          "type:                            %s\n" \
-          "mode:                            %s\n" \
-          "port:                            %d\n" \
-          "host:                            %s\n" \
-          "sock:                            %d\n" \
-          "state:                           %s\n" \
-          "is_locked:                       %d",
-          prefix,
-          (int)&worker,
-          worker->id,
-          worker->name,
-          sock_type_to_string(worker->type),
-          sock_mode_to_string(worker->mode),
-          worker->port,
-          worker->host,
-          worker->sock,
-          state_to_string(worker->state),
-          worker->is_locked);
-  #else
-  sprintf(tmp,
-          "%s\n"                                         \
-          "       id:                              %d\n" \
-          "       name:                            %s\n" \
-          "       type:                            %s\n" \
-          "       mode:                            %s\n" \
-          "       state:                           %s",
-          prefix,
-          worker->id,
-          worker->session_id,
-          sock_type_to_string(worker->type),
-          sock_mode_to_string(worker->mode),
-          state_to_string(worker->state));
-  #endif
-
-  log_add(LOG_INFO, tmp);
-
-  return ERROR_NONE;
-}
-//==============================================================================
-int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix)
-{
-  if(remote_client == NULL)
-    return 1;
-
-  char tmp[1024];
-
-  sprintf(tmp,
-          "%s\n"                                         \
-          "       connect_time:                    %s\n" \
-          "       active_state:                    %s\n" \
-          "       active_time:                     %s\n" \
-          "       register_state:                  %s\n" \
-          "       register_time:                   %s",
-          prefix,
-          time_to_string(remote_client->connect_time),
-          active_to_string(remote_client->active_state),
-          time_to_string(remote_client->active_time),
-          register_to_string(remote_client->register_state),
-          time_to_string(remote_client->register_time));
-
-  log_add(LOG_INFO, tmp);
-
-  return ERROR_NONE;
-}
-//==============================================================================
-int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix)
-{
-  if(clients_list == 0)
-    return 1;
-
-  log_add(LOG_INFO, "---------");
-  log_add_fmt(LOG_INFO, "clients count:                   %d", _custom_remote_clients_count(clients_list));
-  log_add(LOG_INFO, "---------");
-
-  for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+  switch (mode)
   {
-    custom_remote_client_t *tmp_remote_client = &clients_list->items[i];
-    custom_worker_t *tmp_worker = &tmp_remote_client->custom_worker;
-
-    if(tmp_worker->state == STATE_START)
-    {
-      print_custom_worker_info(tmp_worker, "remote client");
-      print_remote_client_info(tmp_remote_client, "worker");
-      log_add(LOG_INFO, "---------");
-    };
+    case SOCK_MODE_UNKNOWN:
+      return "SOCK_MODE_UNKNOWN";
+      break;
+    case SOCK_MODE_CMD_CLIENT:
+      return "SOCK_MODE_CMD_CLIENT";
+      break;
+    case SOCK_MODE_CMD_SERVER:
+      return "SOCK_MODE_CMD_SERVER";
+      break;
+    case SOCK_MODE_WS_SERVER:
+      return "SOCK_MODE_WS_SERVER";
+      break;
+    case SOCK_MODE_WEB_SERVER:
+      return "SOCK_MODE_WEB_SERVER";
+      break;
+    default:
+      return "SOCK_MODE_UNKNOWN";
+      break;
   }
-
-  return ERROR_NONE;
+}
+//==============================================================================
+const char *sock_type_to_string(sock_type_t type)
+{
+  switch (type)
+  {
+    case SOCK_TYPE_UNKNOWN:
+      return "SOCK_TYPE_UNKNOWN";
+      break;
+    case SOCK_TYPE_CLIENT:
+      return "SOCK_TYPE_CLIENT";
+      break;
+    case SOCK_TYPE_SERVER:
+      return "SOCK_TYPE_SERVER";
+      break;
+    case SOCK_TYPE_REMOTE_CLIENT:
+      return "SOCK_TYPE_REMOTE_CLIENT";
+      break;
+    default:
+      return "SOCK_TYPE_UNKNOWN";
+      break;
+  }
 }
 //==============================================================================

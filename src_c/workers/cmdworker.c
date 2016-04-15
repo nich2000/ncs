@@ -26,20 +26,6 @@
 #include "ncs_pack_utils.h"
 #include "map.h"
 //==============================================================================
-typedef struct
-{
-  char session_id[PACK_VALUE_SIZE];
-  char name[PACK_VALUE_SIZE];
-} name_item_t;
-//==============================================================================
-typedef name_item_t name_items_t[SOCK_WORKERS_COUNT];
-//==============================================================================
-typedef struct
-{
-  int         count;
-  name_items_t items;
-} names_t;
-//==============================================================================
 int cmd_server_init     (cmd_server_t *server);
 int cmd_server_start    (cmd_server_t *server, sock_port_t port);
 int cmd_server_stop     (cmd_server_t *server);
@@ -75,13 +61,10 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
-static cmd_server_t _cmd_server;
-static names_t      _names;
-//==============================================================================
-// Visible only in streamer.c
-int          _cmd_client_count = 0;
-cmd_client_t _cmd_client[SOCK_WORKERS_COUNT];
-extern map_t _map;
+static cmd_server_t  _cmd_server;
+static names_t       _names;
+static int           _cmd_client_count = 0;
+cmd_clients_t _cmd_clients;
 //==============================================================================
 static sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
@@ -118,60 +101,19 @@ sock_active_t _cmd_active_neg()
     return ACTIVE_FIRST;
 }
 //==============================================================================
-#ifndef __linux__
-/*
- * getline.c
- * Copyright (C) 1991 Free Software Foundation, Inc.
- * This file is part of the GNU C Library.
- * Read up to (and including) a newline from STREAM into *LINEPTR
- * (and null-terminate it). *LINEPTR is a pointer returned from malloc (or
- * NULL), pointing to *N characters of space.  It is realloc'd as
- * necessary.  Returns the number of characters read (not including the
- * null terminator), or -1 on error or EOF.
-*/
-ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+int cmd_client_count()
 {
-  static char line[256];
-  char *ptr;
-  unsigned int len;
-
-  if (lineptr == NULL || n == NULL)
-  {
-    errno = EINVAL;
-    return -1;
-  }
-
-  if (ferror (stream))
-    return -1;
-
-  if (feof(stream))
-    return -1;
-
-  fgets(line,256,stream);
-
-  ptr = strchr(line,'\n');
-  if (ptr)
-    *ptr = '\0';
-
-  len = strlen(line);
-
-  if ((len+1) < 256)
-  {
-    ptr = realloc(*lineptr, 256);
-    if (ptr == NULL)
-      return(-1);
-    *lineptr = ptr;
-    *n = 256;
-  }
-
-  strcpy(*lineptr,line);
-  return(len);
+  return _cmd_client_count;
 }
-#endif
+//==============================================================================
+cmd_clients_t *cmd_clients()
+{
+  return &_cmd_clients;
+}
 //==============================================================================
 int load_names()
 {
-  char *full_file_name = "../config/names.ejn";
+  char full_file_name[256] = "../config/names.ejn";
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
@@ -285,22 +227,22 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
       }
       case STATE_START:
       {
-        cmd_client_start(&_cmd_client[i], port, host);
+        cmd_client_start(&_cmd_clients[i], port, host);
         break;
       }
       case STATE_STOP:
       {
-        cmd_client_stop(&_cmd_client[i]);
+        cmd_client_stop(&_cmd_clients[i]);
         break;
       }
       case STATE_PAUSE:
       {
-        cmd_client_pause(&_cmd_client[i]);
+        cmd_client_pause(&_cmd_clients[i]);
         break;
       }
       case STATE_RESUME:
       {
-        cmd_client_resume(&_cmd_client[i]);
+        cmd_client_resume(&_cmd_clients[i]);
         break;
       }
       default:;
@@ -315,7 +257,7 @@ int cmd_client_status()
   clr_scr();
 
   for(int i = 0; i < _cmd_client_count; i++)
-    print_custom_worker_info(&_cmd_client[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
+    print_custom_worker_info(&_cmd_clients[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
 
   return ERROR_NONE;
 }
@@ -763,7 +705,7 @@ int cmd_client_send_cmd(int argc, ...)
 {
   for(int i = 0; i < _cmd_client_count; i++)
   {
-    pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
+    pack_protocol_t *tmp_protocol = &_cmd_clients[i].custom_client.custom_remote_client.protocol;
 
     protocol_begin(tmp_protocol);
 
@@ -791,7 +733,7 @@ int cmd_client_send_pack(pack_packet_t *pack)
 {
   for(int i = 0; i < _cmd_client_count; i++)
   {
-    pack_protocol_t *tmp_protocol = &_cmd_client[i].custom_client.custom_remote_client.protocol;
+    pack_protocol_t *tmp_protocol = &_cmd_clients[i].custom_client.custom_remote_client.protocol;
 
     protocol_begin(tmp_protocol);
 
@@ -902,17 +844,17 @@ int cmd_map(pack_packet_t *pack)
   pack_init(pack);
   pack_add_cmd(pack, (unsigned char*)"map");
 
-  for(int i = 0; i < _map.count; i++)
+  for(int i = 0; i < map()->count; i++)
   {
     pack_packet_t tmp_pack;
     pack_init(&tmp_pack);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"KND", (unsigned char*)_map.items[i].kind);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"NUM", (unsigned char*)_map.items[i].number);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"IND", (unsigned char*)_map.items[i].index);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"LAF", (unsigned char*)_map.items[i].lat_f);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"LOF", (unsigned char*)_map.items[i].lon_f);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"_LA", (unsigned char*)_map.items[i].lat);
-    pack_add_as_string(&tmp_pack, (unsigned char*)"_LO", (unsigned char*)_map.items[i].lon);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"KND", (unsigned char*)map()->items[i].kind);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"NUM", (unsigned char*)map()->items[i].number);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"IND", (unsigned char*)map()->items[i].index);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"LAF", (unsigned char*)map()->items[i].lat_f);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"LOF", (unsigned char*)map()->items[i].lon_f);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"_LA", (unsigned char*)map()->items[i].lat);
+    pack_add_as_string(&tmp_pack, (unsigned char*)"_LO", (unsigned char*)map()->items[i].lon);
 
     pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
   }

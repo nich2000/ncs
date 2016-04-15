@@ -14,15 +14,21 @@
 #include "map.h"
 #include "ncs_error.h"
 #include "ncs_log.h"
+#include "utils.h"
 //==============================================================================
 char map_path[256] = DEFAULT_MAP_PATH;
 char map_file[64]  = DEFAULT_MAP_NAME;
 //==============================================================================
-map_t _map;
+static map_t _map;
+//==============================================================================
+map_t *map()
+{
+  return &_map;
+}
 //==============================================================================
 int load_map()
 {
-  char *full_file_name;
+  char full_file_name[256];
   sprintf(full_file_name, "%s/%s", map_path, map_file);
 
   char * line = NULL;

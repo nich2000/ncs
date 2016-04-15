@@ -25,6 +25,25 @@ typedef struct
   custom_client_t              custom_client;
 }cmd_client_t;
 //==============================================================================
+typedef struct
+{
+  char session_id[PACK_VALUE_SIZE];
+  char name[PACK_VALUE_SIZE];
+} name_item_t;
+//==============================================================================
+typedef name_item_t name_items_t[SOCK_WORKERS_COUNT];
+//==============================================================================
+typedef struct
+{
+  int         count;
+  name_items_t items;
+} names_t;
+//==============================================================================
+typedef cmd_client_t cmd_clients_t[SOCK_WORKERS_COUNT];
+//==============================================================================
+int cmd_client_count();
+cmd_clients_t *cmd_clients();
+//==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port);
 int cmd_server_status();
 //==============================================================================

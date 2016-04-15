@@ -22,12 +22,11 @@ const char *_sock_version()
 //==============================================================================
 int sock_error()
 {
-#ifdef __linux__
-  return errno;
-#elif _WIN32
-  return WSAGetLastError();
-#else
-#endif
+  #ifdef __linux__
+    return errno;
+  #elif _WIN32
+    return WSAGetLastError();
+  #endif
 }
 //==============================================================================
 int sock_init()
