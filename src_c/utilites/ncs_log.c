@@ -186,9 +186,9 @@ void log_add(int log_type, const char *message)
     printf("%s %s\n", log_type_str, message);
 
   char full_file_name[256];
-  log_gen_name(LOG_NAME_DATE, DEFAULT_LOG_NAME, full_file_name);
-  sprintf(full_file_name, "%s/%s",
-          log_path, full_file_name);
+  char file_name[64];
+  log_gen_name(LOG_NAME_DATE, DEFAULT_LOG_NAME, file_name);
+  sprintf(full_file_name, "%s/%s", log_path, file_name);
 
   make_dir(log_path);
 

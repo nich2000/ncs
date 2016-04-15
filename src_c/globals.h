@@ -23,6 +23,9 @@
 #define DEFAULT_REPORT_PATH      "../reports"
 #define DEFAULT_REPORT_NAME      "report.txt"
 //==============================================================================
+#define DEFAULT_SESSION_PATH     "../sessions"
+#define DEFAULT_SESSION_NAME     "../session.txt"
+//==============================================================================
 #define DEFAULT_MAP_PATH         "../tracks"
 #define DEFAULT_MAP_NAME         "default.map"
 //==============================================================================

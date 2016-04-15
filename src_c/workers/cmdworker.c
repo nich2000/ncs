@@ -137,7 +137,7 @@ int load_names()
     strcpy(_names.items[_names.count-1].name, token);
   }
 
-  log_add_fmt(LOG_INFO, "load_names, file: %s, names count: %d",
+  log_add_fmt(LOG_INFO, "load_names, file: %s, count: %d",
               full_file_name, _names.count);
 
 //  for(int i = 0; i < _names.count; i++)
@@ -866,8 +866,13 @@ int cmd_remote_client_activate(sock_id_t id, sock_active_t active)
 {
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
-    if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
-      if(_cmd_server.custom_remote_clients_list.items[i].custom_worker.id == id)
+    custom_remote_client_t *tmp_client = &_cmd_server.custom_remote_clients_list.items[i];
+
+    if(tmp_client->custom_worker.state == STATE_START)
+    {
+      sock_id_t tmp_id = tmp_client->custom_worker.id;
+
+      if(tmp_id == id)
       {
         sock_active_t cur_active;
 
@@ -878,9 +883,9 @@ int cmd_remote_client_activate(sock_id_t id, sock_active_t active)
 
         time_t rawtime;
         time (&rawtime);
-        _cmd_server.custom_remote_clients_list.items[i].active_time = rawtime;
+        tmp_client->active_time = rawtime;
 
-        _cmd_server.custom_remote_clients_list.items[i].active_state = cur_active;
+        tmp_client->active_state = cur_active;
 
         switch (cur_active)
         {
@@ -902,6 +907,7 @@ int cmd_remote_client_activate(sock_id_t id, sock_active_t active)
         cmd_remote_client_list(&tmp_packet);
         return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
+    }
   }
 
   return make_last_error_fmt(ERROR_NORMAL, errno, "to activate the client not found, id: %d", id);

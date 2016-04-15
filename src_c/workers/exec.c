@@ -32,39 +32,39 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 //==============================================================================
-#define CMD_HELP            "help"           // 0 - 1 all - specifically
-#define CMD_TEST            "test"           // 0
-#define CMD_CLEAR           "clear"          // 0
-#define CMD_EXIT            "exit"           // 0
-#define CMD_ALL             "all"            // 0 start all default servers
-#define CMD_SERVER          "server"         // 1 - 2(state, port)
-#define CMD_WEB_SERVER      "webserver"      // 1 - 2(state, port)
-#define CMD_WS_SERVER       "wsserver"       // 1 - 2(state, port)
-#define CMD_CLIENT          "client"         // 1 - 3(state, host, port)
-#define CMD_SND_TO_SERVER   "sndtosr"        // 1 - n
-#define CMD_SND_TO_WSSERVER "sndtows"        // 1 - n
-#define CMD_SND_TO_CLIENT   "sndtocl"        // 1 - n
-#define CMD_STREAM          "stream"         // 1(on off pause resume)
-#define CMD_TYPES_INFO      "typesinfo"      // 0
-#define CMD_DEFINES_INFO    "definesinfo"    // 0
-#define CMD_SERVER_INFO     "serverinfo"     // 0
-#define CMD_WEB_SERVER_INFO "webserverinfo"  // 0
-#define CMD_WS_SERVER_INFO  "wsserverinfo"   // 0
-#define CMD_CLIENT_INFO     "clientinfo"     // 0
+#define CMD_HELP             "help"           // 0 - 1 all - specifically
+#define CMD_TEST             "test"           // 0
+#define CMD_CLEAR            "clear"          // 0
+#define CMD_EXIT             "exit"           // 0
+#define CMD_ALL              "all"            // 0 start all default servers
+#define CMD_SERVER           "server"         // 1 - 2(state, port)
+#define CMD_WEB_SERVER       "webserver"      // 1 - 2(state, port)
+#define CMD_WS_SERVER        "wsserver"       // 1 - 2(state, port)
+#define CMD_CLIENT           "client"         // 1 - 3(state, host, port)
+#define CMD_SND_TO_SERVER    "sndtosr"        // 1 - n
+#define CMD_SND_TO_WSSERVER  "sndtows"        // 1 - n
+#define CMD_SND_TO_CLIENT    "sndtocl"        // 1 - n
+#define CMD_STREAM           "stream"         // 1(on off pause resume)
+#define CMD_TYPES_INFO       "typesinfo"      // 0
+#define CMD_DEFINES_INFO     "definesinfo"    // 0
+#define CMD_SERVER_INFO      "serverinfo"     // 0
+#define CMD_WEB_SERVER_INFO  "webserverinfo"  // 0
+#define CMD_WS_SERVER_INFO   "wsserverinfo"   // 0
+#define CMD_CLIENT_INFO      "clientinfo"     // 0
 #define CMD_CMD_REGISTER     "register"       //
 #define CMD_CMD_ACTIVATE     "activate"       //
 #define CMD_WS_REGISTER      "ws_register"    //
 #define CMD_WS_ACTIVATE      "ws_activate"    //
 //==============================================================================
-#define CMD_START           "on"
-#define CMD_STOP            "off"
-#define CMD_PAUSE           "pause"
-#define CMD_RESUME          "resume"
-#define CMD_STEP            "step"
+#define CMD_START            "on"
+#define CMD_STOP             "off"
+#define CMD_PAUSE            "pause"
+#define CMD_RESUME           "resume"
+#define CMD_STEP             "step"
 //==============================================================================
-#define CMD_FIRST           "first"
-#define CMD_SECOND          "second"
-#define CMD_NEXT            "next"
+#define CMD_FIRST            "first"
+#define CMD_SECOND           "second"
+#define CMD_NEXT             "next"
 //==============================================================================
 sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
 sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
@@ -128,12 +128,12 @@ int help()
   sprintf
   (
     tmp,
-    //           1    2    3    4    5    6    7    8    9    10
-    "commands:\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n" \
-    //           11   12   13   14   15   16   17   18   19   20
-                "%s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n %s\n" \
-    //           21   22   23
-                "%s\n %s\n %s\n",
+    //          1   2   3   4   5   6   7   8   9   10
+    "commands:\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+    //          11  12  13  14  15  16  17  18  19  20
+               "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
+    //          21  22  23
+               "%s\n%s\n%s\n",
     CMD_HELP,             // 1
     CMD_TEST,             // 2
     CMD_CLEAR,            // 3
@@ -218,7 +218,7 @@ int handle_command_str(void *sender, char *command)
     else if(strcmp(token, CMD_EXIT) == 0)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_EXIT);
-      return EXEC_DONE;
+      return EXEC_NONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_ALL) == 0)

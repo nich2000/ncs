@@ -33,6 +33,88 @@ static streamer_worker _cmd_streamer[SOCK_WORKERS_COUNT];
 extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
 //==============================================================================
+char session_path[256] = DEFAULT_SESSION_PATH;
+char session_file[64]  = DEFAULT_SESSION_NAME;
+//==============================================================================
+session_t _session;
+//==============================================================================
+session_t *session()
+{
+  return &_session;
+}
+//==============================================================================
+int load_session()
+{
+  char full_file_name[256];
+  sprintf(full_file_name, "%s/%s", session_path, session_file);
+
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  _session.count = 0;
+
+  FILE *f = fopen(full_file_name, "r");
+  if(f == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_session, can not open file %s", full_file_name);
+
+  while ((read = getline(&line, &len, f)) != -1)
+  {
+    _session.count++;
+
+    pack_struct_s_t *tmp_item = &_session.items[_session.count-1];
+
+//    char *token = strtok(line, ";");
+//    memset(map_item->kind, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->kind, token);
+
+//    token = strtok(NULL, ";");
+//    memset(map_item->number, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->number, token);
+
+//    token = strtok(NULL, ";");
+//    memset(map_item->index, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->index, token);
+
+//    token = strtok(NULL, ";");
+//    memset(map_item->lat_f, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->lat_f, token);
+
+//    token = strtok(NULL, ";");
+//    memset(map_item->lon_f, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->lon_f, token);
+
+//    token = strtok(NULL, ";");
+//    memset(map_item->lat, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->lat, token);
+
+//    token = strtok(NULL, "=");
+//    if(token[strlen(token)-1] == '\n')
+//      token[strlen(token)-1] = '\0';
+//    memset(map_item->lon, 0, MAP_ITEM_SIZE);
+//    strcpy(map_item->lon, token);
+  }
+
+  log_add_fmt(LOG_INFO, "load_session, file: %s, count: %d",
+              full_file_name, _session.count);
+
+//  for(int i = 0; i < _map.count; i++)
+//    printf("%s  %s  %s  %s  %s  %s  %s\n",
+//           _map.items[i].kind,
+//           _map.items[i].number,
+//           _map.items[i].index,
+//           _map.items[i].lat_f,
+//           _map.items[i].lon_f,
+//           _map.items[i].lat,
+//           _map.items[i].lon);
+
+  fclose(f);
+  if(line)
+    free(line);
+
+  return ERROR_NONE;
+}
+//==============================================================================
 int cmd_streamer(sock_state_t state)
 {
   _cmd_streamer_count = cmd_client_count();

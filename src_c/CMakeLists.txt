@@ -13,7 +13,6 @@ cmake_minimum_required(VERSION 3.1)
 IF (WIN32)
   set(CMAKE_C_COMPILER "C:/Qt/Tools/mingw492_32/bin/gcc.exe")
 ELSE()
-  # set stuff for other systems
 ENDIF()
 #-------------------------------------------------------------------------------
 project(ncs C)
@@ -25,7 +24,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 #-------------------------------------------------------------------------------
 set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
-set(CMAKE_EXE_LINKER_FLAGS  "-static")
+IF (WIN32)
+  #set(CMAKE_EXE_LINKER_FLAGS  "-static")
+ELSE()
+ENDIF()
 #-------------------------------------------------------------------------------
 include_directories(../libs/iniparser/src)
 include_directories(../libs/jansson/src)

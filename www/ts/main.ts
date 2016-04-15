@@ -14,9 +14,9 @@ function init() {
   clients = new clients_t();
 
   map = new map_t('canvas_map');
-  map.test_mode = true;
+  // map.test_mode = true;
 
-  // ws = new web_socket_t("ws://" + location.hostname + ":5800");
+  ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 //=============================================================================
 $(window).load(function() {

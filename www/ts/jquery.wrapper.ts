@@ -8,8 +8,8 @@ class element {
     tmp.attr("id", id);
 
     // TODO: need select
-    owner.prepend(tmp);
-    // owner.append(tmp);
+    // owner.prepend(tmp);
+    owner.append(tmp);
 
     return tmp;
   }

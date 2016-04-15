@@ -29,6 +29,16 @@ typedef struct
   pthread_t               work_thread;
 }streamer_worker;
 //==============================================================================
+#define SESSION_SIZE 102400
+//==============================================================================
+typedef pack_struct_s_t session_items_t[SESSION_SIZE];
+//==============================================================================
+typedef struct
+{
+  int             count;
+  session_items_t items;
+} session_t;
+//==============================================================================
 int cmd_streamer(sock_state_t state);
 int cmd_streamer_status();
 //==============================================================================

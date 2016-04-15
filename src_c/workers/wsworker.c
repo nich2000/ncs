@@ -306,23 +306,6 @@ void *ws_recv_worker(void *arg)
           tmp_client->hand_shake = TRUE;
           log_add_fmt(LOG_DEBUG, "ws_recv_worker, handshake success, client id: %d",
                       tmp_client->custom_worker.id);
-
-//          pack_packet_t config_packet;
-//          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
-
-          // TODO: тут создали буффер, начали отправку
-          pack_packet_t map_packet;
-          cmd_map(&map_packet);
-          ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
-
-          // TODO: костыль
-          usleep(10000);
-
-          // TODO: пришли сюда, но отправка еще идет,
-          // после отправки буффер чистится и ...
-          pack_packet_t clients_packet;
-          cmd_remote_client_list(&clients_packet);
-          ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
         }
         else
         {
@@ -492,6 +475,23 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t name)
 
         log_add_fmt(LOG_INFO, "ws_remote_clients_register, success, client id: %d, name: %s",
                     id, name);
+
+//        pack_packet_t config_packet;
+//        ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+
+        // TODO: тут создали буффер, начали отправку
+        pack_packet_t map_packet;
+        cmd_map(&map_packet);
+        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
+
+        // TODO: костыль
+        usleep(10000);
+
+        // TODO: пришли сюда, но отправка еще идет,
+        // после отправки буффер чистится и ...
+        pack_packet_t clients_packet;
+        cmd_remote_client_list(&clients_packet);
+        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
       }
   }
 

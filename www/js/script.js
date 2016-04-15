@@ -220,7 +220,7 @@ var clients_t = (function () {
     };
     clients_t.prototype.switch_current = function (current, client) {
         var photo = "/pilots/" + client.name + '.jpg';
-        var info = "/pilots/" + client.name + '_info.dat';
+        var info = "/pilots/" + client.name + '_info.html';
         if (current == active_t.first) {
             element.set_src("first_pilot_photo", photo);
             element.set_src("first_pilot_info", info);
@@ -239,7 +239,7 @@ var element = (function () {
     element.add = function (id, tag, owner) {
         var tmp = $(tag);
         tmp.attr("id", id);
-        owner.prepend(tmp);
+        owner.append(tmp);
         return tmp;
     };
     element.delete = function () {
@@ -279,7 +279,7 @@ function init() {
     exec = new exec_t();
     clients = new clients_t();
     map = new map_t('canvas_map');
-    map.test_mode = true;
+    ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 $(window).load(function () {
     $('body').height($(window).height());

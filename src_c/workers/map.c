@@ -45,40 +45,40 @@ int load_map()
   {
     _map.count++;
 
-    map_item_t *map_item = &_map.items[_map.count-1];
+    map_item_t *tmp_item = &_map.items[_map.count-1];
 
     char *token = strtok(line, ";");
-    memset(map_item->kind, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->kind, token);
+    memset(tmp_item->kind, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->kind, token);
 
     token = strtok(NULL, ";");
-    memset(map_item->number, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->number, token);
+    memset(tmp_item->number, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->number, token);
 
     token = strtok(NULL, ";");
-    memset(map_item->index, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->index, token);
+    memset(tmp_item->index, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->index, token);
 
     token = strtok(NULL, ";");
-    memset(map_item->lat_f, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lat_f, token);
+    memset(tmp_item->lat_f, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->lat_f, token);
 
     token = strtok(NULL, ";");
-    memset(map_item->lon_f, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lon_f, token);
+    memset(tmp_item->lon_f, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->lon_f, token);
 
     token = strtok(NULL, ";");
-    memset(map_item->lat, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lat, token);
+    memset(tmp_item->lat, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->lat, token);
 
     token = strtok(NULL, "=");
     if(token[strlen(token)-1] == '\n')
       token[strlen(token)-1] = '\0';
-    memset(map_item->lon, 0, MAP_ITEM_SIZE);
-    strcpy(map_item->lon, token);
+    memset(tmp_item->lon, 0, MAP_ITEM_SIZE);
+    strcpy(tmp_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "load_map, file: %s, points count: %d",
+  log_add_fmt(LOG_INFO, "load_map, file: %s, count: %d",
               full_file_name, _map.count);
 
 //  for(int i = 0; i < _map.count; i++)
