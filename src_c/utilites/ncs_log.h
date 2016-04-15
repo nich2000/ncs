@@ -15,9 +15,6 @@
 // for FILE
 #include <stdio.h>
 //==============================================================================
-#define LOG_INITIAL_PATH    "../logs"
-#define REPORT_INITIAL_PATH "../reports"
-//==============================================================================
 #define LOG_NAME_ONLY       0
 #define LOG_NAME_DATE       1
 #define LOG_NAME_TIME       2
@@ -40,13 +37,14 @@ typedef int log_time_tag_t;
 //==============================================================================
 void clr_scr();
 //==============================================================================
-void log_gen_name(log_time_tag_t time_tag, const char *name, char *result);
-void log_set_name(const char *name);
-//==============================================================================
 void log_add    (int log_type, const char *message     );
 void log_add_fmt(int log_type, const char *message, ...);
 //==============================================================================
-FILE *report_open(char *report_name);
+FILE *stat_open(char *name);
+int   stat_add(FILE *file, char *message);
+void  stat_close(FILE *file);
+//==============================================================================
+FILE *report_open(char *name);
 int   report_add(FILE *file, char *message);
 void  report_close(FILE *file);
 //==============================================================================

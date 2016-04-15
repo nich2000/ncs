@@ -15,24 +15,25 @@
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================
-char map_path[256];
-char map_file[64];
+char map_path[256] = DEFAULT_MAP_PATH;
+char map_file[64]  = DEFAULT_MAP_NAME;
+//==============================================================================
 map_t _map;
 //==============================================================================
 int load_map()
 {
-//  char *file_name = "../tracks/Brest.map";
-//  char *file_name = "../tracks/Hungaroring.map";
-  char *file_name = "../tracks/Mogilev.map";
+  char *full_file_name;
+  sprintf(full_file_name, "%s/%s", map_path, map_file);
+
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
 
   _map.count = 0;
 
-  FILE *f = fopen(file_name, "r");
+  FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_map, can not open file %s", file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_map, can not open file %s", full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -72,7 +73,7 @@ int load_map()
   }
 
   log_add_fmt(LOG_INFO, "load_map, file: %s, points count: %d",
-              file_name, _map.count);
+              full_file_name, _map.count);
 
 //  for(int i = 0; i < _map.count; i++)
 //    printf("%s  %s  %s  %s  %s  %s  %s\n",

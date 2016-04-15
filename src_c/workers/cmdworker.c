@@ -171,16 +171,16 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 //==============================================================================
 int load_names()
 {
-  char *file_name = "../config/names.ejn";
+  char *full_file_name = "../config/names.ejn";
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
 
   _names.count = 0;
 
-  FILE *f = fopen(file_name, "r");
+  FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -196,7 +196,7 @@ int load_names()
   }
 
   log_add_fmt(LOG_INFO, "load_names, file: %s, names count: %d",
-              file_name, _names.count);
+              full_file_name, _names.count);
 
 //  for(int i = 0; i < _names.count; i++)
 //    printf("%s=%s\n",

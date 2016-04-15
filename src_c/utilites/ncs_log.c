@@ -22,10 +22,15 @@
 
 #include "ncs_log.h"
 //==============================================================================
-char log_path[256];
-char stat_path[256];
+void log_gen_name(log_time_tag_t time_tag, const char *name, char *result);
+void make_dir(const char *dir);
+void get_cur_date_str(char *result);
+void get_cur_time_str(char *result);
+const char *log_type_to_string(int log_type);
 //==============================================================================
-static char log_def_name[64] = "log.txt";
+char log_path[256]    = DEFAULT_LOG_PATH;
+char stat_path[256]   = DEFAULT_STAT_PATH;
+char report_path[265] = DEFAULT_REPORT_PATH;
 //==============================================================================
 void clr_scr()
 {
@@ -33,6 +38,15 @@ void clr_scr()
     system("clear");
   #elif _WIN32
     system("cls");
+  #endif
+}
+//==============================================================================
+void make_dir(const char *dir)
+{
+  #ifdef __linux__
+  mkdir(dir, 0777);
+  #elif _WIN32
+  CreateDirectory(dir, NULL);
   #endif
 }
 //==============================================================================
@@ -79,20 +93,6 @@ void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
   get_cur_date_str(date_str);
 
   sprintf(result, "%s_%s", date_str, name);
-}
-//==============================================================================
-void log_make_dir()
-{
-  #ifdef __linux__
-  mkdir(LOG_INITIAL_PATH, 0777);
-  #elif _WIN32
-  CreateDirectory(LOG_INITIAL_PATH, NULL);
-  #endif
-}
-//==============================================================================
-void log_set_name(const char *name)
-{
-  strncpy(log_def_name, name, 64);
 }
 //==============================================================================
 void log_add_fmt(int log_type, const char *message, ...)
@@ -155,8 +155,6 @@ void log_add(int log_type, const char *message)
       return;
   #endif
 
-  log_make_dir();
-
   const char *log_type_str = log_type_to_string(log_type);
 
   if(
@@ -169,12 +167,14 @@ void log_add(int log_type, const char *message)
     )
     printf("%s %s\n", log_type_str, message);
 
-  char log_full_name[256];
-  log_gen_name(LOG_NAME_DATE, log_def_name, log_full_name);
-  sprintf(log_full_name, "%s/%s",
-          LOG_INITIAL_PATH, log_full_name);
+  char full_file_name[256];
+  log_gen_name(LOG_NAME_DATE, DEFAULT_LOG_NAME, full_file_name);
+  sprintf(full_file_name, "%s/%s",
+          log_path, full_file_name);
 
-  FILE *log = fopen(log_full_name, "a");
+  make_dir(log_path);
+
+  FILE *log = fopen(full_file_name, "a");
   if(log != NULL)
   {
     char time_str[16];
@@ -185,28 +185,50 @@ void log_add(int log_type, const char *message)
     fclose(log);
   }
   else
-    printf("[WARNING] Can not open log file, %s\n", log_full_name);
+    printf("[WARNING] Can not open log file, %s\n", full_file_name);
 }
 //==============================================================================
-void report_make_dir()
+FILE *stat_open(char *name)
 {
-  #ifdef __linux__
-  mkdir(REPORT_INITIAL_PATH, 0777);
-  #elif _WIN32
-  CreateDirectory(REPORT_INITIAL_PATH, NULL);
-  #endif
+  char full_file_name[256];
+  log_gen_name(LOG_NAME_DATE_TIME, name, full_file_name);
+  sprintf(full_file_name, "%s/%s",
+          stat_path, full_file_name);
+
+  make_dir(stat_path);
+
+  FILE *result = fopen(full_file_name, "a");
+
+  return result;
 }
 //==============================================================================
-FILE *report_open(char *report_name)
+int stat_add(FILE *file, char *message)
 {
-  char report_full_name[256];
-  log_gen_name(LOG_NAME_DATE_TIME, report_name, report_full_name);
-  sprintf(report_full_name, "%s/%s",
-          REPORT_INITIAL_PATH, report_full_name);
+  int res = -1;
+  if(file != NULL)
+  {
+    res = fprintf(file, "%s\n", message);
+    fflush(file);
+  }
+  return res;
+}
+//==============================================================================
+void  stat_close(FILE *file)
+{
+  if(file != NULL)
+    fclose(file);
+}
+//==============================================================================
+FILE *report_open(char *name)
+{
+  char full_file_name[256];
+  log_gen_name(LOG_NAME_DATE_TIME, name, full_file_name);
+  sprintf(full_file_name, "%s/%s",
+          report_path, full_file_name);
 
-  report_make_dir();
+  make_dir(report_path);
 
-  FILE *result = fopen(report_full_name, "a");
+  FILE *result = fopen(full_file_name, "a");
 
   return result;
 }
@@ -225,8 +247,6 @@ int report_add(FILE *file, char *message)
 void report_close(FILE *file)
 {
   if(file != NULL)
-  {
     fclose(file);
-  }
 }
 //==============================================================================

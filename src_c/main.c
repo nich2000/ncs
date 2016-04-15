@@ -16,6 +16,7 @@ extern sock_port_t cmd_server_port;
 extern sock_host_t cmd_server_host;
 extern char log_path[256];
 extern char stat_path[256];
+extern char report_path[265];
 extern char map_path[256];
 extern char map_file[64];
 //==============================================================================
@@ -49,35 +50,39 @@ int read_config()
 
       if(strcmp("worker:cmd_server_port", keys[j]) == 0)
       {
-        cmd_server_port = iniparser_getint(config, keys[j], 5700);
+        cmd_server_port = iniparser_getint(config, keys[j], DEFAULT_CMD_SERVER_PORT);
       }
       else if(strcmp("worker:ws_server_port", keys[j]) == 0)
       {
-        ws_server_port = iniparser_getint(config, keys[j], 5800);
+        ws_server_port = iniparser_getint(config, keys[j], DEFAULT_WS_SERVER_PORT);
       }
       else if(strcmp("worker:web_server_port", keys[j]) == 0)
       {
-        web_server_port = iniparser_getint(config, keys[j], 5900);
+        web_server_port = iniparser_getint(config, keys[j], DEFAULT_WEB_SERVER_PORT);
       }
       else if(strcmp("worker:cmd_server_host", keys[j]) == 0)
       {
-        strcpy((char*)cmd_server_host, iniparser_getstring(config, keys[j], "127.0.0.1"));
+        strcpy((char*)cmd_server_host, iniparser_getstring(config, keys[j], DEFAULT_SERVER_HOST));
       }
       else if(strcmp("log:log_path", keys[j]) == 0)
       {
-        strcpy((char*)log_path, iniparser_getstring(config, keys[j], "../logs"));
+        strcpy((char*)log_path, iniparser_getstring(config, keys[j], DEFAULT_LOG_PATH));
       }
       else if(strcmp("stat:stat_path", keys[j]) == 0)
       {
-        strcpy((char*)stat_path, iniparser_getstring(config, keys[j], "../stat"));
+        strcpy((char*)stat_path, iniparser_getstring(config, keys[j], DEFAULT_STAT_PATH));
+      }
+      else if(strcmp("report:report_path", keys[j]) == 0)
+      {
+        strcpy((char*)report_path, iniparser_getstring(config, keys[j], DEFAULT_REPORT_PATH));
       }
       else if(strcmp("map:map_path", keys[j]) == 0)
       {
-        strcpy((char*)map_path, iniparser_getstring(config, keys[j], "../maps"));
+        strcpy((char*)map_path, iniparser_getstring(config, keys[j], DEFAULT_MAP_PATH));
       }
       else if(strcmp("map:map_file", keys[j]) == 0)
       {
-        strcpy((char*)map_file, iniparser_getstring(config, keys[j], "default.map"));
+        strcpy((char*)map_file, iniparser_getstring(config, keys[j], DEFAULT_MAP_NAME));
       }
     }
   }
