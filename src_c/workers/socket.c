@@ -40,11 +40,11 @@ int sock_init()
   {
     WSACleanup();
 
-    log_add_fmt(LOG_INFO, "sock_init, WSAStartup, error: %d", sock_error());
+    log_add_fmt(LOG_INFO, "[SOCK] sock_init, WSAStartup, error: %d", sock_error());
     return make_last_error_fmt(ERROR_NORMAL, errno, "sock_init, WSAStartup, error: %d", sock_error());
   }
   else
-    log_add(LOG_DEBUG, "sock_init, WSAStartup OK");
+    log_add(LOG_DEBUG, "[SOCK] sock_init, WSAStartup OK");
 #else
   // other
 #endif
@@ -59,11 +59,11 @@ int sock_deinit()
 #elif _WIN32
   if (WSACleanup())
   {
-    log_add_fmt(LOG_INFO, "sock_deinit, WSACleanup, error: %d", sock_error());
+    log_add_fmt(LOG_INFO, "[SOCK] sock_deinit, WSACleanup, error: %d", sock_error());
     return make_last_error_fmt(ERROR_NORMAL, errno, "sock_deinit, WSACleanup, error: %d", sock_error());
   }
   else
-    log_add(LOG_DEBUG, "sock_deinit, WSACleanup OK");
+    log_add(LOG_DEBUG, "[SOCK] sock_deinit, WSACleanup OK");
 #else
   // other
 #endif
@@ -92,13 +92,13 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
   {
     char tmp[256];
     int error = sock_error();
-    sprintf(tmp, "sock_accept, select, socket: %d, error: %d", sock, error);
+    sprintf(tmp, "[SOCK] sock_accept, select, socket: %d, error: %d", sock, error);
     log_add(LOG_ERROR, tmp);
     return make_last_error(ERROR_NORMAL, error, tmp);
   }
   else if(res == 0)
   {
-    log_add_fmt(LOG_WAIT, "sock_accept, select, socket: %d, empty for %d seconds",
+    log_add_fmt(LOG_WAIT, "[SOCK] sock_accept, select, socket: %d, empty for %d seconds",
                 sock, SOCK_WAIT_SELECT);
 
     return ERROR_WAIT;
@@ -118,7 +118,7 @@ int sock_accept(SOCKET sock, SOCKET *remote_sock, sock_host_t host, sock_port_t 
           {
             char tmp[256];
             int error = sock_error();
-            sprintf(tmp, "sock_accept, select, socket: %d, error: %d", sock, error);
+            sprintf(tmp, "[SOCK] sock_accept, select, socket: %d, error: %d", sock, error);
             log_add(LOG_ERROR, tmp);
             return make_last_error(ERROR_NORMAL, error, tmp);
           }
@@ -172,14 +172,14 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   {
     char tmp[256];
     int error = sock_error();
-    sprintf(tmp, "sock_recv, select, socket: %d, error: %d", sock, error);
+    sprintf(tmp, "[SOCK] sock_recv, select, socket: %d, error: %d", sock, error);
     log_add(LOG_ERROR, tmp);
     return make_last_error(ERROR_NORMAL, error, tmp);
   }
   else if(res == 0)
   {
     char tmp[256];
-    sprintf(tmp,  "sock_recv, select, socket: %d, empty for %d seconds",
+    sprintf(tmp,  "[SOCK] sock_recv, select, socket: %d, empty for %d seconds",
             sock, SOCK_WAIT_SELECT);
     log_add(ERROR_WAIT, tmp);
     return make_last_error(ERROR_WAIT, errno, tmp);
@@ -197,24 +197,24 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
           {
             char tmp[256];
             int error = sock_error();
-            sprintf(tmp, "sock_recv, recv, socket: %d, error: %d", sock, error);
+            sprintf(tmp, "[SOCK] sock_recv, recv, socket: %d, error: %d", sock, error);
             log_add(LOG_ERROR, tmp);
             return make_last_error(ERROR_NORMAL, error, tmp);
           }
           else if(*size == 0)
           {
             char tmp[256];
-            sprintf(tmp, "sock_recv, recv, socket: %d, socket closed", sock);
+            sprintf(tmp, "[SOCK] sock_recv, recv, socket: %d, socket closed", sock);
             log_add(ERROR_WARNING, tmp);
             return make_last_error(ERROR_WARNING, errno, tmp);
           }
           else
           {
             #ifdef USE_EXTRA_LOGS
-            log_add_fmt(LOG_EXTRA, "sock_recv, socket: %d, recv size: %d", sock, size);
-            log_add_fmt(LOG_EXTRA, "sock_recv, buffer:\n%s", buffer);
+            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, socket: %d, recv size: %d", sock, size);
+            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, buffer:\n%s", buffer);
             bytes_to_hex(buffer, (pack_size_t)size, tmp);
-            log_add_fmt(LOG_EXTRA, "sock_recv, hex buffer:\n%s", buffer);
+            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, hex buffer:\n%s", buffer);
             #endif
 
 //            FD_CLR(sock, &active_fd_set);
@@ -249,16 +249,16 @@ int sock_send(SOCKET sock, char *buffer, int size)
     if(res == SOCKET_ERROR)
     {
       char tmp[128];
-      sprintf(tmp, "sock_send, send, error: %u", sock_get_error());
+      sprintf(tmp, "[SOCK] sock_send, send, error: %u", sock_get_error());
       log_add(tmp, LOG_ERROR);
     }
     else
     {
       #ifdef SOCK_EXTRA_LOGS
-      log_add_fmt(LOG_EXTRA, "sock_send, socket: %d, send size: %d", sock, size);
-      log_add_fmt(LOG_EXTRA, "sock_send, buffer:\n%s", buffer);
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, socket: %d, send size: %d", sock, size);
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, buffer:\n%s", buffer);
       bytes_to_hex(buffer, (pack_size_t)size, tmp);
-      log_add_fmt(LOG_EXTRA, "sock_send, hex buffer:\n%s", buffer);
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, hex buffer:\n%s", buffer);
       #endif
     }
   }
@@ -267,17 +267,17 @@ int sock_send(SOCKET sock, char *buffer, int size)
   if(res == SOCKET_ERROR)
   {
     char tmp[128];
-    sprintf(tmp, "sock_send, send, socket: %d, error: %u", sock, sock_error());
+    sprintf(tmp, "[SOCK] sock_send, send, socket: %d, error: %u", sock, sock_error());
     log_add(LOG_ERROR, tmp);
     return make_last_error(ERROR_NORMAL, errno, tmp);
   }
   else
   {
     #ifdef SOCK_EXTRA_LOGS
-    log_add_fmt(LOG_EXTRA, "sock_send, socket: %d, send size: %d", sock, size);
-    log_add_fmt(LOG_EXTRA, "sock_send, buffer:\n%s", buffer);
+    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, socket: %d, send size: %d", sock, size);
+    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, buffer:\n%s", buffer);
     bytes_to_hex(buffer, (pack_size_t)size, tmp);
-    log_add_fmt(LOG_EXTRA, "sock_send, hex buffer:\n%s", buffer);
+    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, hex buffer:\n%s", buffer);
     #endif
   }
   #endif

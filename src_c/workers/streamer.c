@@ -96,7 +96,7 @@ int load_session()
 //    strcpy(map_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "load_session, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] load_session, file: %s, count: %d",
               full_file_name, _session.count);
 
 //  for(int i = 0; i < _map.count; i++)
@@ -181,7 +181,7 @@ int cmd_streamer_init(streamer_worker *worker, custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 {
-  log_add_fmt(LOG_INFO, "cmd_streamer_start, worker id: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] cmd_streamer_start, worker id: %d",
               worker->id);
 
   cmd_streamer_init(worker, client);
@@ -196,7 +196,7 @@ int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_stop(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "cmd_streamer_stop, worker id: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] cmd_streamer_stop, worker id: %d",
               worker->id);
 
   worker->is_work = FALSE;
@@ -206,7 +206,7 @@ int cmd_streamer_stop(streamer_worker *worker)
 //==============================================================================
 int cmd_streamer_pause(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "cmd_streamer_pause, worker id: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] cmd_streamer_pause, worker id: %d",
               worker->id);
 
   worker->is_pause = TRUE;
@@ -216,7 +216,7 @@ int cmd_streamer_pause(streamer_worker *worker)
 //==============================================================================
 int cmd_streamer_resume(streamer_worker *worker)
 {
-  log_add_fmt(LOG_INFO, "cmd_streamer_resume, worker id: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] cmd_streamer_resume, worker id: %d",
               worker->id);
 
   worker->is_pause = FALSE;
@@ -233,7 +233,7 @@ void *cmd_streamer_worker_func(void *arg)
 {
   streamer_worker *tmp_worker = (streamer_worker*)arg;
 
-  log_add_fmt(LOG_DEBUG, "cmd_streamer_worker_func, worker id: %d",
+  log_add_fmt(LOG_DEBUG, "[SRTEAMER] cmd_streamer_worker_func, worker id: %d",
               tmp_worker->id);
 
   while(tmp_worker->is_work)

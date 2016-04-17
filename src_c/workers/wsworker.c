@@ -201,14 +201,14 @@ void *ws_server_worker(void *arg)
 {
   ws_server_t *tmp_server = (ws_server_t*)arg;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] ws_server_worker, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add_fmt(LOG_DEBUG, "[END] ws_server_worker, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
   return NULL;
@@ -263,7 +263,7 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  log_add_fmt(LOG_DEBUG, "ws_accept, server id: %d, socket: %d, host: %s, port: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] ws_accept, server id: %d, socket: %d, host: %s, port: %d",
               tmp_server->custom_worker.id,
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
@@ -282,7 +282,7 @@ void *ws_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] ws_recv_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_recv_worker, client id: %d",
               tmp_client->custom_worker.id);
 
   tmp_client->custom_worker.state = STATE_START;
@@ -304,7 +304,7 @@ void *ws_recv_worker(void *arg)
         if(sock_send(tmp_sock, response, tmp_size) == ERROR_NONE)
         {
           tmp_client->hand_shake = TRUE;
-          log_add_fmt(LOG_DEBUG, "ws_recv_worker, handshake success, client id: %d",
+          log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, handshake success, client id: %d",
                       tmp_client->custom_worker.id);
         }
         else
@@ -319,14 +319,14 @@ void *ws_recv_worker(void *arg)
         unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
 
-        log_add_fmt(LOG_DEBUG, "ws_recv_worker, message: %s", tmp_buffer);
+        log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, message: %s", tmp_buffer);
 
         pack_packet_t tmp_pack;
         if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
           int res = handle_command_pack(tmp_client, &tmp_pack);
           if(res != ERROR_NONE)
-           log_add_fmt(res, "ws_recv_worker, message: %s", last_error()->message);
+           log_add_fmt(res, "[WS] ws_recv_worker, message: %s", last_error()->message);
         }
         else
         {
@@ -365,7 +365,7 @@ void *ws_recv_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[END] ws_recv_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_recv_worker, client id: %d",
               tmp_client->custom_worker.id);
 
   return NULL;
@@ -376,7 +376,7 @@ void *ws_send_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] ws_send_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_send_worker, client id: %d",
               tmp_client->custom_worker.id);
 
   tmp_client->custom_worker.state = STATE_START;
@@ -414,7 +414,7 @@ void *ws_send_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[END] ws_send_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_send_worker, client id: %d",
               tmp_client->custom_worker.id);
 
   return NULL;
@@ -429,7 +429,7 @@ int on_ws_disconnect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_INFO, "on_ws_disconnect, disconnected from server, client id: %d",
+  log_add_fmt(LOG_INFO, "[WS] on_ws_disconnect, disconnected from server, client id: %d",
               tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
@@ -441,7 +441,7 @@ int on_ws_disconnect(void *sender)
 //==============================================================================
 int on_ws_error(void *sender, error_t *error)
 {
-  log_add_fmt(LOG_INFO, "ws_error, message: %s", error->message);
+  log_add_fmt(LOG_INFO, "[WS] ws_error, message: %s", error->message);
 
   return ERROR_NONE;
 }
@@ -471,7 +471,7 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t name)
 
         _ws_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "ws_remote_clients_register, success, client id: %d, name: %s",
+        log_add_fmt(LOG_INFO, "[WS] ws_remote_clients_register, success, client id: %d, name: %s",
                     id, name);
 
 //        pack_packet_t config_packet;
@@ -641,7 +641,7 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
         sock_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(pack, (char*)json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "ws_server_send_pack, json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_pack, json:\n%s", json_buffer);
 
         sock_buffer_t tmp_buffer;
         int           tmp_size = 0;
@@ -701,7 +701,7 @@ int ws_server_send_cmd(int session_id, int argc, ...)
         pack_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(&tmp_pack, (char*)json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "ws_server_send_cmd, json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_cmd, json:\n%s", json_buffer);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;

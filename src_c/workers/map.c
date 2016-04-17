@@ -78,7 +78,7 @@ int load_map()
     strcpy(tmp_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "load_map, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[MAP] load_map, file: %s, count: %d",
               full_file_name, _map.count);
 
 //  for(int i = 0; i < _map.count; i++)

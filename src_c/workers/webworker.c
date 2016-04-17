@@ -143,14 +143,14 @@ void *web_server_worker(void *arg)
 {
   web_server_t *tmp_server = (web_server_t*)arg;
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] web_server_worker, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WEB] [BEGIN] web_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
   custom_server_start(&tmp_server->custom_server.custom_worker);
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
-  log_add_fmt(LOG_DEBUG, "[END] web_server_worker, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WEB] [END] web_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
   return NULL;
@@ -160,7 +160,7 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_server_t *tmp_server = (custom_server_t*)sender;
 
-  log_add_fmt(LOG_DEBUG, "web_accept, server id: %d, host: %s",
+  log_add_fmt(LOG_DEBUG, "[WEB] web_accept, server id: %d, host: %s",
               tmp_server->custom_worker.id, (char*)host);
 
   SOCKET *s = malloc(sizeof(SOCKET));
@@ -185,7 +185,7 @@ void *web_handle_connection(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
-  log_add_fmt(LOG_DEBUG, "[BEGIN] web_handle_connection, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WEB] [BEGIN] web_handle_connection, server id: %d",
               _web_server.custom_server.custom_worker.id);
 
   char *request  = (char *)malloc(SOCK_WEB_BUFFER_SIZE);
@@ -199,7 +199,7 @@ void *web_handle_connection(void *arg)
       if(web_get_response(request, response, &size) == ERROR_NONE)
         sock_send(tmp_sock, response, size);
       else
-        log_add(LOG_ERROR, last_error()->message);
+        log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection, message: %s", last_error()->message);
 
       break;
     }
@@ -210,7 +210,7 @@ void *web_handle_connection(void *arg)
   free(request);
   free(response);
 
-  log_add_fmt(LOG_DEBUG, "[END] web_handle_connection, server id: %d",
+  log_add_fmt(LOG_DEBUG, "[WEB] [END] web_handle_connection, server id: %d",
               _web_server.custom_server.custom_worker.id);
 
   return NULL;
@@ -237,13 +237,13 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-    log_add(LOG_DEBUG, tmp_full_name);
+    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s", tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
       sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, "/404.html");
-      log_add(LOG_DEBUG, tmp_full_name);
+      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s", tmp_full_name);
 
       f = fopen(tmp_full_name, "rb");
     }
@@ -290,7 +290,8 @@ int web_get_response(char *request, char *response, int *size)
     }
     else
     {
-      return make_last_error_fmt(ERROR_NORMAL, errno, "web_get_response, file not found: %s", tmp_full_name);
+      return make_last_error_fmt(ERROR_NORMAL, errno, "web_get_response, file not found: %s",
+                                 tmp_full_name);
     }
   }
 

@@ -129,7 +129,7 @@ const char *log_type_to_string(int log_type)
     break;
     case LOG_ERROR_FATAL:    return "[ERROR_FATAL]";
     break;
-    case LOG_CMD:            return "[CMD]";
+    case LOG_CMD:            return "[COMMAND]";
     break;
     case LOG_EXTRA:          return "[EXTRA]";
     break;
