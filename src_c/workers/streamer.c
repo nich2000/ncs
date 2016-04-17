@@ -14,6 +14,7 @@
 
 #include "ncs_log.h"
 #include "protocol.h"
+#include "utils.h"
 //==============================================================================
 int cmd_streamer_init  (streamer_worker *worker, custom_remote_client_t *client);
 int cmd_streamer_start (streamer_worker *worker, custom_remote_client_t *client);
@@ -62,7 +63,7 @@ int load_session()
   {
     _session.count++;
 
-    pack_struct_s_t *tmp_item = &_session.items[_session.count-1];
+//    pack_struct_s_t *tmp_item = &_session.items[_session.count-1];
 
 //    char *token = strtok(line, ";");
 //    memset(map_item->kind, 0, MAP_ITEM_SIZE);

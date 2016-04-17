@@ -57,7 +57,9 @@
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
 //==============================================================================
 #define SOCK_PART_SIZE           100
-#define SOCK_BUFFER_SIZE         1024000
+#define SOCK_BUFFER_SIZE         1024 * 1024
+#define SOCK_WEB_BUFFER_SIZE     1024
+#define SOCK_WS_BUFFER_SIZE      1024
 #define SOCK_WORKERS_COUNT       256
 #define SOCK_ERRORS_COUNT        10
 //==============================================================================

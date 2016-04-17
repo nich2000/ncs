@@ -188,8 +188,8 @@ void *web_handle_connection(void *arg)
   log_add_fmt(LOG_DEBUG, "[BEGIN] web_handle_connection, server id: %d",
               _web_server.custom_server.custom_worker.id);
 
-  char *request  = (char *)malloc(1024);
-  char *response = (char *)malloc(1024*1024);
+  char *request  = (char *)malloc(SOCK_WEB_BUFFER_SIZE);
+  char *response = (char *)malloc(SOCK_WEB_BUFFER_SIZE * SOCK_WEB_BUFFER_SIZE);
   int   size     = 0;
 
   while(1)

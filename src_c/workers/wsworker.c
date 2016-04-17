@@ -287,8 +287,8 @@ void *ws_recv_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_START;
 
-  char *request   = (char*)malloc(2048);
-  char *response  = (char*)malloc(1024*1024);
+  char *request   = (char*)malloc(SOCK_WS_BUFFER_SIZE);
+  char *response  = (char*)malloc(SOCK_WS_BUFFER_SIZE * SOCK_WS_BUFFER_SIZE);
   int  tmp_size   = 0;
   int  tmp_errors = 0;
 
@@ -309,29 +309,29 @@ void *ws_recv_worker(void *arg)
         }
         else
         {
-          char tmp[128];
           errno = 1;
-          sprintf(tmp, "ws_recv_worker, errno: %d", errno);
-          make_last_error_fmt(ERROR_NORMAL, errno, tmp);
+          make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
         }
       }
       else
       {
         int tmp_size;
-        unsigned char tmp_buffer[1024];
-        ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, 1024, &tmp_size);
+        unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
+        ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
+
+        log_add_fmt(LOG_DEBUG, "ws_recv_worker, message: %s", tmp_buffer);
 
         pack_packet_t tmp_pack;
         if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
-          handle_command_pack(tmp_client, &tmp_pack);
+          int res = handle_command_pack(tmp_client, &tmp_pack);
+          if(res != ERROR_NONE)
+           log_add_fmt(res, "ws_recv_worker, message: %s", last_error()->message);
         }
         else
         {
-          char tmp[128];
           errno = 2;
-          sprintf(tmp, "ws_recv_worker, errno: %d", errno);
-          make_last_error(ERROR_NORMAL, errno, tmp);
+          make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
         }
       }
     }
@@ -351,10 +351,8 @@ void *ws_recv_worker(void *arg)
 
       if(tmp_errors++ > SOCK_ERRORS_COUNT)
       {
-        char tmp[128];
         errno = 3;
-        sprintf(tmp, "ws_recv_worker, errno: %d", errno);
-        make_last_error(ERROR_NORMAL, errno, tmp);
+        make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
         tmp_client->custom_worker.state = STATE_STOPPING;
       }
     }

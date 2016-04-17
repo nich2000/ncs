@@ -11,7 +11,7 @@
 cmake_minimum_required(VERSION 3.1)
 #-------------------------------------------------------------------------------
 IF (WIN32)
-  set(CMAKE_C_COMPILER "C:/Qt/Tools/mingw492_32/bin/gcc.exe")
+#  set(CMAKE_C_COMPILER "C:/Qt/Tools/mingw492_32/bin/gcc.exe")
 ELSE()
 ENDIF()
 #-------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
 IF (WIN32)
-  #set(CMAKE_EXE_LINKER_FLAGS  "-static")
+#  set(CMAKE_EXE_LINKER_FLAGS  "-static")
 ELSE()
 ENDIF()
 #-------------------------------------------------------------------------------
@@ -35,6 +35,9 @@ include_directories(../libs/AVRCryptoLib)
 include_directories(./utilites)
 include_directories(./workers)
 include_directories(./)
+#-------------------------------------------------------------------------------
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 #-------------------------------------------------------------------------------
 set(_INI      ../libs/iniparser/src/iniparser.c
               ../libs/iniparser/src/dictionary.c)
@@ -71,6 +74,7 @@ set(_ERROR    defines.h
               utilites/ncs_error.c)
 add_library(error SHARED ${_ERROR})
 set_property(TARGET error PROPERTY C_STANDARD 99)
+target_link_libraries(error log)
 #-------------------------------------------------------------------------------
 set(_PACK     defines.h
               globals.h
@@ -109,7 +113,6 @@ target_link_libraries(map error log utils)
 set(_SOCKET   defines.h
               globals.h
               globals.c
-              workers/exec.c
               workers/socket_types.h
               workers/socket.c
               workers/socket_utils.c
@@ -118,10 +121,11 @@ set(_SOCKET   defines.h
               workers/customworker.c
               workers/cmdworker.c
               workers/webworker.c
-              workers/wsworker.c)
+              workers/wsworker.c
+              workers/exec.c)
 add_library(socket SHARED ${_SOCKET})
 set_property(TARGET socket PROPERTY C_STANDARD 99)
-target_link_libraries(socket protocol log error map utils jansson crypto)
+target_link_libraries(socket protocol log error map utils jansson crypto Threads::Threads)
 IF (WIN32)
   target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
@@ -130,10 +134,7 @@ set(_PROG     defines.h
               globals.h
               main.c)
 #-------------------------------------------------------------------------------
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-#-------------------------------------------------------------------------------
 add_executable(${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} protocol log error map socket utils ini Threads::Threads)
+target_link_libraries(${PROJECT_NAME} log error ini socket)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

@@ -58,7 +58,7 @@ void get_cur_date_str(char *result)
   time_t rawtime = tv.tv_sec;
   struct tm * timeinfo = localtime(&rawtime);
 
-  strftime(result, sizeof(result), "%y%m%d", timeinfo);
+  strftime(result, 16, "%y%m%d", timeinfo);
 }
 //==============================================================================
 void get_cur_time_str(char *result)

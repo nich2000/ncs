@@ -183,7 +183,8 @@ int handle_command_pack(void *sender, pack_packet_t *packet)
     return handle_command_str(sender, command);
   };
 
-  return ERROR_NORMAL;
+  return make_last_error_fmt(ERROR_NORMAL, errno, "handle_command_pack, message: %s",
+                             last_error()->message);
 }
 //==============================================================================
 int handle_command_str(void *sender, char *command)
@@ -541,7 +542,8 @@ int handle_command_str(void *sender, char *command)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
-        ws_remote_clients_register(id, (unsigned char*)name_str);
+        int res = ws_remote_clients_register(id, (unsigned char*)name_str);
+        print_last_error("handle_command_str", res);
       }
 
       return EXEC_DONE;

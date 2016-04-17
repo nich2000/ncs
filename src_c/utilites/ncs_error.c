@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "ncs_error.h"
+#include "ncs_log.h"
 //==============================================================================
 static error_t _error_;
 //==============================================================================
@@ -69,6 +70,12 @@ int make_last_error_fmt(int level, int number, const char *message, ...)
   strcpy(_error_.message, tmp);
 
   return level;
+}
+//==============================================================================
+void print_last_error(const char *sender, int result)
+{
+  if(result != ERROR_NONE)
+    log_add_fmt(result, "%s, message: %s", sender, last_error()->message);
 }
 //==============================================================================
 error_t *last_error()

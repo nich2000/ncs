@@ -35,6 +35,8 @@ error_t make_error (int level, int number, const char *message);
 int make_last_error(int level, int number, const char *message);
 int make_last_error_fmt(int level, int number, const char *message, ...);
 //==============================================================================
+void print_last_error(const char *sender, int result);
+//==============================================================================
 error_t *last_error();
 //==============================================================================
 #endif //ERROR_H

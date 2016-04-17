@@ -863,9 +863,11 @@ int pack_command(pack_packet_t *pack, pack_value_t command)
 
       return ERROR_NONE;
     }
+    else
+      return make_last_error(ERROR_NORMAL, errno, "pack_command, pack_val_by_index_as_string");
   }
 
-  return ERROR_NORMAL;
+  return make_last_error(ERROR_NORMAL, errno, "pack_command, pack is not command");
 }
 //==============================================================================
 pack_size_t _pack_params_count(pack_packet_t *pack)
