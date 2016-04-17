@@ -112,10 +112,12 @@ int main(int argc, char *argv[])
         case EXEC_NONE:
           goto exit;
         case EXEC_UNKNOWN:
-          log_add_fmt(LOG_CMD, "unknown command: %s", command);
+          log_add_fmt(LOG_CMD, "unknown command: %s",
+                      command);
           break;
         case EXEC_DONE:
-          log_add_fmt(LOG_CMD, "done command: %s", command);
+          log_add_fmt(LOG_CMD, "done command: %s",
+                      command);
           break;
       }
     }

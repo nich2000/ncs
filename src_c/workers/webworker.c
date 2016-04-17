@@ -199,7 +199,8 @@ void *web_handle_connection(void *arg)
       if(web_get_response(request, response, &size) == ERROR_NONE)
         sock_send(tmp_sock, response, size);
       else
-        log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection, message: %s", last_error()->message);
+        log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection, message: %s",
+                    last_error()->message);
 
       break;
     }
@@ -237,13 +238,15 @@ int web_get_response(char *request, char *response, int *size)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
-    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s", tmp_full_name);
+    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
+                tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
       sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, "/404.html");
-      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s", tmp_full_name);
+      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s",
+                  tmp_full_name);
 
       f = fopen(tmp_full_name, "rb");
     }

@@ -319,14 +319,13 @@ void *ws_recv_worker(void *arg)
         unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
 
-        log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, message: %s", tmp_buffer);
+        log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, message: %s",
+                    tmp_buffer);
 
         pack_packet_t tmp_pack;
         if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
-          int res = handle_command_pack(tmp_client, &tmp_pack);
-          if(res != ERROR_NONE)
-           log_add_fmt(res, "[WS] ws_recv_worker, message: %s", last_error()->message);
+          handle_command_pack(tmp_client, &tmp_pack);
         }
         else
         {
@@ -441,7 +440,8 @@ int on_ws_disconnect(void *sender)
 //==============================================================================
 int on_ws_error(void *sender, error_t *error)
 {
-  log_add_fmt(LOG_INFO, "[WS] ws_error, message: %s", error->message);
+  log_add_fmt(LOG_INFO, "[WS] ws_error, message: %s",
+              error->message);
 
   return ERROR_NONE;
 }
@@ -456,46 +456,54 @@ int on_ws_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int ws_remote_clients_register(sock_id_t id, sock_name_t name)
+int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 {
+  char tmp[256];
+  sprintf(tmp, "[WS] ws_remote_clients_register, client id: %d, session id: %s",
+          id, session_id);
+  log_add(LOG_DEBUG, tmp);
+
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
-    if(_ws_server.custom_remote_clients_list.items[i].custom_worker.state == STATE_START)
-      if(_ws_server.custom_remote_clients_list.items[i].custom_worker.id == id)
+    custom_remote_client_t *client = &_ws_server.custom_remote_clients_list.items[i];
+
+    if(client->custom_worker.state == STATE_START)
+      if(client->custom_worker.id == id)
       {
-        strcpy((char*)_ws_server.custom_remote_clients_list.items[i].custom_worker.session_id, (char*)name);
+        log_add_fmt(LOG_INFO, "[WS] ws_remote_clients_register, client found, client id: %d, session id: %s",
+                    id, session_id);
+
+        strcpy((char*)client->custom_worker.session_id, (char*)session_id);
 
         time_t rawtime;
-        time (&rawtime);
-        _ws_server.custom_remote_clients_list.items[i].register_time = rawtime;
+        time(&rawtime);
+        client->register_time = rawtime;
 
-        _ws_server.custom_remote_clients_list.items[i].register_state = REGISTER_OK;
+        client->register_state = REGISTER_OK;
 
-        log_add_fmt(LOG_INFO, "[WS] ws_remote_clients_register, success, client id: %d, name: %s",
-                    id, name);
+////        pack_packet_t config_packet;
+////        ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
 
-//        pack_packet_t config_packet;
-//        ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+//        // TODO: тут создали буффер, начали отправку
+//        pack_packet_t map_packet;
+//        cmd_map(&map_packet);
+//        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
 
-        // TODO: тут создали буффер, начали отправку
-        pack_packet_t map_packet;
-        cmd_map(&map_packet);
-        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
+//        // TODO: костыль
+//        usleep(10000);
 
-        // TODO: костыль
-        usleep(10000);
-
-        // TODO: пришли сюда, но отправка еще идет,
-        // после отправки буффер чистится и ...
-        pack_packet_t clients_packet;
-        cmd_remote_client_list(&clients_packet);
-        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
+//        // TODO: пришли сюда, но отправка еще идет,
+//        // после отправки буффер чистится и ...
+//        pack_packet_t clients_packet;
+//        cmd_remote_client_list(&clients_packet);
+//        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
       }
   }
 
-  return make_last_error_fmt(ERROR_NORMAL, errno,
-                             "ws_remote_clients_register, the client not found, client id: %d, name: %s",
-                             id, name);
+  sprintf(tmp, "[WS] ws_remote_clients_register, client not found, client id: %d, session id: %s",
+          id, session_id);
+  log_add(LOG_ERROR, tmp);
+  return make_last_error(ERROR_NORMAL, errno, tmp);
 }
 //==============================================================================
 /*
@@ -641,7 +649,8 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
         sock_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(pack, (char*)json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_pack, json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_pack, json:\n%s",
+//                    json_buffer);
 
         sock_buffer_t tmp_buffer;
         int           tmp_size = 0;
@@ -701,7 +710,8 @@ int ws_server_send_cmd(int session_id, int argc, ...)
         pack_buffer_t json_buffer;
         int           json_size = 0;
         packet_to_json_str(&tmp_pack, (char*)json_buffer, &json_size);
-//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_cmd, json:\n%s", json_buffer);
+//        log_add_fmt(LOG_DEBUG, "[WS] ws_server_send_cmd, json:\n%s",
+//                    json_buffer);
 
         pack_buffer_t tmp_buffer;
         pack_size_t   tmp_size = 0;

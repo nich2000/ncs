@@ -542,8 +542,7 @@ int handle_command_str(void *sender, char *command)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
 
-        int res = ws_remote_clients_register(id, (unsigned char*)name_str);
-        print_last_error("handle_command_str", res);
+        ws_remote_clients_register(id, (unsigned char*)name_str);
       }
 
       return EXEC_DONE;

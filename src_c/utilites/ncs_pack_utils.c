@@ -175,9 +175,11 @@ int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOO
     #ifdef SOCK_PACK_MODE
     pack_buffer_t tmp;
     bytes_to_hex((unsigned char*)tmp_buffer, (pack_size_t)tmp_size, (unsigned char*)tmp);
-    log_add_fmt(LOG_DEBUG, "print_pack, %s", (char*)tmp);
+    log_add_fmt(LOG_DEBUG, "print_pack, %s",
+                (char*)tmp);
     #else
-    log_add_fmt(LOG_DEBUG, "print_pack, %s", tmp_buffer);
+    log_add_fmt(LOG_DEBUG, "print_pack, %s",
+                tmp_buffer);
     #endif
   }
 

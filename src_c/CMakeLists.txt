@@ -25,7 +25,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 set(CMAKE_C_FLAGS "-Wall")
 #-------------------------------------------------------------------------------
 IF (WIN32)
-#  set(CMAKE_EXE_LINKER_FLAGS  "-static")
+  set(CMAKE_EXE_LINKER_FLAGS  "-static")
 ELSE()
 ENDIF()
 #-------------------------------------------------------------------------------
