@@ -319,7 +319,7 @@ void *ws_recv_worker(void *arg)
         unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
 
-        log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, message: %s",
+        log_add_fmt(LOG_INFO, "[WS] ws_recv_worker, message: %s",
                     tmp_buffer);
 
         pack_packet_t tmp_pack;
@@ -456,6 +456,7 @@ int on_ws_send(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
+// http://stackoverflow.com/questions/23392755/application-segmentation-fault-only-when-compiling-on-windows-with-mingw
 int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 {
   char tmp[256];
@@ -484,19 +485,19 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 ////        pack_packet_t config_packet;
 ////        ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
 
-//        // TODO: тут создали буффер, начали отправку
-//        pack_packet_t map_packet;
-//        cmd_map(&map_packet);
-//        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
+        // TODO: тут создали буффер, начали отправку
+        pack_packet_t map_packet;
+        cmd_map(&map_packet);
+        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
 
-//        // TODO: костыль
-//        usleep(10000);
+        // TODO: костыль
+        usleep(10000);
 
-//        // TODO: пришли сюда, но отправка еще идет,
-//        // после отправки буффер чистится и ...
-//        pack_packet_t clients_packet;
-//        cmd_remote_client_list(&clients_packet);
-//        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
+        // TODO: пришли сюда, но отправка еще идет,
+        // после отправки буффер чистится и ...
+        pack_packet_t clients_packet;
+        cmd_remote_client_list(&clients_packet);
+        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
       }
   }
 

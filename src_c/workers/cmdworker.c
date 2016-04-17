@@ -284,7 +284,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
 
   load_names();
 
-  load_map();
+//  load_map();
 
   cmd_server_init(server);
 
@@ -821,6 +821,7 @@ int cmd_remote_client_list(pack_packet_t *pack)
     {
       pack_packet_t tmp_pack;
       pack_init(&tmp_pack);
+
       pack_add_as_int   (&tmp_pack, (unsigned char*)"_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, (unsigned char*)"NAM", tmp_custom_worker->name);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"STA", tmp_custom_worker->state);
@@ -830,8 +831,6 @@ int cmd_remote_client_list(pack_packet_t *pack)
       pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
     }
   };
-
-  print_pack(pack, "clients", FALSE, FALSE, TRUE, TRUE);
 
   return ERROR_NONE;
 }
@@ -848,6 +847,7 @@ int cmd_map(pack_packet_t *pack)
   {
     pack_packet_t tmp_pack;
     pack_init(&tmp_pack);
+
     pack_add_as_string(&tmp_pack, (unsigned char*)"KND", (unsigned char*)map()->items[i].kind);
     pack_add_as_string(&tmp_pack, (unsigned char*)"NUM", (unsigned char*)map()->items[i].number);
     pack_add_as_string(&tmp_pack, (unsigned char*)"IND", (unsigned char*)map()->items[i].index);
@@ -962,17 +962,16 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
 
         client->register_state = REGISTER_OK;
 
-//        // name
-//        strcpy((char*)client->custom_worker.name, get_name_by_session_id((char*)session_id));
+        strcpy((char*)client->custom_worker.name, get_name_by_session_id((char*)session_id));
 
-//        log_add_fmt(LOG_INFO, "[CMD] cmd_remote_clients_register, client id: %d, session_id: %s, name: %s",
-//                    client->custom_worker.id,
-//                    client->custom_worker.session_id,
-//                    client->custom_worker.name);
+        log_add_fmt(LOG_INFO, "[CMD] cmd_remote_clients_register, client id: %d, session_id: %s, name: %s",
+                    client->custom_worker.id,
+                    client->custom_worker.session_id,
+                    client->custom_worker.name);
 
-//        pack_packet_t tmp_packet;
-//        cmd_remote_client_list(&tmp_packet);
-//        return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
+        pack_packet_t tmp_packet;
+        cmd_remote_client_list(&tmp_packet);
+        return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
       }
   }
 

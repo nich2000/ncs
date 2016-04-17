@@ -52,7 +52,6 @@
 
 #include "ncs_pack.h"
 
-#include "ncs_pack_utils.h"
 #include "ncs_error.h"
 
 #ifndef DEMS_DEVICE
@@ -92,6 +91,85 @@ pack_size_t _pack_word_size      (pack_word_t *word);
 //==============================================================================
 pack_number_t pack_global_number = PACK_GLOBAL_INIT_NUMBER;
 int pack_last_error = ERROR_NONE;
+//==============================================================================
+#define POLY 0x8408
+unsigned short getCRC16(char *data, unsigned short length)
+{
+  unsigned char i;
+  unsigned int tmp_data;
+  unsigned int crc = 0xffff;
+
+  if (length == 0)
+    return (~crc);
+
+  do
+  {
+    for (i=0, tmp_data = (unsigned int)0xff & *data++;
+         i < 8;
+         i++, tmp_data >>= 1)
+    {
+      if ((crc & 0x0001) ^ (tmp_data & 0x0001))
+        crc = (crc >> 1) ^ POLY;
+      else
+        crc >>= 1;
+    }
+  }
+  while (--length);
+
+  crc = ~crc;
+  tmp_data = crc;
+  crc = (crc << 8) | (tmp_data >> 8 & 0xff);
+
+  return (crc);
+}
+//==============================================================================
+int bytes_to_int(unsigned char *bytes, int *value)
+{
+  intUnion tmp_value;
+
+  for(unsigned int j = 0; j < sizeof(int); j++)
+    tmp_value.buff[j] = bytes[j];
+
+  *value = tmp_value.i;
+
+  return 0;
+}
+//==============================================================================
+int bytes_to_float(unsigned char *bytes, float *value)
+{
+  floatUnion tmp_value;
+
+  for(unsigned int j = 0; j < sizeof(float); j++)
+    tmp_value.buff[j] = bytes[j];
+
+  *value = tmp_value.f;
+
+  return 0;
+}
+//==============================================================================
+int bytes_from_int(unsigned char *bytes, int value)
+{
+  intUnion tmp_value;
+
+  tmp_value.i = value;
+
+  for(unsigned int j = 0; j < sizeof(float); j++)
+    bytes[j] = tmp_value.buff[j];
+
+  return 0;
+}
+//==============================================================================
+int bytes_from_float(unsigned char *bytes, float value)
+{
+  floatUnion tmp_value;
+
+  tmp_value.f = value;
+
+  for(unsigned int j = 0; j < sizeof(float); j++)
+    bytes[j] = tmp_value.buff[j];
+
+  return 0;
+}
 //==============================================================================
 const char *_pack_version()
 {
