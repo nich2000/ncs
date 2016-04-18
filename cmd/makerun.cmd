@@ -1,8 +1,13 @@
 @echo off
 
-cd .\cmake
+PATH=%PATH%;c:/MinGW/bin/;
 
-"c:\CMake\bin\cmake.exe" -G "MinGW Makefiles" ..\src_c
-rem "c:\CMake\bin\cmake.exe" -D "CMAKE_MAKE_PROGRAM:PATH=c:/Qt/Tools/mingw492_32/bin/mingw32-make.exe" ..\src_c
+cd ../cmake
 
-"c:\Qt\Tools\mingw492_32\bin\mingw32-make.exe"
+"c:/CMake/bin/cmake.exe" -G "MinGW Makefiles" ../src_c
+
+pause
+
+"c:/MinGW/bin/mingw32-make.exe"
+
+pause

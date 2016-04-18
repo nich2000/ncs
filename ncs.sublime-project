@@ -2,6 +2,10 @@
   "folders":
   [
     {
+      "path": "nich2000.ru",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
       "path": "cmd",
       "file_exclude_patterns": ["*.bak"]
     },
