@@ -389,6 +389,13 @@ int protocol_add_as_float(pack_key_t key, float value, pack_protocol_t *protocol
   return pack_add_as_float(tmp_pack, key, value);
 }
 //==============================================================================
+int protocol_add_as_char(pack_key_t key, char value, pack_protocol_t *protocol)
+{
+  pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
+
+  return pack_add_as_char(tmp_pack, key, value);
+}
+//==============================================================================
 int protocol_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *protocol)
 {
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
@@ -429,6 +436,13 @@ int protocol_add_param_as_float(float param, pack_protocol_t *protocol)
   pack_key_t tmp_key = PACK_PARAM_KEY;
 
   return protocol_add_as_float(tmp_key, param, protocol);
+}
+//==============================================================================
+int protocol_add_param_as_char(char param, pack_protocol_t *protocol)
+{
+  pack_key_t tmp_key = PACK_PARAM_KEY;
+
+  return protocol_add_as_char(tmp_key, param, protocol);
 }
 //==============================================================================
 int protocol_add_param_as_string(pack_string_t param, pack_protocol_t *protocol)
@@ -663,8 +677,9 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   token = next_value(token, tmp_txt_pack.sfl_par2,        &cnt);
   token = next_value(token, tmp_txt_pack.sExtVoltage,     &cnt);
   token = next_value(token, tmp_txt_pack.sUSBConnected,   &cnt);
+  token = next_value(token, tmp_txt_pack.sxor,            &cnt);
 
-  if(cnt == PACK_STRUCT_VAL_COUNT)
+  if((cnt == PACK_STRUCT_VAL_COUNT) && check_xor(tmp_txt_pack, tmp_txt_pack.sxor))
   {
     protocol->in_packets_list.count++;
     if(protocol->in_packets_list.count >= USHRT_MAX)
@@ -703,7 +718,8 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[15], (unsigned char*)tmp_txt_pack.sfl_par1);        // 16
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[16], (unsigned char*)tmp_txt_pack.sfl_par2);        // 17
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[17], (unsigned char*)tmp_txt_pack.sExtVoltage);     // 18
-    pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[18], (unsigned char*)tmp_txt_pack.sUSBConnected);   // 19
+    pack_add_as_char  (tmp_pack,                 pack_struct_keys[18],                 tmp_txt_pack.sUSBConnected[0]);// 19
+    pack_add_as_char  (tmp_pack,                 pack_struct_keys[19],                 tmp_txt_pack.sxor[0]);         // 20
 
     if(protocol->on_new_in_data != 0)
       protocol->on_new_in_data((void*)sender, (void*)tmp_pack);

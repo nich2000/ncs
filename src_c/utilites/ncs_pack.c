@@ -69,6 +69,7 @@ int pack_key_by_index            (pack_packet_t *pack, pack_index_t index, pack_
 //==============================================================================
 int pack_val_by_key_as_int       (pack_packet_t *pack, pack_key_t key, pack_index_t *index, int   *value);
 int pack_val_by_key_as_float     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, float *value);
+int pack_val_by_key_as_char      (pack_packet_t *pack, pack_key_t key, pack_index_t *index, char  *value);
 int pack_val_by_key_as_string    (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_string_t value);
 int pack_val_by_key_as_bytes     (pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
@@ -85,6 +86,7 @@ int pack_assign_word             (pack_word_t *dst, pack_word_t *src);
 //==============================================================================
 int pack_word_as_int             (pack_word_t *word, int   *value);
 int pack_word_as_float           (pack_word_t *word, float *value);
+int pack_word_as_char            (pack_word_t *word, char  *value);
 int pack_word_as_bytes           (pack_word_t *word, pack_bytes_t value, pack_size_t *size);
 //==============================================================================
 pack_size_t _pack_word_size      (pack_word_t *word);
@@ -285,6 +287,11 @@ int pack_add_as_float(pack_packet_t *pack, pack_key_t key, float value)
   return ERROR_NONE;
 }
 //==============================================================================
+int pack_add_as_char(pack_packet_t *pack, pack_key_t key, char value)
+{
+
+}
+//==============================================================================
 int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)
 {
   pack_size_t tmp_size = strlen((char *)value);
@@ -457,6 +464,15 @@ int pack_val_by_key_as_float(pack_packet_t *pack, pack_key_t key, pack_index_t *
     return ERROR_NORMAL;
 }
 //==============================================================================
+int pack_val_by_key_as_char(pack_packet_t *pack, pack_key_t key, pack_index_t *index, char *value)
+{
+  pack_word_t tmp_word;
+  if(pack_word_by_key(pack, key, index, &tmp_word) == ERROR_NONE)
+    return pack_word_as_char(&tmp_word, value);
+  else
+    return ERROR_NORMAL;
+}
+//==============================================================================
 int pack_val_by_key_as_string(pack_packet_t *pack, pack_key_t key, pack_index_t *index, pack_string_t value)
 {
   pack_word_t tmp_word;
@@ -489,6 +505,15 @@ int pack_val_by_index_as_float(pack_packet_t *pack, pack_index_t index, pack_key
   pack_word_t tmp_word;
   if(pack_word_by_index(pack, index, key, &tmp_word) == ERROR_NONE)
     return pack_word_as_float(&tmp_word, value);
+  else
+    return ERROR_NORMAL;
+}
+//==============================================================================
+int pack_val_by_index_as_char(pack_packet_t *pack, pack_index_t index, pack_key_t key, char *value)
+{
+  pack_word_t tmp_word;
+  if(pack_word_by_index(pack, index, key, &tmp_word) == ERROR_NONE)
+    return pack_word_as_char(&tmp_word, value);
   else
     return ERROR_NORMAL;
 }
@@ -671,6 +696,13 @@ int pack_word_as_int(pack_word_t *word, int *value)
 int pack_word_as_float(pack_word_t *word, float *value)
 {
   bytes_to_float((unsigned char*)word->value, value);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_word_as_char(pack_word_t *word, char *value)
+{
+  *value = word->value[0];
 
   return ERROR_NONE;
 }

@@ -28,7 +28,8 @@ char *pack_struct_keys[PACK_STRUCT_VAL_COUNT]=
   "UN3",                 // 16
   "UN4",                 // 17
   "EVL",                 // 18
-  "USB"                  // 19
+  "USB",                 // 19
+  "XOR"                  // 20
 };
 //==============================================================================
 char *pack_struct_captions[PACK_STRUCT_VAL_COUNT]=
@@ -51,6 +52,7 @@ char *pack_struct_captions[PACK_STRUCT_VAL_COUNT]=
   "fl_par1",             // 16
   "fl_par2",             // 17
   "ExtVoltage",          // 18
-  "USBConnected"         // 19
+  "USBConnected",        // 19
+  "xor"                  // 20
 };
 //==============================================================================

@@ -85,10 +85,10 @@ enum register_t
 //==============================================================================
 typedef int BOOL;
 //==============================================================================
-#define PACK_STRUCT_VAL_COUNT   19
+#define PACK_STRUCT_VAL_COUNT   20
 //==============================================================================
-//                                1  2  3  4  5    6    7   8   9  10 11   12   13   14   15   16 17 18   19
-#define PACK_TXT_FORMAT         "<%s|%u|%u|%u|%.1f|%.1f|%ld|%ld|%d|%d|%.2f|%.2f|%.1f|%.1f|%.2f|%f|%f|%.2f|%c>"
+//                                1  2  3  4  5    6    7   8   9  10 11   12   13   14   15   16 17 18   19 20
+#define PACK_TXT_FORMAT         "<%s|%u|%u|%u|%.1f|%.1f|%ld|%ld|%d|%d|%.2f|%.2f|%.1f|%.1f|%.2f|%f|%f|%.2f|%c|%c>"
 //==============================================================================
 typedef struct
 {
@@ -111,9 +111,10 @@ typedef struct
   float fl_par2;         // 17
   float ExtVoltage;      // 18
   char  USBConnected;    // 19
+  char  _xor;            // 20
 }pack_struct_t;
 //==============================================================================
-#define PACK_TXT_S_FORMAT   "<%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s>"
+#define PACK_TXT_S_FORMAT   "<%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s>"
 //==============================================================================
 typedef struct
 {
@@ -135,7 +136,8 @@ typedef struct
   char sfl_par1[32];        // 16
   char sfl_par2[32];        // 17
   char sExtVoltage[32];     // 18
-  char sUSBConnected[32];   // 19
+  char sUSBConnected[1];    // 19
+  char sxor[1];             // 20
 } pack_struct_s_t;
 //==============================================================================
 #endif //GLOBALS_H
