@@ -1,13 +1,13 @@
 @echo off
 
-PATH=%PATH%;c:/MinGW/bin/;
+PATH=%PATH%;c:/CMake/bin/;c:/MinGW-w64/mingw64/bin/;
 
 cd ../cmake
 
-"c:/CMake/bin/cmake.exe" -G "MinGW Makefiles" ../src_c
+"cmake.exe" -G "MinGW Makefiles" ../src_c
 
 pause
 
-"c:/MinGW/bin/mingw32-make.exe"
+"mingw32-make.exe"
 
 pause
