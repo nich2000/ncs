@@ -245,7 +245,7 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
-    cmd_streamer_step(&tmp_worker->client);
+    cmd_streamer_step(tmp_worker->client);
 
     usleep(100 * 1000);
   }

@@ -1,3 +1,2 @@
-cd ./bin
-
-./SocketTestC -s
+cd ../bin
+./ncs

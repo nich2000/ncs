@@ -1,7 +1,4 @@
-@echo off
+rem @echo off
 
 cd ../bin
-
-SocketTestC -s
-
-rem pause
+call ncs.exe

@@ -130,7 +130,7 @@ int custom_worker_start(custom_worker_t *worker)
 {
   worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
   if (worker->sock == INVALID_SOCKET)
-    return make_last_error_fmt(ERROR_CRITICAL, INVALID_SOCKET,
+    return make_last_error_fmt(ERROR_CRITICAL, errno,
                                "custom_worker_start, socket: INVALID_SOCKET, worker id: %d, error: %d",
                                worker->id, sock_error());
 

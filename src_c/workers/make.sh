@@ -1,2 +1,2 @@
 cd ../../cmd
-makerun.cmd
+makerun.sh
