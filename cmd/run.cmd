@@ -4,4 +4,4 @@ cd ../bin
 
 SocketTestC -s
 
-pause
+rem pause

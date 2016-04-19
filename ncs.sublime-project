@@ -2,10 +2,6 @@
   "folders":
   [
     {
-      "path": "nich2000.ru",
-      "file_exclude_patterns": ["*.bak"]
-    },
-    {
       "path": "cmd",
       "file_exclude_patterns": ["*.bak"]
     },
@@ -40,11 +36,13 @@
       "name": "CMake",
       "windows":
       {
-        "cmd": ["$project_path\\cmd\\makerun.cmd"]
+        "cmd": ["$project_path/cmd/makerun.cmd"],
+        "cmd": ["$file_path/make.cmd"]
       },
       "linux":
       {
-        "cmd": ["sh", "$project_path/cmd/makerun.sh"]
+        "cmd": ["sh", "$project_path/cmd/makerun.sh"],
+        "cmd": ["$file_path/make.sh"]
       }
     }
   ]

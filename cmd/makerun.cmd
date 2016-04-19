@@ -6,8 +6,8 @@ cd ../cmake
 
 "cmake.exe" -G "MinGW Makefiles" ../src_c
 
-pause
+rem pause
 
 "mingw32-make.exe"
 
-pause
+rem pause
