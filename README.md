@@ -1,4 +1,4 @@
 # ncs
-NIch Сlient Server with its own binary protocol
+NIch client-server with its own binary protocol
 
 
