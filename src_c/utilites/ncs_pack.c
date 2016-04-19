@@ -289,7 +289,27 @@ int pack_add_as_float(pack_packet_t *pack, pack_key_t key, float value)
 //==============================================================================
 int pack_add_as_char(pack_packet_t *pack, pack_key_t key, char value)
 {
+  if(pack->words_count >= PACK_WORDS_COUNT)
+    return ERROR_NORMAL;
 
+  pack_word_t *tmp_word = &pack->words[pack->words_count];
+
+  // Key
+  memcpy(tmp_word->key, key, PACK_KEY_SIZE);
+
+  // Type
+  tmp_word->type = PACK_WORD_CHAR;
+
+  // Size
+  tmp_word->size = sizeof(char);
+
+  // Value
+  tmp_word->value[0] = value;
+
+  // Words counter
+  pack->words_count++;
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)

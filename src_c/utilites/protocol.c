@@ -634,8 +634,15 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 // 1. Проверяем наличие < >
 // 2. Парсим каждое значение
 // 3. Должнно быть PACK_TXT_FORMAT_COUNT
+// 4. Должен совпадать xor
 //==============================================================================
-char *next_value(char *token, char *dst, int *cnt)
+void calc_xor(char *initial, char *string, int count)
+{
+  for(int i = 0; i < count; i++)
+    *initial ^= string[i];
+}
+//==============================================================================
+char *next_token(char *token, char *dst, int *cnt)
 {
   if(token != NULL)
   {
@@ -643,44 +650,62 @@ char *next_value(char *token, char *dst, int *cnt)
     strcpy(dst, token);
     return strtok(NULL, "|");
   }
-
   return NULL;
 }
 //==============================================================================
 int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
-  if((buffer[0] != '<') || (buffer[strlen((char*)buffer)-3] != '>'))
-    return ERROR_NONE;
-
-  int cnt = 0;
-  pack_struct_s_t tmp_txt_pack;
-
-  char *token = strtok((char*)&buffer[1], "|");
-
-  token = next_value(token, tmp_txt_pack._ID,             &cnt);
-  token = next_value(token, tmp_txt_pack.sGPStime,        &cnt);
-  token = next_value(token, tmp_txt_pack.sGPStime_s,      &cnt);
-  token = next_value(token, tmp_txt_pack.sTickCount,      &cnt);
-  token = next_value(token, tmp_txt_pack.sGPSspeed,       &cnt);
-  token = next_value(token, tmp_txt_pack.sGPSheading,     &cnt);
-  token = next_value(token, tmp_txt_pack.sGPSlat,         &cnt);
-  token = next_value(token, tmp_txt_pack.sGPSlon,         &cnt);
-  token = next_value(token, tmp_txt_pack.sint_par1,       &cnt);
-  token = next_value(token, tmp_txt_pack.sint_par2,       &cnt);
-  token = next_value(token, tmp_txt_pack.sGyro1AngleZ,    &cnt);
-  token = next_value(token, tmp_txt_pack.sGyro2AngleZ,    &cnt);
-  token = next_value(token, tmp_txt_pack.sMPU1temp,       &cnt);
-  token = next_value(token, tmp_txt_pack.sMPU2temp,       &cnt);
-  token = next_value(token, tmp_txt_pack.sBatteryVoltage, &cnt);
-  token = next_value(token, tmp_txt_pack.sfl_par1,        &cnt);
-  token = next_value(token, tmp_txt_pack.sfl_par2,        &cnt);
-  token = next_value(token, tmp_txt_pack.sExtVoltage,     &cnt);
-  token = next_value(token, tmp_txt_pack.sUSBConnected,   &cnt);
-  token = next_value(token, tmp_txt_pack.sxor,            &cnt);
-
-  if((cnt == PACK_STRUCT_VAL_COUNT) && check_xor(tmp_txt_pack, tmp_txt_pack.sxor))
+  int start = 0;
+  int finish = 0;
+  for(int i = 0; i < size; i++)
   {
+    if(buffer[i] == '<')
+      start = i;
+    if(buffer[i] == '>')
+      finish = i;
+
+    char tmp_buffer[size];
+    memset(tmp_buffer, 0, size);
+    memcpy(tmp_buffer, (char*)&buffer[start], finish-start);
+
+    if((tmp_buffer[0] != '<') || (tmp_buffer[strlen((char*)tmp_buffer)-3] != '>'))
+      return make_last_error(ERROR_WAIT, errno, "protocol_txt_buffer_validate, invalid format");
+
+    char tmp_xor = 0xFF;
+    calc_xor(&tmp_xor, (char*)&buffer[start], finish-start);
+
+    int cnt = 0;
+    pack_struct_s_t tmp_txt_pack;
+
+    char *token = strtok((char*)&buffer[1], "|");
+    token = next_token(token, tmp_txt_pack._ID,             &cnt);
+    token = next_token(token, tmp_txt_pack.sGPStime,        &cnt);
+    token = next_token(token, tmp_txt_pack.sGPStime_s,      &cnt);
+    token = next_token(token, tmp_txt_pack.sTickCount,      &cnt);
+    token = next_token(token, tmp_txt_pack.sGPSspeed,       &cnt);
+    token = next_token(token, tmp_txt_pack.sGPSheading,     &cnt);
+    token = next_token(token, tmp_txt_pack.sGPSlat,         &cnt);
+    token = next_token(token, tmp_txt_pack.sGPSlon,         &cnt);
+    token = next_token(token, tmp_txt_pack.sint_par1,       &cnt);
+    token = next_token(token, tmp_txt_pack.sint_par2,       &cnt);
+    token = next_token(token, tmp_txt_pack.sGyro1AngleZ,    &cnt);
+    token = next_token(token, tmp_txt_pack.sGyro2AngleZ,    &cnt);
+    token = next_token(token, tmp_txt_pack.sMPU1temp,       &cnt);
+    token = next_token(token, tmp_txt_pack.sMPU2temp,       &cnt);
+    token = next_token(token, tmp_txt_pack.sBatteryVoltage, &cnt);
+    token = next_token(token, tmp_txt_pack.sfl_par1,        &cnt);
+    token = next_token(token, tmp_txt_pack.sfl_par2,        &cnt);
+    token = next_token(token, tmp_txt_pack.sExtVoltage,     &cnt);
+    token = next_token(token, tmp_txt_pack.sUSBConnected,   &cnt);  // xor in this token
+            next_token(token, tmp_txt_pack.sxor,            &cnt);  // call just fot copy last token
+
+    if(cnt != PACK_STRUCT_VAL_COUNT)
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, not enough data");
+
+    if(tmp_xor != tmp_txt_pack.sxor[0])
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, incorrect xor");
+
     protocol->in_packets_list.count++;
     if(protocol->in_packets_list.count >= USHRT_MAX)
       protocol->in_packets_list.count = PACK_GLOBAL_INIT_NUMBER;
@@ -692,9 +717,8 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     protocol->in_packets_list.empty = FALSE;
 
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
-
     if(tmp_pack == NULL)
-      return ERROR_NORMAL;
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, pack == NULL");
 
     pack_init(tmp_pack);
 
@@ -718,14 +742,14 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[15], (unsigned char*)tmp_txt_pack.sfl_par1);        // 16
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[16], (unsigned char*)tmp_txt_pack.sfl_par2);        // 17
     pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[17], (unsigned char*)tmp_txt_pack.sExtVoltage);     // 18
-    pack_add_as_char  (tmp_pack,                 pack_struct_keys[18],                 tmp_txt_pack.sUSBConnected[0]);// 19
-    pack_add_as_char  (tmp_pack,                 pack_struct_keys[19],                 tmp_txt_pack.sxor[0]);         // 20
+    pack_add_as_char  (tmp_pack, (unsigned char*)pack_struct_keys[18],                 tmp_txt_pack.sUSBConnected[0]);// 19
+    pack_add_as_char  (tmp_pack, (unsigned char*)pack_struct_keys[19],                 tmp_txt_pack.sxor[0]);         // 20
 
     if(protocol->on_new_in_data != 0)
       protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
   }
 
-  return 1;
+  return ERROR_NONE;
 }
 //==============================================================================
 int protocol_current_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *size, pack_protocol_t *protocol)

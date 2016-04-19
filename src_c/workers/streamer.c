@@ -118,43 +118,43 @@ int load_session()
 //==============================================================================
 int cmd_streamer(sock_state_t state)
 {
-  _cmd_streamer_count = cmd_client_count();
-
-  for(int i = 0; i < _cmd_streamer_count; i++)
+  if(state == STATE_STEP)
   {
-    switch(state)
+    cmd_streamer_step(&_cmd_clients[0].custom_client.custom_remote_client);
+  }
+  else
+  {
+    _cmd_streamer_count = cmd_client_count();
+
+    for(int i = 0; i < _cmd_streamer_count; i++)
     {
-      case STATE_NONE:
+      switch(state)
       {
-        break;
+        case STATE_NONE:
+          break;
+        case STATE_START:
+        {
+          cmd_streamer_start(&_cmd_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
+          break;
+        }
+        case STATE_STOP:
+        {
+          cmd_streamer_stop(&_cmd_streamer[i]);
+          break;
+        }
+        case STATE_PAUSE:
+        {
+          cmd_streamer_pause(&_cmd_streamer[i]);
+          break;
+        }
+        case STATE_RESUME:
+        {
+          cmd_streamer_resume(&_cmd_streamer[i]);
+          break;
+        }
+        default:
+          break;
       }
-      case STATE_START:
-      {
-        cmd_streamer_start(&_cmd_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
-        break;
-      }
-      case STATE_STOP:
-      {
-        cmd_streamer_stop(&_cmd_streamer[i]);
-        break;
-      }
-      case STATE_PAUSE:
-      {
-        cmd_streamer_pause(&_cmd_streamer[i]);
-        break;
-      }
-      case STATE_RESUME:
-      {
-        cmd_streamer_resume(&_cmd_streamer[i]);
-        break;
-      }
-      case STATE_STEP:
-      {
-      //    cmd_streamer_make_random(&_cmd_client[0].custom_client.custom_remote_client);
-          cmd_streamer_make(&_cmd_clients[0].custom_client.custom_remote_client);
-        break;
-      }
-      default:;
     }
   }
 
@@ -244,8 +244,7 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
-//    cmd_streamer_make_random(tmp_worker->client);
-    cmd_streamer_make(tmp_worker->client);
+    cmd_streamer_step(tmp_worker->client);
 
     usleep(100 * 1000);
   }
@@ -253,38 +252,53 @@ void *cmd_streamer_worker_func(void *arg)
   return NULL;
 }
 //==============================================================================
-calc_xor
+int cmd_streamer_step(custom_remote_client_t *client)
+{
+  #ifdef STREAM_RANDOM_PACK
+  cmd_streamer_make_random(client);
+  #else
+  cmd_streamer_make(client);
+  #endif
+}
 //==============================================================================
-check_xor
+//calc_xor
+//==============================================================================
+//check_xor
+//==============================================================================
+void fill_pack_struct(pack_struct_t *pack)
+{
+  strcpy(tmp_pack._ID, (char*)client->custom_worker.session_id);   // 1
+  tmp_pack.GPStime         = rand();                               // 2
+  tmp_pack.GPStime_s       = rand();                               // 3
+  tmp_pack.TickCount       = rand();                               // 4
+  tmp_pack.GPSspeed        = (float)rand()/(float)(RAND_MAX/1000); // 5
+  tmp_pack.GPSheading      = (float)rand()/(float)(RAND_MAX/1000); // 6
+  tmp_pack.GPSlat          = (float)rand()/(float)(RAND_MAX/1000); // 7
+  tmp_pack.GPSlon          = (float)rand()/(float)(RAND_MAX/1000); // 8
+  tmp_pack.int_par1        = rand();                               // 9
+  tmp_pack.int_par2        = rand();                               // 10
+  tmp_pack.Gyro1AngleZ     = (float)rand()/(float)(RAND_MAX/1000); // 11
+  tmp_pack.Gyro2AngleZ     = (float)rand()/(float)(RAND_MAX/1000); // 12
+  tmp_pack.MPU1temp        = (float)rand()/(float)(RAND_MAX/1000); // 13
+  tmp_pack.MPU2temp        = (float)rand()/(float)(RAND_MAX/1000); // 14
+  tmp_pack.BatteryVoltage  = (float)rand()/(float)(RAND_MAX/1000); // 15
+  tmp_pack.fl_par1         = (float)rand()/(float)(RAND_MAX/1000); // 16
+  tmp_pack.fl_par2         = (float)rand()/(float)(RAND_MAX/1000); // 17
+  tmp_pack.ExtVoltage      = (float)rand()/(float)(RAND_MAX/1000); // 18
+  tmp_pack.USBConnected    = '1';                                  // 19
+//  tmp_pack._xor            = calc_xor(&tmp_pack);                // 20
+}
 //==============================================================================
 int cmd_streamer_make(custom_remote_client_t *client)
 {
   pack_struct_t tmp_pack;
-  strcpy(tmp_pack._ID, (char*)client->custom_worker.session_id);
-  tmp_pack.GPStime         = rand();
-  tmp_pack.GPStime_s       = rand();
-  tmp_pack.TickCount       = rand();
-  tmp_pack.GPSspeed        = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.GPSheading      = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.GPSlat          = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.GPSlon          = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.int_par1        = rand();
-  tmp_pack.int_par2        = rand();
-  tmp_pack.Gyro1AngleZ     = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.Gyro2AngleZ     = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.MPU1temp        = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.MPU2temp        = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.BatteryVoltage  = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.fl_par1         = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.fl_par2         = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.ExtVoltage      = (float)rand()/(float)(RAND_MAX/1000);
-  tmp_pack.USBConnected    = '1';
-  tmp_pack._xor            = calc_xor(&tmp_pack);
+  fill_pack_struct(&tmp_pack);
 
-  if(!check_xor(&tmp_pack, tmp_pack._xor))
-    return;
+//  if(!check_xor(&tmp_pack, tmp_pack._xor))
+//    return;
 
   protocol_begin(&client->protocol);
+
   protocol_add_as_string((unsigned char*)pack_struct_keys[0],  (unsigned char*)tmp_pack._ID, &client->protocol);
   protocol_add_as_int   ((unsigned char*)pack_struct_keys[1],  tmp_pack.GPStime,             &client->protocol);
   protocol_add_as_int   ((unsigned char*)pack_struct_keys[2],  tmp_pack.GPStime_s,           &client->protocol);
@@ -303,8 +317,9 @@ int cmd_streamer_make(custom_remote_client_t *client)
   protocol_add_as_float ((unsigned char*)pack_struct_keys[15], tmp_pack.fl_par1,             &client->protocol);
   protocol_add_as_float ((unsigned char*)pack_struct_keys[16], tmp_pack.fl_par2,             &client->protocol);
   protocol_add_as_float ((unsigned char*)pack_struct_keys[17], tmp_pack.ExtVoltage,          &client->protocol);
-  protocol_add_as_char  (                pack_struct_keys[18], tmp_pack.USBConnected,        &client->protocol);
-  protocol_add_as_char  (                pack_struct_keys[19], tmp_pack._xor,                &client->protocol);
+  protocol_add_as_char  ((unsigned char*)pack_struct_keys[18], tmp_pack.USBConnected,        &client->protocol);
+  protocol_add_as_char  ((unsigned char*)pack_struct_keys[19], tmp_pack._xor,                &client->protocol);
+
   protocol_end(&client->protocol);
 
   return ERROR_NONE;

@@ -19,6 +19,8 @@
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
 #else
+//  #define STREAM_RANDOM_PACK
+
 //  #define PRINT_RESV_PACK
 //  #define PRINT_SND_PACK
 //  #define PRINT_ALL_INFO
