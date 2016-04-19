@@ -3,7 +3,7 @@
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
- * <filename>
+ * File: protocol_types.h
  */
 //==============================================================================
 #ifndef PROTOCOL_TYPES_H

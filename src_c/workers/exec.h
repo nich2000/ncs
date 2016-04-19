@@ -3,7 +3,7 @@
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
- * <filename>
+ * File: exec.h
  */
 //==============================================================================
 #ifndef EXEC_H
