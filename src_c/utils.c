@@ -1,10 +1,10 @@
 //==============================================================================
-/*
+/**
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
  * <filename>
-*/
+ */
 //==============================================================================
 // for random_range
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 #include "ncs_log.h"
 //==============================================================================
 #ifndef __linux__
-/*
+/**
  * getline.c
  * Copyright (C) 1991 Free Software Foundation, Inc.
  * This file is part of the GNU C Library.
@@ -23,7 +23,7 @@
  * NULL), pointing to *N characters of space.  It is realloc'd as
  * necessary.  Returns the number of characters read (not including the
  * null terminator), or -1 on error or EOF.
-*/
+ */
 ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 {
   static char line[256];

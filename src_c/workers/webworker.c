@@ -1,10 +1,10 @@
 //==============================================================================
-/*
+/**
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
  * <filename>
-*/
+ */
 //==============================================================================
 #include <stdlib.h>
 #include <string.h>
@@ -19,19 +19,19 @@
 #include "socket_utils.h"
 #include "ncs_log.h"
 //==============================================================================
-/*
+/**
 * GET /index.html HTTP/1.0 \r\n
 * Host: www.paulgriffiths.net \r\n
 * User-Agent: Lynx/2.8.1rel.2 libwww-FM/2.14 \r\n
 * Accept-Encoding: gzip, compress \r\n
 * Accept-Language: en \r\n\r\n
-*/
-/*
+ */
+/**
 * HTTP/1.0 200 OK \r\n
 * Server: PGWebServ v0.1 \r\n
 * Content-Type: text/html \r\n\r\n
 * <DATA> \r\n
-*/
+ */
 //==============================================================================
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer

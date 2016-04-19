@@ -50,4 +50,12 @@
 ----------
 19.04.2016
 ----------
-30.
+30. Создавать все каталоги и файлы по умолчанию
+31. Отладить работу в винде, функция которая получает пакет, падает
+32. Devide inner buffer to str_pack and exec them
+33. calc_xor
+34. try to use ncs str_pack in device
+35. set min need size values of str_pack
+36. client_str_pack_list
+37. server_str_pack_list
+38. Внедрить документацию Doxigen

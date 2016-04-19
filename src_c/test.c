@@ -1,10 +1,10 @@
 //==============================================================================
-/*
+/**
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
  * <filename>
-*/
+ */
 //==============================================================================
 //#include <math.h>
 //#include <stdlib.h>
@@ -54,20 +54,20 @@ int test_gps()
   // Файл gps_parse.h подключен
   // Если этот файл подключить в main, то все ок, эти функции видны
   // NIch 06.02.2016
-  /*
+  /**
   gps_init();
   gps_parse_str(GPS_TEST_STR);
   GPRMC_t *tmp_data = gps_data();
   sprintf(tmp, "%s", tmp_data->time_gps);
   log_add(tmp, LOG_DEBUG);
-  */
+   */
 
   return ERROR_NONE;
 }
 //==============================================================================
 int test_pack()
 {
-/*
+/**
   pack_begin();
   pack_add_cmd("reset");
   pack_add_param_as_int(123);
@@ -104,14 +104,14 @@ int test_pack()
   log_add(tmp, LOG_INFO);
 
   return 0;
-*/
+ */
 
   return ERROR_NONE;
 }
 //==============================================================================
 int test_create_pack()
 {
-/*
+/**
   pack_begin();
 
   pack_add_as_int("SND", 123);
@@ -155,14 +155,14 @@ int test_create_pack()
   }
 
   pack_end();
-*/
+ */
 
   return ERROR_NONE;
 }
 //==============================================================================
 int test_validate_pack()
 {
-/*
+/**
   int res;
   res = pack_queue_next(buffer, &size);
   if(res != 0)
@@ -181,14 +181,14 @@ int test_validate_pack()
   }
 
   return 0;
-*/
+ */
 
   return ERROR_NONE;
 }
 //==============================================================================
 int test_parse_pack()
 {
-/*
+/**
   log_add("-----------------------------", LOG_DEBUG);
 
   pack_packet *tmp_pack = _pack_pack_current(PACK_IN);
@@ -284,7 +284,7 @@ int test_parse_pack()
       }
     //--------------------------------------------------------------------------
   }
-*/
+ */
 
   return ERROR_NONE;
 }

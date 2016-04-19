@@ -1,12 +1,12 @@
 //==============================================================================
-/*
+/**
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
  * <filename>
-*/
+ */
 //==============================================================================
-/*
+/**
 * Binary pack by NIch
 * Moscow 2016
 * ----
@@ -38,12 +38,12 @@
 * FullPack(example)
 * 6         2(9+11)   2      9          11               2    TOTAL = 32
 * VER01\0   0x16      0x01   POW\0125   NAM\030x04IVAN   CRC
-*/
-/*
+ */
+/**
 * b[0] = si & 0xff;
 * b[1] = (si >> 8) & 0xff;
 * si = (b[0] << 8) | b[1];
-*/
+ */
 //==============================================================================
 // malloc
 #include <stdlib.h>
@@ -957,14 +957,14 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
   return ERROR_NONE;
 }
 //==============================================================================
-/*
+/**
  * Command pack
  *
  * 0 - Key: "CMD", Value: UserCommand
  * 1 - KEY: "PAR", Value: UserParam1
  * 2 - KEY: "PAR", Value: UserParam2
  * etc
-*/
+ */
 //==============================================================================
 BOOL _pack_is_command(pack_packet_t *pack)
 {

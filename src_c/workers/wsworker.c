@@ -1,10 +1,10 @@
 //==============================================================================
-/*
+/**
  * NIch CLient Server Project
  * Copyright 2016 NIch(nich2000@mail.ru) All rights reserved
  *
  * <filename>
-*/
+ */
 //==============================================================================
 #include <string.h>
 #include <pthread.h>
@@ -27,20 +27,20 @@
 //==============================================================================
 // http://learn.javascript.ru/websockets#описание-фрейма
 //==============================================================================
-/*
+/**
 * GET /chat HTTP/1.1
 * Host: example.com:8000
 * Upgrade: websocket
 * Connection: Upgrade
 * Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
 * Sec-WebSocket-Version: 13
-*/
-/*
+ */
+/**
 * HTTP/1.1 101 Switching Protocols
 * Upgrade: websocket
 * Connection: Upgrade
 * Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
-*/
+ */
 //==============================================================================
 int ws_server_init (ws_server_t *server);
 int ws_server_start(ws_server_t *server, sock_port_t port);
@@ -507,13 +507,13 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
   return make_last_error(ERROR_NORMAL, errno, tmp);
 }
 //==============================================================================
-/*
+/**
   [
     ["key", "value"],
     ["key", "value"],
     ["key", "value"]
   ]
-*/
+ */
 //==============================================================================
 const char *caption_by_key(const char *key)
 {
