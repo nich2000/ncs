@@ -764,10 +764,16 @@ int pack_word_as_string(pack_word_t *word, pack_string_t value)
         sprintf((char *)value, "%f", valueF);
       }
       break;
+    case PACK_WORD_CHAR:
+      {
+        value[0] = word->value[0];
+      }
+      break;
     case PACK_WORD_STRING:
       {
-        for(pack_size_t j = 0; j < word->size; j++)
-          value[j] = word->value[j];
+        memcpy(value, word->value, word->size);
+//        for(pack_size_t j = 0; j < word->size; j++)
+//          value[j] = word->value[j];
         value[word->size] = '\0';
       }
       break;
@@ -812,6 +818,9 @@ pack_size_t _pack_word_size(pack_word_t *word)
   case PACK_WORD_FLOAT:
     tmp_size += sizeof(float);
     break;
+  case PACK_WORD_CHAR:
+    tmp_size += sizeof(char);
+    break;
   case PACK_WORD_STRING:
     tmp_size += PACK_SIZE_SIZE;
     tmp_size += word->size;
@@ -843,10 +852,9 @@ int pack_word_to_buffer(pack_word_t *word, pack_buffer_t buffer, pack_size_t *st
   switch (word->type)
   {
   case PACK_WORD_NONE:
-    break;
   case PACK_WORD_INT:
-    break;
   case PACK_WORD_FLOAT:
+  case PACK_WORD_CHAR:
     break;
   case PACK_WORD_STRING:
     {
@@ -920,6 +928,9 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
         break;
       case PACK_WORD_FLOAT:
         tmp_word->size = sizeof(float);
+        break;
+      case PACK_WORD_CHAR:
+        tmp_word->size = sizeof(char);
         break;
       case PACK_WORD_STRING:
         {

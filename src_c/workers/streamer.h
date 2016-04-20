@@ -39,7 +39,9 @@ typedef struct
   session_items_t items;
 } session_t;
 //==============================================================================
-int cmd_streamer(sock_state_t state);
+int cmd_streamer       (sock_state_t state, int interval);
 int cmd_streamer_status();
+//==============================================================================
+int load_session();
 //==============================================================================
 #endif //STREAMER_H

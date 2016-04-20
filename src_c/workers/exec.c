@@ -415,7 +415,12 @@ int handle_command_str(void *sender, char *command)
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      cmd_streamer(state);
+      int interval = 1000;
+      char *interval_str = strtok(NULL, " ");
+      if(interval_str != NULL)
+        interval = atoi(interval_str);
+
+       cmd_streamer(state, interval);
 
       return EXEC_DONE;
     }

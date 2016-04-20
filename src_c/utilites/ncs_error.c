@@ -13,7 +13,7 @@
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================
-static error_t _error_;
+static ncs_error_t _error_;
 //==============================================================================
 const char *error_type_to_string(int error_type)
 {
@@ -36,9 +36,9 @@ const char *error_type_to_string(int error_type)
   }
 }
 //==============================================================================
-error_t make_error(int level, int number, const char *message)
+ncs_error_t make_error(int level, int number, const char *message)
 {
-  error_t tmp_error;
+  ncs_error_t tmp_error;
 
   tmp_error.level = level;
   tmp_error.number = number;
@@ -78,7 +78,7 @@ void print_last_error(const char *sender, int result)
     log_add_fmt(result, "%s, message: %s", sender, last_error()->message);
 }
 //==============================================================================
-error_t *last_error()
+ncs_error_t *last_error()
 {
   return &_error_;
 }

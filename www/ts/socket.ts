@@ -38,7 +38,7 @@ class web_socket_t {
 
     message.splice(1, 0, ["par", this.session_id]);
 
-    $("#last_send_cmd").text("Command: " + message);
+    $("#last_send_cmd").text("Send: " + message);
 
     message = JSON.stringify(message);
 
@@ -82,13 +82,22 @@ class web_socket_t {
   }
   //----------------------------------------------------------------------------
   private onMessage(evt: any) {
-    // console.log("onMessage: " + evt.data);
+    let data: any;
+    data = JSON.parse(evt.data);
 
-    try{
-      Signal.emit('onMessage', evt.data);
+    if (data.length == 0)
+      return;
+
+    if (data[0].CMD != undefined) {
+      let cmd: string = data[0].CMD;
+      $("#last_recv_cmd").text("Recv: " + cmd);
+
+      data.shift();
+
+      Signal.emit(cmd, data);
     }
-    catch(e){
-      console.log("onMessage: " + e.data);
+    else {
+      Signal.emit("add_data", data);
     }
   }
   //----------------------------------------------------------------------------

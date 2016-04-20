@@ -53,7 +53,7 @@ void *cmd_send_worker   (void *arg);
 int on_cmd_accept       (void *sender, SOCKET socket, sock_host_t host);
 int on_cmd_connect      (void *sender);
 int on_cmd_disconnect   (void *sender);
-int on_cmd_error        (void *sender, error_t *error);
+int on_cmd_error        (void *sender, ncs_error_t *error);
 int on_cmd_send         (void *sender);
 int on_cmd_recv         (void *sender, char *buffer, int size);
 int on_cmd_new_data     (void *sender, void *data);
@@ -283,8 +283,7 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
     return make_last_error(ERROR_NORMAL, errno, "cmd_server_start, server already started");
 
   load_names();
-
-//  load_map();
+  load_map();
 
   cmd_server_init(server);
 
@@ -431,12 +430,13 @@ int cmd_client_init(cmd_client_t *client)
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
+  load_session();
+
   cmd_client_init(client);
 
   protocol_init(&client->custom_client.custom_remote_client.protocol);
 
   client->custom_client.custom_remote_client.protocol.on_new_in_data  = on_cmd_new_data;
-//  client->custom_client.custom_remote_client.protocol.on_new_out_data = cmd_new_data;
   client->custom_client.custom_remote_client.custom_worker.on_state = on_client_cmd_state;
 
   client->custom_client.custom_remote_client.custom_worker.port = port;
@@ -619,7 +619,7 @@ int on_cmd_disconnect(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int on_cmd_error(void *sender, error_t *error)
+int on_cmd_error(void *sender, ncs_error_t *error)
 {
   log_add_fmt(LOG_INFO, "[CMD] cmd_error, message: %s",
               error->message);
@@ -638,11 +638,15 @@ int on_cmd_recv(void *sender, char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
+  int res;
 #ifdef USE_BINARY_PROTOCOL
-  protocol_bin_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+  res = protocol_bin_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 #else
-  protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+  res = protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 #endif
+
+  if(res != ERROR_NONE)
+    log_add_fmt(res, "on_cmd_recv, message: %s", last_error()->message);
 
   return ERROR_NONE;
 }

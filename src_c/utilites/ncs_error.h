@@ -25,18 +25,18 @@ typedef struct
   int  level;
   int  number;
   char message[2048];
-}error_t;
+}ncs_error_t;
 //==============================================================================
 typedef int (*on_error_msg_t) (void *sender, int level, int number, const char *message);
-typedef int (*on_error_t)     (void *sender, error_t *error);
+typedef int (*on_error_t)     (void *sender, ncs_error_t *error);
 //==============================================================================
-error_t make_error (int level, int number, const char *message);
+ncs_error_t make_error (int level, int number, const char *message);
 //==============================================================================
 int make_last_error(int level, int number, const char *message);
 int make_last_error_fmt(int level, int number, const char *message, ...);
 //==============================================================================
 void print_last_error(const char *sender, int result);
 //==============================================================================
-error_t *last_error();
+ncs_error_t *last_error();
 //==============================================================================
 #endif //ERROR_H

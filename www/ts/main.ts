@@ -1,15 +1,12 @@
 //=============================================================================
 /// <reference path="./jquery.d.ts"/>
 //=============================================================================
-var exec: exec_t;
 var clients: clients_t;
 var ws: web_socket_t;
 var map: map_t;
 //=============================================================================
 function init() {
   console.log("init");
-
-  exec = new exec_t();
 
   clients = new clients_t();
 

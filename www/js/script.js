@@ -1,23 +1,7 @@
 var exec_t = (function () {
     function exec_t() {
         console.log("constructor: exec_t");
-        Signal.bind("onMessage", this.doOnMessage, this);
     }
-    exec_t.prototype.doOnMessage = function (message) {
-        var data;
-        data = JSON.parse(message);
-        if (data.length == 0)
-            return;
-        if (data[0].CMD != undefined) {
-            var cmd = data[0].CMD;
-            $("#last_recv_cmd").text("Command: " + cmd);
-            data.shift();
-            Signal.emit(cmd, data);
-        }
-        else {
-            Signal.emit("add_data", data);
-        }
-    };
     return exec_t;
 })();
 var active_t;
@@ -537,7 +521,7 @@ var web_socket_t = (function () {
     web_socket_t.prototype.doSend = function (message) {
         console.log("doSend: " + message);
         message.splice(1, 0, ["par", this.session_id]);
-        $("#last_send_cmd").text("Command: " + message);
+        $("#last_send_cmd").text("Send: " + message);
         message = JSON.stringify(message);
         this._socket.send(message);
     };
@@ -568,12 +552,18 @@ var web_socket_t = (function () {
         element.set_text("connection_status", 'Connection: error');
     };
     web_socket_t.prototype.onMessage = function (evt) {
-        // console.log("onMessage: " + evt.data);
-        try {
-            Signal.emit('onMessage', evt.data);
+        var data;
+        data = JSON.parse(evt.data);
+        if (data.length == 0)
+            return;
+        if (data[0].CMD != undefined) {
+            var cmd = data[0].CMD;
+            $("#last_recv_cmd").text("Recv: " + cmd);
+            data.shift();
+            Signal.emit(cmd, data);
         }
-        catch (e) {
-            console.log("onMessage: " + e.data);
+        else {
+            Signal.emit("add_data", data);
         }
     };
     Object.defineProperty(web_socket_t.prototype, "is_connected", {

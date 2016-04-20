@@ -60,7 +60,7 @@ void *ws_send_worker(void *arg);
 int on_ws_accept    (void *sender, SOCKET socket, sock_host_t host);
 int on_ws_new_data  (void *sender, void *data);
 int on_ws_disconnect(void *sender);
-int on_ws_error     (void *sender, error_t *error);
+int on_ws_error     (void *sender, ncs_error_t *error);
 int on_ws_recv      (void *sender, char *buffer, int size);
 int on_ws_send      (void *sender);
 //==============================================================================
@@ -438,7 +438,7 @@ int on_ws_disconnect(void *sender)
   return ERROR_NONE;
 }
 //==============================================================================
-int on_ws_error(void *sender, error_t *error)
+int on_ws_error(void *sender, ncs_error_t *error)
 {
   log_add_fmt(LOG_INFO, "[WS] ws_error, message: %s",
               error->message);
