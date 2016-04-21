@@ -52,14 +52,14 @@ int read_config()
 //==============================================================================
 int main(int argc, char *argv[])
 {
-  if(read_config() != ERROR_NONE)
+  if(read_config() >= ERROR_WARNING)
     goto exit;
 
   log_add(LOG_INFO, "-------------------");
   log_add(LOG_INFO, "application started");
   log_add(LOG_INFO, "-------------------");
 
-  if(sock_init() != ERROR_NONE)
+  if(sock_init() >= ERROR_WARNING)
     goto exit;
 
   char command[256];

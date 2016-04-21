@@ -476,29 +476,25 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
   {
-    char tmp[128];
-    errno = 0;
-    sprintf(tmp, "protocol_bin_buffer_validate, buffer too big(%d/%d)", (vbuffer->size + size), PACK_BUFFER_SIZE);
-    return make_last_error(ERROR_NORMAL, errno, tmp);
+    errno = 1;
+    return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                    "message: income buffer too big(%d/%d)",
+                               errno, (vbuffer->size + size), PACK_BUFFER_SIZE);
   }
 
   memcpy(&protocol->validation_buffer.buffer[vbuffer->size], buffer, size);
   vbuffer->size += size;
 
-  pack_size_t tmp_validation_size = vbuffer->size;
-  int tmp_valid_count = 0;
-
+  pack_size_t tmp_remain_size = vbuffer->size;
+  int tmp_valid_pack_count = 0;
   while(1)
   {
-    errno = 0;
-
-    if(vbuffer->size <= 0)
+    if(tmp_remain_size < PACK_VERSION_SIZE)
     {
-      char tmp[128];
-      errno = 1;
-      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      make_last_error(ERROR_NORMAL, errno, tmp);
-      return tmp_valid_count;
+      errno = 2;
+      return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                       "message: (on start) empty buffer(%d), valid packs: %d",
+                                 errno, tmp_remain_size, tmp_valid_pack_count);
     }
 
     pack_size_t tmp_pack_pos = 0;
@@ -508,36 +504,35 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     {
       if(vbuffer->buffer[tmp_pack_pos++] != PACK_VERSION[i])
       {
-        char tmp[128];
-        errno = 2;
-        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-        make_last_error(ERROR_NORMAL, errno, tmp);
-        return tmp_valid_count;
+        errno = 3;
+        return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                        "message: version does not match",
+                                   errno);
       }
 
-      tmp_validation_size--;
-      if(tmp_validation_size <= 0)
+      if(tmp_remain_size <= 0)
       {
-        char tmp[128];
-        errno = 3;
-        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-        make_last_error(ERROR_NORMAL, errno, tmp);
-        return tmp_valid_count;
+        errno = 4;
+        return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                         "message: (on version) empty buffer(%d), valid packs: %d",
+                                   errno, tmp_remain_size, tmp_valid_pack_count);
       }
+      tmp_remain_size--;
     }
 
     // Get size
-    if(tmp_validation_size < 2)
+    if(tmp_remain_size < PACK_SIZE_SIZE)
     {
-      char tmp[128];
-      errno = 4;
-      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      make_last_error(ERROR_NORMAL, errno, tmp);
-      return tmp_valid_count;
+      errno = 5;
+      return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                       "message: (on size) empty buffer(%d), valid packs: %d",
+                                 errno, tmp_remain_size, tmp_valid_pack_count);
     }
 
-    pack_size_t tmp_size = vbuffer->buffer[tmp_pack_pos++] << 8;
-    tmp_size          |= vbuffer->buffer[tmp_pack_pos++];
+    tmp_remain_size--;
+    pack_size_t tmp_size  = vbuffer->buffer[tmp_pack_pos++] << 8;
+    tmp_remain_size--;
+    tmp_size             |= vbuffer->buffer[tmp_pack_pos++];
 
     // Get value
     pack_buffer_t tmp_value_buffer;
@@ -545,15 +540,14 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     {
       tmp_value_buffer[i] = vbuffer->buffer[tmp_pack_pos++];
 
-      tmp_validation_size--;
-      if(tmp_validation_size <= 0)
+      if(tmp_remain_size <= 0)
       {
-        char tmp[128];
-        errno = 5;
-        sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-        make_last_error(ERROR_NORMAL, errno, tmp);
-        return tmp_valid_count;
+        errno = 6;
+        return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                         "message: (on value) empty buffer(%d), valid packs: %d",
+                                   errno, tmp_remain_size, tmp_valid_pack_count);
       }
+      tmp_remain_size--;
     }
 
     // Get index
@@ -561,17 +555,18 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     tmp_index             |= tmp_value_buffer[1];
 
     // Get crc16 1
-    if(tmp_validation_size < 2)
+    if(tmp_remain_size < PACK_CRC_SIZE)
     {
-      char tmp[128];
-      errno = 6;
-      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      make_last_error(ERROR_NORMAL, errno, tmp);
-      return tmp_valid_count;
+      errno = 7;
+      return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                       "message: (on crc) empty buffer(%d), valid packs: %d",
+                                 errno, tmp_remain_size, tmp_valid_pack_count);
     }
 
-    pack_crc16_t tmp_crc16_1 = vbuffer->buffer[tmp_pack_pos++] << 8;
-    tmp_crc16_1           |= vbuffer->buffer[tmp_pack_pos++];
+    tmp_remain_size--;
+    pack_crc16_t tmp_crc16_1  = vbuffer->buffer[tmp_pack_pos++] << 8;
+    tmp_remain_size--;
+    tmp_crc16_1              |= vbuffer->buffer[tmp_pack_pos++];
 
     // Get crc16 2
     pack_crc16_t tmp_crc16_2 = getCRC16((char *)tmp_value_buffer, (tmp_size + PACK_INDEX_SIZE));
@@ -579,22 +574,28 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
     {
-      char tmp[128];
-      errno = 7;
-      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      make_last_error(ERROR_NORMAL, errno, tmp);
-      return tmp_valid_count;
+      errno = 8;
+      return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                      "message: crc16 does not match",
+                                 errno);
     }
 
-    pack_size_t tmp_remain_count = vbuffer->size - tmp_pack_pos;
-    for(pack_size_t j = 0; j < tmp_remain_count; j++)
+    for(pack_size_t j = 0; j < tmp_remain_size; j++)
       vbuffer->buffer[j] = vbuffer->buffer[j + tmp_pack_pos];
-    vbuffer->size = tmp_remain_count;
+    vbuffer->size = tmp_remain_size;
 
-    tmp_valid_count++;
+    tmp_valid_pack_count++;
 
     if(only_validate)
-      continue;
+    {
+      if(tmp_remain_size <= 0)
+        break;
+      else
+      {
+        log_add_fmt(LOG_DEBUG, "protocol_bin_buffer_validate, remain: %d", tmp_remain_size);
+        continue;
+      }
+    }
 
     protocol->in_packets_list.count++;
     if(protocol->in_packets_list.count >= USHRT_MAX)
@@ -607,27 +608,45 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     protocol->in_packets_list.empty = FALSE;
 
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
-
     if(tmp_pack == NULL)
     {
-      char tmp[128];
-      errno = 8;
-      sprintf(tmp, "protocol_bin_buffer_validate, errno: %d", errno);
-      return make_last_error(ERROR_NORMAL, errno, tmp);
+      errno = 9;
+      return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                      "message: current pack is null",
+                                 errno);
     }
 
     pack_init(tmp_pack);
-
     tmp_pack->number = tmp_index;
 
     if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
     {
       if(protocol->on_new_in_data != 0)
-        protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
+      {
+        if (protocol->on_new_in_data((void*)sender, (void*)tmp_pack) >= ERROR_WARNING)
+        {
+          errno = 10;
+          return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                          "message: %s",
+                                     errno, last_error()->message);
+        }
+      }
     }
+    else
+    {
+      errno = 11;
+      return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                      "message: %s",
+                                 errno, last_error()->message);
+    }
+
+    if(tmp_remain_size <= 0)
+      break;
+    else
+      log_add_fmt(LOG_DEBUG, "protocol_bin_buffer_validate, remain: %d", tmp_remain_size);
   }
 
-  return tmp_valid_count;
+  return ERROR_NONE;
 }
 //==============================================================================
 // <"Car_001"|0|0|80974|0.0|0.0|0|0|1|0|-0.46|-3.10|43.2|41.9|4.08|1.000000|2.000000|0.02|1>

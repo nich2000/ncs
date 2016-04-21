@@ -307,10 +307,12 @@ void *custom_recv_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_START;
 
-//  char tmp_report_name[256];
-//  sprintf(tmp_report_name, "report_%d", tmp_client->custom_worker.id);
-//  gen_log_name(tmp_report_name);
-//  tmp_client->report = report_open();
+  #ifdef WRITE_STAT
+  // TODO: here this do not need
+  char tmp_report_name[64];
+  sprintf(tmp_report_name, "report_%d", tmp_client->custom_worker.id);
+  tmp_client->report = report_open(tmp_report_name);
+  #endif
 
   sock_buffer_t tmp_buffer;
   int           tmp_size = 0;
@@ -319,26 +321,36 @@ void *custom_recv_worker(void *arg)
   while(tmp_client->custom_worker.state == STATE_START)
   {
     int res = sock_recv(tmp_sock, (char*)tmp_buffer, &tmp_size);
+
+    // maybe something received
     if(res == ERROR_NONE)
     {
-      if(tmp_size > 0)
-        if(tmp_client->on_recv != 0)
-          tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);
+      if(tmp_size == 0)
+      {
+        usleep(1000);
+        continue;
+      };
+
+      if(tmp_client->on_recv != 0)
+        tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);
     }
+    // maybe close
     else if(res == ERROR_WARNING)
     {
       if(tmp_size == 0)
       {
         if(tmp_client->on_disconnect != 0)
           tmp_client->on_disconnect((void*)tmp_client);
-        break;
+        tmp_client->custom_worker.state = STATE_STOPPING;
       }
     }
+    // error occurred
     else if(res >= ERROR_NORMAL)
     {
+      // handle error
       if(tmp_client->on_error != 0)
         tmp_client->on_error((void*)tmp_client, last_error());
-
+      // if too many errors
       if(tmp_errors++ > SOCK_ERRORS_COUNT)
         tmp_client->custom_worker.state = STATE_STOPPING;
     }
@@ -348,10 +360,12 @@ void *custom_recv_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
+  #ifdef WRITE_STAT
   report_close(tmp_client->report);
+  #endif
 
-  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_recv_worker, worker id: %d, socket: %d",
-              tmp_client->custom_worker.id, tmp_sock);
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_recv_worker, client id: %d",
+              tmp_client->custom_worker.id);
 
   return NULL;
 }

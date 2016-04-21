@@ -19,6 +19,9 @@
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
 #else
+  // Flag block or allow reports
+  #define WRITE_STAT
+
 //  #define STREAM_RANDOM_PACK
 
 //  #define PRINT_RESV_PACK

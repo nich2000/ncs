@@ -185,24 +185,46 @@ void *web_handle_connection(void *arg)
   SOCKET tmp_sock = *(SOCKET*)arg;
   free(arg);
 
+  // TODO: fix web_handle_connection
+//  custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
+//  SOCKET tmp_sock = tmp_client->custom_worker.sock;
+
   log_add_fmt(LOG_DEBUG, "[WEB] [BEGIN] web_handle_connection, server id: %d",
               _web_server.custom_server.custom_worker.id);
 
   char *request  = (char *)malloc(SOCK_WEB_BUFFER_SIZE);
   char *response = (char *)malloc(SOCK_WEB_BUFFER_SIZE * SOCK_WEB_BUFFER_SIZE);
   int   size     = 0;
+  int   errors   = 0;
 
-  while(1)
+  while(TRUE)
   {
-    if(sock_recv(tmp_sock, request, &size) == ERROR_NONE)
+    int res = sock_recv(tmp_sock, request, &size);
+
+    if(res == ERROR_NONE)
     {
       if(web_get_response(request, response, &size) == ERROR_NONE)
         sock_send(tmp_sock, response, size);
       else
         log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection, message: %s",
                     last_error()->message);
-
       break;
+    }
+    else if(res == ERROR_WARNING)
+    {
+      if(size == 0)
+      {
+//        if(tmp_client->on_disconnect != 0)
+//          tmp_client->on_disconnect((void*)tmp_client);
+        break;
+      }
+    }
+    else if(res >= ERROR_NORMAL)
+    {
+//      if(tmp_client->on_error != 0)
+//        tmp_client->on_error((void*)tmp_client, last_error());
+      if(errors++ > SOCK_ERRORS_COUNT)
+        break;
     }
 
     usleep(1000);

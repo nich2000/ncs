@@ -145,7 +145,7 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
       print_custom_worker_info(tmp_worker, "remote client");
       print_remote_client_info(tmp_remote_client, "worker");
       log_add(LOG_INFO, "---------");
-    };
+    }
   }
 
   return ERROR_NONE;

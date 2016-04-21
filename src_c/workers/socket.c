@@ -170,67 +170,50 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
   read_fd_set = active_fd_set;
 
   int res = select(FD_SETSIZE, &read_fd_set, NULL, NULL, &tv);
+
   if (res == SOCKET_ERROR)
   {
-    char tmp[256];
     int error = sock_error();
-    sprintf(tmp, "[SOCK] sock_recv, select, socket: %d, error: %d", sock, error);
-    log_add(LOG_ERROR, tmp);
-    return make_last_error(ERROR_NORMAL, error, tmp);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "[SOCK] sock_recv, select, socket: %d, error: %d",
+                               sock, error);
   }
   else if(res == 0)
   {
-    char tmp[256];
-    sprintf(tmp,  "[SOCK] sock_recv, select, socket: %d, empty for %d seconds",
-            sock, SOCK_WAIT_SELECT);
-    log_add(LOG_WAIT, tmp);
-    return make_last_error(ERROR_WAIT, errno, tmp);
+    return make_last_error_fmt(ERROR_WAIT, errno, "[SOCK] sock_recv, select, socket: %d, empty for %d seconds",
+                           sock, SOCK_WAIT_SELECT);
   }
   else
   {
-//    for(int i = 0; i < FD_SETSIZE; i++)
-//    {
-//      if(FD_ISSET(i, &read_fd_set))
-//      {
-//        if(i == sock)
-//        {
-          *size = recv(sock, buffer, SOCK_BUFFER_SIZE, 0);
-          if(*size == SOCKET_ERROR)
-          {
-            char tmp[256];
-            int error = sock_error();
-            sprintf(tmp, "[SOCK] sock_recv, recv, socket: %d, error: %d", sock, error);
-            log_add(LOG_ERROR, tmp);
-            return make_last_error(ERROR_NORMAL, error, tmp);
-          }
-          else if(*size == 0)
-          {
-            char tmp[256];
-            sprintf(tmp, "[SOCK] sock_recv, recv, socket: %d, socket closed", sock);
-            log_add(LOG_DEBUG, tmp);
-            return make_last_error(ERROR_WARNING, errno, tmp);
-          }
-          else
-          {
-            #ifdef USE_EXTRA_LOGS
-            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, socket: %d, recv size: %d",
-                        sock, size);
-            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, buffer:\n%s",
-                        buffer);
-            bytes_to_hex(buffer, (pack_size_t)size, tmp);
-            log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, hex buffer:\n%s",
-                        buffer);
-            #endif
+    *size = recv(sock, buffer, SOCK_BUFFER_SIZE, 0);
 
-//            FD_CLR(sock, &active_fd_set);
-            return ERROR_NONE;
-          };
-//        }
-//      }
-//    }
+    if(*size == SOCKET_ERROR)
+    {
+      int error = sock_error();
+      return make_last_error_fmt(ERROR_NORMAL, errno, "[SOCK] sock_recv, recv, socket: %d, error: %d",
+                                 sock, error);
+    }
+    else if(*size == 0)
+    {
+      return make_last_error_fmt(ERROR_WARNING, errno, "[SOCK] sock_recv, recv, socket: %d, socket closed",
+                                 sock);
+    }
+    else
+    {
+      #ifdef USE_EXTRA_LOGS
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, socket: %d, recv size: %d",
+                  sock, size);
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, buffer:\n%s",
+                  buffer);
+      bytes_to_hex(buffer, (pack_size_t)size, tmp);
+      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, hex buffer:\n%s",
+                  buffer);
+      #endif
+
+      return ERROR_NONE;
+    }
   }
 
-  return ERROR_NORMAL;
+  return make_last_error(ERROR_NORMAL, errno, "[SOCK] sock_recv, unhandled result");
 }
 //==============================================================================
 int sock_send(SOCKET sock, char *buffer, int size)

@@ -564,7 +564,7 @@ void *cmd_send_worker(void *arg)
     tmp_pack = _protocol_next_pack(tmp_protocol);
     while(tmp_pack != NULL)
     {
-      if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) != ERROR_NONE)
+      if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) >= ERROR_WARNING)
         continue;
 
       int tmp_cnt = protocol_bin_buffer_validate(tmp_buffer,
@@ -645,8 +645,8 @@ int on_cmd_recv(void *sender, char *buffer, int size)
   res = protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 #endif
 
-  if(res != ERROR_NONE)
-    log_add_fmt(res, "on_cmd_recv, message: %s", last_error()->message);
+  if(res >= ERROR_WARNING)
+    log_add_fmt(LOG_ERROR, "on_cmd_recv, message: %s", last_error()->message);
 
   return ERROR_NONE;
 }
@@ -763,21 +763,22 @@ int on_cmd_new_data(void *sender, void *data)
   {
     pack_buffer_t csv;
     int result = pack_values_to_csv(tmp_packet, ';', csv);
-    if(result != ERROR_NONE)
+    if(result >= ERROR_WARNING)
     {
       log_add_fmt(LOG_ERROR, "[CMD] cmd_new_data, pack_values_to_csv, client id: %d, result: %d",
                   tmp_client->custom_worker.id, result);
     }
     else
     {
+      #ifdef WRITE_STAT
       int len = strlen((char*)csv);
-
       int wrote = report_add(tmp_client->report, (char*)csv);
       if(wrote != (len+1))
       {
         log_add_fmt(LOG_ERROR, "[CMD] cmd_new_data, report_add, client id: %d, len: %d, wrote: %d",
                     tmp_client->custom_worker.id, len, wrote);
       }
+      #endif
     }
 
     // ACTIVE_FIRST or ACTIVE_SECOND
@@ -834,7 +835,7 @@ int cmd_remote_client_list(pack_packet_t *pack)
 
       pack_add_as_pack(pack, (unsigned char*)PACK_PARAM_KEY, &tmp_pack);
     }
-  };
+  }
 
   return ERROR_NONE;
 }
@@ -973,9 +974,16 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
                     client->custom_worker.session_id,
                     client->custom_worker.name);
 
-        pack_packet_t tmp_packet;
-        cmd_remote_client_list(&tmp_packet);
-        return ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
+        int res = ERROR_NONE;
+
+        if(res == ERROR_NONE)
+        {
+          pack_packet_t tmp_packet;
+          cmd_remote_client_list(&tmp_packet);
+          res = ws_server_send_pack(SOCK_SEND_TO_ALL, &tmp_packet);
+        }
+
+        return res;
       }
   }
 

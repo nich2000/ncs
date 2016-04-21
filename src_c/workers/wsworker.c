@@ -295,22 +295,40 @@ void *ws_recv_worker(void *arg)
   while(tmp_client->custom_worker.state == STATE_START)
   {
     int res = sock_recv(tmp_sock, request, &tmp_size);
+
     if(res == ERROR_NONE)
     {
+      if(tmp_size == 0)
+      {
+        usleep(1000);
+        continue;
+      };
+
       if(tmp_client->hand_shake == FALSE)
       {
-        ws_hand_shake(request, response, &tmp_size);
-
-        if(sock_send(tmp_sock, response, tmp_size) == ERROR_NONE)
+        if(ws_hand_shake(request, response, &tmp_size) == ERROR_NONE)
         {
-          tmp_client->hand_shake = TRUE;
-          log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, handshake success, client id: %d",
-                      tmp_client->custom_worker.id);
+          if(sock_send(tmp_sock, response, tmp_size) == ERROR_NONE)
+          {
+            tmp_client->hand_shake = TRUE;
+            log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, handshake success, client id: %d",
+                        tmp_client->custom_worker.id);
+          }
+          else
+          {
+            errno = 1;
+            make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, sock_send, errno: %d," \
+                                "message: %s",
+                                errno, last_error()->message);
+            goto errorhandler;
+          }
         }
         else
         {
-          errno = 1;
-          make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
+          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d," \
+                              "message: %s",
+                              errno, last_error()->message);
+          goto errorhandler;
         }
       }
       else
@@ -329,8 +347,10 @@ void *ws_recv_worker(void *arg)
         }
         else
         {
-          errno = 2;
-          make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
+          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d," \
+                              "message: %s",
+                              errno, last_error()->message);
+          goto errorhandler;
         }
       }
     }
@@ -340,20 +360,19 @@ void *ws_recv_worker(void *arg)
       {
         if(tmp_client->on_disconnect != 0)
           tmp_client->on_disconnect((void*)tmp_client);
-        break;
+        tmp_client->custom_worker.state = STATE_STOPPING;
       }
     }
     else if(res >= ERROR_NORMAL)
     {
+      // #govnocode
+      errorhandler:
+      // handle error
       if(tmp_client->on_error != 0)
         tmp_client->on_error((void*)tmp_client, last_error());
-
+      // if too many errors
       if(tmp_errors++ > SOCK_ERRORS_COUNT)
-      {
-        errno = 3;
-        make_last_error_fmt(ERROR_NORMAL, errno, "ws_recv_worker, errno: %d", errno);
         tmp_client->custom_worker.state = STATE_STOPPING;
-      }
     }
 
     usleep(1000);
@@ -482,22 +501,39 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 
         client->register_state = REGISTER_OK;
 
-////        pack_packet_t config_packet;
-////        ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+        int res = ERROR_NONE;
+
+        // Отправка конфига
+//        if(res == ERROR_NONE)
+//        {
+//          pack_packet_t config_packet;
+//          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
+          // TODO: костыль
+//          usleep(10000);
+//        }
 
         // TODO: тут создали буффер, начали отправку
-        pack_packet_t map_packet;
-        cmd_map(&map_packet);
-        ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
-
-        // TODO: костыль
-        usleep(10000);
+        if(res == ERROR_NONE)
+        {
+          pack_packet_t map_packet;
+          cmd_map(&map_packet);
+          res = ws_server_send_pack(SOCK_SEND_TO_ALL, &map_packet);
+          // TODO: костыль
+          usleep(10000);
+        }
 
         // TODO: пришли сюда, но отправка еще идет,
         // после отправки буффер чистится и ...
-        pack_packet_t clients_packet;
-        cmd_remote_client_list(&clients_packet);
-        ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
+        if(res == ERROR_NONE)
+        {
+          pack_packet_t clients_packet;
+          cmd_remote_client_list(&clients_packet);
+          res = ws_server_send_pack(SOCK_SEND_TO_ALL, &clients_packet);
+          // TODO: костыль
+          usleep(10000);
+        }
+
+        return res;
       }
   }
 

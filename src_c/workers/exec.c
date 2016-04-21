@@ -181,7 +181,7 @@ int handle_command_pack(void *sender, pack_packet_t *packet)
     }
 
     return handle_command_str(sender, command);
-  };
+  }
 
   return make_last_error_fmt(ERROR_NORMAL, errno, "handle_command_pack, message: %s",
                              last_error()->message);

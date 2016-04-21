@@ -26,7 +26,7 @@ int cmd_streamer_resume(streamer_worker *worker);
 void *cmd_streamer_worker_func(void *arg);
 int cmd_streamer_make_random(custom_remote_client_t *client);
 int cmd_streamer_make       (custom_remote_client_t *client);
-int cmd_streamer_step       (custom_remote_client_t *client);
+int cmd_streamer_step       (custom_remote_client_t *client, int debug);
 //==============================================================================
 static int             _streamer_count = 0;
 static streamer_worker _streamer[SOCK_WORKERS_COUNT];
@@ -34,13 +34,13 @@ static int             _streamer_interval = 1000;
 //==============================================================================
 static int             _streamer_pack_counter = 0;
 //==============================================================================
+static session_t _session;
+//==============================================================================
 extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
 //==============================================================================
 char session_path[256] = DEFAULT_SESSION_PATH;
 char session_file[64]  = DEFAULT_SESSION_NAME;
-//==============================================================================
-session_t _session;
 //==============================================================================
 session_t *session()
 {
@@ -57,6 +57,7 @@ int load_session()
   ssize_t read;
 
   _session.count = 0;
+  _session.index = -1;
 
   FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
@@ -125,7 +126,7 @@ int cmd_streamer(sock_state_t state, int interval)
 
   if(state == STATE_STEP)
   {
-    cmd_streamer_step(&_cmd_clients[0].custom_client.custom_remote_client);
+    cmd_streamer_step(&_cmd_clients[0].custom_client.custom_remote_client ,1);
   }
   else
   {
@@ -249,7 +250,7 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
-    cmd_streamer_step(tmp_worker->client);
+    cmd_streamer_step(tmp_worker->client, 0);
 
     usleep(_streamer_interval * 1000);
   }
@@ -257,9 +258,16 @@ void *cmd_streamer_worker_func(void *arg)
   return NULL;
 }
 //==============================================================================
-int cmd_streamer_step(custom_remote_client_t *client)
+int cmd_streamer_step(custom_remote_client_t *client, int debug)
 {
-  log_add_fmt(LOG_INFO, "cmd_streamer_step, counter: %s", ++_streamer_pack_counter);
+  _streamer_pack_counter++;
+  if(_session.count > 0)
+    _session.index = _streamer_pack_counter / _session.count;
+
+  if(debug)
+    log_add_fmt(LOG_INFO, "cmd_streamer_step, counter: %d, index: %d",
+                _streamer_pack_counter,
+                _session.index);
 
   #ifdef STREAM_RANDOM_PACK
   cmd_streamer_make_random(client);
@@ -276,8 +284,6 @@ int cmd_streamer_step(custom_remote_client_t *client)
 //==============================================================================
 void fill_pack_struct(custom_remote_client_t *client, pack_struct_t *pack)
 {
-  int index = _session.count / _streamer_pack_counter;
-
   strcpy(pack->_ID, (char*)client->custom_worker.session_id);   // 1
   pack->GPStime         = rand();                               // 2
   pack->GPStime_s       = rand();                               // 3

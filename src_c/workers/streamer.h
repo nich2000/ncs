@@ -35,6 +35,7 @@ typedef pack_struct_s_t session_items_t[SESSION_SIZE];
 //==============================================================================
 typedef struct
 {
+  int             index;
   int             count;
   session_items_t items;
 } session_t;
