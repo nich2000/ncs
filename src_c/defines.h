@@ -20,7 +20,7 @@
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
 #else
-  // Flag block or allow reports
+  // Flag block or allow writes to file
 //  #define WRITE_STAT
   #define WRITE_SESSION
 //  #define WRITE_REPORT

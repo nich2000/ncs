@@ -12,6 +12,9 @@
 #include "defines.h"
 #include "globals.h"
 
+#include "iniparser.h"
+#include "dictionary.h"
+
 #include "ncs_pack.h"
 //==============================================================================
 #define EXEC_UNKNOWN            -1
@@ -21,6 +24,8 @@
 #define MAX_COMMAND_SIZE         128
 //==============================================================================
 typedef int (*exec_func)(int, ...);
+//==============================================================================
+int read_config();
 //==============================================================================
 int handle_command_str (void *sender, char          *command);
 int handle_command_pack(void *sender, pack_packet_t *packet);

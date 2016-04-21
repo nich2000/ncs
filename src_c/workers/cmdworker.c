@@ -61,9 +61,12 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
+BOOL session_relay_to_web = TRUE;
+//==============================================================================
 static cmd_server_t  _cmd_server;
 static names_t       _names;
 static int           _cmd_client_count = 0;
+//==============================================================================
 cmd_clients_t _cmd_clients;
 //==============================================================================
 static sock_active_t _cmd_active = ACTIVE_NONE;
@@ -804,7 +807,7 @@ int on_cmd_new_data(void *sender, void *data)
 
     #ifdef STREAM_TO_WS
     // ACTIVE_FIRST or ACTIVE_SECOND
-    if(tmp_client->active_state)
+    if((session_relay_to_web) && (tmp_client->active_state))
     {
       pack_add_as_int(tmp_packet, (unsigned char*)"ACT", tmp_client->active_state);
       return ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);

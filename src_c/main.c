@@ -10,45 +10,10 @@
 //==============================================================================
 // "-DCMAKE_BUILD_TYPE=Debug"
 //==============================================================================
-extern sock_port_t web_server_port;
-extern sock_port_t ws_server_port;
 extern sock_port_t cmd_server_port;
+extern sock_port_t ws_server_port;
+extern sock_port_t web_server_port;
 extern sock_host_t cmd_server_host;
-extern char log_path[256];
-extern char stat_path[256];
-extern char report_path[265];
-extern char map_path[256];
-extern char map_file[64];
-extern char session_path[256];
-extern char session_file[64];
-//==============================================================================
-int read_config()
-{
-  dictionary *config = iniparser_load("../config/config.ini");
-  if(config == NULL)
-    return make_last_error(ERROR_CRITICAL, errno, "read_config, iniparser_load");
-
-  cmd_server_port = iniparser_getint(config, "worker:cmd_server_port", DEFAULT_CMD_SERVER_PORT);
-  ws_server_port  = iniparser_getint(config, "worker:ws_server_port",  DEFAULT_WS_SERVER_PORT);
-  web_server_port = iniparser_getint(config, "worker:web_server_port", DEFAULT_WEB_SERVER_PORT);
-
-  strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host", DEFAULT_SERVER_HOST));
-
-  strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",           DEFAULT_LOG_PATH));
-
-  strcpy((char*)stat_path,       iniparser_getstring(config, "stat:stat_path",         DEFAULT_STAT_PATH));
-  strcpy((char*)report_path,     iniparser_getstring(config, "report:report_path",     DEFAULT_REPORT_PATH));
-
-  strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",   DEFAULT_SESSION_PATH));
-  strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",   DEFAULT_SESSION_NAME));
-
-  strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",           DEFAULT_MAP_PATH));
-  strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",           DEFAULT_MAP_NAME));
-
-  iniparser_freedict(config);
-
-  return ERROR_NONE;
-}
 //==============================================================================
 int main(int argc, char *argv[])
 {

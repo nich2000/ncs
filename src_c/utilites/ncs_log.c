@@ -28,9 +28,13 @@ void get_cur_date_str(char *result, int short_format);
 void get_cur_time_str(char *result, int short_format);
 const char *log_type_to_string(int log_type);
 //==============================================================================
+BOOL log_enable        = TRUE;
 char log_path[256]     = DEFAULT_LOG_PATH;
+BOOL stat_enable       = TRUE;
 char stat_path[256]    = DEFAULT_STAT_PATH;
+BOOL session_enable    = TRUE;
 char session_path[256] = DEFAULT_SESSION_PATH;
+BOOL report_enable     = TRUE;
 char report_path[265]  = DEFAULT_REPORT_PATH;
 //==============================================================================
 void clr_scr()
@@ -235,18 +239,21 @@ void log_add(int log_type, const char *message)
 
   make_dir(log_path);
 
-  FILE *log = fopen(full_file_name, "a");
-  if(log != NULL)
+  if(log_enable)
   {
-    char time_str[16];
-    get_cur_time_str(time_str, LOG_LONG_FORMAT);
+    FILE *log = fopen(full_file_name, "a");
+    if(log != NULL)
+    {
+      char time_str[16];
+      get_cur_time_str(time_str, LOG_LONG_FORMAT);
 
-    fprintf(log, "%s %s %s\n", time_str, log_type_str, message);
+      fprintf(log, "%s %s %s\n", time_str, log_type_str, message);
 
-    fclose(log);
+      fclose(log);
+    }
+    else
+      printf("[WARNING] Can not open log file, %s\n", full_file_name);
   }
-  else
-    printf("[WARNING] Can not open log file, %s\n", full_file_name);
 }
 //==============================================================================
 FILE *stat_open(char *name)
@@ -268,7 +275,7 @@ FILE *stat_open(char *name)
 int stat_add(FILE *file, char *message)
 {
   int res = -1;
-  if(file != NULL)
+  if((stat_enable) && (file != NULL))
   {
     res = fprintf(file, "%s\n", message);
     fflush(file);
@@ -302,7 +309,7 @@ FILE *session_open(char *name)
 int session_add(FILE *file, char *message)
 {
   int res = -1;
-  if(file != NULL)
+  if((session_enable) && (file != NULL))
   {
     res = fprintf(file, "%s\n", message);
     fflush(file);
@@ -334,9 +341,9 @@ FILE *report_open(char *name)
 }
 //==============================================================================
 int report_add(FILE *file, char *message)
-{
+{ 
   int res = -1;
-  if(file != NULL)
+  if((report_enable) && (file != NULL))
   {
     res = fprintf(file, "%s\n", message);
     fflush(file);

@@ -55,6 +55,7 @@
 #define CMD_CMD_ACTIVATE     "activate"       //
 #define CMD_WS_REGISTER      "ws_register"    //
 #define CMD_WS_ACTIVATE      "ws_activate"    //
+#define CMD_RECONFIG         "reconfig"       // 0
 //==============================================================================
 #define CMD_START            "on"
 #define CMD_STOP             "off"
@@ -70,6 +71,53 @@ sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
 sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
 sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
 sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
+//==============================================================================
+extern BOOL session_relay_to_web;
+extern BOOL log_enable;
+extern char log_path[256];
+extern BOOL stat_enable;
+extern char stat_path[256];
+extern BOOL report_enable;
+extern char report_path[265];
+extern BOOL session_enable;
+extern char session_path[256];
+extern char session_file[64];
+extern char map_path[256];
+extern char map_file[64];
+//==============================================================================
+int read_config()
+{
+  dictionary *config = iniparser_load("../config/config.ini");
+  if(config == NULL)
+    return make_last_error(ERROR_CRITICAL, errno, "read_config, iniparser_load");
+
+  cmd_server_port =              iniparser_getint   (config, "worker:cmd_server_port",      DEFAULT_CMD_SERVER_PORT);
+  ws_server_port  =              iniparser_getint   (config, "worker:ws_server_port",       DEFAULT_WS_SERVER_PORT);
+  web_server_port =              iniparser_getint   (config, "worker:web_server_port",      DEFAULT_WEB_SERVER_PORT);
+
+  strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
+  session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
+
+  log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);
+  strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",                DEFAULT_LOG_PATH));
+
+  stat_enable =                  iniparser_getint   (config, "stat:stat_enable",            TRUE);
+  strcpy((char*)stat_path,       iniparser_getstring(config, "stat:stat_path",              DEFAULT_STAT_PATH));
+
+  report_enable =                iniparser_getint   (config, "report:report_enable",        TRUE);
+  strcpy((char*)report_path,     iniparser_getstring(config, "report:report_path",          DEFAULT_REPORT_PATH));
+
+  session_enable =               iniparser_getint   (config, "session:session_enable",      TRUE);
+  strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
+  strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
+
+  strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
+  strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
+
+  iniparser_freedict(config);
+
+  return ERROR_NONE;
+}
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -132,8 +180,8 @@ int help()
     "commands:\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
     //          11  12  13  14  15  16  17  18  19  20
                "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-    //          21  22  23
-               "%s\n%s\n%s\n",
+    //          21  22  23  24
+               "%s\n%s\n%s\n%s\n",
     CMD_HELP,             // 1
     CMD_TEST,             // 2
     CMD_CLEAR,            // 3
@@ -156,7 +204,8 @@ int help()
     CMD_CMD_REGISTER,     // 20
     CMD_CMD_ACTIVATE,     // 21
     CMD_WS_REGISTER,      // 22
-    CMD_WS_ACTIVATE       // 23
+    CMD_WS_ACTIVATE,      // 23
+    CMD_RECONFIG          // 24
   );
   log_add(LOG_INFO, tmp);
 
@@ -226,16 +275,14 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_ALL);
 
-//      log_set_name("all_log.txt");
-
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      cmd_server(state, DEFAULT_CMD_SERVER_PORT);
-      web_server(state, DEFAULT_WEB_SERVER_PORT);
-      ws_server (state, DEFAULT_WS_SERVER_PORT);
+      cmd_server(state, cmd_server_port);
+      web_server(state, web_server_port);
+      ws_server (state, ws_server_port);
 
       return EXEC_DONE;
     }
@@ -244,14 +291,12 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_SERVER);
 
-//      log_set_name("server_log.txt");
-
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      sock_port_t port = DEFAULT_CMD_SERVER_PORT;
+      sock_port_t port = cmd_server_port;
       char *port_str = strtok(NULL, " ");
       if(port_str != NULL)
         port = atoi(port_str);
@@ -265,14 +310,12 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_WEB_SERVER);
 
-//      log_set_name("web_server_log.txt");
-
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      sock_port_t port = DEFAULT_WEB_SERVER_PORT;
+      sock_port_t port = web_server_port;
       char *port_str = strtok(NULL, " ");
       if(port_str != NULL)
         port = atoi(port_str);
@@ -286,14 +329,12 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_WS_SERVER);
 
-//      log_set_name("ws_server_log.txt");
-
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      sock_port_t port = DEFAULT_WS_SERVER_PORT;
+      sock_port_t port = ws_server_port;
       char *port_str = strtok(NULL, " ");
       if(port_str != NULL)
         port = atoi(port_str);
@@ -307,19 +348,18 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_INFO, "token: %s", CMD_CLIENT);
 
-//      log_set_name("client_log.txt");
-
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
       if(state_str != NULL)
         state = cmd_state(state_str);
 
-      sock_port_t port = DEFAULT_CMD_SERVER_PORT;
+      sock_port_t port = cmd_server_port;
       char *port_str = strtok(NULL, " ");
       if(port_str != NULL)
         port = atoi(port_str);
 
-      sock_host_t host = DEFAULT_SERVER_HOST;
+      sock_host_t host;
+      strcpy((char*)host, (char*)cmd_server_host);
       char *host_str = strtok(NULL, " ");
       if(host_str != NULL)
         strcpy((char*)host, host_str);
@@ -549,6 +589,15 @@ int handle_command_str(void *sender, char *command)
 
         ws_remote_clients_register(id, (unsigned char*)name_str);
       }
+
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_RECONFIG) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_RECONFIG);
+
+      read_config();
 
       return EXEC_DONE;
     }

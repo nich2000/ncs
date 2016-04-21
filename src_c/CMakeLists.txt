@@ -82,7 +82,7 @@ set(_ERROR    defines.h
 add_library          (error SHARED ${_ERROR})
 #add_library          (error STATIC ${_ERROR})
 set_target_properties(error PROPERTIES C_STANDARD 99)
-target_link_libraries(error log)
+target_link_libraries(error ini log)
 #-------------------------------------------------------------------------------
 set(_PACK     defines.h
               globals.h
@@ -166,6 +166,6 @@ set(_PROG     defines.h
               main.c)
 #...............................................................................
 add_executable       (${PROJECT_NAME} ${_PROG})
-target_link_libraries(${PROJECT_NAME} log error ini socket)
+target_link_libraries(${PROJECT_NAME} log error socket)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE C C_STANDARD 99)
 #-------------------------------------------------------------------------------

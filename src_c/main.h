@@ -12,9 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "iniparser.h"
-#include "dictionary.h"
-
 #include "defines.h"
 #include "globals.h"
 
