@@ -14,18 +14,6 @@
 #define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_HOST      "127.0.0.1"
 //==============================================================================
-#define DEFAULT_LOG_PATH         "../logs"
-#define DEFAULT_LOG_NAME         "log.txt"
-//==============================================================================
-#define DEFAULT_STAT_PATH        "../stats"
-#define DEFAULT_STAT_NAME        "stat.txt"
-//==============================================================================
-#define DEFAULT_REPORT_PATH      "../reports"
-#define DEFAULT_REPORT_NAME      "report.txt"
-//==============================================================================
-#define DEFAULT_SESSION_PATH     "../sessions"
-#define DEFAULT_SESSION_NAME     "session.txt"
-//==============================================================================
 #define DEFAULT_MAP_PATH         "../tracks"
 #define DEFAULT_MAP_NAME         "default.map"
 //==============================================================================

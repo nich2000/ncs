@@ -384,6 +384,18 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
               tmp_server->custom_worker.id,
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
+  char tmp_name[64];
+  sprintf(tmp_name, "%d", tmp_client->custom_worker.id);
+  #ifdef WRITE_REPORT
+  tmp_client->report = report_open(tmp_name);
+  #endif
+  #ifdef WRITE_SESSION
+  tmp_client->session = session_open(tmp_name);
+  #endif
+  #ifdef WRITE_STAT
+  tmp_client->stat = stat_open(tmp_name);
+  #endif
+
   pthread_attr_t tmp_attr;
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
@@ -616,6 +628,16 @@ int on_cmd_disconnect(void *sender)
   time (&rawtime);
   tmp_client->custom_remote_client.disconnect_time = rawtime;
 
+  #ifdef WRITE_REPORT
+  report_close(tmp_client->custom_remote_client.report);
+  #endif
+  #ifdef WRITE_SESSION
+  session_close(tmp_client->custom_remote_client.session);
+  #endif
+  #ifdef WRITE_STAT
+  stat_close(tmp_client->custom_remote_client.stat);
+  #endif
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -752,7 +774,6 @@ int cmd_client_send_pack(pack_packet_t *pack)
 int on_cmd_new_data(void *sender, void *data)
 {
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
-
   pack_packet_t *tmp_packet = (pack_packet_t*)data;
 
   if(_pack_is_command(tmp_packet))
@@ -761,6 +782,7 @@ int on_cmd_new_data(void *sender, void *data)
   }
   else
   {
+    #ifdef WRITE_SESSION
     pack_buffer_t csv;
     int result = pack_values_to_csv(tmp_packet, ';', csv);
     if(result >= ERROR_WARNING)
@@ -770,24 +792,24 @@ int on_cmd_new_data(void *sender, void *data)
     }
     else
     {
-      #ifdef WRITE_STAT
       int len = strlen((char*)csv);
-      int wrote = report_add(tmp_client->report, (char*)csv);
+      int wrote = session_add(tmp_client->session, (char*)csv);
       if(wrote != (len+1))
       {
-        log_add_fmt(LOG_ERROR, "[CMD] cmd_new_data, report_add, client id: %d, len: %d, wrote: %d",
+        log_add_fmt(LOG_ERROR, "[CMD] cmd_new_data, session_add, client id: %d, len: %d, wrote: %d",
                     tmp_client->custom_worker.id, len, wrote);
       }
-      #endif
     }
+    #endif
 
+    #ifdef STREAM_TO_WS
     // ACTIVE_FIRST or ACTIVE_SECOND
     if(tmp_client->active_state)
     {
       pack_add_as_int(tmp_packet, (unsigned char*)"ACT", tmp_client->active_state);
-
       return ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
     }
+    #endif
   }
 
   return ERROR_NONE;

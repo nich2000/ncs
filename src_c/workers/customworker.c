@@ -75,7 +75,9 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   //TODO: Временное явление 3
   custom_remote_client->hand_shake       = FALSE;
   //TODO: Временное явление 4
-  custom_remote_client->report           = 0;
+  custom_remote_client->report           = NULL;
+  custom_remote_client->session          = NULL;
+  custom_remote_client->stat             = NULL;
 
   custom_remote_client->on_error         = NULL;
   custom_remote_client->on_send          = NULL;
@@ -263,6 +265,10 @@ int custom_client_work(custom_client_t *client)
 
   client->custom_remote_client.custom_worker.state = STATE_START;
 
+  #ifdef WRITE_STAT
+  client->stat = stat_open(tmp_name);
+  #endif
+
   log_add_fmt(LOG_INFO, "[CUSTOM] custom_client_work, connecting to server, client id: %d...",
           client->custom_remote_client.custom_worker.id);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
@@ -306,13 +312,6 @@ void *custom_recv_worker(void *arg)
               tmp_client->custom_worker.id, tmp_sock);
 
   tmp_client->custom_worker.state = STATE_START;
-
-  #ifdef WRITE_STAT
-  // TODO: here this do not need
-  char tmp_report_name[64];
-  sprintf(tmp_report_name, "report_%d", tmp_client->custom_worker.id);
-  tmp_client->report = report_open(tmp_report_name);
-  #endif
 
   sock_buffer_t tmp_buffer;
   int           tmp_size = 0;

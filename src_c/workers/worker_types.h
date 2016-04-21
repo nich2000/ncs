@@ -67,6 +67,8 @@ typedef struct
   BOOL            hand_shake;
   // TODO: Временное явление 4
   FILE           *report;
+  FILE           *session;
+  FILE           *stat;
 
   on_error_t      on_error;
   on_send_t       on_send;

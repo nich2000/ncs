@@ -10,6 +10,7 @@
 #define DEFINES_H
 //==============================================================================
 #define USE_BINARY_PROTOCOL
+#define DEBUG_MODE
 
 #if defined(__linux__) || defined(_WIN32)
 #else
@@ -20,26 +21,31 @@
   #define PACK_USE_OWN_BUFFER
 #else
   // Flag block or allow reports
-  #define WRITE_STAT
+//  #define WRITE_STAT
+  #define WRITE_SESSION
+//  #define WRITE_REPORT
 
+  // send stream data to ws
+//  #define STREAM_TO_WS
+
+  // create random pack on test stream
 //  #define STREAM_RANDOM_PACK
 
+  // logs manage
+//  #define USE_EXTRA_LOGS
 //  #define PRINT_RESV_PACK
 //  #define PRINT_SND_PACK
 //  #define PRINT_ALL_INFO
+//  #define SILENT_MODE
 
+  // own queue or not
   #define PACK_USE_OWN_QUEUE
 
-  //#define USE_EXTRA_LOGS
-  #define SOCK_PACK_MODE
-  //#define SOCK_RANDOM_BUFFER
+  // debug and test
+//  #define SOCK_RANDOM_BUFFER
 
-  #define DEBUG_MODE
-
-  //#define SILENT_MODE
-
-  //#define SERVER_MODE
-  //#define CLIENT_MODE
+//  #define SERVER_MODE
+//  #define CLIENT_MODE
 #endif
 //==============================================================================
 #endif //DEFINES_H

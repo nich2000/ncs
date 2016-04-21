@@ -24,13 +24,14 @@
 //==============================================================================
 void log_gen_name(log_time_tag_t time_tag, const char *name, char *result);
 void make_dir(const char *dir);
-void get_cur_date_str(char *result);
-void get_cur_time_str(char *result);
+void get_cur_date_str(char *result, int short_format);
+void get_cur_time_str(char *result, int short_format);
 const char *log_type_to_string(int log_type);
 //==============================================================================
-char log_path[256]    = DEFAULT_LOG_PATH;
-char stat_path[256]   = DEFAULT_STAT_PATH;
-char report_path[265] = DEFAULT_REPORT_PATH;
+char log_path[256]     = DEFAULT_LOG_PATH;
+char stat_path[256]    = DEFAULT_STAT_PATH;
+char session_path[256] = DEFAULT_SESSION_PATH;
+char report_path[265]  = DEFAULT_REPORT_PATH;
 //==============================================================================
 void clr_scr()
 {
@@ -50,7 +51,7 @@ void make_dir(const char *dir)
   #endif
 }
 //==============================================================================
-void get_cur_date_str(char *result)
+void get_cur_date_str(char *result, int short_format)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -58,10 +59,17 @@ void get_cur_date_str(char *result)
   time_t rawtime = tv.tv_sec;
   struct tm * timeinfo = localtime(&rawtime);
 
-  strftime(result, 16, "%y%m%d", timeinfo);
+  if(short_format)
+  {
+    strftime(result, 16, "%y%m%d", timeinfo);
+  }
+  else
+  {
+    strftime(result, 16, "%y.%m.%d", timeinfo);
+  }
 }
 //==============================================================================
-void get_cur_time_str(char *result)
+void get_cur_time_str(char *result, int short_format)
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -69,9 +77,18 @@ void get_cur_time_str(char *result)
   time_t rawtime = tv.tv_sec;
   struct tm * timeinfo = localtime(&rawtime);
 
-  char tmp[16];
-  strftime(tmp, 16, "%H:%M:%S", timeinfo);
-  snprintf(result, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+  if(short_format)
+  {
+    char tmp[16];
+    strftime(tmp, 16, "%H%M%S", timeinfo);
+    snprintf(result, 16, "%s%03li", tmp, tv.tv_usec/1000);
+  }
+  else
+  {
+    char tmp[16];
+    strftime(tmp, 16, "%H:%M:%S", timeinfo);
+    snprintf(result, 16, "%s.%03li", tmp, tv.tv_usec/1000);
+  }
 }
 //==============================================================================
 void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
@@ -81,7 +98,15 @@ void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
     case LOG_NAME_DATE:
     {
       char date_str[16];
-      get_cur_date_str(date_str);
+      get_cur_date_str(date_str, LOG_LONG_FORMAT);
+      sprintf(result, "%s_%s", date_str, name);
+      break;
+    }
+
+    case LOG_NAME_DATE_S:
+    {
+      char date_str[16];
+      get_cur_date_str(date_str, LOG_SHORT_FORMAT);
       sprintf(result, "%s_%s", date_str, name);
       break;
     }
@@ -89,7 +114,15 @@ void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
     case LOG_NAME_TIME:
     {
       char time_str[16];
-      get_cur_time_str(time_str);
+      get_cur_time_str(time_str, LOG_LONG_FORMAT);
+      sprintf(result, "%s_%s", time_str, name);
+      break;
+    }
+
+    case LOG_NAME_TIME_S:
+    {
+      char time_str[16];
+      get_cur_time_str(time_str, LOG_SHORT_FORMAT);
       sprintf(result, "%s_%s", time_str, name);
       break;
     }
@@ -97,9 +130,19 @@ void log_gen_name(log_time_tag_t time_tag, const char *name, char *result)
     case LOG_NAME_DATE_TIME:
     {
       char date_str[16];
-      get_cur_date_str(date_str);
+      get_cur_date_str(date_str, LOG_LONG_FORMAT);
       char time_str[16];
-      get_cur_time_str(time_str);
+      get_cur_time_str(time_str, LOG_LONG_FORMAT);
+      sprintf(result, "%s_%s_%s", date_str, time_str, name);
+      break;
+    }
+
+    case LOG_NAME_DATE_TIME_S:
+    {
+      char date_str[16];
+      get_cur_date_str(date_str, LOG_SHORT_FORMAT);
+      char time_str[16];
+      get_cur_time_str(time_str, LOG_SHORT_FORMAT);
       sprintf(result, "%s_%s_%s", date_str, time_str, name);
       break;
     }
@@ -187,7 +230,7 @@ void log_add(int log_type, const char *message)
 
   char full_file_name[256];
   char file_name[64];
-  log_gen_name(LOG_NAME_DATE, DEFAULT_LOG_NAME, file_name);
+  log_gen_name(LOG_NAME_DATE_S, DEFAULT_LOG_NAME, file_name);
   sprintf(full_file_name, "%s/%s", log_path, file_name);
 
   make_dir(log_path);
@@ -196,7 +239,7 @@ void log_add(int log_type, const char *message)
   if(log != NULL)
   {
     char time_str[16];
-    get_cur_time_str(time_str);
+    get_cur_time_str(time_str, LOG_LONG_FORMAT);
 
     fprintf(log, "%s %s %s\n", time_str, log_type_str, message);
 
@@ -208,10 +251,12 @@ void log_add(int log_type, const char *message)
 //==============================================================================
 FILE *stat_open(char *name)
 {
+  char tmp_file_name[256];
+  log_gen_name(LOG_NAME_DATE_TIME_S, name, tmp_file_name);
+
   char full_file_name[256];
-  log_gen_name(LOG_NAME_DATE_TIME, name, full_file_name);
-  sprintf(full_file_name, "%s/%s",
-          stat_path, full_file_name);
+  sprintf(full_file_name, "%s/%s_%s",
+          stat_path, tmp_file_name, DEFAULT_STAT_NAME);
 
   make_dir(stat_path);
 
@@ -237,12 +282,49 @@ void  stat_close(FILE *file)
     fclose(file);
 }
 //==============================================================================
+//==============================================================================
+FILE *session_open(char *name)
+{
+  char tmp_file_name[256];
+  log_gen_name(LOG_NAME_DATE_TIME_S, name, tmp_file_name);
+
+  char full_file_name[256];
+  sprintf(full_file_name, "%s/%s_%s",
+          session_path, tmp_file_name, DEFAULT_SESSION_NAME);
+
+  make_dir(session_path);
+
+  FILE *result = fopen(full_file_name, "a");
+
+  return result;
+}
+//==============================================================================
+int session_add(FILE *file, char *message)
+{
+  int res = -1;
+  if(file != NULL)
+  {
+    res = fprintf(file, "%s\n", message);
+    fflush(file);
+  }
+  return res;
+}
+//==============================================================================
+void  session_close(FILE *file)
+{
+  if(file != NULL)
+    fclose(file);
+}
+//==============================================================================
+//==============================================================================
 FILE *report_open(char *name)
 {
+  char tmp_file_name[256];
+  log_gen_name(LOG_NAME_DATE_TIME_S, name, tmp_file_name);
+
   char full_file_name[256];
-  log_gen_name(LOG_NAME_DATE_TIME, name, full_file_name);
-  sprintf(full_file_name, "%s/%s",
-          report_path, full_file_name);
+  sprintf(full_file_name, "%s/%s_%s",
+          report_path, tmp_file_name, DEFAULT_REPORT_NAME);
 
   make_dir(report_path);
 

@@ -39,8 +39,8 @@ static session_t _session;
 extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
 //==============================================================================
-char session_path[256] = DEFAULT_SESSION_PATH;
-char session_file[64]  = DEFAULT_SESSION_NAME;
+extern char session_path[256];
+char session_file[64] = DEFAULT_SESSION_NAME;
 //==============================================================================
 session_t *session()
 {
