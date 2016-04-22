@@ -20,7 +20,6 @@ int main(int argc, char *argv[])
   if(read_config() >= ERROR_WARNING)
     goto exit;
 
-  log_add(LOG_INFO, "-------------------");
   log_add(LOG_INFO, "application started");
   log_add(LOG_INFO, "-------------------");
 
@@ -62,7 +61,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-      log_add(LOG_INFO, "unknown mode");
+      make_last_error(ERROR_NONE, errno, "unknown mode");
       goto exit;
     }
   }
@@ -75,7 +74,10 @@ int main(int argc, char *argv[])
       switch(handle_command_str(NULL, command))
       {
         case EXEC_NONE:
+        {
+          make_last_error(ERROR_NONE, errno, "exit by user command");
           goto exit;
+        }
         case EXEC_UNKNOWN:
           log_add_fmt(LOG_CMD, "unknown command: %s",
                       command);
@@ -90,7 +92,7 @@ int main(int argc, char *argv[])
 
   exit:
   sock_deinit();
-  log_add(LOG_INFO, "application finished\n");
+  log_add_fmt(LOG_INFO, "application finished, result: %s\n", last_error()->message);
 
   return 0;
 }

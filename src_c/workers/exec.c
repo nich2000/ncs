@@ -116,7 +116,41 @@ int read_config()
 
   iniparser_freedict(config);
 
+  print_config();
+
   return ERROR_NONE;
+}
+//==============================================================================
+void print_config()
+{
+  log_add(LOG_INFO, "-------------------");
+  log_add_fmt(LOG_INFO,
+              "configuration                   \n" \
+              "       session_relay_to_web: %d\n" \
+              "       log_enable:           %d\n" \
+              "       log_path:             %s\n" \
+              "       stat_enable:          %d\n" \
+              "       stat_path:            %s\n" \
+              "       report_enable:        %d\n" \
+              "       report_path:          %s\n" \
+              "       session_enable:       %d\n" \
+              "       session_path:         %s\n" \
+              "       session_file:         %s\n" \
+              "       map_path:             %s\n" \
+              "       map_file:             %s",
+              session_relay_to_web,
+              log_enable,
+              log_path,
+              stat_enable,
+              stat_path,
+              report_enable,
+              report_path,
+              session_enable,
+              session_path,
+              session_file,
+              map_path,
+              map_file);
+  log_add(LOG_INFO, "-------------------");
 }
 //==============================================================================
 sock_state_t cmd_state(char *cmd)

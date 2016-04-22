@@ -25,7 +25,8 @@
 //==============================================================================
 typedef int (*exec_func)(int, ...);
 //==============================================================================
-int read_config();
+int  read_config();
+void print_config();
 //==============================================================================
 int handle_command_str (void *sender, char          *command);
 int handle_command_pack(void *sender, pack_packet_t *packet);
