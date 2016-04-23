@@ -50,8 +50,11 @@
 #include <string.h>
 #include <limits.h>
 
-#include "ncs_pack.h"
+#ifndef DEMS_DEVICE
+#include <pthread.h>
+#endif
 
+#include "ncs_pack.h"
 #include "ncs_error.h"
 
 #ifndef DEMS_DEVICE
@@ -91,8 +94,9 @@ int pack_word_as_bytes           (pack_word_t *word, pack_bytes_t value, pack_si
 //==============================================================================
 pack_size_t _pack_word_size      (pack_word_t *word);
 //==============================================================================
-pack_number_t pack_global_number = PACK_GLOBAL_INIT_NUMBER;
-int pack_last_error = ERROR_NONE;
+static pack_number_t pack_global_number = PACK_GLOBAL_INIT_NUMBER;
+static int pack_last_error = ERROR_NONE;
+static pthread_mutex_t mutex_packet_number = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
 #define POLY 0x8408
 unsigned short getCRC16(char *data, unsigned short length)
@@ -205,6 +209,10 @@ int pack_word_init(pack_word_t *word)
 //==============================================================================
 int pack_init(pack_packet_t *packet)
 {
+  #ifndef DEMS_DEVICE
+  pthread_mutex_lock(&mutex_packet_number);
+  #endif
+
   packet->number      = pack_global_number++;
   packet->words_count = 0;
 
@@ -213,6 +221,10 @@ int pack_init(pack_packet_t *packet)
 
   if(pack_global_number >= USHRT_MAX)
     pack_global_number = PACK_GLOBAL_INIT_NUMBER;
+
+  #ifndef DEMS_DEVICE
+  pthread_mutex_unlock(&mutex_packet_number);
+  #endif
 
   return ERROR_NONE;
 }
@@ -649,6 +661,9 @@ int pack_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
   pack_size_t tmp_pack_pos = PACK_VERSION_SIZE;
 
   pack_size_t tmp_packet_size = _pack_words_size(pack);
+  if(tmp_packet_size == 0)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_to_buffer, words size: %d, words count: %d",
+                               tmp_packet_size, pack->words_count);
 
   // Size
   buffer[tmp_pack_pos++] = (tmp_packet_size >> 8) & 0xff;
@@ -899,10 +914,11 @@ int pack_buffer_to_pack(pack_buffer_t buffer, pack_size_t size, pack_packet_t *p
 //==============================================================================
 int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_words_t words, pack_size_t *words_count)
 {
-  pack_size_t tmp_count = 0;
-
   if(buffer_size < (PACK_KEY_SIZE + PACK_TYPE_SIZE))
-    return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, buffer too small");
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_buffer_to_words, buffer too small(%d)",
+                               buffer_size);
+
+  pack_size_t tmp_count = 0;
 
   // Exclude index
   pack_size_t i = PACK_INDEX_SIZE;
@@ -951,7 +967,8 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
         }
         break;
       default:
-        return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, unknown word type");
+        return make_last_error_fmt(ERROR_NORMAL, errno, "pack_buffer_to_words, unknown word type",
+                                   tmp_word->type);
     }
 
     // Read Value
@@ -962,7 +979,8 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
     tmp_count++;
     *words_count = tmp_count;
     if(tmp_count > PACK_WORDS_COUNT)
-      return make_last_error(ERROR_NORMAL, errno, "pack_buffer_to_words, words count overflow");
+      return make_last_error_fmt(ERROR_NORMAL, errno, "pack_buffer_to_words, words count overflow",
+                             tmp_count);
   }
 
   return ERROR_NONE;

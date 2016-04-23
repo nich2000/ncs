@@ -50,7 +50,6 @@ extern char session_file[64];
 extern char map_path[256];
 extern char map_file[64];
 //==============================================================================
-extern pthread_mutex_t mutex_register;
 extern char log_prefix[8];
 //==============================================================================
 int read_config()
@@ -229,6 +228,7 @@ int handle_command_pack(void *sender, pack_packet_t *packet)
   {
     char command[1024];
     sprintf(command, "%s", cmd);
+//    log_add_fmt(LOG_INFO, "handle_command_pack, command: %s", command);
 
     pack_value_t value;
     pack_index_t index = 1;
@@ -392,12 +392,18 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_SERVER) == 0)
     {
-      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SND_TO_SERVER);
+      log_add_fmt(LOG_DEBUG, "token: %s, full: %s",
+                  CMD_SND_TO_SERVER, command);
+
+      sock_id_t id = -1;
+      char *arg = strtok(NULL, " ");
+      if(arg != NULL)
+        id = atoi(arg);
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
       int cnt = 0;
-      char *arg = strtok(NULL, " ");
+      arg = strtok(NULL, " ");
       while(arg != NULL)
       {
         if(cnt == 0)
@@ -407,7 +413,12 @@ int handle_command_str(void *sender, char *command)
         arg = strtok(NULL, " ");
         cnt++;
       }
-      cmd_client_send_pack(&tmp_packet);
+
+      if(tmp_packet.words_count == 0)
+        log_add_fmt(LOG_ERROR, "handle_command_str, token: %s, words count = 0",
+                    CMD_SND_TO_SERVER);
+      else
+        cmd_client_send_pack(id, &tmp_packet);
 
       return EXEC_DONE;
     }
@@ -544,19 +555,15 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CMD_REGISTER) == 0)
     {
-//      pthread_mutex_lock(&mutex_register);
+      custom_worker_t *worker = (custom_worker_t*)sender;
+      char *session_id = strtok(NULL, " ");
 
-      char *name_str = strtok(NULL, " ");
-      log_add_fmt(LOG_EXTRA, "token: %s, sender: %s", CMD_CMD_REGISTER, name_str);
+      log_add_fmt(LOG_DEBUG, "token: %s, sender id: %d, sender name: %s, session_id: %s",
+                  CMD_CMD_REGISTER, worker->id,  worker->name, session_id);
 
-      if(name_str != NULL)
-      {
-        sock_id_t id = ((custom_worker_t*)sender)->id;
-
-        cmd_remote_client_register(id, (unsigned char*)name_str);
-      }
-
-//      pthread_mutex_unlock(&mutex_register);
+      // TODO: excess search by id...need use sender as worker
+      if(session_id != NULL)
+        cmd_remote_client_register(worker->id, (unsigned char*)session_id);
 
       return EXEC_DONE;
     }

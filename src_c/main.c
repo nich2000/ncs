@@ -15,9 +15,6 @@ extern sock_port_t ws_server_port;
 extern sock_port_t web_server_port;
 extern sock_host_t cmd_server_host;
 //==============================================================================
-extern pthread_mutex_t mutex_accept;
-extern pthread_mutex_t mutex_register;
-//==============================================================================
 int main(int argc, char *argv[])
 {
   if(read_config() >= ERROR_WARNING)
@@ -27,10 +24,6 @@ int main(int argc, char *argv[])
   log_add(LOG_INFO, "-------------------");
 
   if(sock_init() >= ERROR_WARNING)
-    goto exit;
-  if(pthread_mutex_init(&mutex_accept, NULL) != 0)
-    goto exit;
-  if(pthread_mutex_init(&mutex_register, NULL) != 0)
     goto exit;
 
   char command[256];
@@ -99,8 +92,6 @@ int main(int argc, char *argv[])
 
   exit:
   sock_deinit();
-  pthread_mutex_destroy(&mutex_accept);
-  pthread_mutex_destroy(&mutex_register);
   log_add_fmt(LOG_INFO, "application finished, result: %s\n", last_error()->message);
 
   return 0;

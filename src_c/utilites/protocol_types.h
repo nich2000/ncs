@@ -93,6 +93,7 @@ typedef struct
 //==============================================================================
 typedef struct
 {
+  pack_index_t             id;
   pack_validation_buffer_t validation_buffer;
   pack_out_packets_list_t  out_packets_list;
   pack_in_packets_list_t   in_packets_list;

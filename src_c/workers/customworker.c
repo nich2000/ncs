@@ -22,9 +22,6 @@
 // начинается с последнего статического ID
 static int _custom_id = STATIC_WS_SERVER_ID + 1;
 //==============================================================================
-pthread_mutex_t mutex_accept = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex_register = PTHREAD_MUTEX_INITIALIZER;
-//==============================================================================
 int custom_worker_init(int id, custom_worker_t *worker)
 {
   if(id == ID_GEN_NEW)
@@ -47,7 +44,7 @@ int custom_worker_init(int id, custom_worker_t *worker)
   worker->on_lock            = NULL;
 
   sock_name_t tmp;
-  sprintf((char*)tmp, "%s_%d", SOCK_NAME_DEFAULT, worker->id);
+  sprintf((char*)tmp, "%s_%d", SOCK_NO_NAME_DEFAULT, worker->id);
   strcpy((char*)worker->session_id, (char*)tmp);
   strcpy((char*)worker->name,       (char*)tmp);
 
@@ -100,11 +97,7 @@ int custom_remote_clients_init(custom_remote_clients_list_t *clients_list)
   clients_list->index   = 0;
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
-  {
     custom_remote_client_init(ID_DEFAULT, &clients_list->items[i]);
-
-    protocol_init(&clients_list->items[i].protocol);
-  }
 
   return ERROR_NONE;
 }
@@ -123,6 +116,12 @@ int custom_server_init(int id, custom_server_t *custom_server)
 int custom_client_init(custom_client_t *custom_client)
 {
   custom_remote_client_init(ID_GEN_NEW, &custom_client->custom_remote_client);
+
+  custom_worker_t *tmp_worker = &custom_client->custom_remote_client.custom_worker;
+  sock_name_t tmp;
+  sprintf((char*)tmp, "%s_%d", SOCK_NAME_DEFAULT, tmp_worker->id);
+  strcpy((char*)tmp_worker->session_id, (char*)tmp);
+  strcpy((char*)tmp_worker->name,       (char*)tmp);
 
   custom_client->work_thread = 0;
 
@@ -263,7 +262,7 @@ int custom_server_work(custom_server_t *server)
 //==============================================================================
 int custom_client_work(custom_client_t *client)
 {
-  log_add_fmt(LOG_DEBUG, "[CUSTOM] [BEGIN] custom_client_work, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] [BEGIN] custom_client_work, worker id: %d",
               client->custom_remote_client.custom_worker.id);
 
   client->custom_remote_client.custom_worker.state = STATE_START;
@@ -272,7 +271,7 @@ int custom_client_work(custom_client_t *client)
   client->stat = stat_open(tmp_name);
   #endif
 
-  log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_client_work, connecting to server, client id: %d...",
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_client_work, connecting to server, worker id: %d...",
           client->custom_remote_client.custom_worker.id);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
   {
@@ -281,7 +280,7 @@ int custom_client_work(custom_client_t *client)
                     client->custom_remote_client.custom_worker.host) >= ERROR_NORMAL)
     {
       char tmp[256];
-      sprintf(tmp, "[CUSTOM] custom_client_work, sock_connect, client id: %d, try in %d seconds, error: %d",
+      sprintf(tmp, "[CUSTOM] custom_client_work, sock_connect, worker id: %d, try in %d seconds, error: %d",
               client->custom_remote_client.custom_worker.id, SOCK_WAIT_CONNECT, sock_error());
       make_last_error(ERROR_WARNING, ERROR_WARNING, tmp);
       log_add(LOG_EXTRA,
@@ -300,7 +299,7 @@ int custom_client_work(custom_client_t *client)
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_client_work, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_client_work, worker id: %d",
               client->custom_remote_client.custom_worker.id);
 
   return ERROR_NONE;
@@ -366,19 +365,45 @@ void *custom_recv_worker(void *arg)
   report_close(tmp_client->report);
   #endif
 
-  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_recv_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] [END] custom_recv_worker, worker id: %d",
               tmp_client->custom_worker.id);
 
   return NULL;
 }
 //==============================================================================
-int _custom_remote_clients_count(custom_remote_clients_list_t *clients_list)
+int _custom_remote_clients_count_con(custom_remote_clients_list_t *clients_list)
 {
   int tmp_count = 0;
 
   if(clients_list != NULL)
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
       if(clients_list->items[i].custom_worker.state == STATE_START)
+         tmp_count++;
+
+  return tmp_count;
+}
+//==============================================================================
+int _custom_remote_clients_count_reg(custom_remote_clients_list_t *clients_list)
+{
+  int tmp_count = 0;
+
+  if(clients_list != NULL)
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+      if(clients_list->items[i].custom_worker.state == STATE_START)
+        if(clients_list->items[i].register_state == REGISTER_OK)
+         tmp_count++;
+
+  return tmp_count;
+}
+//==============================================================================
+int _custom_remote_clients_count_act(custom_remote_clients_list_t *clients_list)
+{
+  int tmp_count = 0;
+
+  if(clients_list != NULL)
+    for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
+      if(clients_list->items[i].custom_worker.state == STATE_START)
+        if(clients_list->items[i].active_state != ACTIVE_NONE)
          tmp_count++;
 
   return tmp_count;

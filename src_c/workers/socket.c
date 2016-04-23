@@ -199,15 +199,10 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     }
     else
     {
-      #ifdef USE_EXTRA_LOGS
-      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, socket: %d, recv size: %d",
-                  sock, size);
-      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, buffer:\n%s",
-                  buffer);
-      bytes_to_hex(buffer, (pack_size_t)size, tmp);
-      log_add_fmt(LOG_EXTRA, "[SOCK] sock_recv, hex buffer:\n%s",
-                  buffer);
-      #endif
+      pack_buffer_t tmp;
+      bytes_to_hex((unsigned char*)buffer, *size, (unsigned char*)tmp);
+      log_add_fmt(LOG_DEBUG, "sock_recv, socket: %d,\n%s",
+                  sock, (char*)tmp);
 
       return ERROR_NONE;
     }
@@ -264,15 +259,11 @@ int sock_send(SOCKET sock, char *buffer, int size)
   }
   else
   {
-    #ifdef SOCK_EXTRA_LOGS
-    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, socket: %d, send size: %d",
-                sock, size);
-    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, buffer:\n%s",
-                buffer);
-    bytes_to_hex(buffer, (pack_size_t)size, tmp);
-    log_add_fmt(LOG_EXTRA, "[SOCK] sock_send, hex buffer:\n%s",
-                buffer);
-    #endif
+    pack_buffer_t tmp;
+    bytes_to_hex((unsigned char*)buffer, size, (unsigned char*)tmp);
+    log_add_fmt(LOG_DEBUG, "sock_send, socket: %d,\n%s",
+                sock, (char*)tmp);
+
   }
   #endif
 

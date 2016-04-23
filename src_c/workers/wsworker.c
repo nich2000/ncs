@@ -239,7 +239,7 @@ custom_remote_client_t *_ws_remote_clients_next(ws_server_t *ws_server)
 //==============================================================================
 int _ws_remote_clients_count(ws_server_t *ws_server)
 {
-  return _custom_remote_clients_count(&ws_server->custom_remote_clients_list);
+  return _custom_remote_clients_count_con(&ws_server->custom_remote_clients_list);
 }
 //==============================================================================
 int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
@@ -282,7 +282,7 @@ void *ws_recv_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_recv_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_recv_worker, worker id: %d",
               tmp_client->custom_worker.id);
 
   tmp_client->custom_worker.state = STATE_START;
@@ -311,7 +311,7 @@ void *ws_recv_worker(void *arg)
           if(sock_send(tmp_sock, response, tmp_size) == ERROR_NONE)
           {
             tmp_client->hand_shake = TRUE;
-            log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, handshake success, client id: %d",
+            log_add_fmt(LOG_DEBUG, "[WS] ws_recv_worker, handshake success, worker id: %d",
                         tmp_client->custom_worker.id);
           }
           else
@@ -383,7 +383,7 @@ void *ws_recv_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_recv_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_recv_worker, worker id: %d",
               tmp_client->custom_worker.id);
 
   return NULL;
@@ -394,7 +394,7 @@ void *ws_send_worker(void *arg)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)arg;
   SOCKET tmp_sock = tmp_client->custom_worker.sock;
 
-  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_send_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_send_worker, worker id: %d",
               tmp_client->custom_worker.id);
 
   tmp_client->custom_worker.state = STATE_START;
@@ -432,7 +432,7 @@ void *ws_send_worker(void *arg)
 
   tmp_client->custom_worker.state = STATE_STOP;
 
-  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_send_worker, client id: %d",
+  log_add_fmt(LOG_DEBUG, "[WS] [END] ws_send_worker, worker id: %d",
               tmp_client->custom_worker.id);
 
   return NULL;
@@ -447,7 +447,7 @@ int on_ws_disconnect(void *sender)
 {
   custom_client_t *tmp_client = (custom_client_t*)sender;
 
-  log_add_fmt(LOG_INFO, "[WS] on_ws_disconnect, disconnected from server, client id: %d",
+  log_add_fmt(LOG_INFO, "[WS] on_ws_disconnect, disconnected from server, worker id: %d",
               tmp_client->custom_remote_client.custom_worker.id);
 
   time_t rawtime;
@@ -479,7 +479,7 @@ int on_ws_send(void *sender)
 int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 {
   char tmp[256];
-  sprintf(tmp, "[WS] ws_remote_clients_register, client id: %d, session id: %s",
+  sprintf(tmp, "[WS] ws_remote_clients_register, worker id: %d, session id: %s",
           id, session_id);
   log_add(LOG_DEBUG, tmp);
 
@@ -490,7 +490,7 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
     if(client->custom_worker.state == STATE_START)
       if(client->custom_worker.id == id)
       {
-        log_add_fmt(LOG_INFO, "[WS] ws_remote_clients_register, client found, client id: %d, session id: %s",
+        log_add_fmt(LOG_INFO, "[WS] ws_remote_clients_register, client found, worker id: %d, session id: %s",
                     id, session_id);
 
         strcpy((char*)client->custom_worker.session_id, (char*)session_id);
@@ -537,7 +537,7 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
       }
   }
 
-  sprintf(tmp, "[WS] ws_remote_clients_register, client not found, client id: %d, session id: %s",
+  sprintf(tmp, "[WS] ws_remote_clients_register, client not found, worker id: %d, session id: %s",
           id, session_id);
   log_add(LOG_ERROR, tmp);
   return make_last_error(ERROR_NORMAL, errno, tmp);

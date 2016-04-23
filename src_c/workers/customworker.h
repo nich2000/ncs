@@ -42,7 +42,9 @@ int custom_client_start            (custom_worker_t *worker);
 int custom_client_work             (custom_client_t *client);
 
 int                      custom_remote_clients_init (custom_remote_clients_list_t *clients_list);
-int                     _custom_remote_clients_count(custom_remote_clients_list_t *clients_list);
+int                     _custom_remote_clients_count_con(custom_remote_clients_list_t *clients_list);
+int                     _custom_remote_clients_count_reg(custom_remote_clients_list_t *clients_list);
+int                     _custom_remote_clients_count_act(custom_remote_clients_list_t *clients_list);
 custom_remote_client_t *_custom_remote_clients_next (custom_remote_clients_list_t *clients_list);
 
 void *custom_recv_worker(void *arg);

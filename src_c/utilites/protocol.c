@@ -18,6 +18,8 @@
 #include "ncs_pack_utils.h"
 #include "ncs_error.h"
 //==============================================================================
+static int _protocol_id = 0;
+//==============================================================================
 extern pack_number_t pack_global_number;
 extern char *pack_struct_keys[];
 //==============================================================================
@@ -128,6 +130,8 @@ int pack_queue_init(pack_queue_t *queue)
 //==============================================================================
 int protocol_init(pack_protocol_t *protocol)
 {
+  protocol->id = _protocol_id++;
+
   #ifdef PACK_USE_OWN_BUFFER
     protocol = malloc(sizeof(pack_protocol_t));
   #endif
@@ -287,6 +291,9 @@ int protocol_begin(pack_protocol_t *protocol)
 
   pack_init(tmp_pack);
 
+  log_add_fmt(LOG_DEBUG, "protocol_begin, protocol id: %d, packet number: %d, packet index: %d",
+              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
+
   return ERROR_NONE;
 }
 //==============================================================================
@@ -295,27 +302,42 @@ int protocol_end(pack_protocol_t *protocol)
   if(!is_locked(PACK_OUT, protocol))
     return ERROR_NORMAL;
 
-    pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
+  pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
+
+  log_add_fmt(LOG_DEBUG, "protocol_end, protocol id: %d, packet number: %d, packet index: %d",
+              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
 
   #ifdef PACK_USE_OWN_QUEUE
-    pack_queue_add(tmp_pack->number, protocol);
+  if(pack_queue_add(tmp_pack->number, protocol) >= ERROR_NORMAL)
+    goto error;
   #endif
 
   if(protocol->on_new_out_data != 0)
-    protocol->on_new_out_data((void*)protocol, (void*)tmp_pack);
+    if(protocol->on_new_out_data((void*)protocol, (void*)tmp_pack) >= ERROR_NORMAL)
+      goto error;
 
   unlock(PACK_OUT, protocol);
-
   return ERROR_NONE;
+
+  error:
+  unlock(PACK_OUT, protocol);
+  return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_end, message: %s",
+                             last_error()->message);
 }
 //==============================================================================
 #ifdef PACK_USE_OWN_QUEUE
 int pack_queue_add(pack_number_t number, pack_protocol_t *protocol)
 {
-  pack_packet_t *tmp_pack = _pack_pack_by_number(number, PACK_OUT, protocol);
+  log_add_fmt(LOG_DEBUG, "pack_queue_add, protocol id: %d, packet number: %d",
+              protocol->id, number);
 
+  pack_packet_t *tmp_pack = _pack_pack_by_number(number, PACK_OUT, protocol);
   if(tmp_pack == NULL)
-    return ERROR_NORMAL;
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_queue_add, pack by number(%d) not found",
+                               number);
+
+  log_add_fmt(LOG_DEBUG, "pack_queue_add, pack by number(%d) found",
+              tmp_pack->number);
 
   pack_queue_t *tmp_queue = &protocol->queue;
 
@@ -357,7 +379,12 @@ pack_packet_t *_protocol_next_pack(pack_protocol_t *protocol)
     if(tmp_queue->start == tmp_queue->finish)
       tmp_queue->empty = TRUE;
 
-    return tmp_queue->packets[tmp_index];
+    pack_packet_t *tmp_pack = tmp_queue->packets[tmp_index];
+
+    log_add_fmt(LOG_DEBUG, "_protocol_next_pack, protocol id: %d, packet number: %d, queue index: %d",
+                protocol->id, tmp_pack->number, tmp_index);
+
+    return tmp_pack;
   #else
     return _pack_pack_current(PACK_OUT, protocol);
   #endif
@@ -472,6 +499,8 @@ int protocol_assign_pack(pack_protocol_t *protocol, pack_packet_t *pack)
 int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
+//  log_add(LOG_INFO, "protocol_bin_buffer_validate");
+
   pack_validation_buffer_t *vbuffer = &protocol->validation_buffer;
 
   if((vbuffer->size + size) > PACK_BUFFER_SIZE)
@@ -534,6 +563,14 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     tmp_remain_size--;
     tmp_size             |= vbuffer->buffer[tmp_pack_pos++];
 
+    if(tmp_size == 0)
+    {
+      errno = 6;
+      return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
+                                                       "message: value size = %d",
+                                 errno, tmp_size);
+    }
+
     // Get value
     pack_buffer_t tmp_value_buffer;
     for(pack_size_t i = 0; i < (tmp_size + PACK_INDEX_SIZE); i++)
@@ -542,7 +579,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
       if(tmp_remain_size <= 0)
       {
-        errno = 6;
+        errno = 7;
         return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                          "message: (on value) empty buffer(%d), valid packs: %d",
                                    errno, tmp_remain_size, tmp_valid_pack_count);
@@ -557,7 +594,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     // Get crc16 1
     if(tmp_remain_size < PACK_CRC_SIZE)
     {
-      errno = 7;
+      errno = 8;
       return make_last_error_fmt(ERROR_WARNING, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                        "message: (on crc) empty buffer(%d), valid packs: %d",
                                  errno, tmp_remain_size, tmp_valid_pack_count);
@@ -574,7 +611,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     // Check crc16
     if(tmp_crc16_1 != tmp_crc16_2)
     {
-      errno = 8;
+      errno = 9;
       return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                       "message: crc16 does not match",
                                  errno);
@@ -610,7 +647,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
     if(tmp_pack == NULL)
     {
-      errno = 9;
+      errno = 10;
       return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                       "message: current pack is null",
                                  errno);
@@ -623,9 +660,10 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     {
       if(protocol->on_new_in_data != 0)
       {
+//        log_add(LOG_INFO, "protocol_bin_buffer_validate, on_new_in_data");
         if (protocol->on_new_in_data((void*)sender, (void*)tmp_pack) >= ERROR_WARNING)
         {
-          errno = 10;
+          errno = 11;
           return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                           "message: %s",
                                      errno, last_error()->message);
@@ -634,7 +672,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     }
     else
     {
-      errno = 11;
+      errno = 12;
       return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
                                                       "message: %s",
                                  errno, last_error()->message);

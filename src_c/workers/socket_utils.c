@@ -82,12 +82,14 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
   sprintf(tmp,
           "%s\n"                                         \
           "       id:                              %d\n" \
+          "       sock:                            %d\n" \
           "       name:                            %s\n" \
           "       type:                            %s\n" \
           "       mode:                            %s\n" \
           "       state:                           %s",
           prefix,
           worker->id,
+          worker->sock,
           worker->session_id,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
@@ -131,8 +133,14 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
     return 1;
 
   log_add(LOG_INFO, "---------");
-  log_add_fmt(LOG_INFO, "clients count:                   %d",
-              _custom_remote_clients_count(clients_list));
+  log_add_fmt(LOG_INFO,
+              "clients                        \n" \
+              "connected:                   %d\n" \
+              "registered:                  %d\n" \
+              "active:                      %d",
+              _custom_remote_clients_count_con(clients_list),
+              _custom_remote_clients_count_reg(clients_list),
+              _custom_remote_clients_count_act(clients_list));
   log_add(LOG_INFO, "---------");
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)

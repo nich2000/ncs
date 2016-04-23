@@ -143,7 +143,10 @@ const char *active_to_string(sock_active_t value)
 //==============================================================================
 const char *time_to_string(sock_time_t value)
 {
-  return asctime(localtime(&value));
+  if(!value)
+    return "no time";
+  else
+    return asctime(localtime(&value));
 }
 //==============================================================================
 const char *register_to_string(sock_register_t value)

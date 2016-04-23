@@ -60,7 +60,7 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id);
 int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count);
 int cmd_client_status();
 //==============================================================================
-int cmd_client_send_cmd (int argc, ...);
-int cmd_client_send_pack(pack_packet_t *pack);
+int cmd_client_send_cmd (sock_id_t client_id, int argc, ...);
+int cmd_client_send_pack(sock_id_t client_id, pack_packet_t *pack);
 //==============================================================================
 #endif //CMDWORKER_H

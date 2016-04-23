@@ -53,6 +53,7 @@
 //==============================================================================
 #define SOCK_VERSION             "SOCK001\0"
 #define SOCK_NAME_DEFAULT        "DEVICE\0"
+#define SOCK_NO_NAME_DEFAULT     "NONAME\0"
 #define SOCK_VERSION_SIZE        8
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
 //==============================================================================
