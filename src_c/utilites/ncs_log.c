@@ -37,6 +37,8 @@ char session_path[256] = DEFAULT_SESSION_PATH;
 BOOL report_enable     = TRUE;
 char report_path[265]  = DEFAULT_REPORT_PATH;
 //==============================================================================
+char log_prefix[16]    = DEFAULT_LOG_NAME;
+//==============================================================================
 void clr_scr()
 {
   #ifdef __linux__
@@ -234,7 +236,7 @@ void log_add(int log_type, const char *message)
 
   char full_file_name[256];
   char file_name[64];
-  log_gen_name(LOG_NAME_DATE_S, DEFAULT_LOG_NAME, file_name);
+  log_gen_name(LOG_NAME_DATE_S, log_prefix, file_name);
   sprintf(full_file_name, "%s/%s", log_path, file_name);
 
   make_dir(log_path);

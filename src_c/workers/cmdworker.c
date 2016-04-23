@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #include "cmdworker.h"
-
 #include "streamer.h"
 #include "exec.h"
 #include "customworker.h"
@@ -66,6 +65,8 @@ BOOL session_relay_to_web = TRUE;
 static cmd_server_t  _cmd_server;
 static names_t       _names;
 static int           _cmd_client_count = 0;
+//==============================================================================
+extern pthread_mutex_t mutex_accept;
 //==============================================================================
 cmd_clients_t _cmd_clients;
 //==============================================================================
@@ -365,6 +366,8 @@ int _cmd_remote_clients_count(cmd_server_t *cmd_server)
 //==============================================================================
 int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 {
+  pthread_mutex_lock(&mutex_accept);
+
   custom_server_t *tmp_server = (custom_server_t*)sender;
 
   custom_remote_client_t *tmp_client = _cmd_remote_clients_next(&_cmd_server);
@@ -383,7 +386,7 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   memcpy(&tmp_client->custom_worker.sock, &socket, sizeof(SOCKET));
   memcpy(tmp_client->custom_worker.host, host,   SOCK_HOST_SIZE);
 
-  log_add_fmt(LOG_DEBUG, "[CMD] cmd_accept, server id: %d, socket: %d, host: %s, port: %d",
+  log_add_fmt(LOG_INFO, "[CMD] cmd_accept, server id: %d, socket: %d, host: %s, port: %d",
               tmp_server->custom_worker.id,
               tmp_client->custom_worker.sock, tmp_client->custom_worker.host, tmp_client->custom_worker.port);
 
@@ -405,6 +408,8 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 
   pthread_create(&tmp_client->recv_thread, &tmp_attr, custom_recv_worker, (void*)tmp_client);
   pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker,    (void*)tmp_client);
+
+  pthread_mutex_unlock(&mutex_accept);
 
   return ERROR_NONE;
 }
@@ -491,9 +496,26 @@ int cmd_client_resume(cmd_client_t *client)
 //==============================================================================
 int cmd_client_register(cmd_client_t *client)
 {
+  log_add_fmt(LOG_INFO, "cmd_client_register, client id: %d",
+              client->custom_client.custom_remote_client.custom_worker.id);
+
   char tmp[128];
-  sprintf(tmp, "sndtosr register %s", client->custom_client.custom_remote_client.custom_worker.session_id);
+  sprintf(tmp, "sndtosr %s %s",
+          CMD_CMD_REGISTER,
+          client->custom_client.custom_remote_client.custom_worker.session_id);
   handle_command_str(client, tmp);
+
+//  handle_command_str_fmt(client, "sndtosr register %s",
+//                         client->custom_client.custom_remote_client.custom_worker.session_id);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+// TODO: пока непонятно нужна ли эта функция вообще
+int cmd_client_register_result(cmd_client_t *client, int result)
+{
+  log_add_fmt(LOG_INFO, "cmd_client_register_result: %d, client id: %d",
+              client->custom_client.custom_remote_client.custom_worker.id, result);
 
   return ERROR_NONE;
 }
@@ -969,10 +991,8 @@ int cmd_remote_client_activate_all(sock_active_t active, sock_active_t except)
 //==============================================================================
 int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
 {
-  char tmp[256];
-  sprintf(tmp, "[CMD] cmd_remote_client_register, client id: %d, session id: %s",
-          id, session_id);
-  log_add(LOG_DEBUG, tmp);
+  log_add_fmt(LOG_DEBUG, "[CMD] cmd_remote_client_register, client id: %d, session id: %s",
+              id, session_id);
 
   for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
   {
@@ -981,8 +1001,8 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
     if(client->custom_worker.state == STATE_START)
       if(client->custom_worker.id == id)
       {
-        log_add_fmt(LOG_INFO, "[CMD] cmd_remote_client_register, client found, client id: %d, session id: %s",
-                    id, session_id);
+//        log_add_fmt(LOG_DEBUG, "[CMD] cmd_remote_client_register, client found, client id: %d, session id: %s",
+//                    id, session_id);
 
         strcpy((char*)client->custom_worker.session_id, (char*)session_id);
 
@@ -1012,6 +1032,7 @@ int cmd_remote_client_register(sock_id_t id, sock_name_t session_id)
       }
   }
 
+  char tmp[256];
   sprintf(tmp, "[CMD] cmd_remote_clients_register, client not found, client id: %d, session id: %s",
           id, session_id);
   log_add(LOG_ERROR, tmp);

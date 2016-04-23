@@ -20,12 +20,15 @@
 // 1. для клиента
 // 2. для remote клиента, т.е. CMD и WS клиенты будут пересекаться
 // начинается с последнего статического ID
-static int custom_id = STATIC_WS_SERVER_ID + 1;
+static int _custom_id = STATIC_WS_SERVER_ID + 1;
+//==============================================================================
+pthread_mutex_t mutex_accept = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_register = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
 int custom_worker_init(int id, custom_worker_t *worker)
 {
   if(id == ID_GEN_NEW)
-    worker->id = custom_id++;
+    worker->id = _custom_id++;
   else
     worker->id = id;
 
@@ -269,7 +272,7 @@ int custom_client_work(custom_client_t *client)
   client->stat = stat_open(tmp_name);
   #endif
 
-  log_add_fmt(LOG_INFO, "[CUSTOM] custom_client_work, connecting to server, client id: %d...",
+  log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_client_work, connecting to server, client id: %d...",
           client->custom_remote_client.custom_worker.id);
   while(client->custom_remote_client.custom_worker.state == STATE_START)
   {

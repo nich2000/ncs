@@ -32,41 +32,6 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 //==============================================================================
-#define CMD_HELP             "help"           // 0 - 1 all - specifically
-#define CMD_TEST             "test"           // 0
-#define CMD_CLEAR            "clear"          // 0
-#define CMD_EXIT             "exit"           // 0
-#define CMD_ALL              "all"            // 0 start all default servers
-#define CMD_SERVER           "server"         // 1 - 2(state, port)
-#define CMD_WEB_SERVER       "webserver"      // 1 - 2(state, port)
-#define CMD_WS_SERVER        "wsserver"       // 1 - 2(state, port)
-#define CMD_CLIENT           "client"         // 1 - 3(state, host, port)
-#define CMD_SND_TO_SERVER    "sndtosr"        // 1 - n
-#define CMD_SND_TO_WSSERVER  "sndtows"        // 1 - n
-#define CMD_SND_TO_CLIENT    "sndtocl"        // 1 - n
-#define CMD_STREAM           "stream"         // 1(on off pause resume)
-#define CMD_TYPES_INFO       "typesinfo"      // 0
-#define CMD_DEFINES_INFO     "definesinfo"    // 0
-#define CMD_SERVER_INFO      "serverinfo"     // 0
-#define CMD_WEB_SERVER_INFO  "webserverinfo"  // 0
-#define CMD_WS_SERVER_INFO   "wsserverinfo"   // 0
-#define CMD_CLIENT_INFO      "clientinfo"     // 0
-#define CMD_CMD_REGISTER     "register"       //
-#define CMD_CMD_ACTIVATE     "activate"       //
-#define CMD_WS_REGISTER      "ws_register"    //
-#define CMD_WS_ACTIVATE      "ws_activate"    //
-#define CMD_RECONFIG         "reconfig"       // 0
-//==============================================================================
-#define CMD_START            "on"
-#define CMD_STOP             "off"
-#define CMD_PAUSE            "pause"
-#define CMD_RESUME           "resume"
-#define CMD_STEP             "step"
-//==============================================================================
-#define CMD_FIRST            "first"
-#define CMD_SECOND           "second"
-#define CMD_NEXT             "next"
-//==============================================================================
 sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
 sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
 sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
@@ -84,6 +49,9 @@ extern char session_path[256];
 extern char session_file[64];
 extern char map_path[256];
 extern char map_file[64];
+//==============================================================================
+extern pthread_mutex_t mutex_register;
+extern char log_prefix[8];
 //==============================================================================
 int read_config()
 {
@@ -125,7 +93,11 @@ void print_config()
 {
   log_add(LOG_INFO, "-------------------");
   log_add_fmt(LOG_INFO,
-              "configuration                   \n" \
+              "configuration                  \n" \
+              "       web_server_port:      %d\n" \
+              "       ws_server_port:       %d\n" \
+              "       cmd_server_port:      %d\n" \
+              "       cmd_server_host:      %s\n" \
               "       session_relay_to_web: %d\n" \
               "       log_enable:           %d\n" \
               "       log_path:             %s\n" \
@@ -138,6 +110,10 @@ void print_config()
               "       session_file:         %s\n" \
               "       map_path:             %s\n" \
               "       map_file:             %s",
+              web_server_port,
+              ws_server_port,
+              cmd_server_port,
+              cmd_server_host,
               session_relay_to_web,
               log_enable,
               log_path,
@@ -270,6 +246,11 @@ int handle_command_pack(void *sender, pack_packet_t *packet)
                              last_error()->message);
 }
 //==============================================================================
+int handle_command_str_fmt(void *sender, char *command, ...)
+{
+  return ERROR_NONE;
+}
+//==============================================================================
 int handle_command_str(void *sender, char *command)
 {
   char *token = strtok(command, " ");
@@ -280,34 +261,34 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     if(strcmp(token, CMD_HELP) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_HELP);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_HELP);
       help();
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_TEST) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_TEST);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_TEST);
       test();
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLEAR) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CLEAR);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_CLEAR);
       clr_scr();
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_EXIT) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_EXIT);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_EXIT);
       return EXEC_NONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_ALL) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_ALL);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_ALL);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -323,7 +304,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SERVER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_SERVER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SERVER);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -342,7 +323,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WEB_SERVER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WEB_SERVER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WEB_SERVER);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -361,7 +342,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_SERVER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_SERVER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WS_SERVER);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -380,7 +361,8 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLIENT) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CLIENT);
+      strcpy(log_prefix, "cl.txt");
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_CLIENT);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -410,7 +392,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_SERVER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_SERVER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SND_TO_SERVER);
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
@@ -432,7 +414,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_WSSERVER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_WSSERVER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SND_TO_WSSERVER);
 
       int tmp_session_id = SOCK_SEND_TO_ALL;
       char *arg = strtok(NULL, " ");
@@ -460,7 +442,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_CLIENT) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_SND_TO_CLIENT);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SND_TO_CLIENT);
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
@@ -482,7 +464,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_STREAM) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_STREAM);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_STREAM);
 
       sock_state_t state = STATE_START;
       char *state_str = strtok(NULL, " ");
@@ -501,7 +483,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_TYPES_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_TYPES_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_TYPES_INFO);
 
       print_types_info();
 
@@ -510,7 +492,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_DEFINES_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_DEFINES_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_DEFINES_INFO);
 
       print_defines_info();
 
@@ -519,7 +501,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SERVER_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_SERVER_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_SERVER_INFO);
 
       cmd_server_status();
 
@@ -528,7 +510,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WEB_SERVER_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WEB_SERVER_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WEB_SERVER_INFO);
 
       web_server_status();
 
@@ -537,7 +519,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_SERVER_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_SERVER_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WS_SERVER_INFO);
 
       ws_server_status();
 
@@ -546,7 +528,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLIENT_INFO) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CLIENT_INFO);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_CLIENT_INFO);
 
       cmd_client_status();
 
@@ -555,16 +537,18 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CMD_ACTIVATE) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_ACTIVATE);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_CMD_ACTIVATE);
 
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CMD_REGISTER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_CMD_REGISTER);
+//      pthread_mutex_lock(&mutex_register);
 
       char *name_str = strtok(NULL, " ");
+      log_add_fmt(LOG_EXTRA, "token: %s, sender: %s", CMD_CMD_REGISTER, name_str);
+
       if(name_str != NULL)
       {
         sock_id_t id = ((custom_worker_t*)sender)->id;
@@ -572,13 +556,15 @@ int handle_command_str(void *sender, char *command)
         cmd_remote_client_register(id, (unsigned char*)name_str);
       }
 
+//      pthread_mutex_unlock(&mutex_register);
+
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
     {
       char *name_str = strtok(NULL, " ");
-      log_add_fmt(LOG_INFO, "token: %s, sender: %s", CMD_WS_ACTIVATE, name_str);
+      log_add_fmt(LOG_EXTRA, "token: %s, sender: %s", CMD_WS_ACTIVATE, name_str);
 
       sock_id_t id = -1;
       char *id_str = strtok(NULL, " ");
@@ -614,7 +600,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_REGISTER) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_WS_REGISTER);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WS_REGISTER);
 
       char *name_str = strtok(NULL, " ");
       if(name_str != NULL)
@@ -629,7 +615,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_RECONFIG) == 0)
     {
-      log_add_fmt(LOG_INFO, "token: %s", CMD_RECONFIG);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_RECONFIG);
 
       read_config();
 

@@ -123,44 +123,41 @@ int load_session()
 int cmd_streamer(sock_state_t state, int interval)
 {
   _streamer_interval = interval;
+  _streamer_count = cmd_client_count();
 
-  if(state == STATE_STEP)
+  for(int i = 0; i < _streamer_count; i++)
   {
-    cmd_streamer_step(&_cmd_clients[0].custom_client.custom_remote_client ,1);
-  }
-  else
-  {
-    _streamer_count = cmd_client_count();
-
-    for(int i = 0; i < _streamer_count; i++)
+    switch(state)
     {
-      switch(state)
+      case STATE_NONE:
+        break;
+      case STATE_STEP:
       {
-        case STATE_NONE:
-          break;
-        case STATE_START:
-        {
-          cmd_streamer_start(&_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
-          break;
-        }
-        case STATE_STOP:
-        {
-          cmd_streamer_stop(&_streamer[i]);
-          break;
-        }
-        case STATE_PAUSE:
-        {
-          cmd_streamer_pause(&_streamer[i]);
-          break;
-        }
-        case STATE_RESUME:
-        {
-          cmd_streamer_resume(&_streamer[i]);
-          break;
-        }
-        default:
-          break;
+        cmd_streamer_step(&_cmd_clients[i].custom_client.custom_remote_client ,1);
+        break;
       }
+      case STATE_START:
+      {
+        cmd_streamer_start(&_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
+        break;
+      }
+      case STATE_STOP:
+      {
+        cmd_streamer_stop(&_streamer[i]);
+        break;
+      }
+      case STATE_PAUSE:
+      {
+        cmd_streamer_pause(&_streamer[i]);
+        break;
+      }
+      case STATE_RESUME:
+      {
+        cmd_streamer_resume(&_streamer[i]);
+        break;
+      }
+      default:
+        break;
     }
   }
 
