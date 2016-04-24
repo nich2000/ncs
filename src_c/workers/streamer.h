@@ -40,9 +40,25 @@ typedef struct
   session_items_t items;
 } session_t;
 //==============================================================================
+typedef struct
+{
+  float lat;
+  float lon;
+} coord_t;
+//==============================================================================
+typedef coord_t coords_items_t[SESSION_SIZE];
+//==============================================================================
+typedef struct
+{
+  int            index;
+  int            count;
+  coords_items_t items;
+} coords_t;
+//==============================================================================
 int cmd_streamer       (sock_state_t state, int interval);
 int cmd_streamer_status();
 //==============================================================================
 int load_session();
+int load_coords();
 //==============================================================================
 #endif //STREAMER_H

@@ -1,9 +1,9 @@
 cmake/
 bin/
 logs/
-#reports/
-#stats/
-#sessions/
+reports/
+stats/
+sessions/
 .directory
 ncs.sublime-workspace
 src_c/CMakeLists.txt.user

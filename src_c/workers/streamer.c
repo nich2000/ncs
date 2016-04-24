@@ -40,7 +40,8 @@ static int             _streamer_interval = 1000;
 //==============================================================================
 static int             _streamer_pack_counter = 0;
 //==============================================================================
-static session_t _session;
+static session_t       _session;
+static coords_t        _coords;
 //==============================================================================
 extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
@@ -51,6 +52,50 @@ char session_file[64] = DEFAULT_SESSION_NAME;
 session_t *session()
 {
   return &_session;
+}
+//==============================================================================
+int load_coords()
+{
+  char full_file_name[256];
+  sprintf(full_file_name, "%s/%s", session_path, "coords.csv");
+
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  _coords.count = 0;
+  _coords.index = -1;
+
+  FILE *f = fopen(full_file_name, "r");
+  if(f == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_session, can not open file %s", full_file_name);
+
+  while ((read = getline(&line, &len, f)) != -1)
+  {
+    _coords.count++;
+
+    coord_t *tmp_item = &_coords.items[_coords.count-1];
+
+    char *token = strtok(line, ";");
+    tmp_item->lat = atof(token);
+
+    token = strtok(NULL, ";");
+    tmp_item->lon = atof(token);
+  }
+
+  log_add_fmt(LOG_INFO, "[SRTEAMER] load_coords, file: %s, count: %d",
+              full_file_name, _coords.count);
+
+//  for(int i = 0; i < _coords.count; i++)
+//    printf("%f;%f\n",
+//           _coords.items[i].lat,
+//           _coords.items[i].lon);
+
+  fclose(f);
+  if(line)
+    free(line);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int load_session()
@@ -265,13 +310,13 @@ void *cmd_streamer_worker_func(void *arg)
 int cmd_streamer_step(custom_remote_client_t *client, int counter, int debug)
 {
   _streamer_pack_counter++;
-  if(_session.count > 0)
-    _session.index = _streamer_pack_counter / _session.count;
+  if(_coords.count > 0)
+    _coords.index = _streamer_pack_counter % _coords.count;
 
   if(debug)
     log_add_fmt(LOG_INFO, "cmd_streamer_step, counter: %d, index: %d",
                 _streamer_pack_counter,
-                _session.index);
+                _coords.index);
 
   #ifdef STREAM_RANDOM_PACK
   cmd_streamer_make_random(client);
@@ -301,8 +346,8 @@ void fill_pack_struct(custom_remote_client_t *client, int counter, pack_struct_t
   pack->TickCount       = counter;                              // 4
   pack->GPSspeed        = (float)rand()/(float)(RAND_MAX/1000); // 5
   pack->GPSheading      = (float)rand()/(float)(RAND_MAX/1000); // 6
-  pack->GPSlat          = (float)rand()/(float)(RAND_MAX/1000); // 7
-  pack->GPSlon          = (float)rand()/(float)(RAND_MAX/1000); // 8
+  pack->GPSlat          = _coords.items[_coords.index].lat;     // 7
+  pack->GPSlon          = _coords.items[_coords.index].lon;     // 8
   pack->int_par1        = rand();                               // 9
   pack->int_par2        = rand();                               // 10
   pack->Gyro1AngleZ     = (float)rand()/(float)(RAND_MAX/1000); // 11
