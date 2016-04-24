@@ -259,11 +259,10 @@ int sock_send(SOCKET sock, char *buffer, int size)
   }
   else
   {
-    pack_buffer_t tmp;
-    bytes_to_hex((unsigned char*)buffer, size, (unsigned char*)tmp);
-    log_add_fmt(LOG_DEBUG, "sock_send, socket: %d,\n%s",
-                sock, (char*)tmp);
-
+//    pack_buffer_t tmp;
+//    bytes_to_hex((unsigned char*)buffer, size, (unsigned char*)tmp);
+//    log_add_fmt(LOG_DEBUG, "sock_send, socket: %d,\n%s",
+//                sock, (char*)tmp);
   }
   #endif
 

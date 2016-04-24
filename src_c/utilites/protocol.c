@@ -291,8 +291,8 @@ int protocol_begin(pack_protocol_t *protocol)
 
   pack_init(tmp_pack);
 
-  log_add_fmt(LOG_DEBUG, "protocol_begin, protocol id: %d, packet number: %d, packet index: %d",
-              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
+//  log_add_fmt(LOG_DEBUG, "protocol_begin, protocol id: %d, packet number: %d, packet index: %d",
+//              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
 
   return ERROR_NONE;
 }
@@ -304,8 +304,8 @@ int protocol_end(pack_protocol_t *protocol)
 
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
 
-  log_add_fmt(LOG_DEBUG, "protocol_end, protocol id: %d, packet number: %d, packet index: %d",
-              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
+//  log_add_fmt(LOG_DEBUG, "protocol_end, protocol id: %d, packet number: %d, packet index: %d",
+//              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
 
   #ifdef PACK_USE_OWN_QUEUE
   if(pack_queue_add(tmp_pack->number, protocol) >= ERROR_NORMAL)
@@ -328,16 +328,16 @@ int protocol_end(pack_protocol_t *protocol)
 #ifdef PACK_USE_OWN_QUEUE
 int pack_queue_add(pack_number_t number, pack_protocol_t *protocol)
 {
-  log_add_fmt(LOG_DEBUG, "pack_queue_add, protocol id: %d, packet number: %d",
-              protocol->id, number);
+//  log_add_fmt(LOG_DEBUG, "pack_queue_add, protocol id: %d, packet number: %d",
+//              protocol->id, number);
 
   pack_packet_t *tmp_pack = _pack_pack_by_number(number, PACK_OUT, protocol);
   if(tmp_pack == NULL)
     return make_last_error_fmt(ERROR_NORMAL, errno, "pack_queue_add, pack by number(%d) not found",
                                number);
 
-  log_add_fmt(LOG_DEBUG, "pack_queue_add, pack by number(%d) found",
-              tmp_pack->number);
+//  log_add_fmt(LOG_DEBUG, "pack_queue_add, pack by number(%d) found",
+//              tmp_pack->number);
 
   pack_queue_t *tmp_queue = &protocol->queue;
 
@@ -381,8 +381,8 @@ pack_packet_t *_protocol_next_pack(pack_protocol_t *protocol)
 
     pack_packet_t *tmp_pack = tmp_queue->packets[tmp_index];
 
-    log_add_fmt(LOG_DEBUG, "_protocol_next_pack, protocol id: %d, packet number: %d, queue index: %d",
-                protocol->id, tmp_pack->number, tmp_index);
+//    log_add_fmt(LOG_DEBUG, "_protocol_next_pack, protocol id: %d, packet number: %d, queue index: %d",
+//                protocol->id, tmp_pack->number, tmp_index);
 
     return tmp_pack;
   #else

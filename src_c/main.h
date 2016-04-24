@@ -20,5 +20,6 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 #include "exec.h"
+#include "streamer.h"
 //==============================================================================
 #endif //MAIN_H

@@ -26,6 +26,9 @@ int main(int argc, char *argv[])
   if(sock_init() >= ERROR_WARNING)
     goto exit;
 
+  load_coords();
+//  load_session();
+
   char command[256];
   if(argc > 1)
   {

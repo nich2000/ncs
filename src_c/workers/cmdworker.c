@@ -446,9 +446,6 @@ int cmd_client_init(cmd_client_t *client)
 //==============================================================================
 int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
 {
-  load_coords();
-//  load_session();
-
   cmd_client_init(client);
 
   protocol_init(&client->custom_client.custom_remote_client.protocol);
