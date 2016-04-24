@@ -10,6 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __linux__
+#include <sys/time.h>
+#endif
+
+#include <time.h>
+
 #include "streamer.h"
 
 #include "ncs_log.h"
@@ -25,8 +31,8 @@ int cmd_streamer_resume(streamer_worker *worker);
 //==============================================================================
 void *cmd_streamer_worker_func(void *arg);
 int cmd_streamer_make_random(custom_remote_client_t *client);
-int cmd_streamer_make       (custom_remote_client_t *client);
-int cmd_streamer_step       (custom_remote_client_t *client, int debug);
+int cmd_streamer_make       (custom_remote_client_t *client, int counter);
+int cmd_streamer_step       (custom_remote_client_t *client, int counter, int debug);
 //==============================================================================
 static int             _streamer_count = 0;
 static streamer_worker _streamer[SOCK_WORKERS_COUNT];
@@ -133,7 +139,7 @@ int cmd_streamer(sock_state_t state, int interval)
         break;
       case STATE_STEP:
       {
-        cmd_streamer_step(&_cmd_clients[i].custom_client.custom_remote_client ,1);
+        cmd_streamer_step(&_cmd_clients[i].custom_client.custom_remote_client, 0, 1);
         break;
       }
       case STATE_START:
@@ -247,7 +253,8 @@ void *cmd_streamer_worker_func(void *arg)
       continue;
     }
 
-    cmd_streamer_step(tmp_worker->client, 0);
+    tmp_worker->last_number++;
+    cmd_streamer_step(tmp_worker->client, tmp_worker->last_number, 0);
 
     usleep(_streamer_interval * 1000);
   }
@@ -255,7 +262,7 @@ void *cmd_streamer_worker_func(void *arg)
   return NULL;
 }
 //==============================================================================
-int cmd_streamer_step(custom_remote_client_t *client, int debug)
+int cmd_streamer_step(custom_remote_client_t *client, int counter, int debug)
 {
   _streamer_pack_counter++;
   if(_session.count > 0)
@@ -269,7 +276,7 @@ int cmd_streamer_step(custom_remote_client_t *client, int debug)
   #ifdef STREAM_RANDOM_PACK
   cmd_streamer_make_random(client);
   #else
-  cmd_streamer_make(client);
+  cmd_streamer_make(client, counter);
   #endif
 
   return ERROR_NONE;
@@ -279,12 +286,19 @@ int cmd_streamer_step(custom_remote_client_t *client, int debug)
 //==============================================================================
 //check_xor
 //==============================================================================
-void fill_pack_struct(custom_remote_client_t *client, pack_struct_t *pack)
+void fill_pack_struct(custom_remote_client_t *client, int counter, pack_struct_t *pack)
 {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  time_t rawtime = tv.tv_sec;
+  struct tm * timeinfo = localtime(&rawtime);
+  char tmp[16];
+  strftime(tmp, 16, "%H%M%S", timeinfo);
+
   strcpy(pack->_ID, (char*)client->custom_worker.session_id);   // 1
-  pack->GPStime         = rand();                               // 2
-  pack->GPStime_s       = rand();                               // 3
-  pack->TickCount       = rand();                               // 4
+  pack->GPStime         = atoi(tmp);                            // 2
+  pack->GPStime_s       = tv.tv_usec/1000;                      // 3
+  pack->TickCount       = counter;                              // 4
   pack->GPSspeed        = (float)rand()/(float)(RAND_MAX/1000); // 5
   pack->GPSheading      = (float)rand()/(float)(RAND_MAX/1000); // 6
   pack->GPSlat          = (float)rand()/(float)(RAND_MAX/1000); // 7
@@ -303,10 +317,10 @@ void fill_pack_struct(custom_remote_client_t *client, pack_struct_t *pack)
   pack->_xor            = 0;                                    // 20
 }
 //==============================================================================
-int cmd_streamer_make(custom_remote_client_t *client)
+int cmd_streamer_make(custom_remote_client_t *client, int counter)
 {
   pack_struct_t tmp_pack;
-  fill_pack_struct(client, &tmp_pack);
+  fill_pack_struct(client, counter, &tmp_pack);
 
   protocol_begin(&client->protocol);
 

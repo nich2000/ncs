@@ -199,10 +199,10 @@ int sock_recv(SOCKET sock, char *buffer, int *size)
     }
     else
     {
-      pack_buffer_t tmp;
-      bytes_to_hex((unsigned char*)buffer, *size, (unsigned char*)tmp);
-      log_add_fmt(LOG_DEBUG, "sock_recv, socket: %d,\n%s",
-                  sock, (char*)tmp);
+//      pack_buffer_t tmp;
+//      bytes_to_hex((unsigned char*)buffer, *size, (unsigned char*)tmp);
+//      log_add_fmt(LOG_DEBUG, "sock_recv, socket: %d,\n%s",
+//                  sock, (char*)tmp);
 
       return ERROR_NONE;
     }
