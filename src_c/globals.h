@@ -9,6 +9,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 //==============================================================================
+#define APPLICATION_VERSION      "1.0.1.120"
+//==============================================================================
 #define DEFAULT_CMD_SERVER_PORT  5700
 #define DEFAULT_WS_SERVER_PORT   5800
 #define DEFAULT_WEB_SERVER_PORT  5900
