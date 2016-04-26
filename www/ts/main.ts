@@ -13,7 +13,7 @@ function init() {
   map = new map_t('canvas_map');
   // map.test_mode = true;
 
-  ws = new web_socket_t("ws://" + location.hostname + ":5800");
+  ws = new web_socket_t("ws://" + location.hostname + ":5801");
 }
 //=============================================================================
 $(window).load(function() {

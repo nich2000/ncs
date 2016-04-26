@@ -26,7 +26,7 @@
 //  #define WRITE_REPORT
 
   // send stream data to ws
-//  #define STREAM_TO_WS
+  #define STREAM_TO_WS
 
   // create random pack on test stream
 //  #define STREAM_RANDOM_PACK

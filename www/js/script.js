@@ -254,16 +254,14 @@ var element = (function () {
     return element;
 })();
 /// <reference path="./jquery.d.ts"/>
-var exec;
 var clients;
 var ws;
 var map;
 function init() {
     console.log("init");
-    exec = new exec_t();
     clients = new clients_t();
     map = new map_t('canvas_map');
-    ws = new web_socket_t("ws://" + location.hostname + ":5800");
+    ws = new web_socket_t("ws://" + location.hostname + ":5801");
 }
 $(window).load(function () {
     $('body').height($(window).height());
