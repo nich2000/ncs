@@ -1,13 +1,15 @@
-@echo off
+rem @echo off
 
 cd ../bin
 
-@rem del log.txt
+call ncs.exe -h
+pause
 
-start /b SocketTestC -s -p 5600
+call ncs.exe --help
+pause
 
-start /b SocketTestC -c -p 5600 -h 127.0.0.1
+call ncs.exe -v
+pause
 
-@rem start /b SocketTest -c -p 5600 -h 127.0.0.1
-
+call ncs.exe --version
 pause

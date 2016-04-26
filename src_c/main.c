@@ -14,23 +14,24 @@ extern sock_port_t cmd_server_port;
 extern sock_port_t ws_server_port;
 extern sock_port_t web_server_port;
 extern sock_host_t cmd_server_host;
+extern int         cmd_clients_count;
 //==============================================================================
 int main(int argc, char *argv[])
 {
   //---------------------------------------------------------------------------
   if(argc > 1)
   {
-    if((strcmp(argv[1], "-v") == 0) || ((strcmp(argv[1], "--version") == 0)))
+    if((strcmp(argv[1], CMD_S_VERSION) == 0) || ((strcmp(argv[1], CMD_VERSION) == 0)))
     {
       print_version();
       return 0;
     }
-    if((strcmp(argv[1], "-h") == 0) || ((strcmp(argv[1], "--help") == 0)))
+    if((strcmp(argv[1], CMD_S_HELP) == 0) || ((strcmp(argv[1], CMD_HELP) == 0)))
     {
-      print_help();
+      print_help(1);
       return 0;
     }
-    if((strcmp(argv[1], "-c") == 0) || ((strcmp(argv[1], "--config") == 0)))
+    if((strcmp(argv[1], CMD_S_CONFIG) == 0) || ((strcmp(argv[1], CMD_CONFIG) == 0)))
     {
       read_config();
       print_config();
@@ -38,83 +39,84 @@ int main(int argc, char *argv[])
     }
   }
   //---------------------------------------------------------------------------
-
   print_version();
-
+  //---------------------------------------------------------------------------
   if(read_config() >= ERROR_WARNING)
     goto exit;
-
   print_config();
-
+  //---------------------------------------------------------------------------
   log_add(LOG_INFO, "application started");
   log_add_fmt(LOG_INFO, "application version: %s", APPLICATION_VERSION);
   log_add(LOG_INFO, "-------------------");
-
+  //---------------------------------------------------------------------------
   if(sock_init() >= ERROR_WARNING)
     goto exit;
-
+  //---------------------------------------------------------------------------
   load_coords();
 //  load_session();
-
+  //---------------------------------------------------------------------------
   char command[256];
   if(argc > 1)
   {
-
+    // Read params
     for(int i = 1; i < argc; i++)
     {
-      //-d --cmdport   cmd_server_port
-      //-b --webport   web_server_port
-      //-w --wsport    ws_server_port
-      //-h --cmdhost   cmd_server_host
-      //-c --client    client_mode
-      //-t --test      cmp_clients_count
-      //-s --server    server_mode
-      //-e --web       web_server_mode
-      //-o --ws        web_socket_mode
-//    // name -c -p 5700 -h 127.0.0.1
-//    if(argc > 3)
-      //-a --all       all_mode
+      if((strcmp(argv[i], PARAM_S_PORT) == 0) || ((strcmp(argv[i], PARAM_PORT) == 0)))
+      {
+        cmd_server_port
+      }
+      else if((strcmp(argv[i], PARAM_S_WEB_PORT) == 0) || ((strcmp(argv[i], PARAM_WEB_PORT) == 0)))
+      {
+        web_server_port
+      }
+      else if((strcmp(argv[i], PARAM_S_WS_PORT) == 0) || ((strcmp(argv[i], PARAM_WS_PORT) == 0)))
+      {
+        ws_server_port
+      }
+      else if((strcmp(argv[i], PARAM_S_HOST) == 0) || ((strcmp(argv[i], PARAM_HOST) == 0)))
+      {
+        cmd_server_host
+      }
+      else if((strcmp(argv[i], PARAM_S_COUNT) == 0) || ((strcmp(argv[i], PARAM_COUNT) == 0)))
+      {
+        cmd_clients_count
+      }
     }
-
-    //      if(strcmp(argv[2], "-p") == 0)
-    //        cmd_server_port = atoi(argv[3]);
-
-    //    if(strcmp(argv[1], "-s") == 0)
-    //    {
-        //    // 0     1  2 3     4 5
-//      log_add(LOG_INFO, "server mode");
-
-//      sprintf(command, "server on %d", cmd_server_port);
-//      handle_command_str(NULL, command);
-
-//      sprintf(command, "webserver on %d", web_server_port);
-//      handle_command_str(NULL, command);
-
-//      sprintf(command, "wsserver on %d", ws_server_port);
-//      handle_command_str(NULL, command);
-//    }
-//    else if(strcmp(argv[1], "-c") == 0)
-//    {
-//      log_add(LOG_INFO, "client mode");
-
-//      if(argc > 5)
-//        if(strcmp(argv[4], "-h") == 0)
-//          strcpy((char*)cmd_server_host, argv[5]);
-
-//      sprintf(command, "client on %d %s 1", cmd_server_port, cmd_server_host);
-//      handle_command_str(NULL, command);
-//    }
-//    else
-//    {
-      make_last_error(ERROR_NONE, errno, "unknown mode");
-      goto exit;
-//    }
+    // Read cmd
+    for(int i = 1; i < argc; i++)
+    {
+      if((strcmp(argv[i], CMD_S_ALL) == 0) || ((strcmp(argv[i], CMD_ALL) == 0)))
+      {
+        handle_command_str_fmt(NULL, "%s on %s %d %s %d %s %d",
+          CMD_ALL, cmd_server_port, ws_server_port, web_server_port);
+      }
+      else if((strcmp(argv[i], CMD_S_SERVER) == 0) || ((strcmp(argv[i], CMD_SERVER) == 0)))
+      {
+        handle_command_str_fmt(NULL, "%s on %s %d",
+          CMD_SERVER, cmd_server_port);
+      }
+      else if((strcmp(argv[i], CMD_S_WEB_SERVER) == 0) || ((strcmp(argv[i], CMD_WEB_SERVER) == 0)))
+      {
+        handle_command_str_fmt(NULL, "%s on %s %d",
+          CMD_WEB_SERVER, web_server_port);
+      }
+      else if((strcmp(argv[i], CMD_S_WS_SERVER) == 0) || ((strcmp(argv[i], CMD_WS_SERVER) == 0)))
+      {
+        handle_command_str_fmt(NULL, "%s on %s %d",
+          CMD_WS_SERVER, ws_server_port);
+      }
+      else if((strcmp(argv[i], CMD_S_CLIENT) == 0) || ((strcmp(argv[i], CMD_CLIENT) == 0)))
+      {
+        handle_command_str_fmt(NULL, "%s on %s %d %s %s %s %d",
+          CMD_CLIENT, PARAM_S_PORT, cmd_server_port, PARAM_S_HOST, cmd_server_host, PARAM_S_COUNT, cmd_clients_count);
+      }
+    }
   }
   else
   {
     log_add(LOG_INFO, "command mode");
   }
-
+  //---------------------------------------------------------------------------
   while(1)
   {
     fgets(command, sizeof(command), stdin);
@@ -135,11 +137,12 @@ int main(int argc, char *argv[])
         break;
     }
   }
-
+  //---------------------------------------------------------------------------
   exit:
   sock_deinit();
   log_add_fmt(LOG_INFO, "application finished, result: %s\n", last_error()->message);
-
+  //---------------------------------------------------------------------------
   return 0;
+  //---------------------------------------------------------------------------
 }
 //==============================================================================

@@ -29,7 +29,7 @@ const char *time_to_string     (sock_time_t     value);
 const char *register_to_string (sock_register_t value);
 //==============================================================================
 void print_version();
-void print_help();
+void print_help(int run_time);
 void print_config();
 void print_types_info();
 void print_defines_info();

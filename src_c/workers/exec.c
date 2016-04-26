@@ -17,11 +17,9 @@
  */
 //==============================================================================
 #include <string.h>
-// atoi
 #include <stdlib.h>
 
 #include "exec.h"
-
 #include "test.h"
 #include "utils.h"
 #include "socket.h"
@@ -32,10 +30,11 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 //==============================================================================
-sock_port_t web_server_port = DEFAULT_WEB_SERVER_PORT;
-sock_port_t ws_server_port  = DEFAULT_WS_SERVER_PORT;
-sock_port_t cmd_server_port = DEFAULT_CMD_SERVER_PORT;
-sock_host_t cmd_server_host = DEFAULT_SERVER_HOST;
+sock_port_t web_server_port   = DEFAULT_WEB_SERVER_PORT;
+sock_port_t ws_server_port    = DEFAULT_WS_SERVER_PORT;
+sock_port_t cmd_server_port   = DEFAULT_CMD_SERVER_PORT;
+sock_host_t cmd_server_host   = DEFAULT_SERVER_HOST;
+int         cmd_clients_count = 1;
 //==============================================================================
 extern BOOL session_relay_to_web;
 extern BOOL log_enable;
@@ -175,7 +174,7 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     if(strcmp(token, CMD_HELP) == 0)
     {
-      print_help();
+      print_help(0);
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------

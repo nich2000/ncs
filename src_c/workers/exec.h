@@ -17,32 +17,52 @@
 
 #include "ncs_pack.h"
 //==============================================================================
-#define CMD_HELP                "help"           // 0 - 1(all, specifically)
-#define CMD_VERSION             "version"        // 0
-#define CMD_TEST                "test"           // 0
-#define CMD_CLEAR               "clear"          // 0
-#define CMD_EXIT                "exit"           // 0
-#define CMD_ALL                 "all"            // 0 start all default servers
-#define CMD_SERVER              "server"         // 1 - 2(state, port)
-#define CMD_WEB_SERVER          "webserver"      // 1 - 2(state, port)
-#define CMD_WS_SERVER           "wsserver"       // 1 - 2(state, port)
-#define CMD_CLIENT              "client"         // 1 - 3(state, host, port)
-#define CMD_SND_TO_SERVER       "sndtosr"        // 1 - n
-#define CMD_SND_TO_WSSERVER     "sndtows"        // 1 - n
-#define CMD_SND_TO_CLIENT       "sndtocl"        // 1 - n
-#define CMD_STREAM              "stream"         // 1(on off pause resume)
-#define CMD_TYPES_INFO          "typesinfo"      // 0
-#define CMD_DEFINES_INFO        "definesinfo"    // 0
-#define CMD_SERVER_INFO         "serverinfo"     // 0
-#define CMD_WEB_SERVER_INFO     "webserverinfo"  // 0
-#define CMD_WS_SERVER_INFO      "wsserverinfo"   // 0
-#define CMD_CLIENT_INFO         "clientinfo"     // 0
-#define CMD_CMD_REGISTER        "register"       //
-#define CMD_CMD_ACTIVATE        "activate"       //
-#define CMD_WS_REGISTER         "ws_register"    //
-#define CMD_WS_ACTIVATE         "ws_activate"    //
-#define CMD_CONFIG              "config"         // 0
-#define CMD_RECONFIG            "reconfig"       // 0
+#define CMD_S_HELP              "-h"
+#define CMD_S_CONFIG            "-o"
+#define CMD_S_VERSION           "-v"
+#define CMD_S_ALL               "-a"
+#define CMD_S_SERVER            "-s"
+#define CMD_S_WEB_SERVER        "-e"
+#define CMD_S_WS_SERVER         "-w"
+#define CMD_S_CLIENT            "-c"
+#define PARAM_S_PORT            "-p"
+#define PARAM_S_WEB_PORT        "-r"
+#define PARAM_S_WS_PORT         "-t"
+#define PARAM_S_HOST            "-d"
+#define PARAM_S_COUNT           "-n"
+//==============================================================================
+#define CMD_HELP                "--help"
+#define CMD_CONFIG              "--config"
+#define CMD_VERSION             "--version"
+#define CMD_ALL                 "--all"
+#define CMD_SERVER              "--server"
+#define CMD_WEB_SERVER          "--webserver"
+#define CMD_WS_SERVER           "--wsserver"
+#define CMD_CLIENT              "--client"
+#define PARAM_PORT              "--port"
+#define PARAM_WEB_PORT          "--webport"
+#define PARAM_WS_PORT           "--wsport"
+#define PARAM_HOST              "--host"
+#define PARAM_COUNT             "--count"
+//==============================================================================
+#define CMD_TEST                "test"
+#define CMD_CLEAR               "clear"
+#define CMD_EXIT                "exit"
+#define CMD_SND_TO_SERVER       "sndtosr"
+#define CMD_SND_TO_WSSERVER     "sndtows"
+#define CMD_SND_TO_CLIENT       "sndtocl"
+#define CMD_STREAM              "stream"
+#define CMD_TYPES_INFO          "typesinfo"
+#define CMD_DEFINES_INFO        "definesinfo"
+#define CMD_SERVER_INFO         "serverinfo"
+#define CMD_WEB_SERVER_INFO     "webserverinfo"
+#define CMD_WS_SERVER_INFO      "wsserverinfo"
+#define CMD_CLIENT_INFO         "clientinfo"
+#define CMD_CMD_REGISTER        "register"
+#define CMD_CMD_ACTIVATE        "activate"
+#define CMD_WS_REGISTER         "ws_register"
+#define CMD_WS_ACTIVATE         "ws_activate"
+#define CMD_RECONFIG            "reconfig"
 //==============================================================================
 #define CMD_START               "on"
 #define CMD_STOP                "off"

@@ -240,112 +240,115 @@ void print_version()
   printf("Version: %s\n", APPLICATION_VERSION);
 }
 //==============================================================================
-void print_help()
+void print_help(int run_time)
 {
-  printf(
-      "Start commnads:\n" \
-      "%15s  -h  --%-10s # \n" \
-      "%15s  -o  --%-10s # \n" \
-      "%15s  -v  --%-10s # \n" \
-      "%15s  -a  --%-10s # ncs -a -p 5700 -r 5800 -t 5900\n" \
-      "%15s  -s  --%-10s # ncs -s -p 5700\n" \
-      "%15s  -e  --%-10s # ncs -e -r 5800\n" \
-      "%15s  -w  --%-10s # ncs -w -t 5900\n" \
-      "%15s  -c  --%-10s # ncs -c -p 5700 -h 127.0.0.1 -u 50\n" \
-      "%15s  -p  --%-10s # \n" \
-      "%15s  -r  --%-10s # \n" \
-      "%15s  -k  --%-10s # \n" \
-      "%15s  -t  --%-10s # server host for client\n" \
-      "%15s  -u  --%-10s # clients count\n"
-
-      "Runtime commands:\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n" \
-      "%15s\n",
-      CMD_HELP, CMD_HELP,
-      CMD_CONFIG, CMD_CONFIG,
-      CMD_VERSION, CMD_VERSION,
-      CMD_ALL, CMD_ALL,
-      CMD_SERVER, CMD_SERVER,
-      CMD_WEB_SERVER, CMD_WEB_SERVER,
-      CMD_WS_SERVER, CMD_WS_SERVER,
-      CMD_CLIENT, CMD_CLIENT,
-      "port", "port",
-      "webport", "webport",
-      "wsport", "wsport",
-      "host", "host",
-      "count", "count",
-
-      CMD_CLEAR,
-      CMD_EXIT,
-      CMD_TEST,
-      CMD_SND_TO_SERVER,
-      CMD_SND_TO_WSSERVER,
-      CMD_SND_TO_CLIENT,
-      CMD_STREAM,
-      CMD_TYPES_INFO,
-      CMD_DEFINES_INFO,
-      CMD_SERVER_INFO,
-      CMD_WEB_SERVER_INFO,
-      CMD_WS_SERVER_INFO,
-      CMD_CLIENT_INFO,
-      CMD_CMD_REGISTER,
-      CMD_CMD_ACTIVATE,
-      CMD_WS_REGISTER,
-      CMD_WS_ACTIVATE,
-      CMD_RECONFIG);
+  if(run_time)
+  {
+    printf(
+        "%15s -%s --%-15s # print commnads\n" \
+        "%15s -%s --%-15s # print current settings\n" \
+        "%15s -%s --%-15s # print version\n" \
+        "%15s -%s --%-15s # start all\n" \
+        "%15s -%s --%-15s # start command server\n" \
+        "%15s -%s --%-15s # start web server\n" \
+        "%15s -%s --%-15s # start websocket server\n" \
+        "%15s -%s --%-15s # start client\n" \
+        "%15s -%s --%-15s # command port\n" \
+        "%15s -%s --%-15s # web port\n" \
+        "%15s -%s --%-15s # websocket port\n" \
+        "%15s -%s --%-15s # cmd server host(for client)\n" \
+        "%15s -%s --%-15s # clients start count\n",
+        CMD_HELP,       CMD_S_HELP,       CMD_HELP,
+        CMD_CONFIG,     CMD_S_CONFIG,     CMD_CONFIG,
+        CMD_VERSION,    CMD_S_VERSION,    CMD_VERSION,
+        CMD_ALL,        CMD_S_ALL,        CMD_ALL,
+        CMD_SERVER,     CMD_S_SERVER,     CMD_SERVER,
+        CMD_WEB_SERVER, CMD_S_WEB_SERVER, CMD_WEB_SERVER,
+        CMD_WS_SERVER,  CMD_S_WS_SERVER,  CMD_WS_SERVER,
+        CMD_CLIENT,     CMD_S_CLIENT,     CMD_CLIENT,
+        PARAM_PORT,     PARAM_S_PORT,     PARAM_PORT,
+        PARAM_WEB_PORT, PARAM_S_WEB_PORT, PARAM_WEB_PORT,
+        PARAM_WS_PORT,  PARAM_S_WS_PORT,  PARAM_WS_PORT,
+        PARAM_HOST,     PARAM_S_HOST,     PARAM_HOST,
+        PARAM_COUNT,    PARAM_S_COUNT,    PARAM_COUNT);
+  }
+  else
+  {
+    printf(
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n" \
+        "%15s\n",
+        CMD_CLEAR,
+        CMD_EXIT,
+        CMD_TEST,
+        CMD_SND_TO_SERVER,
+        CMD_SND_TO_WSSERVER,
+        CMD_SND_TO_CLIENT,
+        CMD_STREAM,
+        CMD_TYPES_INFO,
+        CMD_DEFINES_INFO,
+        CMD_SERVER_INFO,
+        CMD_WEB_SERVER_INFO,
+        CMD_WS_SERVER_INFO,
+        CMD_CLIENT_INFO,
+        CMD_CMD_REGISTER,
+        CMD_CMD_ACTIVATE,
+        CMD_WS_REGISTER,
+        CMD_WS_ACTIVATE,
+        CMD_RECONFIG);
+  }
 }
 //==============================================================================
 void print_config()
 {
   printf(
-      "web_server_port:      %d\n" \
-      "ws_server_port:       %d\n" \
-      "cmd_server_port:      %d\n" \
-      "cmd_server_host:      %s\n" \
-      "session_relay_to_web: %d\n" \
-      "log_enable:           %d\n" \
-      "log_path:             %s\n" \
-      "stat_enable:          %d\n" \
-      "stat_path:            %s\n" \
-      "report_enable:        %d\n" \
-      "report_path:          %s\n" \
-      "session_enable:       %d\n" \
-      "session_path:         %s\n" \
-      "session_file:         %s\n" \
-      "map_path:             %s\n" \
-      "map_file:             %s",
-      web_server_port,
-      ws_server_port,
-      cmd_server_port,
-      cmd_server_host,
-      session_relay_to_web,
-      log_enable,
-      log_path,
-      stat_enable,
-      stat_path,
-      report_enable,
-      report_path,
-      session_enable,
-      session_path,
-      session_file,
-      map_path,
-      map_file);
+      "%20s: %d\n" \
+      "%20s: %d\n" \
+      "%20s: %d\n" \
+      "%20s: %s\n" \
+      "%20s: %d\n" \
+      "%20s: %d\n" \
+      "%20s: %s\n" \
+      "%20s: %d\n" \
+      "%20s: %s\n" \
+      "%20s: %d\n" \
+      "%20s: %s\n" \
+      "%20s: %d\n" \
+      "%20s: %s\n" \
+      "%20s: %s\n" \
+      "%20s: %s\n" \
+      "%20s: %s",
+      "web_server_port",      web_server_port,
+      "ws_server_port",       ws_server_port,
+      "cmd_server_port",      cmd_server_port,
+      "cmd_server_host",      cmd_server_host,
+      "session_relay_to_web", session_relay_to_web,
+      "log_enable",           log_enable,
+      "log_path",             log_path,
+      "stat_enable",          stat_enable,
+      "stat_path",            stat_path,
+      "report_enable",        report_enable,
+      "report_path",          report_path,
+      "session_enable",       session_enable,
+      "session_path",         session_path,
+      "session_file",         session_file,
+      "map_path",             map_path,
+      "map_file",             map_file);
 }
 //==============================================================================
 void print_types_info()
