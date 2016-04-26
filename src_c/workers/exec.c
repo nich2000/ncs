@@ -304,7 +304,7 @@ int handle_command_str(void *sender, char *command)
       if(host_str != NULL)
         strcpy((char*)host, host_str);
 
-      int count = 1;
+      int count = cmd_clients_count;
       char *count_str = strtok(NULL, " ");
       if(count_str != NULL)
         count = atoi(count_str);

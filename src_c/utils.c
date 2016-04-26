@@ -245,54 +245,54 @@ void print_help(int run_time)
   if(run_time)
   {
     printf(
-        "%15s -%s --%-15s # print commnads\n" \
-        "%15s -%s --%-15s # print current settings\n" \
-        "%15s -%s --%-15s # print version\n" \
-        "%15s -%s --%-15s # start all\n" \
-        "%15s -%s --%-15s # start command server\n" \
-        "%15s -%s --%-15s # start web server\n" \
-        "%15s -%s --%-15s # start websocket server\n" \
-        "%15s -%s --%-15s # start client\n" \
-        "%15s -%s --%-15s # command port\n" \
-        "%15s -%s --%-15s # web port\n" \
-        "%15s -%s --%-15s # websocket port\n" \
-        "%15s -%s --%-15s # cmd server host(for client)\n" \
-        "%15s -%s --%-15s # clients start count\n",
-        CMD_HELP,       CMD_S_HELP,       CMD_HELP,
-        CMD_CONFIG,     CMD_S_CONFIG,     CMD_CONFIG,
-        CMD_VERSION,    CMD_S_VERSION,    CMD_VERSION,
-        CMD_ALL,        CMD_S_ALL,        CMD_ALL,
-        CMD_SERVER,     CMD_S_SERVER,     CMD_SERVER,
-        CMD_WEB_SERVER, CMD_S_WEB_SERVER, CMD_WEB_SERVER,
-        CMD_WS_SERVER,  CMD_S_WS_SERVER,  CMD_WS_SERVER,
-        CMD_CLIENT,     CMD_S_CLIENT,     CMD_CLIENT,
-        PARAM_PORT,     PARAM_S_PORT,     PARAM_PORT,
-        PARAM_WEB_PORT, PARAM_S_WEB_PORT, PARAM_WEB_PORT,
-        PARAM_WS_PORT,  PARAM_S_WS_PORT,  PARAM_WS_PORT,
-        PARAM_HOST,     PARAM_S_HOST,     PARAM_HOST,
-        PARAM_COUNT,    PARAM_S_COUNT,    PARAM_COUNT);
+        "%-15s %-5s # print commnads\n" \
+        "%-15s %-5s # print current settings\n" \
+        "%-15s %-5s # print version\n" \
+        "%-15s %-5s # start all\n" \
+        "%-15s %-5s # start command server\n" \
+        "%-15s %-5s # start web server\n" \
+        "%-15s %-5s # start websocket server\n" \
+        "%-15s %-5s # start client\n" \
+        "%-15s %-5s # command port\n" \
+        "%-15s %-5s # web port\n" \
+        "%-15s %-5s # websocket port\n" \
+        "%-15s %-5s # cmd server host(for client)\n" \
+        "%-15s %-5s # clients start count\n",
+        CMD_HELP,       CMD_S_HELP,
+        CMD_CONFIG,     CMD_S_CONFIG,
+        CMD_VERSION,    CMD_S_VERSION,
+        CMD_ALL,        CMD_S_ALL,
+        CMD_SERVER,     CMD_S_SERVER,
+        CMD_WEB_SERVER, CMD_S_WEB_SERVER,
+        CMD_WS_SERVER,  CMD_S_WS_SERVER,
+        CMD_CLIENT,     CMD_S_CLIENT,
+        PARAM_PORT,     PARAM_S_PORT,
+        PARAM_WEB_PORT, PARAM_S_WEB_PORT,
+        PARAM_WS_PORT,  PARAM_S_WS_PORT,
+        PARAM_HOST,     PARAM_S_HOST,
+        PARAM_COUNT,    PARAM_S_COUNT);
   }
   else
   {
     printf(
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n" \
-        "%15s\n",
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n" \
+        "%-15s\n",
         CMD_CLEAR,
         CMD_EXIT,
         CMD_TEST,
@@ -317,22 +317,22 @@ void print_help(int run_time)
 void print_config()
 {
   printf(
-      "%20s: %d\n" \
-      "%20s: %d\n" \
-      "%20s: %d\n" \
-      "%20s: %s\n" \
-      "%20s: %d\n" \
-      "%20s: %d\n" \
-      "%20s: %s\n" \
-      "%20s: %d\n" \
-      "%20s: %s\n" \
-      "%20s: %d\n" \
-      "%20s: %s\n" \
-      "%20s: %d\n" \
-      "%20s: %s\n" \
-      "%20s: %s\n" \
-      "%20s: %s\n" \
-      "%20s: %s",
+      "%-20s: %d\n" \
+      "%-20s: %d\n" \
+      "%-20s: %d\n" \
+      "%-20s: %s\n" \
+      "%-20s: %d\n" \
+      "%-20s: %d\n" \
+      "%-20s: %s\n" \
+      "%-20s: %d\n" \
+      "%-20s: %s\n" \
+      "%-20s: %d\n" \
+      "%-20s: %s\n" \
+      "%-20s: %d\n" \
+      "%-20s: %s\n" \
+      "%-20s: %s\n" \
+      "%-20s: %s\n" \
+      "%-20s: %s\n",
       "web_server_port",      web_server_port,
       "ws_server_port",       ws_server_port,
       "cmd_server_port",      cmd_server_port,

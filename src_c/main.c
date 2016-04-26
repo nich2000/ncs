@@ -63,23 +63,23 @@ int main(int argc, char *argv[])
     {
       if((strcmp(argv[i], PARAM_S_PORT) == 0) || ((strcmp(argv[i], PARAM_PORT) == 0)))
       {
-        cmd_server_port
+        cmd_server_port = atoi(argv[++i]);
       }
       else if((strcmp(argv[i], PARAM_S_WEB_PORT) == 0) || ((strcmp(argv[i], PARAM_WEB_PORT) == 0)))
       {
-        web_server_port
+        web_server_port = atoi(argv[++i]);
       }
       else if((strcmp(argv[i], PARAM_S_WS_PORT) == 0) || ((strcmp(argv[i], PARAM_WS_PORT) == 0)))
       {
-        ws_server_port
+        ws_server_port = atoi(argv[++i]);
       }
       else if((strcmp(argv[i], PARAM_S_HOST) == 0) || ((strcmp(argv[i], PARAM_HOST) == 0)))
       {
-        cmd_server_host
+        strcpy((char*)cmd_server_host, argv[++i]);
       }
       else if((strcmp(argv[i], PARAM_S_COUNT) == 0) || ((strcmp(argv[i], PARAM_COUNT) == 0)))
       {
-        cmd_clients_count
+        cmd_clients_count = atoi(argv[++i]);
       }
     }
     // Read cmd
@@ -87,30 +87,27 @@ int main(int argc, char *argv[])
     {
       if((strcmp(argv[i], CMD_S_ALL) == 0) || ((strcmp(argv[i], CMD_ALL) == 0)))
       {
-        handle_command_str_fmt(NULL, "%s on %s %d %s %d %s %d",
-          CMD_ALL, cmd_server_port, ws_server_port, web_server_port);
+        strcpy(command, CMD_ALL);
       }
       else if((strcmp(argv[i], CMD_S_SERVER) == 0) || ((strcmp(argv[i], CMD_SERVER) == 0)))
       {
-        handle_command_str_fmt(NULL, "%s on %s %d",
-          CMD_SERVER, cmd_server_port);
+        strcpy(command, CMD_SERVER);
       }
       else if((strcmp(argv[i], CMD_S_WEB_SERVER) == 0) || ((strcmp(argv[i], CMD_WEB_SERVER) == 0)))
       {
-        handle_command_str_fmt(NULL, "%s on %s %d",
-          CMD_WEB_SERVER, web_server_port);
+        strcpy(command, CMD_WEB_SERVER);
       }
       else if((strcmp(argv[i], CMD_S_WS_SERVER) == 0) || ((strcmp(argv[i], CMD_WS_SERVER) == 0)))
       {
-        handle_command_str_fmt(NULL, "%s on %s %d",
-          CMD_WS_SERVER, ws_server_port);
+        strcpy(command, CMD_WS_SERVER);
       }
       else if((strcmp(argv[i], CMD_S_CLIENT) == 0) || ((strcmp(argv[i], CMD_CLIENT) == 0)))
       {
-        handle_command_str_fmt(NULL, "%s on %s %d %s %s %s %d",
-          CMD_CLIENT, PARAM_S_PORT, cmd_server_port, PARAM_S_HOST, cmd_server_host, PARAM_S_COUNT, cmd_clients_count);
+        strcpy(command, CMD_CLIENT);
       }
     }
+
+    handle_command_str(NULL, command);
   }
   else
   {
