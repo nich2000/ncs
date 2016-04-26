@@ -17,7 +17,8 @@
 
 #include "ncs_pack.h"
 //==============================================================================
-#define CMD_HELP                "help"           // 0 - 1 all - specifically
+#define CMD_HELP                "help"           // 0 - 1(all, specifically)
+#define CMD_VERSION             "version"        // 0
 #define CMD_TEST                "test"           // 0
 #define CMD_CLEAR               "clear"          // 0
 #define CMD_EXIT                "exit"           // 0
@@ -40,6 +41,7 @@
 #define CMD_CMD_ACTIVATE        "activate"       //
 #define CMD_WS_REGISTER         "ws_register"    //
 #define CMD_WS_ACTIVATE         "ws_activate"    //
+#define CMD_CONFIG              "config"         // 0
 #define CMD_RECONFIG            "reconfig"       // 0
 //==============================================================================
 #define CMD_START               "on"
@@ -61,7 +63,6 @@
 typedef int (*exec_func)(int, ...);
 //==============================================================================
 int  read_config();
-void print_config();
 //==============================================================================
 int handle_command_str    (void *sender, char *command);
 int handle_command_str_fmt(void *sender, char *command, ...);

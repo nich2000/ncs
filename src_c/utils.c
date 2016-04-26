@@ -12,6 +12,25 @@
 #include "utils.h"
 
 #include "ncs_log.h"
+#include "exec.h"
+//==============================================================================
+extern sock_port_t cmd_server_port;
+extern sock_port_t ws_server_port;
+extern sock_port_t web_server_port;
+extern sock_host_t cmd_server_host;
+extern BOOL session_relay_to_web;
+extern BOOL log_enable;
+extern char log_path[256];
+extern BOOL stat_enable;
+extern char stat_path[256];
+extern BOOL report_enable;
+extern char report_path[265];
+extern BOOL session_enable;
+extern char session_path[256];
+extern char session_file[64];
+extern char map_path[256];
+extern char map_file[64];
+extern char log_prefix[8];
 //==============================================================================
 #ifndef __linux__
 /**
@@ -67,6 +86,53 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 int random_range(int min, int max)
 {
   return (rand() % (max + 1 - min)) + min;
+}
+//==============================================================================
+const char *sock_mode_to_string(sock_mode_t mode)
+{
+  switch (mode)
+  {
+    case SOCK_MODE_UNKNOWN:
+      return "SOCK_MODE_UNKNOWN";
+      break;
+    case SOCK_MODE_CMD_CLIENT:
+      return "SOCK_MODE_CMD_CLIENT";
+      break;
+    case SOCK_MODE_CMD_SERVER:
+      return "SOCK_MODE_CMD_SERVER";
+      break;
+    case SOCK_MODE_WS_SERVER:
+      return "SOCK_MODE_WS_SERVER";
+      break;
+    case SOCK_MODE_WEB_SERVER:
+      return "SOCK_MODE_WEB_SERVER";
+      break;
+    default:
+      return "SOCK_MODE_UNKNOWN";
+      break;
+  }
+}
+//==============================================================================
+const char *sock_type_to_string(sock_type_t type)
+{
+  switch (type)
+  {
+    case SOCK_TYPE_UNKNOWN:
+      return "SOCK_TYPE_UNKNOWN";
+      break;
+    case SOCK_TYPE_CLIENT:
+      return "SOCK_TYPE_CLIENT";
+      break;
+    case SOCK_TYPE_SERVER:
+      return "SOCK_TYPE_SERVER";
+      break;
+    case SOCK_TYPE_REMOTE_CLIENT:
+      return "SOCK_TYPE_REMOTE_CLIENT";
+      break;
+    default:
+      return "SOCK_TYPE_UNKNOWN";
+      break;
+  }
 }
 //==============================================================================
 const char *state_to_string(sock_state_t value)
@@ -167,7 +233,122 @@ const char *register_to_string(sock_register_t value)
   }
 }
 //==============================================================================
-int print_types_info()
+void print_version()
+{
+  printf("NIch CLient Server Project\n");
+  printf("Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n");
+  printf("Version: %s\n", APPLICATION_VERSION);
+}
+//==============================================================================
+void print_help()
+{
+  printf(
+      "Start commnads:\n" \
+      "%15s  -h  --%-10s # \n" \
+      "%15s  -o  --%-10s # \n" \
+      "%15s  -v  --%-10s # \n" \
+      "%15s  -a  --%-10s # ncs -a -p 5700 -r 5800 -t 5900\n" \
+      "%15s  -s  --%-10s # ncs -s -p 5700\n" \
+      "%15s  -e  --%-10s # ncs -e -r 5800\n" \
+      "%15s  -w  --%-10s # ncs -w -t 5900\n" \
+      "%15s  -c  --%-10s # ncs -c -p 5700 -h 127.0.0.1 -u 50\n" \
+      "%15s  -p  --%-10s # \n" \
+      "%15s  -r  --%-10s # \n" \
+      "%15s  -k  --%-10s # \n" \
+      "%15s  -t  --%-10s # server host for client\n" \
+      "%15s  -u  --%-10s # clients count\n"
+
+      "Runtime commands:\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n" \
+      "%15s\n",
+      CMD_HELP, CMD_HELP,
+      CMD_CONFIG, CMD_CONFIG,
+      CMD_VERSION, CMD_VERSION,
+      CMD_ALL, CMD_ALL,
+      CMD_SERVER, CMD_SERVER,
+      CMD_WEB_SERVER, CMD_WEB_SERVER,
+      CMD_WS_SERVER, CMD_WS_SERVER,
+      CMD_CLIENT, CMD_CLIENT,
+      "port", "port",
+      "webport", "webport",
+      "wsport", "wsport",
+      "host", "host",
+      "count", "count",
+
+      CMD_CLEAR,
+      CMD_EXIT,
+      CMD_TEST,
+      CMD_SND_TO_SERVER,
+      CMD_SND_TO_WSSERVER,
+      CMD_SND_TO_CLIENT,
+      CMD_STREAM,
+      CMD_TYPES_INFO,
+      CMD_DEFINES_INFO,
+      CMD_SERVER_INFO,
+      CMD_WEB_SERVER_INFO,
+      CMD_WS_SERVER_INFO,
+      CMD_CLIENT_INFO,
+      CMD_CMD_REGISTER,
+      CMD_CMD_ACTIVATE,
+      CMD_WS_REGISTER,
+      CMD_WS_ACTIVATE,
+      CMD_RECONFIG);
+}
+//==============================================================================
+void print_config()
+{
+  printf(
+      "web_server_port:      %d\n" \
+      "ws_server_port:       %d\n" \
+      "cmd_server_port:      %d\n" \
+      "cmd_server_host:      %s\n" \
+      "session_relay_to_web: %d\n" \
+      "log_enable:           %d\n" \
+      "log_path:             %s\n" \
+      "stat_enable:          %d\n" \
+      "stat_path:            %s\n" \
+      "report_enable:        %d\n" \
+      "report_path:          %s\n" \
+      "session_enable:       %d\n" \
+      "session_path:         %s\n" \
+      "session_file:         %s\n" \
+      "map_path:             %s\n" \
+      "map_file:             %s",
+      web_server_port,
+      ws_server_port,
+      cmd_server_port,
+      cmd_server_host,
+      session_relay_to_web,
+      log_enable,
+      log_path,
+      stat_enable,
+      stat_path,
+      report_enable,
+      report_path,
+      session_enable,
+      session_path,
+      session_file,
+      map_path,
+      map_file);
+}
+//==============================================================================
+void print_types_info()
 {
   char tmp[1024];
 
@@ -219,11 +400,9 @@ int print_types_info()
     sizeof(custom_remote_clients_list_t)
   );
   log_add(LOG_INFO, tmp);
-
-  return ERROR_NONE;
 }
 //==============================================================================
-int print_defines_info()
+void print_defines_info()
 {
   char tmp[1024];
 
@@ -258,54 +437,5 @@ int print_defines_info()
     SOCK_WAIT_CONNECT
   );
   log_add(LOG_INFO, tmp);
-
-  return ERROR_NONE;
-}
-//==============================================================================
-const char *sock_mode_to_string(sock_mode_t mode)
-{
-  switch (mode)
-  {
-    case SOCK_MODE_UNKNOWN:
-      return "SOCK_MODE_UNKNOWN";
-      break;
-    case SOCK_MODE_CMD_CLIENT:
-      return "SOCK_MODE_CMD_CLIENT";
-      break;
-    case SOCK_MODE_CMD_SERVER:
-      return "SOCK_MODE_CMD_SERVER";
-      break;
-    case SOCK_MODE_WS_SERVER:
-      return "SOCK_MODE_WS_SERVER";
-      break;
-    case SOCK_MODE_WEB_SERVER:
-      return "SOCK_MODE_WEB_SERVER";
-      break;
-    default:
-      return "SOCK_MODE_UNKNOWN";
-      break;
-  }
-}
-//==============================================================================
-const char *sock_type_to_string(sock_type_t type)
-{
-  switch (type)
-  {
-    case SOCK_TYPE_UNKNOWN:
-      return "SOCK_TYPE_UNKNOWN";
-      break;
-    case SOCK_TYPE_CLIENT:
-      return "SOCK_TYPE_CLIENT";
-      break;
-    case SOCK_TYPE_SERVER:
-      return "SOCK_TYPE_SERVER";
-      break;
-    case SOCK_TYPE_REMOTE_CLIENT:
-      return "SOCK_TYPE_REMOTE_CLIENT";
-      break;
-    default:
-      return "SOCK_TYPE_UNKNOWN";
-      break;
-  }
 }
 //==============================================================================

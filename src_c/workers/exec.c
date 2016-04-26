@@ -49,84 +49,7 @@ extern char session_path[256];
 extern char session_file[64];
 extern char map_path[256];
 extern char map_file[64];
-//==============================================================================
 extern char log_prefix[8];
-//==============================================================================
-int read_config()
-{
-  dictionary *config = iniparser_load("../config/config.ini");
-  if(config == NULL)
-    return make_last_error(ERROR_CRITICAL, errno, "read_config, iniparser_load");
-
-  cmd_server_port =              iniparser_getint   (config, "worker:cmd_server_port",      DEFAULT_CMD_SERVER_PORT);
-  ws_server_port  =              iniparser_getint   (config, "worker:ws_server_port",       DEFAULT_WS_SERVER_PORT);
-  web_server_port =              iniparser_getint   (config, "worker:web_server_port",      DEFAULT_WEB_SERVER_PORT);
-
-  strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
-  session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
-
-  log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);
-  strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",                DEFAULT_LOG_PATH));
-
-  stat_enable =                  iniparser_getint   (config, "stat:stat_enable",            TRUE);
-  strcpy((char*)stat_path,       iniparser_getstring(config, "stat:stat_path",              DEFAULT_STAT_PATH));
-
-  report_enable =                iniparser_getint   (config, "report:report_enable",        TRUE);
-  strcpy((char*)report_path,     iniparser_getstring(config, "report:report_path",          DEFAULT_REPORT_PATH));
-
-  session_enable =               iniparser_getint   (config, "session:session_enable",      TRUE);
-  strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
-  strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
-
-  strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
-  strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
-
-  iniparser_freedict(config);
-
-  print_config();
-
-  return ERROR_NONE;
-}
-//==============================================================================
-void print_config()
-{
-  log_add(LOG_INFO, "-------------------");
-  log_add_fmt(LOG_INFO,
-              "configuration                  \n" \
-              "       web_server_port:      %d\n" \
-              "       ws_server_port:       %d\n" \
-              "       cmd_server_port:      %d\n" \
-              "       cmd_server_host:      %s\n" \
-              "       session_relay_to_web: %d\n" \
-              "       log_enable:           %d\n" \
-              "       log_path:             %s\n" \
-              "       stat_enable:          %d\n" \
-              "       stat_path:            %s\n" \
-              "       report_enable:        %d\n" \
-              "       report_path:          %s\n" \
-              "       session_enable:       %d\n" \
-              "       session_path:         %s\n" \
-              "       session_file:         %s\n" \
-              "       map_path:             %s\n" \
-              "       map_file:             %s",
-              web_server_port,
-              ws_server_port,
-              cmd_server_port,
-              cmd_server_host,
-              session_relay_to_web,
-              log_enable,
-              log_path,
-              stat_enable,
-              stat_path,
-              report_enable,
-              report_path,
-              session_enable,
-              session_path,
-              session_file,
-              map_path,
-              map_file);
-  log_add(LOG_INFO, "-------------------");
-}
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -178,45 +101,36 @@ sock_active_t cmd_active(char *cmd)
     return ACTIVE_NONE;
 }
 //==============================================================================
-int help()
+int read_config()
 {
-  char tmp[1024];
+  dictionary *config = iniparser_load("../config/config.ini");
+  if(config == NULL)
+    return make_last_error(ERROR_CRITICAL, errno, "read_config, iniparser_load");
 
-  sprintf
-  (
-    tmp,
-    //          1   2   3   4   5   6   7   8   9   10
-    "commands:\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-    //          11  12  13  14  15  16  17  18  19  20
-               "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n" \
-    //          21  22  23  24
-               "%s\n%s\n%s\n%s\n",
-    CMD_HELP,             // 1
-    CMD_TEST,             // 2
-    CMD_CLEAR,            // 3
-    CMD_EXIT,             // 4
-    CMD_ALL,              // 5
-    CMD_SERVER,           // 6
-    CMD_WEB_SERVER,       // 7
-    CMD_WS_SERVER,        // 8
-    CMD_CLIENT,           // 9
-    CMD_SND_TO_SERVER,    // 10
-    CMD_SND_TO_WSSERVER,  // 11
-    CMD_SND_TO_CLIENT,    // 12
-    CMD_STREAM,           // 13
-    CMD_TYPES_INFO,       // 14
-    CMD_DEFINES_INFO,     // 15
-    CMD_SERVER_INFO,      // 16
-    CMD_WEB_SERVER_INFO,  // 17
-    CMD_WS_SERVER_INFO,   // 18
-    CMD_CLIENT_INFO,      // 19
-    CMD_CMD_REGISTER,     // 20
-    CMD_CMD_ACTIVATE,     // 21
-    CMD_WS_REGISTER,      // 22
-    CMD_WS_ACTIVATE,      // 23
-    CMD_RECONFIG          // 24
-  );
-  log_add(LOG_INFO, tmp);
+  cmd_server_port =              iniparser_getint   (config, "worker:cmd_server_port",      DEFAULT_CMD_SERVER_PORT);
+  ws_server_port  =              iniparser_getint   (config, "worker:ws_server_port",       DEFAULT_WS_SERVER_PORT);
+  web_server_port =              iniparser_getint   (config, "worker:web_server_port",      DEFAULT_WEB_SERVER_PORT);
+
+  strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
+  session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
+
+  log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);
+  strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",                DEFAULT_LOG_PATH));
+
+  stat_enable =                  iniparser_getint   (config, "stat:stat_enable",            TRUE);
+  strcpy((char*)stat_path,       iniparser_getstring(config, "stat:stat_path",              DEFAULT_STAT_PATH));
+
+  report_enable =                iniparser_getint   (config, "report:report_enable",        TRUE);
+  strcpy((char*)report_path,     iniparser_getstring(config, "report:report_path",          DEFAULT_REPORT_PATH));
+
+  session_enable =               iniparser_getint   (config, "session:session_enable",      TRUE);
+  strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
+  strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
+
+  strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
+  strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
+
+  iniparser_freedict(config);
 
   return ERROR_NONE;
 }
@@ -261,8 +175,19 @@ int handle_command_str(void *sender, char *command)
     //--------------------------------------------------------------------------
     if(strcmp(token, CMD_HELP) == 0)
     {
-      log_add_fmt(LOG_EXTRA, "token: %s", CMD_HELP);
-      help();
+      print_help();
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_VERSION) == 0)
+    {
+      print_version();
+      return EXEC_DONE;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_CONFIG) == 0)
+    {
+      print_config();
       return EXEC_DONE;
     }
     //--------------------------------------------------------------------------

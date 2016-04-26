@@ -28,7 +28,10 @@ const char *active_to_string   (sock_active_t   value);
 const char *time_to_string     (sock_time_t     value);
 const char *register_to_string (sock_register_t value);
 //==============================================================================
-int print_types_info();
-int print_defines_info();
+void print_version();
+void print_help();
+void print_config();
+void print_types_info();
+void print_defines_info();
 //==============================================================================
 #endif //UTILS_H

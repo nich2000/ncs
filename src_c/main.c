@@ -17,16 +17,34 @@ extern sock_host_t cmd_server_host;
 //==============================================================================
 int main(int argc, char *argv[])
 {
-  printf("NIch CLient Server Project\n");
-  printf("Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n");
-  printf("Version: %s\n", APPLICATION_VERSION);
-
+  //---------------------------------------------------------------------------
   if(argc > 1)
+  {
     if((strcmp(argv[1], "-v") == 0) || ((strcmp(argv[1], "--version") == 0)))
+    {
+      print_version();
       return 0;
+    }
+    if((strcmp(argv[1], "-h") == 0) || ((strcmp(argv[1], "--help") == 0)))
+    {
+      print_help();
+      return 0;
+    }
+    if((strcmp(argv[1], "-c") == 0) || ((strcmp(argv[1], "--config") == 0)))
+    {
+      read_config();
+      print_config();
+      return 0;
+    }
+  }
+  //---------------------------------------------------------------------------
+
+  print_version();
 
   if(read_config() >= ERROR_WARNING)
     goto exit;
+
+  print_config();
 
   log_add(LOG_INFO, "application started");
   log_add_fmt(LOG_INFO, "application version: %s", APPLICATION_VERSION);
