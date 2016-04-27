@@ -25,7 +25,6 @@ typedef union
 } floatUnion;
 //==============================================================================
 #define PACK_KEY_SIZE            4
-#define PACK_VERSION_SIZE        4
 //==============================================================================
 #ifdef DEMS_DEVICE
 #define PACK_BUFFER_SIZE         256
@@ -34,7 +33,7 @@ typedef union
 #else
 #define PACK_BUFFER_SIZE         1024
 #define PACK_VALUE_SIZE          256
-#define PACK_WORDS_COUNT         256 // 2048
+#define PACK_WORDS_COUNT         256 //TODO: разобраться с кол-вом слов в пакете
 #endif
 //==============================================================================
 #define PACK_WORD_NONE           0

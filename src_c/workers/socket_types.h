@@ -40,23 +40,7 @@
 #else
 #endif
 //==============================================================================
-#define SOCK_TYPE_UNKNOWN        0
-#define SOCK_TYPE_CLIENT         1
-#define SOCK_TYPE_SERVER         2
-#define SOCK_TYPE_REMOTE_CLIENT  3
-//==============================================================================
-#define SOCK_MODE_UNKNOWN        0
-#define SOCK_MODE_CMD_CLIENT     1
-#define SOCK_MODE_CMD_SERVER     2
-#define SOCK_MODE_WS_SERVER      3
-#define SOCK_MODE_WEB_SERVER     4
-//==============================================================================
-#define SOCK_VERSION             "SOCK001\0"
-#define SOCK_NAME_DEFAULT        "DEVICE\0"
-#define SOCK_NO_NAME_DEFAULT     "NONAME\0"
-#define SOCK_VERSION_SIZE        8
 #define SOCK_HOST_SIZE           15  // 255.255.255.255
-//==============================================================================
 #define SOCK_PART_SIZE           100
 #define SOCK_BUFFER_SIZE         1024 * 1024
 #define SOCK_WEB_BUFFER_SIZE     1024

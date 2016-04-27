@@ -14,9 +14,6 @@
 
 #include "customworker.h"
 //==============================================================================
-#define WEB_LINE_SIZE      256
-#define WEB_INITIAL_PATH   "../www"
-//==============================================================================
 typedef struct
 {
   custom_server_t custom_server;

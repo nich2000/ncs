@@ -39,18 +39,6 @@
 #define LOG_DATA                 13
 #define LOG_RAW_DATA             14
 //==============================================================================
-#define DEFAULT_LOG_PATH         "../logs"
-#define DEFAULT_LOG_NAME         "log.txt"
-//==============================================================================
-#define DEFAULT_STAT_PATH        "../stats"
-#define DEFAULT_STAT_NAME        "stat.txt"
-//==============================================================================
-#define DEFAULT_REPORT_PATH      "../reports"
-#define DEFAULT_REPORT_NAME      "report.txt"
-//==============================================================================
-#define DEFAULT_SESSION_PATH     "../sessions"
-#define DEFAULT_SESSION_NAME     "session.txt"
-//==============================================================================
 typedef int log_time_tag_t;
 //==============================================================================
 void clr_scr();

@@ -111,7 +111,7 @@ int read_config()
   ws_server_port  =              iniparser_getint   (config, "worker:ws_server_port",       DEFAULT_WS_SERVER_PORT);
   web_server_port =              iniparser_getint   (config, "worker:web_server_port",      DEFAULT_WEB_SERVER_PORT);
   strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
-  strcpy((char*)worker_name,     iniparser_getstring(config, "worker:worker_name",          SOCK_NAME_DEFAULT));
+  strcpy((char*)worker_name,     iniparser_getstring(config, "worker:worker_name",          DEFAULT_SOCK_NAME));
   session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
 
   log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);

@@ -9,22 +9,67 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 //==============================================================================
-#define APPLICATION_VERSION      "1.0.1.120"
+#define APPLICATION_VERSION      "1.0.1.130\0"
+#define APPLICATION_VERSION_SIZE 15
+#define PACK_VERSION             "V01\0"
+#define PACK_VERSION_SIZE        4
+#define SOCK_VERSION             "SOCK001\0"
+#define SOCK_VERSION_SIZE        8
+#define PROTOCOL_VERSION         "PROT001\0"
+#define PROTOCOL_VERSION_SIZE    8
 //==============================================================================
 #define DEFAULT_CMD_SERVER_PORT  5700
 #define DEFAULT_WS_SERVER_PORT   5800
 #define DEFAULT_WEB_SERVER_PORT  5900
 #define DEFAULT_SERVER_HOST      "127.0.0.1"
 //==============================================================================
+#define DEFAULT_LOG_PATH         "../logs"
+#define DEFAULT_LOG_NAME         "log.txt"
+//==============================================================================
+#define DEFAULT_STAT_PATH        "../stats"
+#define DEFAULT_STAT_NAME        "stat.txt"
+//==============================================================================
+#define DEFAULT_REPORT_PATH      "../reports"
+#define DEFAULT_REPORT_NAME      "report.txt"
+//==============================================================================
+#define DEFAULT_SESSION_PATH     "../sessions"
+#define DEFAULT_SESSION_NAME     "session.txt"
+//==============================================================================
 #define DEFAULT_MAP_PATH         "../tracks"
 #define DEFAULT_MAP_NAME         "default.map"
 //==============================================================================
-#ifndef FALSE
-#define FALSE 0
-#endif
-#ifndef TRUE
-#define TRUE 1
-#endif
+#define DEFAULT_SOCK_NAME        "DEVICE\0"
+#define DEFAULT_SOCK_NO_NAME     "NONAME\0"
+//==============================================================================
+#define DEFAULT_WEB_PATH         "../www"
+//==============================================================================
+enum type_t
+{
+  type_unknown,
+  type_client,
+  type_server,
+  type_remote_client
+};
+//==============================================================================
+#define SOCK_TYPE_UNKNOWN        0
+#define SOCK_TYPE_CLIENT         1
+#define SOCK_TYPE_SERVER         2
+#define SOCK_TYPE_REMOTE_CLIENT  3
+//==============================================================================
+enum mode_t
+{
+  mode_unknown,
+  mode_cmd_client,
+  mode_cmd_server,
+  mode_ws_server,
+  mode_web_server
+};
+//==============================================================================
+#define SOCK_MODE_UNKNOWN        0
+#define SOCK_MODE_CMD_CLIENT     1
+#define SOCK_MODE_CMD_SERVER     2
+#define SOCK_MODE_WS_SERVER      3
+#define SOCK_MODE_WEB_SERVER     4
 //==============================================================================
 enum state_t
 {
@@ -83,6 +128,12 @@ enum connected_t
 #define DISCONNECTED            0
 //==============================================================================
 typedef int BOOL;
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
 //==============================================================================
 #define PACK_STRUCT_VAL_COUNT   20
 //==============================================================================

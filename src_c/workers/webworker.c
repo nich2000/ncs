@@ -36,6 +36,8 @@
 // http://csapp.cs.cmu.edu/2e/ics2/code/netp/tiny/tiny.c
 // http://stackoverflow.com/questions/14002954/c-programming-how-to-read-the-whole-file-contents-into-a-buffer
 //==============================================================================
+#define WEB_LINE_SIZE 256
+//==============================================================================
 int web_server_init(web_server_t *server);
 int web_server_start(web_server_t *server, sock_port_t port);
 int web_server_work(web_server_t *server);
@@ -246,7 +248,7 @@ int web_get_response(char *request, char *response, int *size)
   char    tmp_method[WEB_LINE_SIZE];
   char    tmp_uri[WEB_LINE_SIZE];
   char    tmp_version[WEB_LINE_SIZE];
-  char    tmp_full_name[256];
+  char    tmp_full_name[WEB_LINE_SIZE];
   char   *tmp_buffer;
   size_t  tmp_file_size = 0;
 
@@ -259,14 +261,14 @@ int web_get_response(char *request, char *response, int *size)
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "/index.html");
 
-    sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, tmp_uri);
+    sprintf(tmp_full_name, "%s%s", DEFAULT_WEB_PATH, tmp_uri);
     log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
                 tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
-      sprintf(tmp_full_name, "%s%s", WEB_INITIAL_PATH, "/404.html");
+      sprintf(tmp_full_name, "%s%s", DEFAULT_WEB_PATH, "/404.html");
       log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s",
                   tmp_full_name);
 
