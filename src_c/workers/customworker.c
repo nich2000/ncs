@@ -22,6 +22,8 @@
 // начинается с последнего статического ID
 static int _custom_id = STATIC_WS_SERVER_ID + 1;
 //==============================================================================
+char worker_name[16];
+//==============================================================================
 int custom_worker_init(int id, custom_worker_t *worker)
 {
   if(id == ID_GEN_NEW)
@@ -58,6 +60,7 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   custom_remote_client->send_thread      = 0;
   custom_remote_client->recv_thread      = 0;
 
+  custom_remote_client->connect_state    = DISCONNECTED;
   custom_remote_client->active_state     = ACTIVE_NONE;
   custom_remote_client->register_state   = REGISTER_NONE;
 
@@ -119,7 +122,10 @@ int custom_client_init(custom_client_t *custom_client)
 
   custom_worker_t *tmp_worker = &custom_client->custom_remote_client.custom_worker;
   sock_name_t tmp;
-  sprintf((char*)tmp, "%s_%d", SOCK_NAME_DEFAULT, tmp_worker->id);
+  if(strcmp(worker_name, SOCK_NAME_DEFAULT) == 0)
+    sprintf((char*)tmp, "%s_%d", SOCK_NAME_DEFAULT, tmp_worker->id);
+  else
+    strcpy((char*)tmp, worker_name);
   strcpy((char*)tmp_worker->session_id, (char*)tmp);
   strcpy((char*)tmp_worker->name,       (char*)tmp);
 

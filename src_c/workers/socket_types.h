@@ -77,6 +77,7 @@ typedef unsigned short sock_id_t;
 typedef unsigned char  sock_name_t[PACK_VALUE_SIZE];
 typedef unsigned char  sock_data_t[PACK_VALUE_SIZE];
 typedef unsigned short sock_index_t;
+typedef unsigned short sock_connect_t;
 typedef unsigned short sock_state_t;
 typedef unsigned short sock_active_t;
 typedef unsigned short sock_register_t;

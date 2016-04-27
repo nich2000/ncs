@@ -60,6 +60,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "addr:                            %d\n" \
           "id:                              %d\n" \
           "name:                            %s\n" \
+          "session_id:                      %s\n" \
           "type:                            %s\n" \
           "mode:                            %s\n" \
           "port:                            %d\n" \
@@ -71,6 +72,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           (int)&worker,
           worker->id,
           worker->name,
+          worker->session_id,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
           worker->port,
@@ -83,6 +85,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           "%s\n"                                         \
           "       id:                              %d\n" \
           "       sock:                            %d\n" \
+          "       session_id:                      %s\n" \
           "       name:                            %s\n" \
           "       type:                            %s\n" \
           "       mode:                            %s\n" \
@@ -91,6 +94,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
           worker->id,
           worker->sock,
           worker->session_id,
+          worker->name,
           sock_type_to_string(worker->type),
           sock_mode_to_string(worker->mode),
           state_to_string(worker->state));
@@ -101,7 +105,7 @@ int print_custom_worker_info(custom_worker_t *worker, char *prefix)
   return ERROR_NONE;
 }
 //==============================================================================
-int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix)
+int print_custom_remote_client_info(custom_remote_client_t *remote_client, char *prefix)
 {
   if(remote_client == NULL)
     return 1;
@@ -110,12 +114,14 @@ int print_remote_client_info(custom_remote_client_t *remote_client, char *prefix
 
   sprintf(tmp,
           "%s\n"                                         \
+          "       connect_state:                   %s\n" \
           "       connect_time:                    %s\n" \
           "       active_state:                    %s\n" \
           "       active_time:                     %s\n" \
           "       register_state:                  %s\n" \
           "       register_time:                   %s",
           prefix,
+          connect_to_string(remote_client->connect_state),
           time_to_string(remote_client->connect_time),
           active_to_string(remote_client->active_state),
           time_to_string(remote_client->active_time),
@@ -151,7 +157,7 @@ int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_
     if(tmp_worker->state == STATE_START)
     {
       print_custom_worker_info(tmp_worker, "remote client");
-      print_remote_client_info(tmp_remote_client, "worker");
+      print_custom_remote_client_info(tmp_remote_client, "worker");
       log_add(LOG_INFO, "---------");
     }
   }

@@ -261,7 +261,10 @@ int cmd_client_status()
   clr_scr();
 
   for(int i = 0; i < _cmd_client_count; i++)
-    print_custom_worker_info(&_cmd_clients[i].custom_client.custom_remote_client.custom_worker, "cmd_client");
+  {
+    print_custom_worker_info(&_cmd_clients[i].custom_client.custom_remote_client.custom_worker, "worker");
+    print_custom_remote_client_info(&_cmd_clients[i].custom_client.custom_remote_client, "client");
+  }
 
   return ERROR_NONE;
 }
@@ -377,6 +380,7 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
 
   time_t rawtime;
   time (&rawtime);
+  tmp_client->connect_state = CONNECTED;
   tmp_client->connect_time = rawtime;
 
   tmp_client->custom_worker.state = STATE_STARTING;
@@ -548,6 +552,7 @@ int on_cmd_connect(void *sender)
 
   time_t rawtime;
   time (&rawtime);
+  tmp_client->custom_remote_client.connect_state = CONNECTED;
   tmp_client->custom_remote_client.connect_time = rawtime;
 
   pthread_attr_t tmp_attr;
@@ -678,6 +683,7 @@ int on_cmd_disconnect(void *sender)
 
   time_t rawtime;
   time (&rawtime);
+  tmp_client->custom_remote_client.connect_state = DISCONNECTED;
   tmp_client->custom_remote_client.disconnect_time = rawtime;
 
   #ifdef WRITE_REPORT

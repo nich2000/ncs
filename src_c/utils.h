@@ -21,6 +21,7 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream);
 //==============================================================================
 int random_range(int min, int max);
 //==============================================================================
+const char *connect_to_string  (sock_connect_t  value);
 const char *sock_mode_to_string(sock_mode_t     value);
 const char *sock_type_to_string(sock_type_t     value);
 const char *state_to_string    (sock_state_t    value);

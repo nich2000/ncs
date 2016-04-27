@@ -19,6 +19,7 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port);
 int sock_print_client_header(sock_port_t port, sock_host_t host);
 //==============================================================================
 int print_custom_worker_info(custom_worker_t *worker, char *prefix);
+int print_custom_remote_client_info(custom_remote_client_t *remote_client, char *prefix);
 int print_custom_remote_clients_list_info(custom_remote_clients_list_t *clients_list, char *prefix);
 //==============================================================================
 #endif //SOCKET_UTILS_H

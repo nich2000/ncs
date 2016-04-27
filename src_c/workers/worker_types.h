@@ -50,6 +50,7 @@ typedef struct
   pthread_t       send_thread;
   pthread_t       recv_thread;
 
+  sock_connect_t  connect_state;
   sock_active_t   active_state;
   sock_register_t register_state;
 
@@ -58,14 +59,11 @@ typedef struct
   sock_time_t     active_time;
   sock_time_t     register_time;
 
-  // TODO: Временное явление 1
+  // TODO: Временное явление
   pack_protocol_t protocol;
-  // TODO: Временное явление 2
   char           *out_message;
   int             out_message_size;
-  // TODO: Временное явление 3
   BOOL            hand_shake;
-  // TODO: Временное явление 4
   FILE           *report;
   FILE           *session;
   FILE           *stat;

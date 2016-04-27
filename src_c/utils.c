@@ -135,6 +135,24 @@ const char *sock_type_to_string(sock_type_t type)
   }
 }
 //==============================================================================
+const char *connect_to_string(sock_connect_t value)
+{
+  switch (value)
+  {
+    case CONNECTED:
+      return "CONNECTED";
+      break;
+
+    case DISCONNECTED:
+      return "DISCONNECTED";
+      break;
+
+    default:
+      return "CONNECT_UNKNOWN";
+      break;
+  }
+}
+//==============================================================================
 const char *state_to_string(sock_state_t value)
 {
   switch (value)
@@ -210,7 +228,7 @@ const char *active_to_string(sock_active_t value)
 const char *time_to_string(sock_time_t value)
 {
   if(!value)
-    return "no time";
+    return "no time\n";
   else
     return asctime(localtime(&value));
 }
