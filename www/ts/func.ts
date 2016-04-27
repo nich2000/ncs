@@ -218,7 +218,7 @@ class clients_t {
       }
     }
 
-    let id: string = '';
+    let id: string = "";
     for(let i = 0; i < data.length; i++){
       if(data[i]._ID != undefined){
         id = data[i]._ID;
@@ -250,8 +250,8 @@ class clients_t {
   }
   //----------------------------------------------------------------------------
   private switch_current(current: active_t, client: client_t): void{
-    let photo: string = "/pilots/" + client.name + '.jpg';
-    let info: string  = "/pilots/" + client.name + '_info.html';
+    let photo: string = "/pilots/" + client.name + ".jpg";
+    let info: string  = "/pilots/" + client.name + "_info.html";
 
     if(current == active_t.first)
     {

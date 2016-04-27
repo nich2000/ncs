@@ -72,7 +72,7 @@ class map_t {
 
     let canvasSupported: boolean = !!document.createElement("canvas").getContext;
     if (canvasSupported) {
-      this._ctx = this._canvas.getContext('2d');
+      this._ctx = this._canvas.getContext("2d");
 
       this._height = this._canvas.height;
       this._width = this._canvas.width;
@@ -82,7 +82,7 @@ class map_t {
       this._is_init = true;
     }
     else {
-      console.error('Can not get context');
+      console.error("Can not get context");
       this._is_init = false;
       return;
     }
@@ -135,7 +135,7 @@ class map_t {
     this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
     this._ctx.closePath();
     this._ctx.lineWidth = 5;
-    this._ctx.strokeStyle = 'blue';
+    this._ctx.strokeStyle = "blue";
   }
   //----------------------------------------------------------------------------
   private load_map(data: any): void {

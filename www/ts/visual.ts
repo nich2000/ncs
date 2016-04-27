@@ -51,9 +51,9 @@ class row_t extends custom_t {
     super(id, "<tr/>", owner);
 
     // Пример замыкания, Signal.emit вызовет эту переменную
-    // let value: string = '1234';
+    // let value: string = "1234";
     this._self.click(function() {
-      let cell: any = $(this).find('td:last');
+      let cell: any = $(this).find("td:last");
       Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
     });
   }
@@ -128,33 +128,33 @@ class clients_table_t extends table_t {
   }
   //----------------------------------------------------------------------------
   private get_id(id: number): string {
-    return 'client_' + String(id);
+    return "client_" + String(id);
   }
   //----------------------------------------------------------------------------
   private add_row(id: number, name: string): void {
     let row_id: string = this.get_id(id);
     let row: row_t = super.do_add_row(row_id);
 
-    let cell_id: string = 'client_name_' + String(id);
+    let cell_id: string = "client_name_" + String(id);
     row.add_cell(cell_id, name);
 
-    cell_id = 'client_act_' + String(id);
+    cell_id = "client_act_" + String(id);
     row.add_cell(cell_id, "");
 
-    cell_id = 'client_id_' + String(id);
+    cell_id = "client_id_" + String(id);
     row.add_cell(cell_id, String(id));
   }
   //----------------------------------------------------------------------------
   private active_row(row: row_t, active: active_t): void {
     switch(active){
       case active_t.first: {
-        row.self.removeClass('dems-second');
-        row.self.addClass('dems-first').siblings().removeClass('dems-first');
+        row.self.removeClass("dems-second");
+        row.self.addClass("dems-first").siblings().removeClass("dems-first");
         break;
       }
       case active_t.second: {
-        row.self.removeClass('dems-first');
-        row.self.addClass('dems-second').siblings().removeClass('dems-second');
+        row.self.removeClass("dems-first");
+        row.self.addClass("dems-second").siblings().removeClass("dems-second");
         break;
       }
     }
@@ -162,16 +162,16 @@ class clients_table_t extends table_t {
   //----------------------------------------------------------------------------
   private state_row(row: row_t, state: state_t): void {
     if(state == state_t.start)
-      row.self.addClass('dems-active').siblings().removeClass('dems-active');
+      row.self.addClass("dems-active").siblings().removeClass("dems-active");
     else
-      row.self.removeClass('dems-active');
+      row.self.removeClass("dems-active");
   }
   //----------------------------------------------------------------------------
   private register_row(row: row_t, register: register_t): void {
     if(register == register_t.ok)
-      row.self.addClass('dems-register').siblings().removeClass('dems-register');
+      row.self.addClass("dems-register").siblings().removeClass("dems-register");
     else
-      row.self.removeClass('dems-register');
+      row.self.removeClass("dems-register");
   }
   //----------------------------------------------------------------------------
   public add_client(client: client_t): void {
@@ -184,7 +184,7 @@ class clients_table_t extends table_t {
 
     this.active_row(row, active);
 
-    let cell_id: string = 'client_act_' + String(client.id);
+    let cell_id: string = "client_act_" + String(client.id);
     element.set_text(cell_id, active_t[active]);
   }
   //----------------------------------------------------------------------------
@@ -211,14 +211,14 @@ class data_table_t extends table_t {
   }
   //----------------------------------------------------------------------------
   add_row(prefix: string, key: string, value: string) : void {
-    let row_id: string = 'data_' + prefix + '_' + key + '_' + value;
+    let row_id: string = "data_" + prefix + "_" + key + "_" + value;
 
     let row: row_t = super.do_add_row(row_id);
 
-    let cell_id: string = 'data_' + prefix + '_key_' + key;
+    let cell_id: string = "data_" + prefix + "_key_" + key;
     row.add_cell(cell_id, key);
 
-    cell_id = 'data_' + prefix + '_value_' + key;
+    cell_id = "data_" + prefix + "_value_" + key;
     row.add_cell(cell_id, value);
   }
   //----------------------------------------------------------------------------

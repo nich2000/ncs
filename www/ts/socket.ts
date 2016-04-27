@@ -3,16 +3,26 @@
 //==============================================================================
 class web_socket_t {
   //----------------------------------------------------------------------------
-  private _socket: WebSocket;
-  private _host: string;
-  private _is_connected: boolean;
-  private _session_id: string;
+  private _socket: WebSocket = undefined;
+  private _host: string = "";
+  private _is_connected: boolean = false;
+  private _session_id: string = "";
+  private _counter: number = 0;
+  private _connection_status: any = undefined;
+  private _last_recv_cmd: any = undefined;
+  private _last_send_cmd: any = undefined;
+  private _data_counter: any = undefined;
   //----------------------------------------------------------------------------
   constructor(host: string) {
     console.log("constructor: web_socket_t");
 
     this._host = host;
     this._is_connected = false;
+
+    this._connection_status = $("#connection_status");
+    this._last_recv_cmd     = $("#last_recv_cmd");
+    this._last_send_cmd     = $("#last_send_cmd");
+    this._data_counter      = $("#data_counter");
 
     Signal.bind("doSend", this.doSend, this);
 
@@ -38,7 +48,7 @@ class web_socket_t {
 
     message.splice(1, 0, ["par", this.session_id]);
 
-    $("#last_send_cmd").text("Send: " + message);
+    this._last_send_cmd.text("Send: " + message);
 
     message = JSON.stringify(message);
 
@@ -51,10 +61,10 @@ class web_socket_t {
     this._is_connected = true;
     this.session_id = String(new Date().getTime());
 
-    $('#connection_status').removeClass('label-danger');
-    $('#connection_status').removeClass('label-warning');
-    $('#connection_status').addClass('label-success');
-    element.set_text("connection_status", 'Connection: open');
+    this._connection_status.removeClass("label-danger");
+    this._connection_status.removeClass("label-warning");
+    this._connection_status.addClass("label-success");
+    this._connection_status.text("Connection: open");
 
     Signal.emit("doSend", [["cmd", "ws_register"]]);
   }
@@ -64,10 +74,10 @@ class web_socket_t {
 
     this._is_connected = false;
 
-    $('#connection_status').removeClass('label-danger');
-    $('#connection_status').removeClass('label-success');
-    $('#connection_status').addClass('label-warning');
-    element.set_text("connection_status", 'Connection: close');
+    this._connection_status.removeClass("label-danger");
+    this._connection_status.removeClass("label-success");
+    this._connection_status.addClass("label-warning");
+    this._connection_status.text("Connection: close");
   }
   //----------------------------------------------------------------------------
   private onError(evt: any) {
@@ -75,10 +85,10 @@ class web_socket_t {
 
     this._is_connected = false;
 
-    $('#connection_status').removeClass('label-success');
-    $('#connection_status').removeClass('label-warning');
-    $('#connection_status').addClass('label-danger');
-    element.set_text("connection_status", 'Connection: error');
+    this._connection_status.removeClass("label-success");
+    this._connection_status.removeClass("label-warning");
+    this._connection_status.addClass("label-danger");
+    this._connection_status.text("Connection: error");
   }
   //----------------------------------------------------------------------------
   private onMessage(evt: any) {
@@ -90,13 +100,15 @@ class web_socket_t {
 
     if (data[0].CMD != undefined) {
       let cmd: string = data[0].CMD;
-      $("#last_recv_cmd").text("Recv: " + cmd);
+      this._last_recv_cmd.text("Recv: " + cmd);
 
       data.shift();
 
       Signal.emit(cmd, data);
     }
     else {
+      this._counter++;
+      this._data_counter.text("Counter: " + this._counter);
       Signal.emit("add_data", data);
     }
   }

@@ -49,7 +49,7 @@ function toNumbersArray(value: any) {
 }
 //==============================================================================
 function toNumberToByte(value: any) {
-  var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
-  return arr[value >> 4] + '' + arr[value & 0xF];
+  var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "A", "B", "C", "D", "E", "F"];
+  return arr[value >> 4] + "" + arr[value & 0xF];
 }
 //==============================================================================

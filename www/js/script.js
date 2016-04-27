@@ -498,9 +498,22 @@ var Signal = (function () {
 var web_socket_t = (function () {
     function web_socket_t(host) {
         var _this = this;
+        this._socket = undefined;
+        this._host = "";
+        this._is_connected = false;
+        this._session_id = "";
+        this._counter = 0;
+        this._connection_status = undefined;
+        this._last_recv_cmd = undefined;
+        this._last_send_cmd = undefined;
+        this._data_counter = undefined;
         console.log("constructor: web_socket_t");
         this._host = host;
         this._is_connected = false;
+        this._connection_status = $('#connection_status');
+        this._last_recv_cmd = $("#last_recv_cmd");
+        this._last_send_cmd = $("#last_send_cmd");
+        this._data_counter = $("#data_counter");
         Signal.bind("doSend", this.doSend, this);
         var timerConnect = setInterval(function () {
             _this.createWebSocket();
@@ -519,7 +532,7 @@ var web_socket_t = (function () {
     web_socket_t.prototype.doSend = function (message) {
         console.log("doSend: " + message);
         message.splice(1, 0, ["par", this.session_id]);
-        $("#last_send_cmd").text("Send: " + message);
+        this._last_send_cmd.text("Send: " + message);
         message = JSON.stringify(message);
         this._socket.send(message);
     };
@@ -527,27 +540,27 @@ var web_socket_t = (function () {
         console.log("onOpen");
         this._is_connected = true;
         this.session_id = String(new Date().getTime());
-        $('#connection_status').removeClass('label-danger');
-        $('#connection_status').removeClass('label-warning');
-        $('#connection_status').addClass('label-success');
-        element.set_text("connection_status", 'Connection: open');
+        this._connection_status.removeClass('label-danger');
+        this._connection_status.removeClass('label-warning');
+        this._connection_status.addClass('label-success');
+        this._connection_status.text('Connection: open');
         Signal.emit("doSend", [["cmd", "ws_register"]]);
     };
     web_socket_t.prototype.onClose = function (evt) {
         console.log("onClose");
         this._is_connected = false;
-        $('#connection_status').removeClass('label-danger');
-        $('#connection_status').removeClass('label-success');
-        $('#connection_status').addClass('label-warning');
-        element.set_text("connection_status", 'Connection: close');
+        this._connection_status.removeClass('label-danger');
+        this._connection_status.removeClass('label-success');
+        this._connection_status.addClass('label-warning');
+        this._connection_status.text('Connection: close');
     };
     web_socket_t.prototype.onError = function (evt) {
         console.log(evt.data);
         this._is_connected = false;
-        $('#connection_status').removeClass('label-success');
-        $('#connection_status').removeClass('label-warning');
-        $('#connection_status').addClass('label-danger');
-        element.set_text("connection_status", 'Connection: error');
+        this._connection_status.removeClass('label-success');
+        this._connection_status.removeClass('label-warning');
+        this._connection_status.addClass('label-danger');
+        this._connection_status.text('Connection: error');
     };
     web_socket_t.prototype.onMessage = function (evt) {
         var data;
@@ -556,11 +569,13 @@ var web_socket_t = (function () {
             return;
         if (data[0].CMD != undefined) {
             var cmd = data[0].CMD;
-            $("#last_recv_cmd").text("Recv: " + cmd);
+            this._last_recv_cmd.text("Recv: " + cmd);
             data.shift();
             Signal.emit(cmd, data);
         }
         else {
+            this._counter++;
+            this._data_counter.text("Counter: " + this._counter);
             Signal.emit("add_data", data);
         }
     };

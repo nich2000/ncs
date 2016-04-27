@@ -50,6 +50,7 @@ extern char session_file[64];
 extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
+extern char web_path[256];
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -129,6 +130,8 @@ int read_config()
 
   strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
   strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
+
+  strcpy((char*)web_path,        iniparser_getstring(config, "web:web_path",                DEFAULT_WEB_PATH));
 
   iniparser_freedict(config);
 

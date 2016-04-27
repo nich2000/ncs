@@ -38,6 +38,8 @@
 //==============================================================================
 #define WEB_LINE_SIZE 256
 //==============================================================================
+char web_path[256] = DEFAULT_WEB_PATH;
+//==============================================================================
 int web_server_init(web_server_t *server);
 int web_server_start(web_server_t *server, sock_port_t port);
 int web_server_work(web_server_t *server);
@@ -261,14 +263,14 @@ int web_get_response(char *request, char *response, int *size)
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "/index.html");
 
-    sprintf(tmp_full_name, "%s%s", DEFAULT_WEB_PATH, tmp_uri);
+    sprintf(tmp_full_name, "%s%s", web_path, tmp_uri);
     log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
                 tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
-      sprintf(tmp_full_name, "%s%s", DEFAULT_WEB_PATH, "/404.html");
+      sprintf(tmp_full_name, "%s%s", web_path, "/404.html");
       log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s",
                   tmp_full_name);
 

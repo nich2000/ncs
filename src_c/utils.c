@@ -31,6 +31,7 @@ extern char session_file[64];
 extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
+extern char web_path[256];
 //==============================================================================
 #ifndef __linux__
 /**
@@ -350,6 +351,7 @@ void print_config()
       "%-20s: %s\n" \
       "%-20s: %s\n" \
       "%-20s: %s\n" \
+      "%-20s: %s\n" \
       "%-20s: %s\n",
       "web_server_port",      web_server_port,
       "ws_server_port",       ws_server_port,
@@ -366,7 +368,8 @@ void print_config()
       "session_path",         session_path,
       "session_file",         session_file,
       "map_path",             map_path,
-      "map_file",             map_file);
+      "map_file",             map_file,
+      "web_path",             web_path);
 }
 //==============================================================================
 void print_types_info()
