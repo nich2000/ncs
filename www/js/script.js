@@ -170,16 +170,9 @@ var clients_t = (function () {
     };
     clients_t.prototype.add_data = function (data) {
         var active = active_t.none;
-        for (var i_1 = 0; i_1 < data.length; i_1++) {
+        for (var i_1 = data.length - 1; i_1 >= 0; i_1--) {
             if (data[i_1].ACT != undefined) {
                 active = data[i_1].ACT;
-                break;
-            }
-        }
-        var id = '';
-        for (var i_2 = 0; i_2 < data.length; i_2++) {
-            if (data[i_2]._ID != undefined) {
-                id = data[i_2]._ID;
                 break;
             }
         }
@@ -189,22 +182,34 @@ var clients_t = (function () {
             data_table = this._data_first_table;
             prefix = "first";
         }
-        else {
+        else if (active == active_t.second) {
             data_table = this._data_second_table;
             prefix = "second";
+        }
+        else
+            return;
+        var id = "";
+        for (var i_2 = 0; i_2 < data.length; i_2++) {
+            if (data[i_2]._ID != undefined) {
+                id = data[i_2]._ID;
+                break;
+            }
         }
         for (var i = 0; i < data.length; i++) {
             if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
                 var param = Object.keys(data[i])[0];
                 var value = data[i][param];
+                var b = new Date();
                 data_table.add_row(prefix, param, value);
+                var e = new Date;
+                profiler.text(e - b);
             }
         }
         Signal.emit("add_position", data);
     };
     clients_t.prototype.switch_current = function (current, client) {
-        var photo = "/pilots/" + client.name + '.jpg';
-        var info = "/pilots/" + client.name + '_info.html';
+        var photo = "/pilots/" + client.name + ".jpg";
+        var info = "/pilots/" + client.name + "_info.html";
         if (current == active_t.first) {
             element.set_src("first_pilot_photo", photo);
             element.set_src("first_pilot_info", info);
@@ -257,18 +262,20 @@ var element = (function () {
 var clients;
 var ws;
 var map;
+var profiler;
 function init() {
+    profiler = $("#profiler");
     console.log("init");
     clients = new clients_t();
-    map = new map_t('canvas_map');
-    ws = new web_socket_t("ws://" + location.hostname + ":5801");
+    map = new map_t("canvas_map");
+    ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
 $(window).load(function () {
-    $('body').height($(window).height());
+    $("body").height($(window).height());
     init();
 });
 $(window).resize(function () {
-    $('body').height($(window).height());
+    $("body").height($(window).height());
 });
 /// <reference path="./jquery.d.ts"/>
 var map_item_t = (function () {
@@ -321,14 +328,14 @@ var map_t = (function () {
         this._canvas = this._cnv[0];
         var canvasSupported = !!document.createElement("canvas").getContext;
         if (canvasSupported) {
-            this._ctx = this._canvas.getContext('2d');
+            this._ctx = this._canvas.getContext("2d");
             this._height = this._canvas.height;
             this._width = this._canvas.width;
             this.clear();
             this._is_init = true;
         }
         else {
-            console.error('Can not get context');
+            console.error("Can not get context");
             this._is_init = false;
             return;
         }
@@ -376,7 +383,7 @@ var map_t = (function () {
         this._ctx.bezierCurveTo(200, 5, 150, 20, 170, 80);
         this._ctx.closePath();
         this._ctx.lineWidth = 5;
-        this._ctx.strokeStyle = 'blue';
+        this._ctx.strokeStyle = "blue";
     };
     map_t.prototype.load_map = function (data) {
         this._map_items = [];
@@ -510,7 +517,7 @@ var web_socket_t = (function () {
         console.log("constructor: web_socket_t");
         this._host = host;
         this._is_connected = false;
-        this._connection_status = $('#connection_status');
+        this._connection_status = $("#connection_status");
         this._last_recv_cmd = $("#last_recv_cmd");
         this._last_send_cmd = $("#last_send_cmd");
         this._data_counter = $("#data_counter");
@@ -540,27 +547,27 @@ var web_socket_t = (function () {
         console.log("onOpen");
         this._is_connected = true;
         this.session_id = String(new Date().getTime());
-        this._connection_status.removeClass('label-danger');
-        this._connection_status.removeClass('label-warning');
-        this._connection_status.addClass('label-success');
-        this._connection_status.text('Connection: open');
+        this._connection_status.removeClass("label-danger");
+        this._connection_status.removeClass("label-warning");
+        this._connection_status.addClass("label-success");
+        this._connection_status.text("Connection: open");
         Signal.emit("doSend", [["cmd", "ws_register"]]);
     };
     web_socket_t.prototype.onClose = function (evt) {
         console.log("onClose");
         this._is_connected = false;
-        this._connection_status.removeClass('label-danger');
-        this._connection_status.removeClass('label-success');
-        this._connection_status.addClass('label-warning');
-        this._connection_status.text('Connection: close');
+        this._connection_status.removeClass("label-danger");
+        this._connection_status.removeClass("label-success");
+        this._connection_status.addClass("label-warning");
+        this._connection_status.text("Connection: close");
     };
     web_socket_t.prototype.onError = function (evt) {
         console.log(evt.data);
         this._is_connected = false;
-        this._connection_status.removeClass('label-success');
-        this._connection_status.removeClass('label-warning');
-        this._connection_status.addClass('label-danger');
-        this._connection_status.text('Connection: error');
+        this._connection_status.removeClass("label-success");
+        this._connection_status.removeClass("label-warning");
+        this._connection_status.addClass("label-danger");
+        this._connection_status.text("Connection: error");
     };
     web_socket_t.prototype.onMessage = function (evt) {
         var data;
@@ -638,8 +645,8 @@ function toNumbersArray(value) {
     return buffer;
 }
 function toNumberToByte(value) {
-    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'];
-    return arr[value >> 4] + '' + arr[value & 0xF];
+    var arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "A", "B", "C", "D", "E", "F"];
+    return arr[value >> 4] + "" + arr[value & 0xF];
 }
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -694,7 +701,7 @@ var row_t = (function (_super) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
         this._self.click(function () {
-            var cell = $(this).find('td:last');
+            var cell = $(this).find("td:last");
             Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
         });
     }
@@ -759,43 +766,43 @@ var clients_table_t = (function (_super) {
         _super.call(this, id, $(window), cols_count);
     }
     clients_table_t.prototype.get_id = function (id) {
-        return 'client_' + String(id);
+        return "client_" + String(id);
     };
     clients_table_t.prototype.add_row = function (id, name) {
         var row_id = this.get_id(id);
         var row = _super.prototype.do_add_row.call(this, row_id);
-        var cell_id = 'client_name_' + String(id);
+        var cell_id = "client_name_" + String(id);
         row.add_cell(cell_id, name);
-        cell_id = 'client_act_' + String(id);
+        cell_id = "client_act_" + String(id);
         row.add_cell(cell_id, "");
-        cell_id = 'client_id_' + String(id);
+        cell_id = "client_id_" + String(id);
         row.add_cell(cell_id, String(id));
     };
     clients_table_t.prototype.active_row = function (row, active) {
         switch (active) {
             case active_t.first: {
-                row.self.removeClass('dems-second');
-                row.self.addClass('dems-first').siblings().removeClass('dems-first');
+                row.self.removeClass("dems-second");
+                row.self.addClass("dems-first").siblings().removeClass("dems-first");
                 break;
             }
             case active_t.second: {
-                row.self.removeClass('dems-first');
-                row.self.addClass('dems-second').siblings().removeClass('dems-second');
+                row.self.removeClass("dems-first");
+                row.self.addClass("dems-second").siblings().removeClass("dems-second");
                 break;
             }
         }
     };
     clients_table_t.prototype.state_row = function (row, state) {
         if (state == state_t.start)
-            row.self.addClass('dems-active').siblings().removeClass('dems-active');
+            row.self.addClass("dems-active").siblings().removeClass("dems-active");
         else
-            row.self.removeClass('dems-active');
+            row.self.removeClass("dems-active");
     };
     clients_table_t.prototype.register_row = function (row, register) {
         if (register == register_t.ok)
-            row.self.addClass('dems-register').siblings().removeClass('dems-register');
+            row.self.addClass("dems-register").siblings().removeClass("dems-register");
         else
-            row.self.removeClass('dems-register');
+            row.self.removeClass("dems-register");
     };
     clients_table_t.prototype.add_client = function (client) {
         this.add_row(client.id, client.name);
@@ -804,7 +811,7 @@ var clients_table_t = (function (_super) {
         var id = this.get_id(client.id);
         var row = this.find_row(id);
         this.active_row(row, active);
-        var cell_id = 'client_act_' + String(client.id);
+        var cell_id = "client_act_" + String(client.id);
         element.set_text(cell_id, active_t[active]);
     };
     clients_table_t.prototype.state_client = function (client, state) {
@@ -825,11 +832,11 @@ var data_table_t = (function (_super) {
         _super.call(this, id, $(window), cols_count);
     }
     data_table_t.prototype.add_row = function (prefix, key, value) {
-        var row_id = 'data_' + prefix + '_' + key + '_' + value;
+        var row_id = "data_" + prefix + "_" + key + "_" + value;
         var row = _super.prototype.do_add_row.call(this, row_id);
-        var cell_id = 'data_' + prefix + '_key_' + key;
+        var cell_id = "data_" + prefix + "_key_" + key;
         row.add_cell(cell_id, key);
-        cell_id = 'data_' + prefix + '_value_' + key;
+        cell_id = "data_" + prefix + "_value_" + key;
         row.add_cell(cell_id, value);
     };
     return data_table_t;

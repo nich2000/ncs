@@ -36,6 +36,11 @@ typedef enum
 //==============================================================================
 typedef struct
 {
+  // first
+  struct timeval               send_time_f;
+  // second
+  struct timeval               send_time_s;
+
   custom_server_t              custom_server;
   custom_remote_clients_list_t custom_remote_clients_list;
 }ws_server_t;
@@ -45,6 +50,7 @@ int ws_server_status();
 //==============================================================================
 int ws_server_send_cmd (int session_id, int argc, ...);
 int ws_server_send_pack(int session_id, pack_packet_t *pack);
+int ws_server_send_data(int session_id, pack_packet_t *pack, sock_active_t active);
 //==============================================================================
 int ws_remote_clients_register(sock_id_t id, sock_name_t name);
 //==============================================================================

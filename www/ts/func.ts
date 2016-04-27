@@ -211,17 +211,9 @@ class clients_t {
   //----------------------------------------------------------------------------
   private add_data(data: any): void {
     let active: active_t = active_t.none;
-    for(let i = 0; i < data.length; i++){
+    for(let i = data.length-1; i >= 0; i--){
       if(data[i].ACT != undefined){
         active = data[i].ACT;
-        break;
-      }
-    }
-
-    let id: string = "";
-    for(let i = 0; i < data.length; i++){
-      if(data[i]._ID != undefined){
-        id = data[i]._ID;
         break;
       }
     }
@@ -232,9 +224,19 @@ class clients_t {
       data_table = this._data_first_table;
       prefix = "first";
     }
-    else{
+    else if(active == active_t.second){
       data_table = this._data_second_table;
       prefix = "second";
+    }
+    else
+      return;
+
+    let id: string = "";
+    for(let i = 0; i < data.length; i++){
+      if(data[i]._ID != undefined){
+        id = data[i]._ID;
+        break;
+      }
     }
 
     for (var i = 0; i < data.length; i++){
@@ -242,7 +244,10 @@ class clients_t {
         let param = Object.keys(data[i])[0];
         let value = data[i][param];
 
+        let b: any = new Date();
         data_table.add_row(prefix, param, value);
+        let e: any = new Date;
+        profiler.text(e - b);
       }
     }
 

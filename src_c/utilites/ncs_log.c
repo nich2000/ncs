@@ -14,11 +14,11 @@
 #include <sys/time.h>
 #include <windows.h>
 #endif
-
+#include <time.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
+#include <pthread.h>
 
 #include "ncs_log.h"
 //==============================================================================
@@ -36,8 +36,9 @@ BOOL session_enable    = TRUE;
 char session_path[256] = DEFAULT_SESSION_PATH;
 BOOL report_enable     = TRUE;
 char report_path[265]  = DEFAULT_REPORT_PATH;
-//==============================================================================
 char log_prefix[16]    = DEFAULT_LOG_NAME;
+//==============================================================================
+static pthread_mutex_t mutex_log = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
 void clr_scr()
 {
@@ -207,19 +208,23 @@ void log_add_fmt(int log_type, const char *message, ...)
 //==============================================================================
 void log_add(int log_type, const char *message)
 {
+  #ifndef DEMS_DEVICE
+  pthread_mutex_lock(&mutex_log);
+  #endif
+
   #ifndef DEBUG_MODE
   if(log_type == LOG_DEBUG)
-    return;
+    goto exit;
   #endif
 
   #ifndef USE_EXTRA_LOGS
     if(log_type == LOG_EXTRA)
-      return;
+      goto exit;
   #endif
 
   #ifndef USE_WAIT_LOGS
     if(log_type == LOG_WAIT)
-      return;
+      goto exit;
   #endif
 
   const char *log_type_str = log_type_to_string(log_type);
@@ -256,6 +261,12 @@ void log_add(int log_type, const char *message)
     else
       printf("[WARNING] Can not open log file, %s\n", full_file_name);
   }
+
+  exit:
+  #ifndef DEMS_DEVICE
+  pthread_mutex_unlock(&mutex_log);
+  #endif
+  return;
 }
 //==============================================================================
 FILE *stat_open(char *name)

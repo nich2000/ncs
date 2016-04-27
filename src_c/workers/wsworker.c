@@ -6,6 +6,8 @@
  * File: wsworker.c
  */
 //==============================================================================
+#include <sys/time.h>
+#include <time.h>
 #include <string.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -74,6 +76,8 @@ int       ws_set_frame(WSFrame_t frame_type, unsigned char* msg, int msg_length,
 WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* out_buffer, int out_size, int* out_length);
 //==============================================================================
 static ws_server_t _ws_server;
+//==============================================================================
+static pthread_mutex_t mutex_ws_send = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
@@ -256,6 +260,7 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
 
   time_t rawtime;
   time (&rawtime);
+  tmp_client->connect_state = CONNECTED;
   tmp_client->connect_time = rawtime;
 
   tmp_client->custom_worker.state = STATE_STARTING;
@@ -452,6 +457,7 @@ int on_ws_disconnect(void *sender)
 
   time_t rawtime;
   time (&rawtime);
+  tmp_client->custom_remote_client.connect_state = DISCONNECTED;
   tmp_client->custom_remote_client.disconnect_time = rawtime;
 
   return ERROR_NONE;
@@ -659,6 +665,36 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
 //==============================================================================
 // TODO: https://computing.llnl.gov/tutorials/pthreads/
 //==============================================================================
+float timedifference_msec(struct timeval t0, struct timeval t1)
+{
+  return (t1.tv_sec - t0.tv_sec) * 1000.0f + (t1.tv_usec - t0.tv_usec) / 1000.0f;
+}
+//==============================================================================
+int ws_server_send_data(int session_id, pack_packet_t *pack, sock_active_t active)
+{
+  struct timeval now;
+  gettimeofday(&now, 0);
+
+  if(active == ACTIVE_FIRST)
+    if(timedifference_msec(_ws_server.send_time_f, now) < 1000)
+      return ERROR_WAIT;
+
+  if(active == ACTIVE_SECOND)
+    if(timedifference_msec(_ws_server.send_time_s, now) < 1000)
+      return ERROR_WAIT;
+
+  pack_add_as_int(pack, (unsigned char*)"ACT", active);
+  int res = ws_server_send_pack(session_id, pack);
+
+  if(active == ACTIVE_FIRST)
+    gettimeofday(&_ws_server.send_time_f, 0);
+
+  if(active == ACTIVE_SECOND)
+    gettimeofday(&_ws_server.send_time_s, 0);
+
+  return res;
+}
+//==============================================================================
 int ws_server_send_pack(int session_id,  pack_packet_t *pack)
 {
   if(_ws_server.custom_server.custom_worker.state != STATE_START)
@@ -667,8 +703,9 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
   if(_ws_remote_clients_count(&_ws_server) == 0)
     return make_last_error(ERROR_WARNING, errno, "ws_server_send_pack, no ws clients connected");
 
-//  mutex enter
-//  _ws_server.is_locked = TRUE;
+  #ifndef DEMS_DEVICE
+  pthread_mutex_lock(&mutex_ws_send);
+  #endif
 
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
@@ -702,8 +739,9 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
     }
   }
 
-//  _ws_server.is_locked = FALSE;
-//  mutex exit
+  #ifndef DEMS_DEVICE
+  pthread_mutex_unlock(&mutex_ws_send);
+  #endif
 
   return ERROR_NONE;
 }

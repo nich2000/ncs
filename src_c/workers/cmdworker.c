@@ -881,10 +881,7 @@ int on_cmd_new_data(void *sender, void *data)
     #ifdef STREAM_TO_WS
     // ACTIVE_FIRST or ACTIVE_SECOND
     if((session_relay_to_web) && (tmp_client->active_state))
-    {
-      pack_add_as_int(tmp_packet, (unsigned char*)"ACT", tmp_client->active_state);
-      return ws_server_send_pack(SOCK_SEND_TO_ALL, tmp_packet);
-    }
+      return ws_server_send_data(SOCK_SEND_TO_ALL, tmp_packet, tmp_client->active_state);
     #endif
   }
 

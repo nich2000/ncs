@@ -4,8 +4,11 @@
 var clients: clients_t;
 var ws: web_socket_t;
 var map: map_t;
+var profiler: any;
 //=============================================================================
 function init() {
+  profiler = $("#profiler");
+
   console.log("init");
 
   clients = new clients_t();
