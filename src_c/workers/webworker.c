@@ -243,6 +243,21 @@ void *web_handle_connection(void *arg)
   return NULL;
 }
 //==============================================================================
+#define HEADER_200 "HTTP/1.0 200 OK\r\n"
+#define HEADER_400 "HTTP/1.0 400 Bad Request\r\n"
+#define HEADER_401 "HTTP/1.0 401 Unauthorized\r\n"
+#define HEADER_403 "HTTP/1.0 403 Forbidden\r\n"
+#define HEADER_404 "HTTP/1.0 404 Not Found\r\n"
+#define HEADER_500 "HTTP/1.0 500 Internal Server Error\r\n"
+//==============================================================================
+const char NOT_FOUND[256] =
+"<!DOCTYPE html>" \
+"<html>" \
+"  <body>" \
+"     <h1>Not Found</h1>" \
+"  </body>" \
+"</html>\0";
+//==============================================================================
 int web_get_response(char *request, char *response, int *size)
 {
   char    tmp[256];
@@ -270,28 +285,32 @@ int web_get_response(char *request, char *response, int *size)
 
   if(sscanf(tmp_header, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
   {
-    log_add_fmt(LOG_INFO, "[WEB] request header: %s %s %s", tmp_method, tmp_uri, tmp_version);
+    // log_add_fmt(LOG_DEBUG, "[WEB] request header: %s %s %s",
+                // tmp_method, tmp_uri, tmp_version);
 
     if(strcmp("/", tmp_uri) == 0)
-      strcpy(tmp_uri, "/index.html");
+      strcpy(tmp_uri, "html/index.html");
 
     sprintf(tmp_full_name, "%s%s", tmp_work_dir, tmp_uri);
-    log_add_fmt(LOG_INFO, "[WEB] request file: %s",
+    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
                 tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
-      sprintf(tmp_full_name, "%s%s", web_path, "/utility/404_.html");
-      log_add_fmt(LOG_INFO, "[WEB] file not found, responce file: %s",
-                  tmp_full_name);
+      sprintf(tmp_full_name, "%s%s", web_path, "html/utility/404.html");
 
-      strcpy(tmp_response_header, "HTTP/1.0 404 Not Found\r\n");
+      // log_add_fmt(LOG_INFO, "[WEB] file(%s) not found, responce file: %s",
+                  // tmp_uri, tmp_full_name);
+      log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
+                  tmp_uri);
+
+      strcpy(tmp_response_header, HEADER_404);
       f = fopen(tmp_full_name, "rb");
     }
     else
     {
-      strcpy(tmp_response_header, "HTTP/1.0 200 OK\r\n");
+      strcpy(tmp_response_header, HEADER_200);
     }
 
     if(f != NULL)
@@ -336,9 +355,13 @@ int web_get_response(char *request, char *response, int *size)
     }
     else
     {
-      strcpy(response, tmp_response_header);
+      strcpy(response, HEADER_404);
+      strcat(response, "Content-Type: text/html\r\n");
+      sprintf(tmp, "Content-Length: %u\r\n\r\n", strlen(NOT_FOUND));
+      strcat(response, tmp);
+      strcat(response, NOT_FOUND);
       *size = strlen(response);
-      log_add_fmt(LOG_INFO, "[WEB] file not found, responce file: %s",
+      log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
                   tmp_full_name);
     }
   }

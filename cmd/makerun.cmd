@@ -6,4 +6,6 @@ cd ../cmake
 cmake.exe -G "MinGW Makefiles" ../src_c
 mingw32-make.exe
 
-rem pause
+rem cd ../bin
+rem call ncs.exe -e
+

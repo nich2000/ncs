@@ -50,6 +50,7 @@
   [
     {
       "name": "CMake",
+      "shell": true,
       "windows":
       {
         "cmd": ["$project_path/cmd/makerun.cmd"],
