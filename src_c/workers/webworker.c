@@ -246,12 +246,17 @@ void *web_handle_connection(void *arg)
 int web_get_response(char *request, char *response, int *size)
 {
   char    tmp[256];
+
   char   *tmp_header;
-  char    tmp_work_dir[256];
   char    tmp_method[WEB_LINE_SIZE];
   char    tmp_uri[WEB_LINE_SIZE];
   char    tmp_version[WEB_LINE_SIZE];
+
+  char    tmp_response_header[WEB_LINE_SIZE];
+
+  char    tmp_work_dir[256];
   char    tmp_full_name[WEB_LINE_SIZE];
+
   char   *tmp_buffer;
   size_t  tmp_file_size = 0;
 
@@ -265,23 +270,28 @@ int web_get_response(char *request, char *response, int *size)
 
   if(sscanf(tmp_header, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
   {
-    log_add_fmt(LOG_INFO, "%s %s %s", tmp_method, tmp_uri, tmp_version);
+    log_add_fmt(LOG_INFO, "[WEB] request header: %s %s %s", tmp_method, tmp_uri, tmp_version);
 
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "/index.html");
 
     sprintf(tmp_full_name, "%s%s", tmp_work_dir, tmp_uri);
-    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
+    log_add_fmt(LOG_INFO, "[WEB] request file: %s",
                 tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
       sprintf(tmp_full_name, "%s%s", web_path, "/utility/404_.html");
-      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce file: %s",
+      log_add_fmt(LOG_INFO, "[WEB] file not found, responce file: %s",
                   tmp_full_name);
 
+      strcpy(tmp_response_header, "HTTP/1.0 404 Not Found\r\n");
       f = fopen(tmp_full_name, "rb");
+    }
+    else
+    {
+      strcpy(tmp_response_header, "HTTP/1.0 200 OK\r\n");
     }
 
     if(f != NULL)
@@ -293,7 +303,7 @@ int web_get_response(char *request, char *response, int *size)
       fread(tmp_buffer, tmp_file_size, 1, f);
       fclose(f);
 
-      strcpy(response, "HTTP/1.0 200 OK\r\n");
+      strcpy(response, tmp_response_header);
 
       if(strstr(tmp_full_name, "html") != NULL)
         strcat(response, "Content-Type: text/html\r\n");
@@ -326,8 +336,10 @@ int web_get_response(char *request, char *response, int *size)
     }
     else
     {
-      strcpy(response, "HTTP/1.0 404 Not Found\r\n");
+      strcpy(response, tmp_response_header);
       *size = strlen(response);
+      log_add_fmt(LOG_INFO, "[WEB] file not found, responce file: %s",
+                  tmp_full_name);
     }
   }
 
