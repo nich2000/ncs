@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     log_add(LOG_INFO, "command mode");
   }
   //---------------------------------------------------------------------------
-  while(1)
+  while(TRUE)
   {
     fgets(command, sizeof(command), stdin);
     switch(handle_command_str(NULL, command))

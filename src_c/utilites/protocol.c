@@ -321,7 +321,7 @@ int protocol_end(pack_protocol_t *protocol)
 
   error:
   unlock(PACK_OUT, protocol);
-  return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_end, message: %s",
+  return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_end,\nmessage: %s",
                              last_error()->message);
 }
 //==============================================================================
@@ -516,7 +516,7 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
   pack_size_t tmp_remain_size = vbuffer->size;
   int tmp_valid_pack_count = 0;
-  while(1)
+  while(TRUE)
   {
     if(tmp_remain_size < PACK_VERSION_SIZE)
     {

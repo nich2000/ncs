@@ -240,13 +240,13 @@ int custom_server_work(custom_server_t *server)
                     server->custom_worker.id, tmp_client, tmp_host, tmp_port);
 
         if(server->on_accept((void*)server, tmp_client, tmp_host) >= ERROR_NORMAL)
-          log_add_fmt(LOG_ERROR, "[CUSTOM] custom_server_work, on_accept, server id: %d, error: %s",
+          log_add_fmt(LOG_ERROR, "[CUSTOM] custom_server_work, on_accept, server id: %d,\nmessage: %s",
                       server->custom_worker.id, last_error()->message);
       }
     }
     else if(res >= ERROR_NORMAL)
     {
-      log_add_fmt(LOG_ERROR, "[CUSTOM] custom_server_work, sock_accept, server id: %d, error: %s",
+      log_add_fmt(LOG_ERROR, "[CUSTOM] custom_server_work, sock_accept, server id: %d,\nmessage: %s",
                   server->custom_worker.id, last_error()->message);
       if(errors++ > SOCK_ERRORS_COUNT)
         server->custom_worker.state = STATE_STOPPING;

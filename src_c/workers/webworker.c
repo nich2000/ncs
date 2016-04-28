@@ -196,8 +196,8 @@ void *web_handle_connection(void *arg)
   log_add_fmt(LOG_DEBUG, "[WEB] [BEGIN] web_handle_connection, server id: %d",
               _web_server.custom_server.custom_worker.id);
 
-  char *request  = (char *)malloc(SOCK_WEB_BUFFER_SIZE);
-  char *response = (char *)malloc(SOCK_WEB_BUFFER_SIZE * SOCK_WEB_BUFFER_SIZE);
+  char *request  = (char *)malloc(SOCK_WEB_REQUEST_SIZE);
+  char *response = (char *)malloc(SOCK_WEB_RESPONSE_SIZE);
   int   size     = 0;
   int   errors   = 0;
 
@@ -210,7 +210,7 @@ void *web_handle_connection(void *arg)
       if(web_get_response(request, response, &size) == ERROR_NONE)
         sock_send(tmp_sock, response, size);
       else
-        log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection, message: %s",
+        log_add_fmt(LOG_ERROR, "[WEB] web_handle_connection,\nmessage: %s",
                     last_error()->message);
       break;
     }
@@ -247,6 +247,7 @@ int web_get_response(char *request, char *response, int *size)
 {
   char    tmp[256];
   char   *tmp_header;
+  char    tmp_work_dir[256];
   char    tmp_method[WEB_LINE_SIZE];
   char    tmp_uri[WEB_LINE_SIZE];
   char    tmp_version[WEB_LINE_SIZE];
@@ -257,21 +258,27 @@ int web_get_response(char *request, char *response, int *size)
   *size = 0;
 
   tmp_header = strtok(request, "\r\n");
+  if(tmp_header == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "web_get_response, empty request");
+
+  strcpy(tmp_work_dir, web_path);
 
   if(sscanf(tmp_header, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
   {
+    log_add_fmt(LOG_INFO, "%s %s %s", tmp_method, tmp_uri, tmp_version);
+
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "/index.html");
 
-    sprintf(tmp_full_name, "%s%s", web_path, tmp_uri);
+    sprintf(tmp_full_name, "%s%s", tmp_work_dir, tmp_uri);
     log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
                 tmp_full_name);
 
     FILE *f = fopen(tmp_full_name, "rb");
     if(f == NULL)
     {
-      sprintf(tmp_full_name, "%s%s", web_path, "/404.html");
-      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce: %s",
+      sprintf(tmp_full_name, "%s%s", web_path, "/utility/404_.html");
+      log_add_fmt(LOG_DEBUG, "[WEB] file not found, responce file: %s",
                   tmp_full_name);
 
       f = fopen(tmp_full_name, "rb");
@@ -319,8 +326,8 @@ int web_get_response(char *request, char *response, int *size)
     }
     else
     {
-      return make_last_error_fmt(ERROR_NORMAL, errno, "web_get_response, file not found: %s",
-                                 tmp_full_name);
+      strcpy(response, "HTTP/1.0 404 Not Found\r\n");
+      *size = strlen(response);
     }
   }
 

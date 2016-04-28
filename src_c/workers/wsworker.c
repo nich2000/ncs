@@ -322,7 +322,7 @@ void *ws_recv_worker(void *arg)
           else
           {
             errno = 1;
-            make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, sock_send, errno: %d," \
+            make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, sock_send, errno: %d,\n" \
                                 "message: %s",
                                 errno, last_error()->message);
             goto errorhandler;
@@ -330,7 +330,7 @@ void *ws_recv_worker(void *arg)
         }
         else
         {
-          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d," \
+          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d,\n" \
                               "message: %s",
                               errno, last_error()->message);
           goto errorhandler;
@@ -342,7 +342,7 @@ void *ws_recv_worker(void *arg)
         unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
 
-        log_add_fmt(LOG_INFO, "[WS] ws_recv_worker, message: %s",
+        log_add_fmt(LOG_INFO, "[WS] ws_recv_worker,\nmessage: %s",
                     tmp_buffer);
 
         pack_packet_t tmp_pack;
@@ -352,7 +352,7 @@ void *ws_recv_worker(void *arg)
         }
         else
         {
-          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d," \
+          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d,\n" \
                               "message: %s",
                               errno, last_error()->message);
           goto errorhandler;
@@ -465,7 +465,7 @@ int on_ws_disconnect(void *sender)
 //==============================================================================
 int on_ws_error(void *sender, ncs_error_t *error)
 {
-  log_add_fmt(LOG_INFO, "[WS] ws_error, message: %s",
+  log_add_fmt(LOG_INFO, "[WS] ws_error,\nmessage: %s",
               error->message);
 
   return ERROR_NONE;
@@ -657,9 +657,8 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
   }
   else
   {
-    char tmp[128];
-    sprintf(tmp, "json_to_packet, error: %s", tmp_error.text);
-    return make_last_error(ERROR_NORMAL, errno, tmp);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "json_to_packet,\nmesage: %s",
+                               tmp_error.text);
   }
 }
 //==============================================================================

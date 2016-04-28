@@ -75,7 +75,8 @@ int make_last_error_fmt(int level, int number, const char *message, ...)
 void print_last_error(const char *sender, int result)
 {
   if(result >= ERROR_WARNING)
-    log_add_fmt(result, "%s, message: %s", sender, last_error()->message);
+    log_add_fmt(result, "%s,\nmessage: %s",
+                sender, last_error()->message);
 }
 //==============================================================================
 ncs_error_t *last_error()

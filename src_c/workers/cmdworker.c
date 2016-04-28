@@ -649,13 +649,13 @@ void *cmd_send_worker(void *arg)
         }
         else
         {
-          log_add_fmt(LOG_ERROR, "[CMD] cmd_send_worker, worker id: %d, error: %s",
+          log_add_fmt(LOG_ERROR, "[CMD] cmd_send_worker, worker id: %d,\nmessage: %s",
                       tmp_client->custom_worker.id, last_error()->message);
         }
       }
       else
       {
-        log_add_fmt(LOG_ERROR, "[CMD] cmd_send_worker, worker id: %d, error: %s",
+        log_add_fmt(LOG_ERROR, "[CMD] cmd_send_worker, worker id: %d,\nmessage: %s",
                     tmp_client->custom_worker.id, last_error()->message);
       }
 
@@ -701,7 +701,7 @@ int on_cmd_disconnect(void *sender)
 //==============================================================================
 int on_cmd_error(void *sender, ncs_error_t *error)
 {
-  log_add_fmt(LOG_INFO, "[CMD] cmd_error, message: %s",
+  log_add_fmt(LOG_INFO, "[CMD] cmd_error,\nmessage: %s",
               error->message);
 
   return ERROR_NONE;
@@ -726,7 +726,8 @@ int on_cmd_recv(void *sender, char *buffer, int size)
 #endif
 
   if(res >= ERROR_WARNING)
-    log_add_fmt(LOG_ERROR, "on_cmd_recv, message: %s", last_error()->message);
+    log_add_fmt(LOG_ERROR, "on_cmd_recv,\nmessage: %s",
+                last_error()->message);
 
   return ERROR_NONE;
 }
