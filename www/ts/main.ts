@@ -6,7 +6,7 @@ var ws: web_socket_t;
 var map: map_t;
 var profiler: any;
 //=============================================================================
-function init() {
+function init(): void {
   profiler = $("#profiler");
 
   console.log("init");
@@ -17,6 +17,13 @@ function init() {
   // map.test_mode = true;
 
   ws = new web_socket_t("ws://" + location.hostname + ":5800");
+}
+//=============================================================================
+function test(): void {
+  // $.get("command?cmd=ws_activate&par=1&par=next",
+  //   function( data ) {
+  //     alert("Data Loaded: " + data);
+  //   });
 }
 //=============================================================================
 $(window).load(function() {

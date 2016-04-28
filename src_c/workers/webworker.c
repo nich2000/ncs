@@ -18,6 +18,7 @@
 #include "socket_types.h"
 #include "socket_utils.h"
 #include "ncs_log.h"
+#include "exec.h"
 //==============================================================================
 /**
 * GET /index.html HTTP/1.0 \r\n
@@ -285,8 +286,25 @@ int web_get_response(char *request, char *response, int *size)
 
   if(sscanf(tmp_header, "%s %s %s", tmp_method, tmp_uri, tmp_version) >= 3)
   {
-    // log_add_fmt(LOG_DEBUG, "[WEB] request header: %s %s %s",
-                // tmp_method, tmp_uri, tmp_version);
+     log_add_fmt(LOG_DEBUG, "[WEB] request header: %s %s %s",
+                 tmp_method, tmp_uri, tmp_version);
+
+    if(strstr(tmp_method, "GET") != NULL)
+    {
+//      log_add(LOG_INFO, "GET request");
+
+      if(strstr(tmp_uri, "command") != NULL)
+      {
+//        log_add(LOG_INFO, "command found");
+
+        char *tmp_command = strstr(tmp_uri, "?");
+        if(tmp_command != NULL)
+        {
+          log_add(LOG_INFO, &tmp_command[1]);
+          handle_command_ajax(NULL, &tmp_command[1]);
+        }
+      }
+    }
 
     if(strcmp("/", tmp_uri) == 0)
       strcpy(tmp_uri, "html/index.html");
@@ -357,7 +375,7 @@ int web_get_response(char *request, char *response, int *size)
     {
       strcpy(response, HEADER_404);
       strcat(response, "Content-Type: text/html\r\n");
-      sprintf(tmp, "Content-Length: %u\r\n\r\n", strlen(NOT_FOUND));
+      sprintf(tmp, "Content-Length: %li\r\n\r\n", strlen(NOT_FOUND));
       strcat(response, tmp);
       strcat(response, NOT_FOUND);
       *size = strlen(response);

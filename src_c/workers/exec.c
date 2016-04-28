@@ -138,6 +138,44 @@ int read_config()
   return ERROR_NONE;
 }
 //==============================================================================
+int handle_command_ajax(void *sender, char *command)
+{
+  char *token = strtok(command, "&");
+  if(token == NULL)
+    goto exit;
+
+  char tmp_command[1024];
+  int i = 0;
+
+  while(token != NULL)
+  {
+    char *tmp = strstr(token, "=");
+    if(tmp != NULL)
+    {
+      if(i == 0)
+      {
+        sprintf(tmp_command, "%s", &tmp[1]);
+        i++;
+      }
+      else
+      {
+        char tmp1[128];
+        sprintf(tmp1, " %s", &tmp[1]);
+        strcat(tmp_command, tmp1);
+      }
+    }
+
+    token = strtok(NULL, "&");
+  }
+
+  log_add(LOG_INFO, tmp_command);
+  return handle_command_str(sender, tmp_command);
+
+  exit:
+  return make_last_error_fmt(ERROR_NORMAL, errno, "handle_command_ajax,\nmessage: %s",
+                             "ajax is not the command");
+}
+//==============================================================================
 int handle_command_pack(void *sender, pack_packet_t *packet)
 {
   pack_value_t cmd;
@@ -160,7 +198,7 @@ int handle_command_pack(void *sender, pack_packet_t *packet)
   }
 
   return make_last_error_fmt(ERROR_NORMAL, errno, "handle_command_pack,\nmessage: %s",
-                             last_error()->message);
+                             "pack is not the commnad");
 }
 //==============================================================================
 int handle_command_str_fmt(void *sender, char *command, ...)

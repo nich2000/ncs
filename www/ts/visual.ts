@@ -54,7 +54,11 @@ class row_t extends custom_t {
     // let value: string = "1234";
     this._self.click(function() {
       let cell: any = $(this).find("td:last");
-      Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
+      // Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
+      $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next",
+        function(data) {
+        }
+      );
     });
   }
   //----------------------------------------------------------------------------

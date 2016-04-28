@@ -270,6 +270,8 @@ function init() {
     map = new map_t("canvas_map");
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
 }
+function test() {
+}
 $(window).load(function () {
     $("body").height($(window).height());
     init();
@@ -702,7 +704,8 @@ var row_t = (function (_super) {
         this._cells = [];
         this._self.click(function () {
             var cell = $(this).find("td:last");
-            Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
+            $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next", function (data) {
+            });
         });
     }
     Object.defineProperty(row_t.prototype, "cells", {

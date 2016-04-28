@@ -87,5 +87,6 @@ int  read_config();
 int handle_command_str    (void *sender, char *command);
 int handle_command_str_fmt(void *sender, char *command, ...);
 int handle_command_pack   (void *sender, pack_packet_t *packet);
+int handle_command_ajax   (void *sender, char *command);
 //==============================================================================
 #endif //EXEC_H
