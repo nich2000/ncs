@@ -8,22 +8,22 @@
 
     <title>DEMS</title>
 
-    <link type="image/x-icon" rel="icon" href="../img/favicon.icon">
+    <link type="image/x-icon" rel="icon" href="../../img/favicon.ico">
 
     <script src="../../js/jquery-1.12.1.min.js"></script>
 
-    <link href="/../../bootstrap-3.3.6-dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="/../../bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
+    <link href="../../bootstrap-3.3.6-dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="../../bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
 
-    <link href="/../../css/style.css" rel="stylesheet">
-    <script src="/../../js/script.js"></script>
+    <link href="../../css/style.css" rel="stylesheet">
+    <script src="../../js/script.js"></script>
   </head>
   <!-- ================================================ -->
   <body>
-    <div class="container" style="height: 100%;">
+    <div class="container-fluid" style="height: 100%;">
       <!-- ================================================ -->
       <!-- Header -->
-      <div class="row dems-header">
+      <div class="row dems-header" style="margin-left: 0px;">
 <!--         <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4">
           <img class="img-responsive pull-left dems-logo" src="img/our.jpg" alt="no our logo">
         </div>
@@ -34,13 +34,13 @@
         </div> -->
       </div>
       <!-- ================================================ -->
-      <div class="row dems-workspace">
+      <div class="row dems-workspace" style="margin-left: 0px;">
         <!-- ================================================ -->
         <!-- Clients list -->
-        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="background-color: yellow; height: 100%;">
+        <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3" style="background-color: #6F6F6F; height: 100%;">
           <div class="dems-table" style="width: 100%; height: 90%;">
             <table class="table">
-              <thead style="background-color: green">
+              <thead style="background-color: #5A5A5A">
                 <tr>
                   <th>Name</th><th>Id</th><th>Act</th>
                 </tr>
@@ -49,32 +49,24 @@
               </tbody>
             </table>
           </div>
-          <button type="button" class="btn btn-primary btn-sm btn-block" style="height: 10%;">
+          <button type="button" class="btn btn-primary btn-sm btn-block" style="height: 10%;background-color: #9A9A9A;">
             Refresh
           </button>
         </div>
         <!-- ================================================ -->
         <!-- Work info -->
-        <div class="col-lg-9 col-md-9 col-sm-9 col-xs-9" style="background-color: red; height: 100%;">
+        <div class="col-lg-9 col-md-9 col-sm-9 col-xs-9" style="background-color: #777777; height: 100%;">
           <!-- Clients -->
-          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: green; height: 65%;">
+          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: #9E9E9E; height: 65%;">
             <!-- ================================================ -->
             <!-- First -->
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: maroon; height: 100%;">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: Coral; height: 40%;">
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Coral; height: 100%;">
-                  <img id="first_pilot_photo" class="img-responsive" src="/pilots/default.png" alt="Not Found">
-                </div>
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Coral; height: 100%;">
-                  <iframe id="first_pilot_info" src="/pilots/default_info.html" style="width: 100%; height: 100%;"></iframe>
-                </div>
-              </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: #8A8A8A; height: 100%;">
               <!-- ================================================ -->
               <!-- Data first -->
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: DarkGoldenRod; height: 60%;">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: #A9A9A9; height: 60%;">
                 <div class="dems-table" style="width: 100%; height: 100%;">
                   <table class="table table-striped">
-                    <thead style="background-color: green">
+                    <thead style="background-color: #5A5A5A">
                       <tr>
                         <th>Param</th><th>Value</th>
                       </tr>
@@ -87,21 +79,13 @@
             </div>
             <!-- ================================================ -->
             <!-- Second -->
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Tomato; height: 100%;">
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: Coral; height: 40%;">
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Coral; height: 100%;">
-                  <img id="second_pilot_photo" class="img-responsive" src="/pilots/default.png" alt="Not Found">
-                </div>
-                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: Coral; height: 100%;">
-                  <iframe id="second_pilot_info" src="/pilots/default_info.html" style="width: 100%; height: 100%;"></iframe>
-                </div>
-              </div>
+            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: #8A8A8A; height: 100%;">
               <!-- ================================================ -->
               <!-- Data second -->
-              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: DarkGoldenRod; height: 60%;">
+              <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: #A9A9A9; height: 60%;">
                 <div class="dems-table" style="width: 100%; height: 100%;">
                   <table class="table table-striped">
-                    <thead style="background-color: green">
+                    <thead style="background-color: #5A5A5A">
                       <tr>
                         <th>Param</th><th>Value</th>
                       </tr>
@@ -114,32 +98,17 @@
             </div>
             <!-- ================================================ -->
           </div>
-          <!-- ================================================ -->
-          <!-- Map -->
-          <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="background-color: blue; height: 35%;">
-            <div id="mini_map" class="col-lg-6 col-md-6 col-sm-6 col-xs-6 dems-mini-map">
-              <canvas id="canvas_map" class="dems-map">
-                <p>Ваш браузер не поддерживает canvas</p>
-              </canvas>
-            </div>
-            <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6" style="background-color: GoldenRod; height: 100%;">
-            </div>
-          </div>
         </div>
       </div>
       <!-- ================================================ -->
       <!-- Footer -->
-      <div class="row dems-footer">
+      <div class="row dems-footer" style="margin-left: 0px;">
         <span class="label label-warning" id="connection_status">Disconnected</span>
         <span class="label label-info"    id="last_recv_cmd">Recv: none</span>
         <span class="label label-info"    id="last_send_cmd">Send: none</span>
         <span class="label label-info"    id="data_counter">Counter: 0</span>
         <span class="label label-info"    id="profiler">Time: 0</span>
       </div>
-    </div>
-    <!-- ================================================ -->
-    <!-- Modal map -->
-    <div id="maxi_map" class="dems-maxi-map dems-hide">
     </div>
   </body>
   <!-- ================================================ -->
