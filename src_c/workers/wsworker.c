@@ -77,8 +77,6 @@ WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* o
 //==============================================================================
 static ws_server_t _ws_server;
 //==============================================================================
-static pthread_mutex_t mutex_ws_send = PTHREAD_MUTEX_INITIALIZER;
-//==============================================================================
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
 //==============================================================================
@@ -702,10 +700,6 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
   if(_ws_remote_clients_count(&_ws_server) == 0)
     return make_last_error(ERROR_WARNING, errno, "ws_server_send_pack, no ws clients connected");
 
-  #ifndef DEMS_DEVICE
-  pthread_mutex_lock(&mutex_ws_send);
-  #endif
-
   if(_ws_server.custom_server.custom_worker.state == STATE_START)
   {
     for(int i = 0; i < SOCK_WORKERS_COUNT; i++)
@@ -737,10 +731,6 @@ int ws_server_send_pack(int session_id,  pack_packet_t *pack)
       }
     }
   }
-
-  #ifndef DEMS_DEVICE
-  pthread_mutex_unlock(&mutex_ws_send);
-  #endif
 
   return ERROR_NONE;
 }

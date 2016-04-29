@@ -66,8 +66,6 @@ static cmd_server_t  _cmd_server;
 static names_t       _names;
 static int           _cmd_client_count = 0;
 //==============================================================================
-static pthread_mutex_t mutex_client_register = PTHREAD_MUTEX_INITIALIZER;
-//==============================================================================
 cmd_clients_t _cmd_clients;
 //==============================================================================
 static sock_active_t _cmd_active = ACTIVE_NONE;
@@ -494,8 +492,6 @@ int cmd_client_resume(cmd_client_t *client)
 //==============================================================================
 int cmd_client_register(cmd_client_t *client)
 {
-  pthread_mutex_lock(&mutex_client_register);
-
   log_add_fmt(LOG_INFO, "cmd_client_register, worker id: %d, session id: %s",
               client->custom_client.custom_remote_client.custom_worker.id,
               client->custom_client.custom_remote_client.custom_worker.session_id);
@@ -507,8 +503,6 @@ int cmd_client_register(cmd_client_t *client)
           CMD_CMD_REGISTER,
           client->custom_client.custom_remote_client.custom_worker.session_id);
   handle_command_str(client, tmp);
-
-  pthread_mutex_unlock(&mutex_client_register);
 
   return ERROR_NONE;
 }

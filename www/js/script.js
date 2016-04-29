@@ -50,8 +50,8 @@ var static_filter = [
 var client_t = (function () {
     function client_t(id, name) {
         this._id = -1;
-        this._name = "unnamed";
-        this._session = "unnamed";
+        this._name = "noname";
+        this._session = "nosession";
         this._state = state_t.unknown;
         this._connect = connect_t.unknown;
         this._active = active_t.unknown;
@@ -77,12 +77,32 @@ var client_t = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(client_t.prototype, "session", {
+        get: function () {
+            return this._session;
+        },
+        set: function (v) {
+            this._session = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(client_t.prototype, "state", {
         get: function () {
             return this._state;
         },
         set: function (v) {
             this._state = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(client_t.prototype, "connect", {
+        get: function () {
+            return this._connect;
+        },
+        set: function (v) {
+            this._connect = v;
         },
         enumerable: true,
         configurable: true
@@ -152,10 +172,12 @@ var clients_t = (function () {
             this._clients.push(client);
             this._clients_table.add_client(client);
         }
-        this.switch_current(active, client);
+        client.session = session;
+        client.connect = connect;
         client.state = state;
         client.active = active;
         client.register = register;
+        this.switch_current(active, client);
         this._clients_table.state_client(client, state);
         this._clients_table.active_client(client, active);
         this._clients_table.register_client(client, register);
@@ -232,13 +254,25 @@ var clients_t = (function () {
     return clients_t;
 })();
 /// <reference path="./jquery.d.ts"/>
+var pos_t;
+(function (pos_t) {
+    pos_t[pos_t["append"] = 0] = "append";
+    pos_t[pos_t["prepend"] = 1] = "prepend";
+})(pos_t || (pos_t = {}));
 var element = (function () {
     function element() {
     }
-    element.add = function (id, tag, owner) {
-        var tmp = $(tag);
-        tmp.attr("id", id);
-        owner.append(tmp);
+    element.add = function (id, tag, owner, pos) {
+        if (pos === void 0) { pos = pos_t.append; }
+        var tmp = this.find_by_id(id);
+        if (tmp == undefined) {
+            tmp = $(tag);
+            tmp.attr("id", id);
+            if (pos == pos_t.append)
+                owner.append(tmp);
+            else
+                owner.prepend(tmp);
+        }
         return tmp;
     };
     element.delete = function () {
@@ -713,7 +747,7 @@ var row_t = (function (_super) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
         this._self.click(function () {
-            var cell = $(this).find("td:last");
+            var cell = $(this).find("td:first");
             $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next", function (data) {
             });
         });
@@ -846,10 +880,13 @@ var data_table_t = (function (_super) {
     }
     data_table_t.prototype.add_row = function (prefix, key, value) {
         var row_id = "data_" + prefix + "_" + key + "_" + value;
-        var row = _super.prototype.do_add_row.call(this, row_id);
-        var cell_id = "data_" + prefix + "_key_" + key;
-        row.add_cell(cell_id, key);
-        cell_id = "data_" + prefix + "_value_" + key;
+        var row = _super.prototype.find_row.call(this, row_id);
+        if (row == undefined) {
+            _super.prototype.do_add_row.call(this, row_id);
+            var cell_id_1 = "data_" + prefix + "_key_" + key;
+            row.add_cell(cell_id_1, key);
+        }
+        var cell_id = "data_" + prefix + "_value_" + key;
         row.add_cell(cell_id, value);
     };
     return data_table_t;

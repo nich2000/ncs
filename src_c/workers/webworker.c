@@ -291,16 +291,16 @@ int web_get_response(char *request, char *response, int *size)
 
     if(strstr(tmp_method, "GET") != NULL)
     {
-//      log_add(LOG_INFO, "GET request");
+     // log_add(LOG_INFO, "GET request");
 
       if(strstr(tmp_uri, "command") != NULL)
       {
-//        log_add(LOG_INFO, "command found");
+       // log_add(LOG_INFO, "command found");
 
         char *tmp_command = strstr(tmp_uri, "?");
         if(tmp_command != NULL)
         {
-          log_add(LOG_INFO, &tmp_command[1]);
+          // log_add(LOG_INFO, &tmp_command[1]);
           handle_command_ajax(NULL, &tmp_command[1]);
         }
       }

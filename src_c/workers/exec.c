@@ -53,6 +53,8 @@ extern char map_file[64];
 extern char log_prefix[8];
 extern char web_path[256];
 //==============================================================================
+static pthread_mutex_t mutex_handle_command = PTHREAD_MUTEX_INITIALIZER;
+//==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
   if(cmd[strlen(cmd)-1] == '\n')
@@ -210,6 +212,12 @@ int handle_command_str_fmt(void *sender, char *command, ...)
 //==============================================================================
 int handle_command_str(void *sender, char *command)
 {
+  // #ifndef DEMS_DEVICE
+  // pthread_mutex_lock(&mutex_handle_command);
+  // #endif
+
+  int result = EXEC_UNKNOWN;
+
   char *token = strtok(command, " ");
   if(token != NULL)
   {
@@ -219,39 +227,51 @@ int handle_command_str(void *sender, char *command)
     if(strcmp(token, CMD_HELP) == 0)
     {
       print_help(0);
-      return EXEC_DONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_VERSION) == 0)
     {
       print_version();
-      return EXEC_DONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CONFIG) == 0)
     {
       print_config();
-      return EXEC_DONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_TEST) == 0)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_TEST);
       test();
-      return EXEC_DONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLEAR) == 0)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_CLEAR);
       clr_scr();
-      return EXEC_DONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_EXIT) == 0)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_EXIT);
-      return EXEC_NONE;
+
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_ALL) == 0)
@@ -267,7 +287,8 @@ int handle_command_str(void *sender, char *command)
       web_server(state, web_server_port);
       ws_server (state, ws_server_port);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SERVER) == 0)
@@ -286,7 +307,8 @@ int handle_command_str(void *sender, char *command)
 
       cmd_server(state, port);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WEB_SERVER) == 0)
@@ -305,7 +327,8 @@ int handle_command_str(void *sender, char *command)
 
       web_server(state, port);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_SERVER) == 0)
@@ -324,7 +347,8 @@ int handle_command_str(void *sender, char *command)
 
       ws_server(state, port);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLIENT) == 0)
@@ -355,7 +379,8 @@ int handle_command_str(void *sender, char *command)
 
       cmd_client(state, port, host, count);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_SERVER) == 0)
@@ -388,7 +413,8 @@ int handle_command_str(void *sender, char *command)
       else
         cmd_client_send_pack(id, &tmp_packet);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_WSSERVER) == 0)
@@ -416,7 +442,8 @@ int handle_command_str(void *sender, char *command)
 
       ws_server_send_pack(tmp_session_id, &tmp_packet);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SND_TO_CLIENT) == 0)
@@ -438,7 +465,8 @@ int handle_command_str(void *sender, char *command)
       }
       cmd_server_send_pack(&tmp_packet);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_STREAM) == 0)
@@ -457,7 +485,8 @@ int handle_command_str(void *sender, char *command)
 
        cmd_streamer(state, interval);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_TYPES_INFO) == 0)
@@ -466,7 +495,8 @@ int handle_command_str(void *sender, char *command)
 
       print_types_info();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_DEFINES_INFO) == 0)
@@ -475,7 +505,8 @@ int handle_command_str(void *sender, char *command)
 
       print_defines_info();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_SERVER_INFO) == 0)
@@ -484,7 +515,8 @@ int handle_command_str(void *sender, char *command)
 
       cmd_server_status();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WEB_SERVER_INFO) == 0)
@@ -493,7 +525,8 @@ int handle_command_str(void *sender, char *command)
 
       web_server_status();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_SERVER_INFO) == 0)
@@ -502,7 +535,8 @@ int handle_command_str(void *sender, char *command)
 
       ws_server_status();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CLIENT_INFO) == 0)
@@ -511,14 +545,16 @@ int handle_command_str(void *sender, char *command)
 
       cmd_client_status();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CMD_ACTIVATE) == 0)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_CMD_ACTIVATE);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_CMD_REGISTER) == 0)
@@ -533,7 +569,8 @@ int handle_command_str(void *sender, char *command)
       if(session_id != NULL)
         cmd_remote_client_register(worker->id, (unsigned char*)session_id);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
@@ -570,7 +607,8 @@ int handle_command_str(void *sender, char *command)
 
       cmd_remote_client_activate(id, active);
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_WS_REGISTER) == 0)
@@ -585,7 +623,8 @@ int handle_command_str(void *sender, char *command)
         ws_remote_clients_register(id, (unsigned char*)name_str);
       }
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
     else if(strcmp(token, CMD_RECONFIG) == 0)
@@ -594,10 +633,16 @@ int handle_command_str(void *sender, char *command)
 
       read_config();
 
-      return EXEC_DONE;
+      result = EXEC_DONE;
+      goto exit;
     }
     //--------------------------------------------------------------------------
   }
-  return EXEC_UNKNOWN;
+
+  exit:
+  // #ifndef DEMS_DEVICE
+  // pthread_mutex_unlock(&mutex_handle_command);
+  // #endif
+  return result;
 }
 //==============================================================================

@@ -50,15 +50,16 @@ class row_t extends custom_t {
   constructor(id: string, owner: any) {
     super(id, "<tr/>", owner);
 
-    // Пример замыкания, Signal.emit вызовет эту переменную
-    // let value: string = "1234";
+    // #govnocode
     this._self.click(function() {
-      let cell: any = $(this).find("td:last");
+      // let cell: any = $(this).find("td:last");
+      let cell: any = $(this).find("td:first");
       // Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
       $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next",
         function(data) {
         }
       );
+
     });
   }
   //----------------------------------------------------------------------------
@@ -114,7 +115,6 @@ class table_t extends custom_t {
   //----------------------------------------------------------------------------
   protected do_add_row(id: string): row_t {
     let row: row_t = this.find_row(id);
-
     if (row == undefined) {
       row = new row_t(id, this._self);
       this._rows.push(row);
@@ -217,12 +217,16 @@ class data_table_t extends table_t {
   add_row(prefix: string, key: string, value: string) : void {
     let row_id: string = "data_" + prefix + "_" + key + "_" + value;
 
-    let row: row_t = super.do_add_row(row_id);
+    let row: row_t = super.find_row(row_id)
+    if(row == undefined)
+    {
+      super.do_add_row(row_id);
 
-    let cell_id: string = "data_" + prefix + "_key_" + key;
-    row.add_cell(cell_id, key);
+      let cell_id: string = "data_" + prefix + "_key_" + key;
+      row.add_cell(cell_id, key);
+    }
 
-    cell_id = "data_" + prefix + "_value_" + key;
+    let cell_id = "data_" + prefix + "_value_" + key;
     row.add_cell(cell_id, value);
   }
   //----------------------------------------------------------------------------

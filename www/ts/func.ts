@@ -1,4 +1,5 @@
 //==============================================================================
+//==============================================================================
 enum connect_t {
   unknown = 0,
   connected,
@@ -64,8 +65,8 @@ interface data_list_i {
 class client_t {
   //----------------------------------------------------------------------------
   private _id      : number             = -1;
-  private _name    : string             = "unnamed";
-  private _session : string             = "unnamed";
+  private _name    : string             = "noname";
+  private _session : string             = "nosession";
   private _state   : state_t            = state_t.unknown;
   private _connect : connect_t          = connect_t.unknown;
   private _active  : active_t           = active_t.unknown;
@@ -89,12 +90,28 @@ class client_t {
     this._name = v;
   }
   //----------------------------------------------------------------------------
+  public get session() : string {
+    return this._session;
+  }
+  //----------------------------------------------------------------------------
+  public set session(v : string) {
+    this._session = v;
+  }
+  //----------------------------------------------------------------------------
   public get state() : state_t {
     return this._state;
   }
   //----------------------------------------------------------------------------
   public set state(v : state_t) {
     this._state = v;
+  }
+  //----------------------------------------------------------------------------
+  public get connect() : connect_t {
+    return this._connect;
+  }
+  //----------------------------------------------------------------------------
+  public set connect(v : connect_t) {
+    this._connect = v;
   }
   //----------------------------------------------------------------------------
   public get active() : active_t {
@@ -186,11 +203,13 @@ class clients_t {
       this._clients_table.add_client(client);
     }
 
-    this.switch_current(active, client);
-
+    client.session  = session;
+    client.connect  = connect;
     client.state    = state;
     client.active   = active;
     client.register = register;
+
+    this.switch_current(active, client);
 
     this._clients_table.state_client   (client, state);
     this._clients_table.active_client  (client, active);

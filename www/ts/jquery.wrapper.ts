@@ -1,16 +1,25 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
+enum pos_t {
+  append = 0,
+  prepend
+}
+//==============================================================================
 class element {
   //----------------------------------------------------------------------------
-  public static add(id: string, tag: string, owner: any): any{
-    let tmp = $(tag);
-    tmp.attr("id", id);
+  public static add(id: string, tag: string, owner: any, pos: pos_t = pos_t.append): any{
+    let tmp: any = this.find_by_id(id);
+    if(tmp == undefined)
+    {
+      tmp = $(tag);
+      tmp.attr("id", id);
 
-    // TODO: need select
-    // owner.prepend(tmp);
-    owner.append(tmp);
-
+      if(pos == pos_t.append)
+        owner.append(tmp);
+      else
+        owner.prepend(tmp);
+    }
     return tmp;
   }
   //----------------------------------------------------------------------------
