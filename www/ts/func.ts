@@ -1,14 +1,19 @@
 //==============================================================================
+enum connect_t {
+  unknown = 0,
+  connected,
+  disconnected
+}
 //==============================================================================
 enum active_t {
-  none = 0,
+  unknown = 0,
   first,
   second,
   next
 };
 //==============================================================================
 enum state_t {
-  none = 0,
+  unknown = 0,
   start,
   starting,
   stop,
@@ -60,8 +65,10 @@ class client_t {
   //----------------------------------------------------------------------------
   private _id      : number             = -1;
   private _name    : string             = "unnamed";
-  private _state   : state_t            = state_t.none;
-  private _active  : active_t           = active_t.none;
+  private _session : string             = "unnamed";
+  private _state   : state_t            = state_t.unknown;
+  private _connect : connect_t          = connect_t.unknown;
+  private _active  : active_t           = active_t.unknown;
   private _register: register_t         = register_t.none;
   private _data    : Array<data_list_i> = [];
   //----------------------------------------------------------------------------
@@ -163,11 +170,13 @@ class clients_t {
   }
   //----------------------------------------------------------------------------
   private add_client(data: any): void {
-    let id      : number     = data[0]._ID;
-    let name    : string     = data[1].NAM;
-    let state   : state_t    = parseInt(data[2].STA);
-    let active  : active_t   = parseInt(data[3].ACT);
-    let register: register_t = parseInt(data[4].REG);
+    let id      : number     =          data[0]._ID;
+    let name    : string     =          data[1].NAM;
+    let session : string     =          data[2].SES;
+    let state   : state_t    = parseInt(data[3].STA);
+    let connect : connect_t  = parseInt(data[4].CON);
+    let active  : active_t   = parseInt(data[5].ACT);
+    let register: register_t = parseInt(data[6].REG);
 
     let client: client_t = this.get_client_by_id(id);
     if(client == undefined){
@@ -210,7 +219,7 @@ class clients_t {
   }
   //----------------------------------------------------------------------------
   private add_data(data: any): void {
-    let active: active_t = active_t.none;
+    let active: active_t = active_t.unknown;
     for(let i = data.length-1; i >= 0; i--){
       if(data[i].ACT != undefined){
         active = data[i].ACT;

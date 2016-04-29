@@ -27,11 +27,12 @@
 #define LOG_NAME_DATE_TIME_S     6
 //==============================================================================
 #define LOG_INFO                 100
-#define LOG_WAIT                 101
-#define LOG_WARNING              102
-#define LOG_ERROR                103
-#define LOG_ERROR_CRITICAL       104
-#define LOG_ERROR_FATAL          105
+#define LOG_IGNORE               101
+#define LOG_WAIT                 102
+#define LOG_WARNING              103
+#define LOG_ERROR                104
+#define LOG_ERROR_CRITICAL       105
+#define LOG_ERROR_FATAL          106
 //==============================================================================
 #define LOG_CMD                  10
 #define LOG_EXTRA                11

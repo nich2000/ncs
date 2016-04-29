@@ -14,11 +14,12 @@
 #include "globals.h"
 //==============================================================================
 #define ERROR_NONE       100
-#define ERROR_WAIT       101
-#define ERROR_WARNING    102
-#define ERROR_NORMAL     103
-#define ERROR_CRITICAL   104
-#define ERROR_FATAL      105
+#define ERROR_IGNORE     101
+#define ERROR_WAIT       102
+#define ERROR_WARNING    103
+#define ERROR_NORMAL     104
+#define ERROR_CRITICAL   105
+#define ERROR_FATAL      106
 //==============================================================================
 typedef struct
 {

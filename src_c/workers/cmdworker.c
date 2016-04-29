@@ -918,14 +918,16 @@ int cmd_remote_client_list(pack_packet_t *pack)
     custom_remote_client_t *tmp_remote_client = &_cmd_server.custom_remote_clients_list.items[i];
     custom_worker_t *tmp_custom_worker = &tmp_remote_client->custom_worker;
 
-    if(tmp_custom_worker->state == STATE_START)
+    if(tmp_custom_worker->state != STATE_STOP)
     {
       pack_packet_t tmp_pack;
       pack_init(&tmp_pack);
 
       pack_add_as_int   (&tmp_pack, (unsigned char*)"_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, (unsigned char*)"NAM", tmp_custom_worker->name);
+      pack_add_as_string(&tmp_pack, (unsigned char*)"SES", tmp_custom_worker->session_id);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"STA", tmp_custom_worker->state);
+      pack_add_as_int   (&tmp_pack, (unsigned char*)"CON", tmp_remote_client->connect_state);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"ACT", tmp_remote_client->active_state);
       pack_add_as_int   (&tmp_pack, (unsigned char*)"REG", tmp_remote_client->register_state);
 

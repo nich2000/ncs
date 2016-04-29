@@ -47,6 +47,7 @@ extern char report_path[265];
 extern BOOL session_enable;
 extern char session_path[256];
 extern char session_file[64];
+extern BOOL map_enable;
 extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
@@ -128,6 +129,7 @@ int read_config()
   strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
   strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
 
+  session_enable =               iniparser_getint   (config, "map:map_enable",              TRUE);
   strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
   strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
 

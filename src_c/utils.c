@@ -28,6 +28,7 @@ extern char report_path[265];
 extern BOOL session_enable;
 extern char session_path[256];
 extern char session_file[64];
+extern BOOL map_enable;
 extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
@@ -350,6 +351,7 @@ void print_config()
       "%-20s: %d\n" \
       "%-20s: %s\n" \
       "%-20s: %s\n" \
+      "%-20s: %d\n" \
       "%-20s: %s\n" \
       "%-20s: %s\n" \
       "%-20s: %s\n",
@@ -367,6 +369,7 @@ void print_config()
       "session_enable",       session_enable,
       "session_path",         session_path,
       "session_file",         session_file,
+      "map_enable",           map_enable,
       "map_path",             map_path,
       "map_file",             map_file,
       "web_path",             web_path);

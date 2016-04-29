@@ -4,9 +4,15 @@ var exec_t = (function () {
     }
     return exec_t;
 })();
+var connect_t;
+(function (connect_t) {
+    connect_t[connect_t["unknown"] = 0] = "unknown";
+    connect_t[connect_t["connected"] = 1] = "connected";
+    connect_t[connect_t["disconnected"] = 2] = "disconnected";
+})(connect_t || (connect_t = {}));
 var active_t;
 (function (active_t) {
-    active_t[active_t["none"] = 0] = "none";
+    active_t[active_t["unknown"] = 0] = "unknown";
     active_t[active_t["first"] = 1] = "first";
     active_t[active_t["second"] = 2] = "second";
     active_t[active_t["next"] = 3] = "next";
@@ -14,7 +20,7 @@ var active_t;
 ;
 var state_t;
 (function (state_t) {
-    state_t[state_t["none"] = 0] = "none";
+    state_t[state_t["unknown"] = 0] = "unknown";
     state_t[state_t["start"] = 1] = "start";
     state_t[state_t["starting"] = 2] = "starting";
     state_t[state_t["stop"] = 3] = "stop";
@@ -45,8 +51,10 @@ var client_t = (function () {
     function client_t(id, name) {
         this._id = -1;
         this._name = "unnamed";
-        this._state = state_t.none;
-        this._active = active_t.none;
+        this._session = "unnamed";
+        this._state = state_t.unknown;
+        this._connect = connect_t.unknown;
+        this._active = active_t.unknown;
         this._register = register_t.none;
         this._data = [];
         this._id = id;
@@ -133,9 +141,11 @@ var clients_t = (function () {
     clients_t.prototype.add_client = function (data) {
         var id = data[0]._ID;
         var name = data[1].NAM;
-        var state = parseInt(data[2].STA);
-        var active = parseInt(data[3].ACT);
-        var register = parseInt(data[4].REG);
+        var session = data[2].SES;
+        var state = parseInt(data[3].STA);
+        var connect = parseInt(data[4].CON);
+        var active = parseInt(data[5].ACT);
+        var register = parseInt(data[6].REG);
         var client = this.get_client_by_id(id);
         if (client == undefined) {
             client = new client_t(id, name);
@@ -169,7 +179,7 @@ var clients_t = (function () {
         return false;
     };
     clients_t.prototype.add_data = function (data) {
-        var active = active_t.none;
+        var active = active_t.unknown;
         for (var i_1 = data.length - 1; i_1 >= 0; i_1--) {
             if (data[i_1].ACT != undefined) {
                 active = data[i_1].ACT;

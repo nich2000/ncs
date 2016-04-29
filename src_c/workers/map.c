@@ -16,6 +16,7 @@
 #include "ncs_log.h"
 #include "utils.h"
 //==============================================================================
+BOOL map_enable    = FALSE;
 char map_path[256] = DEFAULT_MAP_PATH;
 char map_file[64]  = DEFAULT_MAP_NAME;
 //==============================================================================
@@ -28,6 +29,10 @@ map_t *map()
 //==============================================================================
 int load_map()
 {
+  if(!map_enable)
+    return make_last_error_fmt(ERROR_IGNORE, errno, "load_map, map not enabled");
+
+
   char full_file_name[256];
   sprintf(full_file_name, "%s/%s", map_path, map_file);
 
