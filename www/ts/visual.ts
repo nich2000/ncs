@@ -47,7 +47,7 @@ class row_t extends custom_t {
   //----------------------------------------------------------------------------
   private _cells: Array<cell_t> = [];
   //----------------------------------------------------------------------------
-  constructor(id: string, owner: any) {
+  constructor(id: string, owner: any, onclick: any) {
     super(id, "<tr/>", owner);
 
     // #govnocode

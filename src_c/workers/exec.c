@@ -212,9 +212,9 @@ int handle_command_str_fmt(void *sender, char *command, ...)
 //==============================================================================
 int handle_command_str(void *sender, char *command)
 {
-  // #ifndef DEMS_DEVICE
-  // pthread_mutex_lock(&mutex_handle_command);
-  // #endif
+   #ifndef DEMS_DEVICE
+   pthread_mutex_lock(&mutex_handle_command);
+   #endif
 
   int result = EXEC_UNKNOWN;
 
@@ -270,7 +270,7 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_EXIT);
 
-      result = EXEC_DONE;
+      result = EXEC_NONE;
       goto exit;
     }
     //--------------------------------------------------------------------------
@@ -640,9 +640,9 @@ int handle_command_str(void *sender, char *command)
   }
 
   exit:
-  // #ifndef DEMS_DEVICE
-  // pthread_mutex_unlock(&mutex_handle_command);
-  // #endif
+   #ifndef DEMS_DEVICE
+   pthread_mutex_unlock(&mutex_handle_command);
+   #endif
   return result;
 }
 //==============================================================================
