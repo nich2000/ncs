@@ -140,9 +140,9 @@ var client_t = (function () {
 var clients_t = (function () {
     function clients_t() {
         this._clients = [];
-        this._clients_table = new clients_table_t("remote_clients", 2);
-        this._data_first_table = new data_table_t("remote_data_first", 2);
-        this._data_second_table = new data_table_t("remote_data_second", 2);
+        this._clients_table = new clients_table_t("remote_clients", 2, undefined);
+        this._data_first_table = new data_table_t("remote_data_first", 2, undefined);
+        this._data_second_table = new data_table_t("remote_data_second", 2, undefined);
         Signal.bind("clients", this.refresh_clients, this);
         Signal.bind("add_data", this.add_data, this);
     }
@@ -743,14 +743,11 @@ var cell_t = (function (_super) {
 })(custom_t);
 var row_t = (function (_super) {
     __extends(row_t, _super);
-    function row_t(id, owner) {
+    function row_t(id, owner, onclick) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
-        this._self.click(function () {
-            var cell = $(this).find("td:first");
-            $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next", function (data) {
-            });
-        });
+        if (onclick != undefined)
+            this._self.click(onclick);
     }
     Object.defineProperty(row_t.prototype, "cells", {
         get: function () {
@@ -778,10 +775,11 @@ var row_t = (function (_super) {
 })(custom_t);
 var table_t = (function (_super) {
     __extends(table_t, _super);
-    function table_t(id, owner, cols_count) {
+    function table_t(id, owner, cols_count, onrowclick) {
         _super.call(this, id, "<table/>", owner);
         this._rows = [];
         this._cols_count = cols_count;
+        this._onrowclick = onrowclick;
     }
     Object.defineProperty(table_t.prototype, "rows", {
         get: function () {
@@ -800,7 +798,7 @@ var table_t = (function (_super) {
     table_t.prototype.do_add_row = function (id) {
         var row = this.find_row(id);
         if (row == undefined) {
-            row = new row_t(id, this._self);
+            row = new row_t(id, this._self, this._onrowclick);
             this._rows.push(row);
         }
         return row;
@@ -809,8 +807,8 @@ var table_t = (function (_super) {
 })(custom_t);
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
-    function clients_table_t(id, cols_count) {
-        _super.call(this, id, $(window), cols_count);
+    function clients_table_t(id, cols_count, onrowclick) {
+        _super.call(this, id, $(window), cols_count, onrowclick);
     }
     clients_table_t.prototype.get_id = function (id) {
         return "client_" + String(id);
@@ -875,8 +873,8 @@ var clients_table_t = (function (_super) {
 })(table_t);
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
-    function data_table_t(id, cols_count) {
-        _super.call(this, id, $(window), cols_count);
+    function data_table_t(id, cols_count, onrowclick) {
+        _super.call(this, id, $(window), cols_count, onrowclick);
     }
     data_table_t.prototype.add_row = function (prefix, key, value) {
         var row_id = "data_" + prefix + "_" + key + "_" + value;

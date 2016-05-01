@@ -151,13 +151,19 @@ void *web_server_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[WEB] [BEGIN] web_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
-  custom_server_start(&tmp_server->custom_server.custom_worker);
+  if(custom_server_start(&tmp_server->custom_server.custom_worker) >= ERROR_NORMAL)
+  {
+    log_add_fmt(LOG_ERROR_CRITICAL, "[WEB] web_server_worker,\nmessage: %s",
+                last_error()->message);
+    goto exit;
+  }
+
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
+  exit:
   log_add_fmt(LOG_DEBUG, "[WEB] [END] web_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
-
   return NULL;
 }
 //==============================================================================

@@ -58,6 +58,8 @@ typedef struct
   sock_time_t     disconnect_time;
   sock_time_t     active_time;
   sock_time_t     register_time;
+  sock_time_t     send_time;
+  sock_time_t     recv_time;
 
   // TODO: Временное явление
   pack_protocol_t protocol;

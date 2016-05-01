@@ -119,14 +119,19 @@ int print_custom_remote_client_info(custom_remote_client_t *remote_client, char 
           "       active_state:                    %s\n" \
           "       active_time:                     %s\n" \
           "       register_state:                  %s\n" \
-          "       register_time:                   %s",
+          "       register_time:                   %s\n" \
+          "       recv_time:                       %s\n" \
+          "       send_time:                       %s",
           prefix,
           connect_to_string(remote_client->connect_state),
           time_to_string(remote_client->connect_time),
           active_to_string(remote_client->active_state),
           time_to_string(remote_client->active_time),
           register_to_string(remote_client->register_state),
-          time_to_string(remote_client->register_time));
+          time_to_string(remote_client->register_time),
+          time_to_string(remote_client->recv_time),
+          time_to_string(remote_client->send_time)
+          );
 
   log_add(LOG_INFO, tmp);
 

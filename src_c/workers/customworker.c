@@ -68,6 +68,8 @@ int custom_remote_client_init(int id, custom_remote_client_t *custom_remote_clie
   custom_remote_client->disconnect_time  = 0;
   custom_remote_client->active_time      = 0;
   custom_remote_client->register_time    = 0;
+  custom_remote_client->recv_time        = 0;
+  custom_remote_client->send_time        = 0;
 
   // TODO: Временное явление 1
   protocol_init(&custom_remote_client->protocol);
@@ -138,14 +140,24 @@ int custom_client_init(custom_client_t *custom_client)
 //==============================================================================
 int custom_worker_start(custom_worker_t *worker)
 {
-  worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+  worker->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_IP); 
   if (worker->sock == INVALID_SOCKET)
     return make_last_error_fmt(ERROR_CRITICAL, errno,
                                "custom_worker_start, socket: INVALID_SOCKET, worker id: %d, error: %d",
                                worker->id, sock_error());
 
   int reuse = 1;
-  setsockopt(worker->sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
+  if(setsockopt(worker->sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "custom_worker_start, setsockopt(SO_REUSEADDR) failed,\n" \
+                                                      "worker id: %d, error: %d",
+                               worker->id, sock_error());
+  #ifdef SO_REUSEPORT
+  if (setsockopt(worker->sock, SOL_SOCKET, SO_REUSEPORT, (const char*)&reuse, sizeof(reuse)) < 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "custom_worker_start, setsockopt(SO_REUSEPORT) failed,\n" \
+                                                      "worker id: %d, error: %d",
+                               worker->id, sock_error());
+  #endif
+
 
   log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_worker_start, socket: %d, worker id: %d",
               worker->sock, worker->id);
@@ -158,8 +170,10 @@ int custom_server_start(custom_worker_t *worker)
   log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_server_start, server id: %d, port: %d",
               worker->id, worker->port);
 
-  if(custom_worker_start(worker) >= ERROR_NORMAL)
-    return ERROR_CRITICAL;
+  int res = custom_worker_start(worker);
+  if(res >= ERROR_NORMAL)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "custom_server_start,\nmessage: %s",
+                               last_error());
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
@@ -167,11 +181,8 @@ int custom_server_start(custom_worker_t *worker)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
   if(bind(worker->sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR)
   {
-    char tmp[128];
-    sprintf(tmp, "[CUSTOM] custom_server_start, bind, server id: %d, error: %d", worker->id, sock_error());
-    log_add(LOG_ERROR_CRITICAL,
-            tmp);
-    return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "[CUSTOM] custom_server_start, bind, server id: %d, error: %d",
+                           worker->id, sock_error());
   }
   else
     log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_server_start, bind, server id: %d",
@@ -179,12 +190,8 @@ int custom_server_start(custom_worker_t *worker)
 
   if (listen(worker->sock, SOMAXCONN) == SOCKET_ERROR)
   {
-    char tmp[128];
-    sprintf(tmp, "[CUSTOM] custom_server_start, bind, server id: %d, error: %d",
-            worker->id, sock_error());
-    log_add(LOG_ERROR_CRITICAL,
-            tmp);
-    return make_last_error(ERROR_CRITICAL, SOCKET_ERROR, tmp);
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "[CUSTOM] custom_server_start, bind, server id: %d, error: %d",
+                               worker->id, sock_error());
   }
   else
     log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_server_start, listen, server id: %d",
@@ -198,10 +205,11 @@ int custom_client_start(custom_worker_t *worker)
   log_add_fmt(LOG_DEBUG, "[CUSTOM] custom_client_start, server id: %d, port: %d, host: %s",
               worker->id, worker->port, worker->host);
 
-  if(custom_worker_start(worker) >= ERROR_NORMAL)
-    return make_last_error(ERROR_CRITICAL, errno, "custom_client_start");
-
-  return ERROR_NONE;
+  int res = custom_worker_start(worker);
+  if(res >= ERROR_NORMAL)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "custom_client_start,\nmessage: %s",
+                               last_error());
+   return ERROR_NONE;
 }
 //==============================================================================
 int custom_worker_stop(custom_worker_t *worker)
@@ -337,6 +345,10 @@ void *custom_recv_worker(void *arg)
         usleep(1000);
         continue;
       };
+
+      time_t rawtime;
+      time (&rawtime);
+      tmp_client->recv_time = rawtime;
 
       if(tmp_client->on_recv != 0)
         tmp_client->on_recv(tmp_client, (char*)tmp_buffer, tmp_size);

@@ -47,20 +47,22 @@ class row_t extends custom_t {
   //----------------------------------------------------------------------------
   private _cells: Array<cell_t> = [];
   //----------------------------------------------------------------------------
-  constructor(id: string, owner: any, onclick: any) {
+  constructor(id: string, owner: any, onclick: Function) {
     super(id, "<tr/>", owner);
 
-    // #govnocode
-    this._self.click(function() {
-      // let cell: any = $(this).find("td:last");
-      let cell: any = $(this).find("td:first");
-      // Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
-      $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next",
-        function(data) {
-        }
-      );
+    if(onclick != undefined)
+      this._self.click(onclick);
 
-    });
+    // #govnocode
+    // this._self.click(function() {
+    //   // let cell: any = $(this).find("td:last");
+    //   let cell: any = $(this).find("td:first");
+    //   // Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
+    //   $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next",
+    //     function(data) {
+    //     }
+    //   );
+    // });
   }
   //----------------------------------------------------------------------------
   public get cells(): cell_t[] {
@@ -91,13 +93,16 @@ class row_t extends custom_t {
 //==============================================================================
 class table_t extends custom_t {
   //----------------------------------------------------------------------------
+  private _onrowclick: Function;
+  //----------------------------------------------------------------------------
   protected _cols_count: number;
   protected _rows: Array<row_t> = [];
   //----------------------------------------------------------------------------
-  constructor(id: string, owner: any, cols_count: number) {
+  constructor(id: string, owner: any, cols_count: number, onrowclick: Function) {
     super(id, "<table/>", owner);
 
     this._cols_count = cols_count;
+    this._onrowclick = onrowclick;
   }
   //----------------------------------------------------------------------------
   public get rows(): row_t[] {
@@ -116,7 +121,7 @@ class table_t extends custom_t {
   protected do_add_row(id: string): row_t {
     let row: row_t = this.find_row(id);
     if (row == undefined) {
-      row = new row_t(id, this._self);
+      row = new row_t(id, this._self, this._onrowclick);
       this._rows.push(row);
     }
 
@@ -127,8 +132,8 @@ class table_t extends custom_t {
 //==============================================================================
 class clients_table_t extends table_t {
   //----------------------------------------------------------------------------
-  constructor(id: string, cols_count: number) {
-    super(id, $(window), cols_count);
+  constructor(id: string, cols_count: number, onrowclick: Function) {
+    super(id, $(window), cols_count, onrowclick);
   }
   //----------------------------------------------------------------------------
   private get_id(id: number): string {
@@ -210,8 +215,8 @@ class clients_table_t extends table_t {
 //==============================================================================
 class data_table_t extends table_t {
   //----------------------------------------------------------------------------
-  constructor(id: string, cols_count: number) {
-    super(id, $(window), cols_count);
+  constructor(id: string, cols_count: number, onrowclick: Function) {
+    super(id, $(window), cols_count, onrowclick);
   }
   //----------------------------------------------------------------------------
   add_row(prefix: string, key: string, value: string) : void {

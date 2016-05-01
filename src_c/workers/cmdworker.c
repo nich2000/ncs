@@ -419,13 +419,19 @@ void *cmd_server_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[CMD] [BEGIN] cmd_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
-  custom_server_start(&tmp_server->custom_server.custom_worker);
+  if(custom_server_start(&tmp_server->custom_server.custom_worker) >= ERROR_NORMAL)
+  {
+    log_add_fmt(LOG_ERROR_CRITICAL, "[CMD] cmd_server_worker,\nmessage: %s",
+                last_error()->message);
+    goto exit;
+  }
+
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
+  exit:
   log_add_fmt(LOG_DEBUG, "[CMD] [END] cmd_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
-
   return NULL;
 }
 //==============================================================================
@@ -525,7 +531,13 @@ void *cmd_client_worker(void *arg)
 
   do
   {
-    custom_client_start(&tmp_client->custom_client.custom_remote_client.custom_worker);
+    if(custom_client_start(&tmp_client->custom_client.custom_remote_client.custom_worker) >= ERROR_NORMAL)
+    {
+      log_add_fmt(LOG_ERROR_CRITICAL, "[CMD] cmd_client_worker,\nmessage: %s",
+                  last_error()->message);
+      continue;
+    }
+
     custom_client_work (&tmp_client->custom_client);
     custom_worker_stop (&tmp_client->custom_client.custom_remote_client.custom_worker);
   }
@@ -638,6 +650,10 @@ void *cmd_send_worker(void *arg)
       {
         if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
         {
+          time_t rawtime;
+          time (&rawtime);
+          tmp_client->send_time = rawtime;
+
           if(tmp_client->on_send != 0)
             tmp_client->on_send((void*)tmp_client);
         }

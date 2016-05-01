@@ -206,13 +206,19 @@ void *ws_server_worker(void *arg)
   log_add_fmt(LOG_DEBUG, "[WS] [BEGIN] ws_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
 
-  custom_server_start(&tmp_server->custom_server.custom_worker);
+  if(custom_server_start(&tmp_server->custom_server.custom_worker) >= ERROR_NORMAL)
+  {
+    log_add_fmt(LOG_ERROR_CRITICAL, "[WS] ws_server_worker,\nmessage: %s",
+                last_error()->message);
+    goto exit;
+  }
+
   custom_server_work (&tmp_server->custom_server);
   custom_worker_stop (&tmp_server->custom_server.custom_worker);
 
+  exit:
   log_add_fmt(LOG_DEBUG, "[WS] [END] ws_server_worker, server id: %d",
               tmp_server->custom_server.custom_worker.id);
-
   return NULL;
 }
 //==============================================================================
@@ -336,6 +342,10 @@ void *ws_recv_worker(void *arg)
       }
       else
       {
+        time_t rawtime;
+        time (&rawtime);
+        tmp_client->recv_time = rawtime;
+
         int tmp_size;
         unsigned char tmp_buffer[SOCK_WS_BUFFER_SIZE];
         ws_get_frame((unsigned char*)request, strlen(request), tmp_buffer, SOCK_WS_BUFFER_SIZE, &tmp_size);
@@ -419,7 +429,15 @@ void *ws_send_worker(void *arg)
         if((tmp_client->out_message != NULL) && (tmp_client->out_message_size != 0))
         {
           if(sock_send(tmp_sock, tmp_client->out_message, tmp_client->out_message_size) >= ERROR_NORMAL)
+          {
             tmp_errors++;
+          }
+          else
+          {
+            time_t rawtime;
+            time (&rawtime);
+            tmp_client->send_time = rawtime;
+          }
 
           free(tmp_client->out_message);
           tmp_client->out_message = NULL;

@@ -168,9 +168,9 @@ class clients_t {
   private _data_second_table: data_table_t;
   //----------------------------------------------------------------------------
   constructor() {
-    this._clients_table     = new clients_table_t("remote_clients",     2);
-    this._data_first_table  = new data_table_t   ("remote_data_first",  2);
-    this._data_second_table = new data_table_t   ("remote_data_second", 2);
+    this._clients_table     = new clients_table_t("remote_clients",     2, undefined);
+    this._data_first_table  = new data_table_t   ("remote_data_first",  2, undefined);
+    this._data_second_table = new data_table_t   ("remote_data_second", 2, undefined);
 
     Signal.bind("clients",  this.refresh_clients, this);
     Signal.bind("add_data", this.add_data,        this);
