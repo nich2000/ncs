@@ -13,10 +13,12 @@ function init(): void {
 
   clients = new clients_t();
 
-  map = new map_t("canvas_map");
+  // map = new map_t("canvas_map");
   // map.test_mode = true;
 
   ws = new web_socket_t("ws://" + location.hostname + ":5800");
+
+  console.log("init done");
 }
 //=============================================================================
 function test(): void {

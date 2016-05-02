@@ -573,6 +573,7 @@ int handle_command_str(void *sender, char *command)
       goto exit;
     }
     //--------------------------------------------------------------------------
+    // name id switcher
     else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
     {
       char *name_str = strtok(NULL, " ");

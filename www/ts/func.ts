@@ -200,7 +200,8 @@ class clients_t {
       client = new client_t(id, name);
 
       this._clients.push(client);
-      this._clients_table.add_client(client);
+      let row: row_t = this._clients_table.add_client(client);
+      row.onclick =
     }
 
     client.session  = session;
@@ -296,6 +297,16 @@ class clients_t {
       element.set_src("second_pilot_photo", photo);
       element.set_src("second_pilot_info",  info);
     }
+  }
+  //----------------------------------------------------------------------------
+  private select_client(id: string): void {
+    let client: client_t = this.get_client_by_id(parseInt(id));
+
+    // name id switcher
+    $.get("command?cmd=ws_activate&par=" + client.name + "&par=" + client.id + "&par=next",
+      function(data) {
+      }
+    );
   }
   //----------------------------------------------------------------------------
 }

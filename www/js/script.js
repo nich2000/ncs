@@ -170,7 +170,9 @@ var clients_t = (function () {
         if (client == undefined) {
             client = new client_t(id, name);
             this._clients.push(client);
-            this._clients_table.add_client(client);
+            var row = this._clients_table.add_client(client);
+            row.onclick =
+            ;
         }
         client.session = session;
         client.connect = connect;
@@ -251,6 +253,11 @@ var clients_t = (function () {
             element.set_src("second_pilot_info", info);
         }
     };
+    clients_t.prototype.select_client = function (id) {
+        var client = this.get_client_by_id(parseInt(id));
+        $.get("command?cmd=ws_activate&par=" + client.name + "&par=" + client.id + "&par=next", function (data) {
+        });
+    };
     return clients_t;
 })();
 /// <reference path="./jquery.d.ts"/>
@@ -311,8 +318,8 @@ function init() {
     profiler = $("#profiler");
     console.log("init");
     clients = new clients_t();
-    map = new map_t("canvas_map");
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
+    console.log("init done");
 }
 function test() {
 }
@@ -722,6 +729,23 @@ var custom_t = (function () {
         enumerable: true,
         configurable: true
     });
+    Object.defineProperty(custom_t.prototype, "owner", {
+        get: function () {
+            return this._owner;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(custom_t.prototype, "ext_id", {
+        get: function () {
+            return this._ext_id;
+        },
+        set: function (v) {
+            this._ext_id = v;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return custom_t;
 })();
 var cell_t = (function (_super) {
@@ -743,11 +767,13 @@ var cell_t = (function (_super) {
 })(custom_t);
 var row_t = (function (_super) {
     __extends(row_t, _super);
-    function row_t(id, owner, onclick) {
+    function row_t(id, owner, ext_id) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
-        if (onclick != undefined)
-            this._self.click(onclick);
+        this.onclick = undefined;
+        this.ext_id = ext_id;
+        if (this.onclick != undefined)
+            this._self.click(this.onclick(this.ext_id));
     }
     Object.defineProperty(row_t.prototype, "cells", {
         get: function () {
@@ -775,11 +801,10 @@ var row_t = (function (_super) {
 })(custom_t);
 var table_t = (function (_super) {
     __extends(table_t, _super);
-    function table_t(id, owner, cols_count, onrowclick) {
+    function table_t(id, owner, cols_count) {
         _super.call(this, id, "<table/>", owner);
         this._rows = [];
         this._cols_count = cols_count;
-        this._onrowclick = onrowclick;
     }
     Object.defineProperty(table_t.prototype, "rows", {
         get: function () {
@@ -795,10 +820,11 @@ var table_t = (function (_super) {
         }
         return undefined;
     };
-    table_t.prototype.do_add_row = function (id) {
+    table_t.prototype.do_add_row = function (id, ext_id) {
         var row = this.find_row(id);
         if (row == undefined) {
-            row = new row_t(id, this._self, this._onrowclick);
+            row = new row_t(id, this._self, ext_id);
+            row.onclick = this.onrowclick;
             this._rows.push(row);
         }
         return row;
@@ -807,15 +833,15 @@ var table_t = (function (_super) {
 })(custom_t);
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
-    function clients_table_t(id, cols_count, onrowclick) {
-        _super.call(this, id, $(window), cols_count, onrowclick);
+    function clients_table_t(id, cols_count) {
+        _super.call(this, id, $(window), cols_count);
     }
     clients_table_t.prototype.get_id = function (id) {
         return "client_" + String(id);
     };
-    clients_table_t.prototype.add_row = function (id, name) {
+    clients_table_t.prototype.add_row = function (id, name, ext_id) {
         var row_id = this.get_id(id);
-        var row = _super.prototype.do_add_row.call(this, row_id);
+        var row = _super.prototype.do_add_row.call(this, row_id, ext_id);
         var cell_id = "client_name_" + String(id);
         row.add_cell(cell_id, name);
         cell_id = "client_act_" + String(id);

@@ -3,6 +3,7 @@
 class custom_t {
   //----------------------------------------------------------------------------
   protected _id: string;
+  protected _ext_id: string;
   protected _owner: any;
   protected _self: any;
   //----------------------------------------------------------------------------
@@ -21,6 +22,18 @@ class custom_t {
   //----------------------------------------------------------------------------
   public get self() : any {
     return this._self;
+  }
+  //----------------------------------------------------------------------------
+  public get owner() : any {
+    return this._owner;
+  }
+  //----------------------------------------------------------------------------
+  public get ext_id() : string {
+    return this._ext_id;
+  }
+  //----------------------------------------------------------------------------
+  public set ext_id(v : string) {
+    this._ext_id = v;
   }
   //----------------------------------------------------------------------------
 }
@@ -47,11 +60,15 @@ class row_t extends custom_t {
   //----------------------------------------------------------------------------
   private _cells: Array<cell_t> = [];
   //----------------------------------------------------------------------------
-  constructor(id: string, owner: any, onclick: Function) {
+  public onclick: Function = undefined;
+  //----------------------------------------------------------------------------
+  constructor(id: string, owner: any, ext_id: string) {
     super(id, "<tr/>", owner);
 
-    if(onclick != undefined)
-      this._self.click(onclick);
+    this.ext_id = ext_id;
+
+    if(this.onclick != undefined)
+      this._self.click(this.onclick(this.ext_id));
 
     // #govnocode
     // this._self.click(function() {
@@ -93,16 +110,15 @@ class row_t extends custom_t {
 //==============================================================================
 class table_t extends custom_t {
   //----------------------------------------------------------------------------
-  private _onrowclick: Function;
-  //----------------------------------------------------------------------------
   protected _cols_count: number;
   protected _rows: Array<row_t> = [];
   //----------------------------------------------------------------------------
-  constructor(id: string, owner: any, cols_count: number, onrowclick: Function) {
+  public onrowclick: Function;
+  //----------------------------------------------------------------------------
+  constructor(id: string, owner: any, cols_count: number) {
     super(id, "<table/>", owner);
 
     this._cols_count = cols_count;
-    this._onrowclick = onrowclick;
   }
   //----------------------------------------------------------------------------
   public get rows(): row_t[] {
@@ -118,10 +134,12 @@ class table_t extends custom_t {
     return undefined;
   }
   //----------------------------------------------------------------------------
-  protected do_add_row(id: string): row_t {
+  protected do_add_row(id: string, ext_id: string): row_t {
     let row: row_t = this.find_row(id);
     if (row == undefined) {
-      row = new row_t(id, this._self, this._onrowclick);
+      row = new row_t(id, this._self, ext_id);
+      row.onclick = this.onrowclick;
+
       this._rows.push(row);
     }
 
@@ -132,17 +150,17 @@ class table_t extends custom_t {
 //==============================================================================
 class clients_table_t extends table_t {
   //----------------------------------------------------------------------------
-  constructor(id: string, cols_count: number, onrowclick: Function) {
-    super(id, $(window), cols_count, onrowclick);
+  constructor(id: string, cols_count: number) {
+    super(id, $(window), cols_count);
   }
   //----------------------------------------------------------------------------
   private get_id(id: number): string {
     return "client_" + String(id);
   }
   //----------------------------------------------------------------------------
-  private add_row(id: number, name: string): void {
+  private add_row(id: number, name: string, ext_id: string): void {
     let row_id: string = this.get_id(id);
-    let row: row_t = super.do_add_row(row_id);
+    let row: row_t = super.do_add_row(row_id, ext_id);
 
     let cell_id: string = "client_name_" + String(id);
     row.add_cell(cell_id, name);
