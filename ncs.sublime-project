@@ -18,6 +18,10 @@
       "file_exclude_patterns": ["*.user", "*.bak"]
     },
     {
+      "path": "src_py",
+      "file_exclude_patterns": ["*.user", "*.bak"]
+    },
+    {
       "path": "www",
       "file_exclude_patterns": ["*.bak"],
       "folder_exclude_patterns": ["bootstrap-3.3.6-dist", "jquery-ui-1.11.4", "wsbyajke", "js"]
