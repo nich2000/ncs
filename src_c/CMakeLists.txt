@@ -51,6 +51,12 @@ set(_JANSSON  ../libs/jansson/src/dump.c
 add_library          (jansson STATIC ${_JANSSON})
 set_target_properties(jansson PROPERTIES C_STANDARD 99)
 #-------------------------------------------------------------------------------
+set(_RS-232   ../libs/RS-232/src/rs232.c)
+#...............................................................................
+add_library          (rs232sh SHARED ${_RS-232})
+add_library          (rs232 STATIC ${_RS-232})
+set_target_properties(rs232 PROPERTIES C_STANDARD 99)
+#-------------------------------------------------------------------------------
 set(_CRYPTO   ../libs/AVRCryptoLib/sha1.c
               ../libs/AVRCryptoLib/base64.c)
 #...............................................................................
