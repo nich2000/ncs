@@ -52,6 +52,11 @@ int main(int argc, char *argv[])
   if(sock_init() >= ERROR_WARNING)
     goto exit;
   //---------------------------------------------------------------------------
+  #ifdef PI_DEVICE
+  if(gpio_init() >= ERROR_WARNING)
+    goto exit;
+  #endif
+  //---------------------------------------------------------------------------
   load_coords();
 //  load_session();
   //---------------------------------------------------------------------------
@@ -137,6 +142,9 @@ int main(int argc, char *argv[])
   //---------------------------------------------------------------------------
   exit:
   sock_deinit();
+  #ifdef PI_DEVICE
+  gpio_close();
+  #endif
   log_add_fmt(LOG_INFO, "application finished, result: %s\n", last_error()->message);
   //---------------------------------------------------------------------------
   return 0;

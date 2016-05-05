@@ -16,6 +16,7 @@
 #include "defines.h"
 #include "globals.h"
 
+#include "gpio.h"
 #include "socket.h"
 #include "ncs_log.h"
 #include "ncs_error.h"
