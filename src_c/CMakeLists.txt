@@ -58,11 +58,13 @@ set_target_properties(jansson PROPERTIES C_STANDARD 99)
 #add_library          (rs232 STATIC ${_RS-232})
 #set_target_properties(rs232 PROPERTIES C_STANDARD 99)
 #-------------------------------------------------------------------------------
+IF (PI_DEVICE)
 set(_BCM2835   ../libs/bcm2835/src/bcm2835.c)
 #...............................................................................
 #add_library          (bcm2835 SHARED ${_BCM2835})
 add_library          (bcm2835 STATIC ${_BCM2835})
 set_target_properties(bcm2835 PROPERTIES C_STANDARD 99)
+ENDIF()
 #-------------------------------------------------------------------------------
 set(_CRYPTO   ../libs/AVRCryptoLib/sha1.c
               ../libs/AVRCryptoLib/base64.c)
@@ -169,6 +171,9 @@ set(_SOCKET   defines.h
 add_library          (socket STATIC ${_SOCKET})
 set_target_properties(socket PROPERTIES C_STANDARD 99)
 target_link_libraries(socket protocol log error utils jansson crypto bcm2835 Threads::Threads)
+IF (PI_DEVICE)
+target_link_libraries(socket bcm2835)
+ENDIF()
 IF (WIN32)
 target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
