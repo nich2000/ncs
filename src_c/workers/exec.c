@@ -177,7 +177,7 @@ int handle_command_ajax(void *sender, char *command)
     token = strtok(NULL, "&");
   }
 
-  log_add(LOG_INFO, tmp_command);
+  log_add_fmt(LOG_INFO, "handle_command_ajax, %s", tmp_command);
   return handle_command_str(sender, tmp_command);
 
   exit:
@@ -648,7 +648,8 @@ int handle_command_str(void *sender, char *command)
       log_add_fmt(LOG_INFO, "token: %s", CMD_GPIO);
 
       #ifdef PI_DEVICE
-      gpio(command);
+      char *direction = strtok(NULL, " ");
+      gpio(direction);
       #endif
 
       result = EXEC_DONE;

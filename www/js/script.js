@@ -325,7 +325,6 @@ function test() {
 }
 $(window).load(function () {
     $("body").height($(window).height());
-    init();
 });
 $(window).resize(function () {
     $("body").height($(window).height());

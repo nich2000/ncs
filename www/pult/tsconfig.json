@@ -1,0 +1,15 @@
+{
+  "compilerOptions":
+  {
+    "target": "es5",
+    "noImplicitAny": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "out": "script.js"
+  },
+  "files":
+  [
+    "script.ts"
+  ]
+}

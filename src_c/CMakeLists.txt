@@ -161,7 +161,6 @@ set(_SOCKET   defines.h
               workers/exec.c
               workers/map.h
               workers/map.c
-              workers/gpio.h
               workers/gpio.c
               utilites/ncs_pack_types.h
               utilites/ncs_pack.h
@@ -170,7 +169,7 @@ set(_SOCKET   defines.h
 #add_library          (socket SHARED ${_SOCKET})
 add_library          (socket STATIC ${_SOCKET})
 set_target_properties(socket PROPERTIES C_STANDARD 99)
-target_link_libraries(socket protocol log error utils jansson crypto Threads::Threads)
+target_link_libraries(socket protocol log error utils jansson crypto bcm2835 Threads::Threads)
 IF (WIN32)
 target_link_libraries(socket wsock32 ws2_32)
 ENDIF()
