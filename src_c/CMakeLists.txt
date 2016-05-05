@@ -161,7 +161,6 @@ set(_SOCKET   defines.h
               workers/exec.c
               workers/map.h
               workers/map.c
-              workers/gpio.c
               utilites/ncs_pack_types.h
               utilites/ncs_pack.h
               utilites/ncs_pack.c)

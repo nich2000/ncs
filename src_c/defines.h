@@ -17,7 +17,7 @@
   #define DEMS_DEVICE
 #endif
 
-#define PI_DEVICE
+//#define PI_DEVICE
 
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
