@@ -15,10 +15,10 @@
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================
-#define PIN_SPEED_1  RPI_GPIO_P1_22
-#define PIN_DIR_1    RPI_GPIO_P1_23
-#define PIN_SPEED_2  RPI_GPIO_P1_24
-#define PIN_DIR_2    RPI_GPIO_P1_26
+#define PIN_SPEED_1  RPI_GPIO_P1_21
+#define PIN_DIR_1    RPI_GPIO_P1_22
+#define PIN_SPEED_2  RPI_GPIO_P1_23
+#define PIN_DIR_2    RPI_GPIO_P1_24
 //==============================================================================
 #define DIR_STOP     "stop"
 #define DIR_FORWARD  "forward"

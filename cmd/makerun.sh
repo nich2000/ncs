@@ -1,5 +1,7 @@
 #!/bin/sh
 
+PATH=$PATH:/home/pi/Downloads/cmake-3.2.1.build/bin
+
 clear
 
 mkdir cmake
