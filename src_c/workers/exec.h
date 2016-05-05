@@ -63,6 +63,7 @@
 #define CMD_WS_REGISTER         "ws_register"
 #define CMD_WS_ACTIVATE         "ws_activate"
 #define CMD_RECONFIG            "reconfig"
+#define CMD_GPIO                "gpio"
 //==============================================================================
 #define CMD_START               "on"
 #define CMD_STOP                "off"

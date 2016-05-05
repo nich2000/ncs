@@ -11,6 +11,7 @@
 #-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.1)
 #-------------------------------------------------------------------------------
+include_directories(../libs/bcm2835/src/)
 include_directories(../libs/iniparser/src)
 include_directories(../libs/jansson/src)
 include_directories(../libs/AVRCryptoLib)
@@ -51,11 +52,17 @@ set(_JANSSON  ../libs/jansson/src/dump.c
 add_library          (jansson STATIC ${_JANSSON})
 set_target_properties(jansson PROPERTIES C_STANDARD 99)
 #-------------------------------------------------------------------------------
-set(_RS-232   ../libs/RS-232/src/rs232.c)
+#set(_RS-232   ../libs/RS-232/src/rs232.c)
 #...............................................................................
-add_library          (rs232sh SHARED ${_RS-232})
-add_library          (rs232 STATIC ${_RS-232})
-set_target_properties(rs232 PROPERTIES C_STANDARD 99)
+#add_library          (rs232sh SHARED ${_RS-232})
+#add_library          (rs232 STATIC ${_RS-232})
+#set_target_properties(rs232 PROPERTIES C_STANDARD 99)
+#-------------------------------------------------------------------------------
+set(_BCM2835   ../libs/bcm2835/src/bcm2835.c)
+#...............................................................................
+#add_library          (bcm2835 SHARED ${_BCM2835})
+add_library          (bcm2835 STATIC ${_BCM2835})
+set_target_properties(bcm2835 PROPERTIES C_STANDARD 99)
 #-------------------------------------------------------------------------------
 set(_CRYPTO   ../libs/AVRCryptoLib/sha1.c
               ../libs/AVRCryptoLib/base64.c)
@@ -154,6 +161,8 @@ set(_SOCKET   defines.h
               workers/exec.c
               workers/map.h
               workers/map.c
+              workers/gpio.h
+              workers/gpio.c
               utilites/ncs_pack_types.h
               utilites/ncs_pack.h
               utilites/ncs_pack.c)
