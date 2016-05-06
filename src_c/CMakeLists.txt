@@ -11,6 +11,11 @@
 #-------------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.1)
 #-------------------------------------------------------------------------------
+#set(PI_DEVICE 1)
+#-------------------------------------------------------------------------------
+# included here defines.h
+#add_definitions(-DPI_DEVICE)
+#-------------------------------------------------------------------------------
 include_directories(../libs/bcm2835/src/)
 include_directories(../libs/iniparser/src)
 include_directories(../libs/jansson/src)
@@ -21,6 +26,7 @@ include_directories(./)
 #-------------------------------------------------------------------------------
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 # set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin/lib)
+#-------------------------------------------------------------------------------
 set(CMAKE_C_FLAGS "-Wall")
 set(BUILD_SHARED_LIBS OFF)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -167,10 +173,13 @@ set(_SOCKET   defines.h
               utilites/ncs_pack.h
               utilites/ncs_pack.c)
 #...............................................................................
-#add_library          (socket SHARED ${_SOCKET})
+IF (PI_DEVICE)
+add_library          (socket STATIC ${_SOCKET} workers/gpio.c)
+ELSE()
 add_library          (socket STATIC ${_SOCKET})
+ENDIF()
 set_target_properties(socket PROPERTIES C_STANDARD 99)
-target_link_libraries(socket protocol log error utils jansson crypto bcm2835 Threads::Threads)
+target_link_libraries(socket protocol log error utils jansson crypto Threads::Threads)
 IF (PI_DEVICE)
 target_link_libraries(socket bcm2835)
 ENDIF()

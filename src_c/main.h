@@ -16,7 +16,10 @@
 #include "defines.h"
 #include "globals.h"
 
+#ifdef PI_DEVICE
 #include "gpio.h"
+#endif
+
 #include "socket.h"
 #include "ncs_log.h"
 #include "ncs_error.h"
