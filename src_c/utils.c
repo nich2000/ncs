@@ -33,6 +33,7 @@ extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
 extern char web_path[256];
+extern int  ws_refresh_rate;
 //==============================================================================
 #ifndef __linux__
 /**
@@ -343,6 +344,7 @@ void print_config()
       "%-20s: %s\n" \
       "%-20s: %d\n" \
       "%-20s: %d\n" \
+      "%-20s: %d\n" \
       "%-20s: %s\n" \
       "%-20s: %d\n" \
       "%-20s: %s\n" \
@@ -360,6 +362,7 @@ void print_config()
       "cmd_server_port",      cmd_server_port,
       "cmd_server_host",      cmd_server_host,
       "session_relay_to_web", session_relay_to_web,
+      "ws_refresh_rate",      ws_refresh_rate,
       "log_enable",           log_enable,
       "log_path",             log_path,
       "stat_enable",          stat_enable,

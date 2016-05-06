@@ -57,6 +57,7 @@ extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
 extern char web_path[256];
+extern int  ws_refresh_rate;
 //==============================================================================
 static pthread_mutex_t mutex_handle_command = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
@@ -122,6 +123,7 @@ int read_config()
   strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
   strcpy((char*)worker_name,     iniparser_getstring(config, "worker:worker_name",          DEFAULT_SOCK_NAME));
   session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
+  ws_refresh_rate =              iniparser_getint   (config, "worker:ws_refresh_rate",      1000);
 
   log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);
   strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",                DEFAULT_LOG_PATH));
@@ -136,7 +138,7 @@ int read_config()
   strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
   strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
 
-  session_enable =               iniparser_getint   (config, "map:map_enable",              TRUE);
+  map_enable =                   iniparser_getint   (config, "map:map_enable",              TRUE);
   strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
   strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
 
@@ -581,8 +583,7 @@ int handle_command_str(void *sender, char *command)
     // name id switcher
     else if(strcmp(token, CMD_WS_ACTIVATE) == 0)
     {
-      char *name_str = strtok(NULL, " ");
-      log_add_fmt(LOG_EXTRA, "token: %s, sender: %s", CMD_WS_ACTIVATE, name_str);
+      log_add_fmt(LOG_EXTRA, "token: %s", CMD_WS_ACTIVATE);
 
       sock_id_t id = -1;
       char *id_str = strtok(NULL, " ");

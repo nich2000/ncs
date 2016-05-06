@@ -60,26 +60,20 @@ class row_t extends custom_t {
   //----------------------------------------------------------------------------
   private _cells: Array<cell_t> = [];
   //----------------------------------------------------------------------------
-  public onclick: Function = undefined;
+  // public onclick: Function = undefined;
   //----------------------------------------------------------------------------
   constructor(id: string, owner: any, ext_id: string) {
     super(id, "<tr/>", owner);
 
     this.ext_id = ext_id;
 
-    if(this.onclick != undefined)
-      this._self.click(this.onclick(this.ext_id));
-
-    // #govnocode
-    // this._self.click(function() {
-    //   // let cell: any = $(this).find("td:last");
-    //   let cell: any = $(this).find("td:first");
-    //   // Signal.emit("doSend", [["cmd", "ws_activate"], ["par", cell.text()], ["par", "next"]]);
-    //   $.get("command?cmd=ws_activate&par=" + cell.text() + "&par=next",
-    //     function(data) {
-    //     }
-    //   );
-    // });
+    let self = this;
+    this._self.click(function() {
+      $.get("command?cmd=ws_activate&par=" + self.ext_id + "&par=next",
+        function(data) {
+        }
+      );
+    });
   }
   //----------------------------------------------------------------------------
   public get cells(): cell_t[] {
@@ -138,7 +132,7 @@ class table_t extends custom_t {
     let row: row_t = this.find_row(id);
     if (row == undefined) {
       row = new row_t(id, this._self, ext_id);
-      row.onclick = this.onrowclick;
+      // row.onclick = this.onrowclick;
 
       this._rows.push(row);
     }
@@ -158,7 +152,7 @@ class clients_table_t extends table_t {
     return "client_" + String(id);
   }
   //----------------------------------------------------------------------------
-  private add_row(id: number, name: string, ext_id: string): void {
+  private add_row(id: number, name: string, ext_id: string): row_t {
     let row_id: string = this.get_id(id);
     let row: row_t = super.do_add_row(row_id, ext_id);
 
@@ -170,6 +164,8 @@ class clients_table_t extends table_t {
 
     cell_id = "client_id_" + String(id);
     row.add_cell(cell_id, String(id));
+
+    return row;
   }
   //----------------------------------------------------------------------------
   private active_row(row: row_t, active: active_t): void {
@@ -201,8 +197,8 @@ class clients_table_t extends table_t {
       row.self.removeClass("dems-register");
   }
   //----------------------------------------------------------------------------
-  public add_client(client: client_t): void {
-    this.add_row(client.id, client.name);
+  public add_client(client: client_t): row_t {
+    return this.add_row(client.id, client.name, String(client.id));
   }
   //----------------------------------------------------------------------------
   public active_client(client: client_t, active: active_t): void {
@@ -233,8 +229,8 @@ class clients_table_t extends table_t {
 //==============================================================================
 class data_table_t extends table_t {
   //----------------------------------------------------------------------------
-  constructor(id: string, cols_count: number, onrowclick: Function) {
-    super(id, $(window), cols_count, onrowclick);
+  constructor(id: string, cols_count: number) {
+    super(id, $(window), cols_count);
   }
   //----------------------------------------------------------------------------
   add_row(prefix: string, key: string, value: string) : void {
@@ -243,7 +239,7 @@ class data_table_t extends table_t {
     let row: row_t = super.find_row(row_id)
     if(row == undefined)
     {
-      super.do_add_row(row_id);
+      row = super.do_add_row(row_id, "");
 
       let cell_id: string = "data_" + prefix + "_key_" + key;
       row.add_cell(cell_id, key);

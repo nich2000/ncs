@@ -77,6 +77,8 @@ WSFrame_t ws_get_frame(unsigned char* in_buffer, int in_length, unsigned char* o
 //==============================================================================
 static ws_server_t _ws_server;
 //==============================================================================
+int ws_refresh_rate = 1000;
+//==============================================================================
 extern char *pack_struct_keys[];
 extern char *pack_struct_captions[];
 //==============================================================================
@@ -309,7 +311,7 @@ void *ws_recv_worker(void *arg)
     {
       if(tmp_size == 0)
       {
-        usleep(1000);
+        usleep(10000);
         continue;
       };
 
@@ -356,11 +358,17 @@ void *ws_recv_worker(void *arg)
         pack_packet_t tmp_pack;
         if(json_str_to_packet(&tmp_pack, (char*)tmp_buffer, &tmp_size) == ERROR_NONE)
         {
-          handle_command_pack(tmp_client, &tmp_pack);
+          if(handle_command_pack(tmp_client, &tmp_pack) >= ERROR_NORMAL)
+          {
+            make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, handle_command_pack, errno: %d,\n" \
+                                "message: %s",
+                                errno, last_error()->message);
+            goto errorhandler;
+          }
         }
         else
         {
-          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, ws_hand_shake, errno: %d,\n" \
+          make_last_error_fmt(ERROR_NORMAL, errno, "[WS] ws_recv_worker, json_str_to_packet, errno: %d,\n" \
                               "message: %s",
                               errno, last_error()->message);
           goto errorhandler;
@@ -388,7 +396,7 @@ void *ws_recv_worker(void *arg)
         tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   free(request);
@@ -448,7 +456,7 @@ void *ws_send_worker(void *arg)
         }
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
@@ -673,7 +681,7 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
   }
   else
   {
-    return make_last_error_fmt(ERROR_NORMAL, errno, "json_to_packet,\nmesage: %s",
+    return make_last_error_fmt(ERROR_NORMAL, errno, "json_str_to_packet,\nmesage: %s",
                                tmp_error.text);
   }
 }
@@ -691,11 +699,11 @@ int ws_server_send_data(int session_id, pack_packet_t *pack, sock_active_t activ
   gettimeofday(&now, 0);
 
   if(active == ACTIVE_FIRST)
-    if(timedifference_msec(_ws_server.send_time_f, now) < 1000)
+    if(timedifference_msec(_ws_server.send_time_f, now) < ws_refresh_rate)
       return ERROR_WAIT;
 
   if(active == ACTIVE_SECOND)
-    if(timedifference_msec(_ws_server.send_time_s, now) < 1000)
+    if(timedifference_msec(_ws_server.send_time_s, now) < ws_refresh_rate)
       return ERROR_WAIT;
 
   pack_add_as_int(pack, (unsigned char*)"ACT", active);

@@ -140,9 +140,9 @@ var client_t = (function () {
 var clients_t = (function () {
     function clients_t() {
         this._clients = [];
-        this._clients_table = new clients_table_t("remote_clients", 2, undefined);
-        this._data_first_table = new data_table_t("remote_data_first", 2, undefined);
-        this._data_second_table = new data_table_t("remote_data_second", 2, undefined);
+        this._clients_table = new clients_table_t("remote_clients", 3);
+        this._data_first_table = new data_table_t("remote_data_first", 2);
+        this._data_second_table = new data_table_t("remote_data_second", 2);
         Signal.bind("clients", this.refresh_clients, this);
         Signal.bind("add_data", this.add_data, this);
     }
@@ -171,8 +171,6 @@ var clients_t = (function () {
             client = new client_t(id, name);
             this._clients.push(client);
             var row = this._clients_table.add_client(client);
-            row.onclick =
-            ;
         }
         client.session = session;
         client.connect = connect;
@@ -183,6 +181,7 @@ var clients_t = (function () {
         this._clients_table.state_client(client, state);
         this._clients_table.active_client(client, active);
         this._clients_table.register_client(client, register);
+        return client;
     };
     clients_t.prototype.get_client_by_id = function (id) {
         for (var i = 0; i < this._clients.length; i++)
@@ -254,6 +253,7 @@ var clients_t = (function () {
         }
     };
     clients_t.prototype.select_client = function (id) {
+        console.log("select_client: " + id);
         var client = this.get_client_by_id(parseInt(id));
         $.get("command?cmd=ws_activate&par=" + client.name + "&par=" + client.id + "&par=next", function (data) {
         });
@@ -310,21 +310,30 @@ var element = (function () {
     return element;
 })();
 /// <reference path="./jquery.d.ts"/>
-var clients;
-var ws;
-var map;
-var profiler;
+var use_clients = 1;
+var use_map = 0;
+var use_ws = 1;
+var clients = undefined;
+var ws = undefined;
+var map = undefined;
+var profiler = undefined;
 function init() {
     profiler = $("#profiler");
     console.log("init");
-    clients = new clients_t();
-    ws = new web_socket_t("ws://" + location.hostname + ":5800");
-    console.log("init done");
+    if (use_clients)
+        clients = new clients_t();
+    if (use_map) {
+        map = new map_t("canvas_map");
+    }
+    if (use_ws)
+        ws = new web_socket_t("ws://" + location.hostname + ":5800");
+    console.log("init success");
 }
 function test() {
 }
 $(window).load(function () {
     $("body").height($(window).height());
+    init();
 });
 $(window).resize(function () {
     $("body").height($(window).height());
@@ -769,10 +778,12 @@ var row_t = (function (_super) {
     function row_t(id, owner, ext_id) {
         _super.call(this, id, "<tr/>", owner);
         this._cells = [];
-        this.onclick = undefined;
         this.ext_id = ext_id;
-        if (this.onclick != undefined)
-            this._self.click(this.onclick(this.ext_id));
+        var self = this;
+        this._self.click(function () {
+            $.get("command?cmd=ws_activate&par=" + self.ext_id + "&par=next", function (data) {
+            });
+        });
     }
     Object.defineProperty(row_t.prototype, "cells", {
         get: function () {
@@ -823,7 +834,6 @@ var table_t = (function (_super) {
         var row = this.find_row(id);
         if (row == undefined) {
             row = new row_t(id, this._self, ext_id);
-            row.onclick = this.onrowclick;
             this._rows.push(row);
         }
         return row;
@@ -847,6 +857,7 @@ var clients_table_t = (function (_super) {
         row.add_cell(cell_id, "");
         cell_id = "client_id_" + String(id);
         row.add_cell(cell_id, String(id));
+        return row;
     };
     clients_table_t.prototype.active_row = function (row, active) {
         switch (active) {
@@ -875,7 +886,7 @@ var clients_table_t = (function (_super) {
             row.self.removeClass("dems-register");
     };
     clients_table_t.prototype.add_client = function (client) {
-        this.add_row(client.id, client.name);
+        return this.add_row(client.id, client.name, String(client.id));
     };
     clients_table_t.prototype.active_client = function (client, active) {
         var id = this.get_id(client.id);
@@ -898,14 +909,14 @@ var clients_table_t = (function (_super) {
 })(table_t);
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
-    function data_table_t(id, cols_count, onrowclick) {
-        _super.call(this, id, $(window), cols_count, onrowclick);
+    function data_table_t(id, cols_count) {
+        _super.call(this, id, $(window), cols_count);
     }
     data_table_t.prototype.add_row = function (prefix, key, value) {
         var row_id = "data_" + prefix + "_" + key + "_" + value;
         var row = _super.prototype.find_row.call(this, row_id);
         if (row == undefined) {
-            _super.prototype.do_add_row.call(this, row_id);
+            row = _super.prototype.do_add_row.call(this, row_id, "");
             var cell_id_1 = "data_" + prefix + "_key_" + key;
             row.add_cell(cell_id_1, key);
         }

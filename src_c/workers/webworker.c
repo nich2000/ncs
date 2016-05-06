@@ -238,7 +238,7 @@ void *web_handle_connection(void *arg)
         break;
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   free(request);
@@ -308,85 +308,94 @@ int web_get_response(char *request, char *response, int *size)
         {
           // log_add(LOG_INFO, &tmp_command[1]);
           handle_command_ajax(NULL, &tmp_command[1]);
+
+          strcpy(response, HEADER_200);
+          strcat(response, "Content-Type: application/json\r\n");
+          sprintf(tmp, "Content-Length: %u\r\n\r\n", 2);
+          strcat(response, tmp);
+          strcat(response, "{}");
+          *size = strlen(response);
         }
       }
-    }
-
-    if(strcmp("/", tmp_uri) == 0)
-      strcpy(tmp_uri, "html/index.html");
-
-    sprintf(tmp_full_name, "%s%s", tmp_work_dir, tmp_uri);
-    log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
-                tmp_full_name);
-
-    FILE *f = fopen(tmp_full_name, "rb");
-    if(f == NULL)
-    {
-      sprintf(tmp_full_name, "%s%s", web_path, "html/utility/404.html");
-
-      // log_add_fmt(LOG_INFO, "[WEB] file(%s) not found, responce file: %s",
-                  // tmp_uri, tmp_full_name);
-      log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
-                  tmp_uri);
-
-      strcpy(tmp_response_header, HEADER_404);
-      f = fopen(tmp_full_name, "rb");
-    }
-    else
-    {
-      strcpy(tmp_response_header, HEADER_200);
-    }
-
-    if(f != NULL)
-    {
-      fseek(f, 0, SEEK_END);
-      tmp_file_size = ftell(f);
-      tmp_buffer = (char *)malloc(tmp_file_size);
-      fseek(f, 0, SEEK_SET);
-      fread(tmp_buffer, tmp_file_size, 1, f);
-      fclose(f);
-
-      strcpy(response, tmp_response_header);
-
-      if(strstr(tmp_full_name, "html") != NULL)
-        strcat(response, "Content-Type: text/html\r\n");
-      else if(strstr(tmp_full_name, "js") != NULL)
-        strcat(response, "Content-Type: text/javascript\r\n");
-      else if(strstr(tmp_full_name, "css") != NULL)
-        strcat(response, "Content-Type: text/css\r\n");
-      else if(strstr(tmp_full_name, "ico") != NULL)
-        strcat(response, "Content-Type: image/x-icon\r\n");
-      else if(strstr(tmp_full_name, "png") != NULL)
+      else
       {
-        strcat(response, "Content-Type: image/png\r\n");
-        strcat(response, "Content-Transfer-Encoding: binary\r\n");
+        if(strcmp("/", tmp_uri) == 0)
+          strcpy(tmp_uri, "html/index.html");
+
+        sprintf(tmp_full_name, "%s%s", tmp_work_dir, tmp_uri);
+        log_add_fmt(LOG_DEBUG, "[WEB] request file: %s",
+                    tmp_full_name);
+
+        FILE *f = fopen(tmp_full_name, "rb");
+        if(f == NULL)
+        {
+          sprintf(tmp_full_name, "%s%s", web_path, "html/utility/404.html");
+
+          // log_add_fmt(LOG_INFO, "[WEB] file(%s) not found, responce file: %s",
+                      // tmp_uri, tmp_full_name);
+          log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
+                      tmp_uri);
+
+          strcpy(tmp_response_header, HEADER_404);
+          f = fopen(tmp_full_name, "rb");
+        }
+        else
+        {
+          strcpy(tmp_response_header, HEADER_200);
+        }
+
+        if(f != NULL)
+        {
+          fseek(f, 0, SEEK_END);
+          tmp_file_size = ftell(f);
+          tmp_buffer = (char *)malloc(tmp_file_size);
+          fseek(f, 0, SEEK_SET);
+          fread(tmp_buffer, tmp_file_size, 1, f);
+          fclose(f);
+
+          strcpy(response, tmp_response_header);
+
+          if(strstr(tmp_full_name, "html") != NULL)
+            strcat(response, "Content-Type: text/html\r\n");
+          else if(strstr(tmp_full_name, "js") != NULL)
+            strcat(response, "Content-Type: text/javascript\r\n");
+          else if(strstr(tmp_full_name, "css") != NULL)
+            strcat(response, "Content-Type: text/css\r\n");
+          else if(strstr(tmp_full_name, "ico") != NULL)
+            strcat(response, "Content-Type: image/x-icon\r\n");
+          else if(strstr(tmp_full_name, "png") != NULL)
+          {
+            strcat(response, "Content-Type: image/png\r\n");
+            strcat(response, "Content-Transfer-Encoding: binary\r\n");
+          }
+          else if(strstr(tmp_full_name, "jpg") != NULL)
+          {
+            strcat(response, "Content-Type: image/jpg\r\n");
+            strcat(response, "Content-Transfer-Encoding: binary\r\n");
+          }
+
+          sprintf(tmp, "Content-Length: %u\r\n\r\n", (unsigned int)tmp_file_size);
+          strcat(response, tmp);
+
+          *size = strlen(response);
+
+          memcpy(&response[*size], tmp_buffer, tmp_file_size);
+          *size += tmp_file_size;
+
+          free(tmp_buffer);
+        }
+        else
+        {
+          strcpy(response, HEADER_404);
+          strcat(response, "Content-Type: text/html\r\n");
+          sprintf(tmp, "Content-Length: %li\r\n\r\n", strlen(NOT_FOUND));
+          strcat(response, tmp);
+          strcat(response, NOT_FOUND);
+          *size = strlen(response);
+          log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
+                      tmp_full_name);
+        }
       }
-      else if(strstr(tmp_full_name, "jpg") != NULL)
-      {
-        strcat(response, "Content-Type: image/jpg\r\n");
-        strcat(response, "Content-Transfer-Encoding: binary\r\n");
-      }
-
-      sprintf(tmp, "Content-Length: %u\r\n\r\n", (unsigned int)tmp_file_size);
-      strcat(response, tmp);
-
-      *size = strlen(response);
-
-      memcpy(&response[*size], tmp_buffer, tmp_file_size);
-      *size += tmp_file_size;
-
-      free(tmp_buffer);
-    }
-    else
-    {
-      strcpy(response, HEADER_404);
-      strcat(response, "Content-Type: text/html\r\n");
-      sprintf(tmp, "Content-Length: %li\r\n\r\n", strlen(NOT_FOUND));
-      strcat(response, tmp);
-      strcat(response, NOT_FOUND);
-      *size = strlen(response);
-      log_add_fmt(LOG_WARNING, "[WEB] requested file(%s) not found",
-                  tmp_full_name);
     }
   }
 

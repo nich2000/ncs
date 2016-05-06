@@ -260,7 +260,7 @@ int custom_server_work(custom_server_t *server)
         server->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   server->custom_worker.state = STATE_STOP;
@@ -308,7 +308,7 @@ int custom_client_work(custom_client_t *client)
         client->on_connect((void*)client);
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
@@ -342,7 +342,7 @@ void *custom_recv_worker(void *arg)
     {
       if(tmp_size == 0)
       {
-        usleep(1000);
+        usleep(10000);
         continue;
       };
 
@@ -374,7 +374,7 @@ void *custom_recv_worker(void *arg)
         tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;

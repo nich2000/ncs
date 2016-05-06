@@ -168,9 +168,9 @@ class clients_t {
   private _data_second_table: data_table_t;
   //----------------------------------------------------------------------------
   constructor() {
-    this._clients_table     = new clients_table_t("remote_clients",     2, undefined);
-    this._data_first_table  = new data_table_t   ("remote_data_first",  2, undefined);
-    this._data_second_table = new data_table_t   ("remote_data_second", 2, undefined);
+    this._clients_table     = new clients_table_t("remote_clients",     3);
+    this._data_first_table  = new data_table_t   ("remote_data_first",  2);
+    this._data_second_table = new data_table_t   ("remote_data_second", 2);
 
     Signal.bind("clients",  this.refresh_clients, this);
     Signal.bind("add_data", this.add_data,        this);
@@ -186,7 +186,7 @@ class clients_t {
     }
   }
   //----------------------------------------------------------------------------
-  private add_client(data: any): void {
+  private add_client(data: any): client_t {
     let id      : number     =          data[0]._ID;
     let name    : string     =          data[1].NAM;
     let session : string     =          data[2].SES;
@@ -201,7 +201,7 @@ class clients_t {
 
       this._clients.push(client);
       let row: row_t = this._clients_table.add_client(client);
-      row.onclick =
+      // row.onclick = this.select_client;
     }
 
     client.session  = session;
@@ -215,6 +215,8 @@ class clients_t {
     this._clients_table.state_client   (client, state);
     this._clients_table.active_client  (client, active);
     this._clients_table.register_client(client, register);
+
+    return client;
   }
   //----------------------------------------------------------------------------
   private get_client_by_id(id: number): client_t {
@@ -300,9 +302,10 @@ class clients_t {
   }
   //----------------------------------------------------------------------------
   private select_client(id: string): void {
+    console.log("select_client: " + id);
+
     let client: client_t = this.get_client_by_id(parseInt(id));
 
-    // name id switcher
     $.get("command?cmd=ws_activate&par=" + client.name + "&par=" + client.id + "&par=next",
       function(data) {
       }

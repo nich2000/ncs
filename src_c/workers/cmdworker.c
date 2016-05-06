@@ -673,7 +673,7 @@ void *cmd_send_worker(void *arg)
       tmp_pack = _protocol_next_pack(tmp_protocol);
     }
 
-    usleep(1000);
+    usleep(10000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
