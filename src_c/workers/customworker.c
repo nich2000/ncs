@@ -46,7 +46,7 @@ int custom_worker_init(int id, custom_worker_t *worker)
   worker->on_lock            = NULL;
 
   sock_name_t tmp;
-  sprintf((char*)tmp, "%s_%d", DEFAULT_SOCK_NO_NAME, worker->id);
+  sprintf((char*)tmp, "%s_%d", DEFAULT_WORKER_NO_NAME, worker->id);
   strcpy((char*)worker->session_id, (char*)tmp);
   strcpy((char*)worker->name,       (char*)tmp);
 
@@ -124,8 +124,8 @@ int custom_client_init(custom_client_t *custom_client)
 
   custom_worker_t *tmp_worker = &custom_client->custom_remote_client.custom_worker;
   sock_name_t tmp;
-  if(strcmp(worker_name, DEFAULT_SOCK_NAME) == 0)
-    sprintf((char*)tmp, "%s_%d", DEFAULT_SOCK_NAME, tmp_worker->id);
+  if(strcmp(worker_name, DEFAULT_WORKER_NAME) == 0)
+    sprintf((char*)tmp, "%s_%d", DEFAULT_WORKER_NAME, tmp_worker->id);
   else
     strcpy((char*)tmp, worker_name);
   strcpy((char*)tmp_worker->session_id, (char*)tmp);

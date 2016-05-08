@@ -60,11 +60,14 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
-BOOL session_relay_to_web = TRUE;
+BOOL session_relay_to_web = DEFAULT_SESSION_REALAY_TO_WEB;
 //==============================================================================
 static cmd_server_t  _cmd_server;
 static names_t       _names;
 static int           _cmd_client_count = 0;
+//==============================================================================
+BOOL names_enable = DEFAULT_NAMES_ENABLE;
+char names_file[256] = DEFAULT_NAMES_FILE;
 //==============================================================================
 cmd_clients_t _cmd_clients;
 //==============================================================================
@@ -115,16 +118,18 @@ cmd_clients_t *cmd_clients()
 //==============================================================================
 int load_names()
 {
-  char full_file_name[256] = "../config/names.ejn";
+  if(!names_enable)
+    return make_last_error_fmt(ERROR_IGNORE, errno, "load_names, names not enabled");
+
   char * line = NULL;
   size_t len = 0;
   ssize_t read;
 
   _names.count = 0;
 
-  FILE *f = fopen(full_file_name, "r");
+  FILE *f = fopen(names_file, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", names_file);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -140,7 +145,7 @@ int load_names()
   }
 
   log_add_fmt(LOG_INFO, "[CMD] load_names, file: %s, count: %d",
-              full_file_name, _names.count);
+              names_file, _names.count);
 
 //  for(int i = 0; i < _names.count; i++)
 //    printf("%s=%s\n",

@@ -47,7 +47,9 @@ extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
 //==============================================================================
 extern char session_path[256];
-char session_file[64] = DEFAULT_SESSION_NAME;
+//==============================================================================
+BOOL session_stream_enable = DEFAULT_SESSION_STREAM_ENABLE;
+char session_stream_file[64] = DEFAULT_SESSION_STREAM_NAME;
 //==============================================================================
 session_t *session()
 {
@@ -100,8 +102,11 @@ int load_coords()
 //==============================================================================
 int load_session()
 {
+  if(!session_stream_enable)
+    return make_last_error_fmt(ERROR_IGNORE, errno, "load_session, session stream not enabled");
+
   char full_file_name[256];
-  sprintf(full_file_name, "%s/%s", session_path, session_file);
+  sprintf(full_file_name, "%s/%s", session_path, session_stream_file);
 
   char * line = NULL;
   size_t len = 0;

@@ -51,13 +51,16 @@ extern BOOL report_enable;
 extern char report_path[265];
 extern BOOL session_enable;
 extern char session_path[256];
-extern char session_file[64];
+extern BOOL session_stream_enable;
+extern char session_stream_file[64];
 extern BOOL map_enable;
 extern char map_path[256];
 extern char map_file[64];
 extern char log_prefix[8];
 extern char web_path[256];
 extern int  ws_refresh_rate;
+extern BOOL names_enable;
+extern char names_file[256];
 //==============================================================================
 static pthread_mutex_t mutex_handle_command = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
@@ -113,36 +116,41 @@ sock_active_t cmd_active(char *cmd)
 //==============================================================================
 int read_config()
 {
-  dictionary *config = iniparser_load("../config/config.ini");
+  char full_file_name[256] = "../config/config.ini";
+  dictionary *config = iniparser_load(full_file_name);
   if(config == NULL)
-    return make_last_error(ERROR_CRITICAL, errno, "read_config, iniparser_load");
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "read_config, iniparser_load, can not load file: %s",
+                               full_file_name);
 
-  cmd_server_port =              iniparser_getint   (config, "worker:cmd_server_port",      DEFAULT_CMD_SERVER_PORT);
-  ws_server_port  =              iniparser_getint   (config, "worker:ws_server_port",       DEFAULT_WS_SERVER_PORT);
-  web_server_port =              iniparser_getint   (config, "worker:web_server_port",      DEFAULT_WEB_SERVER_PORT);
-  strcpy((char*)cmd_server_host, iniparser_getstring(config, "worker:cmd_server_host",      DEFAULT_SERVER_HOST));
-  strcpy((char*)worker_name,     iniparser_getstring(config, "worker:worker_name",          DEFAULT_SOCK_NAME));
-  session_relay_to_web =         iniparser_getint   (config, "worker:session_relay_to_web", DEFAULT_CMD_SERVER_PORT);
-  ws_refresh_rate =              iniparser_getint   (config, "worker:ws_refresh_rate",      1000);
+  cmd_server_port =                  iniparser_getint   (config, "worker:cmd_server_port",        DEFAULT_CMD_SERVER_PORT);
+  ws_server_port  =                  iniparser_getint   (config, "worker:ws_server_port",         DEFAULT_WS_SERVER_PORT);
+  web_server_port =                  iniparser_getint   (config, "worker:web_server_port",        DEFAULT_WEB_SERVER_PORT);
+  strcpy((char*)cmd_server_host,     iniparser_getstring(config, "worker:cmd_server_host",        DEFAULT_SERVER_HOST));
+  strcpy((char*)worker_name,         iniparser_getstring(config, "worker:worker_name",            DEFAULT_WORKER_NAME));
+  session_relay_to_web =             iniparser_getint   (config, "worker:session_relay_to_web",   DEFAULT_SESSION_REALAY_TO_WEB);
+  ws_refresh_rate =                  iniparser_getint   (config, "worker:ws_refresh_rate",        DEFAULT_WS_REFRESH_RATE);
+  names_enable =                     iniparser_getint   (config, "worker:names_enable",           DEFAULT_NAMES_ENABLE);
+  strcpy((char*)names_file,          iniparser_getstring(config, "worker:names_file",             DEFAULT_NAMES_FILE));
 
-  log_enable =                   iniparser_getint   (config, "log:log_enable",              TRUE);
-  strcpy((char*)log_path,        iniparser_getstring(config, "log:log_path",                DEFAULT_LOG_PATH));
+  log_enable =                       iniparser_getint   (config, "log:log_enable",                DEFAULT_LOG_ENABLE);
+  strcpy((char*)log_path,            iniparser_getstring(config, "log:log_path",                  DEFAULT_LOG_PATH));
 
-  stat_enable =                  iniparser_getint   (config, "stat:stat_enable",            TRUE);
-  strcpy((char*)stat_path,       iniparser_getstring(config, "stat:stat_path",              DEFAULT_STAT_PATH));
+  stat_enable =                      iniparser_getint   (config, "stat:stat_enable",              DEFAULT_STAT_ENABLE);
+  strcpy((char*)stat_path,           iniparser_getstring(config, "stat:stat_path",                DEFAULT_STAT_PATH));
 
-  report_enable =                iniparser_getint   (config, "report:report_enable",        TRUE);
-  strcpy((char*)report_path,     iniparser_getstring(config, "report:report_path",          DEFAULT_REPORT_PATH));
+  report_enable =                    iniparser_getint   (config, "report:report_enable",          DEFAULT_REPORT_ENABLE);
+  strcpy((char*)report_path,         iniparser_getstring(config, "report:report_path",            DEFAULT_REPORT_PATH));
 
-  session_enable =               iniparser_getint   (config, "session:session_enable",      TRUE);
-  strcpy((char*)session_path,    iniparser_getstring(config, "session:session_path",        DEFAULT_SESSION_PATH));
-  strcpy((char*)session_file,    iniparser_getstring(config, "session:session_file",        DEFAULT_SESSION_NAME));
+  session_enable =                   iniparser_getint   (config, "session:session_enable",        DEFAULT_SESSION_ENABLE);
+  strcpy((char*)session_path,        iniparser_getstring(config, "session:session_path",          DEFAULT_SESSION_PATH));
+  session_stream_enable =            iniparser_getint   (config, "session:session_stream_enable", DEFAULT_SESSION_STREAM_ENABLE);
+  strcpy((char*)session_stream_file, iniparser_getstring(config, "session:session_stream_file",   DEFAULT_SESSION_STREAM_NAME));
 
-  map_enable =                   iniparser_getint   (config, "map:map_enable",              TRUE);
-  strcpy((char*)map_path,        iniparser_getstring(config, "map:map_path",                DEFAULT_MAP_PATH));
-  strcpy((char*)map_file,        iniparser_getstring(config, "map:map_file",                DEFAULT_MAP_NAME));
+  map_enable =                       iniparser_getint   (config, "map:map_enable",                DEFAULT_MAP_ENABLE);
+  strcpy((char*)map_path,            iniparser_getstring(config, "map:map_path",                  DEFAULT_MAP_PATH));
+  strcpy((char*)map_file,            iniparser_getstring(config, "map:map_file",                  DEFAULT_MAP_NAME));
 
-  strcpy((char*)web_path,        iniparser_getstring(config, "web:web_path",                DEFAULT_WEB_PATH));
+  strcpy((char*)web_path,            iniparser_getstring(config, "web:web_path",                  DEFAULT_WEB_PATH));
 
   iniparser_freedict(config);
 

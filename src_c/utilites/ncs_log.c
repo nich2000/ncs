@@ -28,13 +28,13 @@ void get_cur_date_str(char *result, int short_format);
 void get_cur_time_str(char *result, int short_format);
 const char *log_type_to_string(int log_type);
 //==============================================================================
-BOOL log_enable        = TRUE;
+BOOL log_enable        = DEFAULT_LOG_ENABLE;
 char log_path[256]     = DEFAULT_LOG_PATH;
-BOOL stat_enable       = TRUE;
+BOOL stat_enable       = DEFAULT_STAT_ENABLE;
 char stat_path[256]    = DEFAULT_STAT_PATH;
-BOOL session_enable    = TRUE;
+BOOL session_enable    = DEFAULT_SESSION_ENABLE;
 char session_path[256] = DEFAULT_SESSION_PATH;
-BOOL report_enable     = TRUE;
+BOOL report_enable     = DEFAULT_REPORT_ENABLE;
 char report_path[265]  = DEFAULT_REPORT_PATH;
 char log_prefix[16]    = DEFAULT_LOG_NAME;
 //==============================================================================
@@ -310,7 +310,7 @@ FILE *session_open(char *name)
 
   char full_file_name[256];
   sprintf(full_file_name, "%s/%s_%s",
-          session_path, tmp_file_name, DEFAULT_SESSION_NAME);
+          session_path, tmp_file_name, DEFAULT_SESSION_STREAM_NAME);
 
   make_dir(session_path);
 
