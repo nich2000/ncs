@@ -238,7 +238,8 @@ void *web_handle_connection(void *arg)
         break;
     }
 
-    usleep(10000);
+//    sched_yield();
+    usleep(5000);
   }
 
   free(request);

@@ -167,28 +167,19 @@ const char *log_type_to_string(int log_type)
 {
   switch(log_type)
   {
-    case LOG_INFO:           return "[INFO]";
-    break;
-    case LOG_WAIT:           return "[WAIT]";
-    break;
-    case LOG_WARNING:        return "[WARNING]";
-    break;
-    case LOG_ERROR:          return "[ERROR]";
-    break;
-    case LOG_ERROR_CRITICAL: return "[ERROR_CRITICAL]";
-    break;
-    case LOG_ERROR_FATAL:    return "[ERROR_FATAL]";
-    break;
-    case LOG_CMD:            return "[COMMAND]";
-    break;
-    case LOG_EXTRA:          return "[EXTRA]";
-    break;
-    case LOG_DEBUG:          return "[DEBUG]";
-    break;
-    case LOG_DATA:           return "[DATA]";
-    break;
-    case LOG_RAW_DATA:       return "";
-    break;
+    case LOG_INFO:           return "[INFO] ";
+    case LOG_WAIT:           return "[WAIT] ";
+    case LOG_WARNING:        return "[WARNING] ";
+    case LOG_ERROR:          return "[ERROR] ";
+    case LOG_ERROR_CRITICAL: return "[ERROR_CRITICAL] ";
+    case LOG_ERROR_FATAL:    return "[ERROR_FATAL] ";
+    case LOG_CMD:            return "[COMMAND] ";
+    case LOG_EXTRA:          return "[EXTRA] ";
+    case LOG_DEBUG:          return "[DEBUG] ";
+    case LOG_DATA:           return "[DATA] ";
+    case LOG_NO_IDENT:
+    case LOG_RAW_DATA:
+    default:                 return "";
   }
 
   return "";
@@ -233,11 +224,13 @@ void log_add(int log_type, const char *message)
      (log_type == LOG_INFO)
      ||
      (log_type == LOG_CMD)
+     ||
+     (log_type == LOG_NO_IDENT)
      #ifndef SILENT_MODE
      || (log_type >= LOG_ERROR_CRITICAL)
      #endif
     )
-    printf("%s %s\n", log_type_str, message);
+    printf("%s%s\n", log_type_str, message);
 
   char full_file_name[256];
   char file_name[64];
@@ -254,7 +247,7 @@ void log_add(int log_type, const char *message)
       char time_str[16];
       get_cur_time_str(time_str, LOG_LONG_FORMAT);
 
-      fprintf(log, "%s %s %s\n", time_str, log_type_str, message);
+      fprintf(log, "%s %s%s\n", time_str, log_type_str, message);
 
       fclose(log);
     }

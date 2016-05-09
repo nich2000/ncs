@@ -260,7 +260,8 @@ int custom_server_work(custom_server_t *server)
         server->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(10000);
+//    sched_yield();
+    usleep(5000);
   }
 
   server->custom_worker.state = STATE_STOP;
@@ -308,7 +309,8 @@ int custom_client_work(custom_client_t *client)
         client->on_connect((void*)client);
     }
 
-    usleep(10000);
+//    sched_yield();
+    usleep(5000);
   }
 
   client->custom_remote_client.custom_worker.state = STATE_STOP;
@@ -341,10 +343,7 @@ void *custom_recv_worker(void *arg)
     if(res == ERROR_NONE)
     {
       if(tmp_size == 0)
-      {
-        usleep(10000);
-        continue;
-      };
+        goto next;
 
       time_t rawtime;
       time (&rawtime);
@@ -374,7 +373,9 @@ void *custom_recv_worker(void *arg)
         tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(10000);
+    next:
+//    sched_yield();
+    usleep(5000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;

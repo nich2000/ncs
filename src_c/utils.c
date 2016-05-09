@@ -37,6 +37,7 @@ extern char web_path[256];
 extern int  ws_refresh_rate;
 extern BOOL names_enable;
 extern char names_file[256];
+extern BOOL history_enable;
 //==============================================================================
 #ifndef __linux__
 /**
@@ -257,13 +258,6 @@ const char *register_to_string(sock_register_t value)
   }
 }
 //==============================================================================
-void print_version()
-{
-  printf("NIch CLient Server Project\n");
-  printf("Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n");
-  printf("Version: %s\n", APPLICATION_VERSION);
-}
-//==============================================================================
 void print_help(int run_time)
 {
   if(run_time)
@@ -338,53 +332,75 @@ void print_help(int run_time)
   }
 }
 //==============================================================================
+void print_version()
+{
+  char tmp[1024];
+
+  sprintf(tmp,
+          "NIch CLient Server Project\n"                                \
+          "Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n" \
+          "Version: %s\n"                                               \
+          "Sock: %s, Pack: %s, Protocol: %s",
+          APPLICATION_VERSION,
+          SOCK_VERSION, PACK_VERSION, PROTOCOL_VERSION);
+
+  log_add(LOG_NO_IDENT, tmp);
+}
+//==============================================================================
 void print_config()
 {
-  printf(
-      "%-20s: %d\n" \
-      "%-20s: %d\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %d\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %d\n" \
-      "%-20s: %s\n" \
-      "%-20s: %s\n" \
-      "%-20s: %s\n",
-      "web_server_port",       web_server_port,        // 1
-      "ws_server_port",        ws_server_port,         // 2
-      "cmd_server_port",       cmd_server_port,        // 3
-      "cmd_server_host",       cmd_server_host,        // 4
-      "session_relay_to_web",  session_relay_to_web,   // 5
-      "ws_refresh_rate",       ws_refresh_rate,        // 6
-      "names_enable",          names_enable,           // 7
-      "names_file",            names_file,             // 8
-      "log_enable",            log_enable,             // 9
-      "log_path",              log_path,               // 10
-      "stat_enable",           stat_enable,            // 11
-      "stat_path",             stat_path,              // 12
-      "report_enable",         report_enable,          // 13
-      "report_path",           report_path,            // 14
-      "session_enable",        session_enable,         // 15
-      "session_path",          session_path,           // 16
-      "session_stream_enable", session_stream_enable,  // 17
-      "session_stream_file",   session_stream_file,    // 18
-      "map_enable",            map_enable,             // 19
-      "map_path",              map_path,               // 20
-      "map_file",              map_file,               // 21
-      "web_path",              web_path);              // 22
+  char tmp[1024];
+
+  sprintf(tmp,
+          "%-25s: %d\n" \
+          "%-25s: %d\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %d\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d\n" \
+          "%-25s: %s\n" \
+          "%-25s: %s\n" \
+          "%-25s: %s\n" \
+          "%-25s: %d",
+          "web_server_port",       web_server_port,        // 1
+          "ws_server_port",        ws_server_port,         // 2
+          "cmd_server_port",       cmd_server_port,        // 3
+          "cmd_server_host",       cmd_server_host,        // 4
+          "session_relay_to_web",  session_relay_to_web,   // 5
+          "ws_refresh_rate",       ws_refresh_rate,        // 6
+          "names_enable",          names_enable,           // 7
+          "names_file",            names_file,             // 8
+          "log_enable",            log_enable,             // 9
+          "log_path",              log_path,               // 10
+          "stat_enable",           stat_enable,            // 11
+          "stat_path",             stat_path,              // 12
+          "report_enable",         report_enable,          // 13
+          "report_path",           report_path,            // 14
+          "session_enable",        session_enable,         // 15
+          "session_path",          session_path,           // 16
+          "session_stream_enable", session_stream_enable,  // 17
+          "session_stream_file",   session_stream_file,    // 18
+          "map_enable",            map_enable,             // 19
+          "map_path",              map_path,               // 20
+          "map_file",              map_file,               // 21
+          "web_path",              web_path,               // 22
+          "history_enable",        history_enable          // 23
+          );
+
+  log_add(LOG_NO_IDENT, tmp);
 }
 //==============================================================================
 void print_types_info()

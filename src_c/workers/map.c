@@ -27,15 +27,15 @@ map_t *map()
   return &_map;
 }
 //==============================================================================
-int load_map()
+int map_load()
 {
   if(!map_enable)
-    return make_last_error_fmt(ERROR_IGNORE, errno, "load_map, map not enabled");
+    return make_last_error_fmt(ERROR_IGNORE, errno, "map_load, map not enabled");
 
   char full_file_name[256];
   sprintf(full_file_name, "%s/%s", map_path, map_file);
 
-  char * line = NULL;
+  char *line = NULL;
   size_t len = 0;
   ssize_t read;
 
@@ -43,7 +43,7 @@ int load_map()
 
   FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_map, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "map_load, can not open file %s", full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -82,7 +82,7 @@ int load_map()
     strcpy(tmp_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "[MAP] load_map, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[MAP] map_load, file: %s, count: %d",
               full_file_name, _map.count);
 
 //  for(int i = 0; i < _map.count; i++)

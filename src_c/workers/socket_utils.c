@@ -15,11 +15,7 @@
 //==============================================================================
 int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 {
-  log_add_fmt(LOG_INFO, "sock version: %s, pack version: %s",
-              _sock_version(), _pack_version());
-
   char tmp[128];
-
   switch(mode)
   {
     case SOCK_MODE_CMD_SERVER:
@@ -39,8 +35,6 @@ int sock_print_server_header(sock_mode_t mode, sock_port_t port)
 //==============================================================================
 int sock_print_client_header(sock_port_t port, sock_host_t host)
 {
-  log_add_fmt(LOG_INFO, "sock version: %s, pack version: %s",
-              _sock_version(), _pack_version());
   log_add_fmt(LOG_INFO, "Client, port: %d, host: %s",
               port, host);
 

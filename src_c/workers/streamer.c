@@ -56,7 +56,7 @@ session_t *session()
   return &_session;
 }
 //==============================================================================
-int load_coords()
+int coords_load()
 {
   char full_file_name[256];
   sprintf(full_file_name, "%s/%s", session_path, "coords.csv");
@@ -70,7 +70,7 @@ int load_coords()
 
   FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_session, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "coords_load, can not open file %s", full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -85,7 +85,7 @@ int load_coords()
     tmp_item->lon = atof(token);
   }
 
-  log_add_fmt(LOG_INFO, "[SRTEAMER] load_coords, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] coords_load, file: %s, count: %d",
               full_file_name, _coords.count);
 
 //  for(int i = 0; i < _coords.count; i++)
@@ -100,10 +100,10 @@ int load_coords()
   return ERROR_NONE;
 }
 //==============================================================================
-int load_session()
+int session_load()
 {
   if(!session_stream_enable)
-    return make_last_error_fmt(ERROR_IGNORE, errno, "load_session, session stream not enabled");
+    return make_last_error_fmt(ERROR_IGNORE, errno, "session_load, session stream not enabled");
 
   char full_file_name[256];
   sprintf(full_file_name, "%s/%s", session_path, session_stream_file);
@@ -117,7 +117,7 @@ int load_session()
 
   FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_session, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "session_load, can not open file %s", full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -156,7 +156,7 @@ int load_session()
 //    strcpy(map_item->lon, token);
   }
 
-  log_add_fmt(LOG_INFO, "[SRTEAMER] load_session, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[SRTEAMER] session_load, file: %s, count: %d",
               full_file_name, _session.count);
 
 //  for(int i = 0; i < _map.count; i++)

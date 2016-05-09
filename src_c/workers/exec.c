@@ -35,11 +35,17 @@
 #include "ncs_log.h"
 #include "ncs_error.h"
 //==============================================================================
+static history_t _history;
+static int       _history_index = -1;
+//==============================================================================
+static pthread_mutex_t mutex_handle_command = PTHREAD_MUTEX_INITIALIZER;
+//==============================================================================
 sock_port_t web_server_port   = DEFAULT_WEB_SERVER_PORT;
 sock_port_t ws_server_port    = DEFAULT_WS_SERVER_PORT;
 sock_port_t cmd_server_port   = DEFAULT_CMD_SERVER_PORT;
 sock_host_t cmd_server_host   = DEFAULT_SERVER_HOST;
 int         cmd_clients_count = 1;
+BOOL        history_enable    = TRUE;
 //==============================================================================
 extern char worker_name[16];
 extern BOOL session_relay_to_web;
@@ -61,8 +67,6 @@ extern char web_path[256];
 extern int  ws_refresh_rate;
 extern BOOL names_enable;
 extern char names_file[256];
-//==============================================================================
-static pthread_mutex_t mutex_handle_command = PTHREAD_MUTEX_INITIALIZER;
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -114,12 +118,106 @@ sock_active_t cmd_active(char *cmd)
     return ACTIVE_NONE;
 }
 //==============================================================================
-int read_config()
+history_t *history()
 {
+  return &_history;
+}
+//==============================================================================
+int history_load()
+{
+  if(!history_enable)
+    return make_last_error_fmt(ERROR_IGNORE, errno, "history_load, history not enabled");
+
+  char full_file_name[256];
+  sprintf(full_file_name, "%s/%s", "../history", "history.txt");
+
+  char *line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+  _history.count = 0;
+
+  FILE *f = fopen(full_file_name, "r");
+  if(f == NULL)
+    return make_last_error_fmt(ERROR_NORMAL, errno, "history_load, can not open file %s", full_file_name);
+
+  while ((read = getline(&line, &len, f)) != -1)
+  {
+    _history.count++;
+    if(_history.count >= HISTORY_COUNT)
+      break;
+
+    strcpy(_history.items[_history.count-1], line);
+  }
+  log_add_fmt(LOG_INFO, "[HISTORY] history_load, file: %s, count: %d",
+              full_file_name, _history.count);
+
+  _history_index = _history.count - 1;
+
+//  for(int i = 0; i < _history.count; i++)
+//    printf("%s",
+//           _history.items[i]);
+
+  fclose(f);
+  if(line)
+    free(line);
+
+  return ERROR_NONE;
+}
+//==============================================================================
+void history_add(command_t command)
+{
+  _history.count++;
+  if(_history.count >= HISTORY_COUNT)
+    return;
+
+  _history_index = _history.count - 1;
+
+  strcpy(_history.items[_history.count-1], command);
+
+  char full_file_name[256];
+  sprintf(full_file_name, "%s/%s", "../history", "history.txt");
+
+  FILE *f = fopen(full_file_name, "w");
+  if(f == NULL)
+    return;
+
+  for(int i = 0; i < _history.count; i++)
+    fprintf(f, "%s", _history.items[i]);
+
+  fclose(f);
+}
+//==============================================================================
+const char* history_prev()
+{
+  _history_index--;
+  if(_history_index <= 0)
+    _history_index = 0;
+
+  if((_history.count == 0) || (_history.count <= _history_index))
+    return "\0";
+  else
+    return _history.items[_history_index];
+}
+//==============================================================================
+const char* history_next()
+{
+  _history_index++;
+  if(_history_index >= _history.count)
+    _history_index = _history.count-1;
+
+  if((_history.count == 0) || (_history.count <= _history_index))
+    return "\0";
+  else
+    return _history.items[_history_index];
+}
+//==============================================================================
+int read_config()
+{ 
   char full_file_name[256] = "../config/config.ini";
   dictionary *config = iniparser_load(full_file_name);
   if(config == NULL)
-    return make_last_error_fmt(ERROR_CRITICAL, errno, "read_config, iniparser_load, can not load file: %s",
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "read_config, iniparser_load,\nmessage: can not load file: %s",
                                full_file_name);
 
   cmd_server_port =                  iniparser_getint   (config, "worker:cmd_server_port",        DEFAULT_CMD_SERVER_PORT);
@@ -646,7 +744,10 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_RECONFIG);
 
-      read_config();
+      if(read_config() >= ERROR_WARNING)
+        log_add_fmt(LOG_INFO, "handle_command_str,\nmessage: %s",
+                    last_error()->message);
+      print_config();
 
       result = EXEC_DONE;
       goto exit;

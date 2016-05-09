@@ -17,18 +17,18 @@
 
 #include "ncs_pack.h"
 //==============================================================================
-#define CMD_S_HELP              "-h"
-#define CMD_S_CONFIG            "-o"
-#define CMD_S_VERSION           "-v"
+#define CMD_S_HELP              "-H"
+#define CMD_S_CONFIG            "-C"
+#define CMD_S_VERSION           "-V"
 #define CMD_S_ALL               "-a"
 #define CMD_S_SERVER            "-s"
-#define CMD_S_WEB_SERVER        "-e"
-#define CMD_S_WS_SERVER         "-w"
+#define CMD_S_WEB_SERVER        "-w"
+#define CMD_S_WS_SERVER         "-s"
 #define CMD_S_CLIENT            "-c"
 #define PARAM_S_PORT            "-p"
 #define PARAM_S_WEB_PORT        "-r"
 #define PARAM_S_WS_PORT         "-t"
-#define PARAM_S_HOST            "-d"
+#define PARAM_S_HOST            "-h"
 #define PARAM_S_COUNT           "-n"
 //==============================================================================
 #define CMD_HELP                "--help"
@@ -79,11 +79,29 @@
 #define EXEC_NONE                0
 #define EXEC_DONE                1
 //==============================================================================
-#define MAX_COMMAND_SIZE         128
+#define COMMAND_SIZE            128
+#define HISTORY_COUNT           1024
+//==============================================================================
+typedef char command_t[COMMAND_SIZE];
+//==============================================================================
+typedef command_t history_items_t[HISTORY_COUNT];
+//==============================================================================
+typedef struct
+{
+  int             count;
+  history_items_t items;
+} history_t;
+//==============================================================================
+history_t *history();
 //==============================================================================
 typedef int (*exec_func)(int, ...);
 //==============================================================================
-int  read_config();
+int read_config();
+//==============================================================================
+int history_load();
+void history_add(command_t command);
+const char* history_prev();
+const char* history_next();
 //==============================================================================
 int handle_command_str    (void *sender, char *command);
 int handle_command_str_fmt(void *sender, char *command, ...);

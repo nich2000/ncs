@@ -58,7 +58,7 @@ typedef struct
 int cmd_streamer       (sock_state_t state, int interval);
 int cmd_streamer_status();
 //==============================================================================
-int load_session();
-int load_coords();
+int session_load();
+int coords_load();
 //==============================================================================
 #endif //STREAMER_H

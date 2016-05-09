@@ -36,7 +36,7 @@ void *cmd_server_worker (void *arg);
 custom_remote_client_t *_cmd_remote_clients_next (cmd_server_t *cmd_server);
 int                     _cmd_remote_clients_count(cmd_server_t *cmd_server);
 //==============================================================================
-int load_names();
+int names_load();
 //==============================================================================
 int cmd_client_init     (cmd_client_t *client);
 int cmd_client_start    (cmd_client_t *client, sock_port_t port, sock_host_t host);
@@ -116,10 +116,10 @@ cmd_clients_t *cmd_clients()
   return &_cmd_clients;
 }
 //==============================================================================
-int load_names()
+int names_load()
 {
   if(!names_enable)
-    return make_last_error_fmt(ERROR_IGNORE, errno, "load_names, names not enabled");
+    return make_last_error_fmt(ERROR_IGNORE, errno, "names_load, names not enabled");
 
   char * line = NULL;
   size_t len = 0;
@@ -129,7 +129,7 @@ int load_names()
 
   FILE *f = fopen(names_file, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "load_names, can not open file %s", names_file);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "names_load, can not open file %s", names_file);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -144,7 +144,7 @@ int load_names()
     strcpy(_names.items[_names.count-1].name, token);
   }
 
-  log_add_fmt(LOG_INFO, "[CMD] load_names, file: %s, count: %d",
+  log_add_fmt(LOG_INFO, "[CMD] names_load, file: %s, count: %d",
               names_file, _names.count);
 
 //  for(int i = 0; i < _names.count; i++)
@@ -292,8 +292,8 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   if(server->custom_server.custom_worker.state == STATE_START)
     return make_last_error(ERROR_NORMAL, errno, "cmd_server_start, server already started");
 
-  load_names();
-  load_map();
+  names_load();
+  map_load();
 
   cmd_server_init(server);
 
@@ -678,7 +678,8 @@ void *cmd_send_worker(void *arg)
       tmp_pack = _protocol_next_pack(tmp_protocol);
     }
 
-    usleep(10000);
+//    sched_yield();
+    usleep(5000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;

@@ -310,10 +310,7 @@ void *ws_recv_worker(void *arg)
     if(res == ERROR_NONE)
     {
       if(tmp_size == 0)
-      {
-        usleep(10000);
-        continue;
-      };
+        goto next;
 
       if(tmp_client->hand_shake == FALSE)
       {
@@ -396,7 +393,9 @@ void *ws_recv_worker(void *arg)
         tmp_client->custom_worker.state = STATE_STOPPING;
     }
 
-    usleep(10000);
+    next:
+//    sched_yield();
+    usleep(5000);
   }
 
   free(request);
@@ -456,7 +455,8 @@ void *ws_send_worker(void *arg)
         }
     }
 
-    usleep(10000);
+//    sched_yield();
+    usleep(5000);
   }
 
   tmp_client->custom_worker.state = STATE_STOP;
@@ -538,8 +538,9 @@ int ws_remote_clients_register(sock_id_t id, sock_name_t session_id)
 //        {
 //          pack_packet_t config_packet;
 //          ws_server_send_pack(SOCK_SEND_TO_ALL, &config_packet);
-          // TODO: костыль
-//          usleep(10000);
+//          // TODO: костыль
+//          pthread_yield();
+////          usleep(10000);
 //        }
 
         // TODO: тут создали буффер, начали отправку

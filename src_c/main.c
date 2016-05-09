@@ -16,6 +16,19 @@ extern sock_port_t web_server_port;
 extern sock_host_t cmd_server_host;
 extern int         cmd_clients_count;
 //==============================================================================
+int getcode()
+{
+  struct termios oldt, newt;
+  int ch;
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  ch = getchar();
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  return ch;
+}
+//==============================================================================
 int main(int argc, char *argv[])
 {
   //---------------------------------------------------------------------------
@@ -33,7 +46,9 @@ int main(int argc, char *argv[])
     }
     if((strcmp(argv[1], CMD_S_CONFIG) == 0) || ((strcmp(argv[1], CMD_CONFIG) == 0)))
     {
-      read_config();
+      if(read_config() >= ERROR_WARNING)
+        log_add_fmt(LOG_ERROR, "main,\nmessage: %s",
+                    last_error()->message);
       print_config();
       return 0;
     }
@@ -41,12 +56,12 @@ int main(int argc, char *argv[])
   //---------------------------------------------------------------------------
   print_version();
   //---------------------------------------------------------------------------
-  if(read_config() >= ERROR_WARNING)
-    goto exit;
+  if(read_config() >= LOG_ERROR)
+    log_add_fmt(LOG_ERROR, "main,\nmessage: %s",
+                last_error()->message);
   print_config();
   //---------------------------------------------------------------------------
   log_add(LOG_INFO, "application started");
-  log_add_fmt(LOG_INFO, "application version: %s", APPLICATION_VERSION);
   log_add(LOG_INFO, "-------------------");
   //---------------------------------------------------------------------------
   if(sock_init() >= ERROR_WARNING)
@@ -57,8 +72,8 @@ int main(int argc, char *argv[])
     goto exit;
   #endif
   //---------------------------------------------------------------------------
-  load_coords();
-//  load_session();
+  coords_load();
+//  session_load();
   //---------------------------------------------------------------------------
   char command[256];
   if(argc > 1)
@@ -114,14 +129,47 @@ int main(int argc, char *argv[])
 
     handle_command_str(NULL, command);
   }
-  else
-  {
-    log_add(LOG_INFO, "command mode");
-  }
   //---------------------------------------------------------------------------
+  log_add(LOG_INFO, "command mode");
+  if(history_load() >= ERROR_NORMAL)
+    log_add_fmt(LOG_ERROR, "main,\nmessage: %s",
+                last_error()->message);
+  //---------------------------------------------------------------------------
+  strcpy(command, "\0");
   while(TRUE)
   {
-    fgets(command, sizeof(command), stdin);
+//    char ch = getcode();
+//    if(ch == '\033')
+//    {
+//      getchar(); // skip the [
+//      ch = getchar();
+//      switch(ch)
+//      {
+//        case 'A': // arrow up
+//        {
+//          strcpy(command, history_prev());
+//          break;
+//        }
+//        case 'B': // arrow down
+//        {
+//          strcpy(command, history_next());
+//          break;
+//        }
+//      }
+//      if(strlen(command) != 0)
+//      {
+//        printf("%s\n", command);
+//        continue;
+//      }
+//    }
+
+//    if(strlen(command) == 0)
+//    {
+//      printf("manual input\n");
+      fgets(command, sizeof(command), stdin);
+      history_add(command);
+//    };
+
     switch(handle_command_str(NULL, command))
     {
       case EXEC_NONE:
@@ -138,6 +186,7 @@ int main(int argc, char *argv[])
                     command);
         break;
     }
+    strcpy(command, "\0");
   }
   //---------------------------------------------------------------------------
   exit:

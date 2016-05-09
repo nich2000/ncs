@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <termios.h>
 
 #include "defines.h"
 #include "globals.h"
