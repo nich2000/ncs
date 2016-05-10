@@ -31,6 +31,10 @@
       "file_exclude_patterns": ["*.bak"]
     },
     {
+      "path": "history",
+      "file_exclude_patterns": ["*.bak"]
+    },
+    {
       "path": "logs",
       "file_exclude_patterns": ["*.bak"]
     },

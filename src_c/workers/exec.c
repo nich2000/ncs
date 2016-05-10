@@ -167,6 +167,10 @@ int history_load()
 //==============================================================================
 void history_add(command_t command)
 {
+  for(int i = 0; i < _history.count; i++)
+    if(strcmp(command, _history.items[i]) == 0)
+      return;
+
   _history.count++;
   if(_history.count >= HISTORY_COUNT)
     return;
