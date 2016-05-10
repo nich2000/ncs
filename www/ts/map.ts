@@ -180,8 +180,12 @@ class map_t {
     // scale
     this.set_scale();
 
+    this.debug_draw();
+
+    this.draw_map();
+
     // draw
-    this.refresh();
+    // this.refresh();
   }
   //----------------------------------------------------------------------------
   private set_bounds(): void {
@@ -234,6 +238,7 @@ class map_t {
 
     // console.log(lat + "  " + lon);
 
+    this._position_first = [];
     let map_item: map_item_t = new map_item_t(lat, lon);
     this._position_first.push(map_item);
 
@@ -258,6 +263,8 @@ class map_t {
 
     // console.log("map, clear");
 
+    // this._canvas.width = this._canvas.width;
+
     // this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
     this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
   }
@@ -271,60 +278,64 @@ class map_t {
   private end_draw(): void {
     // console.log("map, end_draw");
 
-    this._ctx.stroke();
+    // this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
   private draw_map(): void {
     console.log("map, draw_map, count: " + this._map_items.length);
 
-    this._ctx.lineWidth = 1;
-    this._ctx.strokeStyle="red";
+    this._ctx.beginPath;
+    this._ctx.strokeStyle="Blue";
 
     for(let i = 0; i < this._map_items.length; i++){
       let lat = (this._map_items[i].lat - this._min_h) * this._scale;
       let lon = (this._map_items[i].lon - this._min_w) * this._scale;
 
-      if((this._map_items[i].lat == 0) && (this._map_items[i].lon == 0)) {
-      }
-      else {
-        this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
-      }
+      this._ctx.moveTo(lon, lat);
+      this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
     }
+
+    this._ctx.closePath();
+    this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
   private draw_client(): void {
     console.log("map, draw_client, count: " + this._position_first.length);
 
-    this._ctx.lineWidth = 1;
-    this._ctx.strokeStyle="blue";
+    this._ctx.beginPath;
+    this._ctx.strokeStyle="Orange";
 
     for(let i = 0; i < this._position_first.length; i++){
       let lat = (this._position_first[i].lat - this._min_h) * this._scale;
       let lon = (this._position_first[i].lon - this._min_w) * this._scale;
 
+      this._ctx.moveTo(lon, lat);
       this._ctx.arc(lon, lat, 3, 0, 2 * Math.PI);
     }
+
+    this._ctx.closePath();
+    this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
   public refresh(): void {
     if (!this._is_init)
       return;
 
-    console.log("map, refresh");
+    // console.log("map, refresh");
 
-    this.begin_draw();
+    // this.begin_draw();
 
-    this.debug_draw();
+    // this.debug_draw();
 
-    if(this._test_mode)
-      this.test_draw()
-    else{
-      this.draw_map();
+    // if(this._test_mode)
+      // this.test_draw()
+    // else{
+      // this.draw_map();
       this.draw_client();
       // this.draw_client();
-    }
+    // }
 
-    this.end_draw();
+    // this.end_draw();
   }
   //----------------------------------------------------------------------------
 }

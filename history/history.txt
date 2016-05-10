@@ -6,4 +6,4 @@ stream off
 --client
 reconfig
 stream on 500
-stream on 250
+stream on 250stream on 250
