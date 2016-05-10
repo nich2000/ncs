@@ -24,6 +24,8 @@ class Signal {
   }
   //----------------------------------------------------------------------------
   public static emit(signal: string, data: any): void {
+    console.log("emit: " + signal);
+
     for (let key in this.signals) {
       if (this.signals[key].signal == signal) {
         if (this.signals[key].context) {

@@ -4,3 +4,6 @@ exit
 stream on 100
 stream off
 --client
+reconfig
+stream on 500
+stream on 250

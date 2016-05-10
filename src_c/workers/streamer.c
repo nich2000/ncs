@@ -330,8 +330,9 @@ int cmd_streamer_step(custom_remote_client_t *client, int counter, int debug)
     _coords.index = _streamer_pack_counter % _coords.count;
 
   if(debug)
-    log_add_fmt(LOG_INFO, "cmd_streamer_step, counter: %d, index: %d",
+    log_add_fmt(LOG_INFO, "cmd_streamer_step, counter: %d, count: %d, index: %d",
                 _streamer_pack_counter,
+                _coords.count,
                 _coords.index);
 
   #ifdef STREAM_RANDOM_PACK

@@ -33,7 +33,7 @@ typedef union
 #else
 #define PACK_BUFFER_SIZE         1024
 #define PACK_VALUE_SIZE          256
-#define PACK_WORDS_COUNT         256 //TODO: разобраться с кол-вом слов в пакете
+#define PACK_WORDS_COUNT         2048 //256 //TODO: разобраться с кол-вом слов в пакете
 #endif
 //==============================================================================
 #define PACK_WORD_NONE           0

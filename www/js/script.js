@@ -390,14 +390,14 @@ var map_t = (function () {
     function map_t(id) {
         this._test_mode = false;
         this._id = "";
-        this._cnv = "";
+        this._cnv = undefined;
         this._canvas = undefined;
         this._ctx = undefined;
         this._is_init = false;
+        this._maximaize = false;
         this._height = 1;
         this._width = 1;
         this._scale = 1;
-        this._maximaize = false;
         this._min_h = 1000000000;
         this._max_h = -1000000000;
         this._min_w = 1000000000;
@@ -414,8 +414,10 @@ var map_t = (function () {
         var canvasSupported = !!document.createElement("canvas").getContext;
         if (canvasSupported) {
             this._ctx = this._canvas.getContext("2d");
-            this._height = this._canvas.height;
-            this._width = this._canvas.width;
+            this._height = this._cnv.height();
+            this._width = this._cnv.width();
+            this._ctx.canvas.height = this._height;
+            this._ctx.canvas.width = this._width;
             this.clear();
             this._is_init = true;
         }
@@ -453,9 +455,16 @@ var map_t = (function () {
         configurable: true
     });
     map_t.prototype.debug_draw = function () {
-        this._ctx.font = "10px Courier";
-        this._ctx.fillText("h: " + this._height, 10, 20);
-        this._ctx.fillText("w: " + this._width, 10, 40);
+        console.log("map, debug_draw");
+        this._ctx.font = "15px Courier";
+        this._ctx.fillStyle = 'blue';
+        this._ctx.fillText(this._canvas.height + " * " + this._canvas.width, 10, 20);
+        this._ctx.fillText(this._cnv.height() + " * " + this._cnv.width(), 10, 40);
+        this._ctx.fillText(this._height + " * " + this._width, 10, 60);
+        this._ctx.fillText(this._scale, 10, 80);
+        this._ctx.fillText(this._min_h + " * " + this._min_w, 10, 100);
+        this._ctx.fillText(this._max_h + " * " + this._max_w, 10, 120);
+        this._ctx.fillText(this._height_map + " * " + this._width_map, 10, 140);
     };
     map_t.prototype.test_draw = function () {
         this._ctx.beginPath();
@@ -471,6 +480,7 @@ var map_t = (function () {
         this._ctx.strokeStyle = "blue";
     };
     map_t.prototype.load_map = function (data) {
+        console.log("map, load_map, size: " + data.length);
         this._map_items = [];
         for (var i = 0; i < data.length; i++) {
             var lon_s = data[i].PAR[3].LAF;
@@ -487,9 +497,12 @@ var map_t = (function () {
         this.refresh();
     };
     map_t.prototype.set_bounds = function () {
+        console.log("map, set_bounds");
         for (var i = 0; i < this._map_items.length; i++) {
             var lat = this._map_items[i].lat;
             var lon = this._map_items[i].lon;
+            if ((lat == 0) && (lon == 0))
+                continue;
             if (lat > this._max_h)
                 this._max_h = lat;
             if (lat < this._min_h)
@@ -503,6 +516,7 @@ var map_t = (function () {
         this._width_map = this._max_w - this._min_w;
     };
     map_t.prototype.set_scale = function () {
+        console.log("map, set_scale");
         var tmp_scale_h = this._height / this._height_map;
         var tmp_scale_w = this._width / this._width_map;
         if (tmp_scale_h < tmp_scale_w)
@@ -510,49 +524,64 @@ var map_t = (function () {
         else
             this._scale = tmp_scale_w;
     };
-    map_t.prototype.add_position = function (lat, lon, active) {
+    map_t.prototype.add_position = function (data) {
+        var lon_s = data[6].LAT;
+        lon_s = lon_s.replace(/\,/, ".");
+        var lon = parseFloat(lon_s);
+        var lat_s = data[7].LON;
+        lat_s = lat_s.replace(/\,/, ".");
+        var lat = parseFloat(lat_s);
         var map_item = new map_item_t(lat, lon);
-        if (active == active_t.first)
-            this._position_first.push(map_item);
-        else if (active = active_t.second)
-            this._position_second.push(map_item);
+        this._position_first.push(map_item);
         this.refresh();
     };
     map_t.prototype.clear = function () {
         if (!this._is_init)
             return;
-        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+        this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
     };
     map_t.prototype.begin_draw = function () {
+        // console.log("map, begin_draw");
         this.clear();
     };
     map_t.prototype.end_draw = function () {
+        // console.log("map, end_draw");
         this._ctx.stroke();
     };
     map_t.prototype.draw_map = function () {
+        console.log("map, draw_map, count: " + this._map_items.length);
+        this._ctx.lineWidth = 1;
+        this._ctx.strokeStyle = "red";
         for (var i = 0; i < this._map_items.length; i++) {
             var lat = (this._map_items[i].lat - this._min_h) * this._scale;
             var lon = (this._map_items[i].lon - this._min_w) * this._scale;
-            this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+            if ((this._map_items[i].lat == 0) && (this._map_items[i].lon == 0)) {
+            }
+            else {
+                this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+            }
         }
     };
     map_t.prototype.draw_client = function () {
+        console.log("map, draw_client, count: " + this._position_first.length);
+        this._ctx.lineWidth = 1;
+        this._ctx.strokeStyle = "blue";
         for (var i = 0; i < this._position_first.length; i++) {
             var lat = (this._position_first[i].lat - this._min_h) * this._scale;
             var lon = (this._position_first[i].lon - this._min_w) * this._scale;
-            this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+            this._ctx.arc(lon, lat, 3, 0, 2 * Math.PI);
         }
     };
     map_t.prototype.refresh = function () {
         if (!this._is_init)
             return;
+        console.log("map, refresh");
         this.begin_draw();
         this.debug_draw();
         if (this._test_mode)
             this.test_draw();
         else {
             this.draw_map();
-            this.draw_client();
             this.draw_client();
         }
         this.end_draw();
@@ -572,6 +601,7 @@ var Signal = (function () {
         this.signals.push(tmp);
     };
     Signal.emit = function (signal, data) {
+        console.log("emit: " + signal);
         for (var key in this.signals) {
             if (this.signals[key].signal == signal) {
                 if (this.signals[key].context) {

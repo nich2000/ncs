@@ -43,14 +43,15 @@ class map_t {
   private _test_mode:  boolean = false;
   //----------------------------------------------------------------------------
   private _id:         string  = "";
-  private _cnv:        any     = "";
-  private _canvas:     any     = undefined;
+  private _cnv:        any     = undefined; // jquery object
+  private _canvas:     any     = undefined; // DOM object
   private _ctx:        any     = undefined;
   private _is_init:    boolean = false;
+  private _maximaize:  boolean = false;
+  //----------------------------------------------------------------------------
   private _height:     number  = 1;
   private _width:      number  = 1;
   private _scale:      number  = 1;
-  private _maximaize:  boolean = false;
   //----------------------------------------------------------------------------
   private _min_h:      number  =  1000000000;
   private _max_h:      number  = -1000000000;
@@ -74,8 +75,14 @@ class map_t {
     if (canvasSupported) {
       this._ctx = this._canvas.getContext("2d");
 
-      this._height = this._canvas.height;
-      this._width = this._canvas.width;
+      // this._height = this._canvas.height;
+      // this._width  = this._canvas.width;
+
+      this._height = this._cnv.height();
+      this._width  = this._cnv.width();
+
+      this._ctx.canvas.height = this._height;
+      this._ctx.canvas.width = this._width;
 
       this.clear();
 
@@ -114,14 +121,21 @@ class map_t {
   //----------------------------------------------------------------------------
   public set test_mode(v : boolean) {
     this._test_mode = v;
-
     this.refresh();
   }
   //----------------------------------------------------------------------------
   private debug_draw(): void {
-    this._ctx.font = "10px Courier";
-    this._ctx.fillText("h: " + this._height, 10, 20);
-    this._ctx.fillText("w: " + this._width, 10, 40);
+    console.log("map, debug_draw");
+
+    this._ctx.font = "15px Courier";
+    this._ctx.fillStyle = 'blue';
+    this._ctx.fillText(this._canvas.height + " * " + this._canvas.width, 10, 20);
+    this._ctx.fillText(this._cnv.height()  + " * " + this._cnv.width(),  10, 40);
+    this._ctx.fillText(this._height        + " * " + this._width,        10, 60);
+    this._ctx.fillText(this._scale,                                      10, 80);
+    this._ctx.fillText(this._min_h         + " * " + this._min_w,        10, 100);
+    this._ctx.fillText(this._max_h         + " * " + this._max_w,        10, 120);
+    this._ctx.fillText(this._height_map    + " * " + this._width_map,    10, 140);
   }
   //----------------------------------------------------------------------------
   private test_draw(): void {
@@ -139,6 +153,8 @@ class map_t {
   }
   //----------------------------------------------------------------------------
   private load_map(data: any): void {
+    console.log("map, load_map, size: " + data.length);
+
     this._map_items = [];
     for(let i: number = 0; i < data.length; i++){
       // let map_item: map_item_t = new map_item_t(data[i].PAR);
@@ -152,6 +168,8 @@ class map_t {
       let lat: number = parseFloat(lat_s);
 
       let map_item: map_item_t = new map_item_t(lat, lon);
+
+      // console.log(lat + "  " + lon);
 
       this._map_items.push(map_item);
     }
@@ -167,9 +185,14 @@ class map_t {
   }
   //----------------------------------------------------------------------------
   private set_bounds(): void {
+    console.log("map, set_bounds");
+
     for(let i = 0; i < this._map_items.length; i++){
       let lat: number = this._map_items[i].lat;
       let lon: number = this._map_items[i].lon;
+
+      if((lat == 0) && (lon == 0))
+        continue;
 
       if (lat > this._max_h)
         this._max_h = lat;
@@ -189,6 +212,8 @@ class map_t {
   }
   //----------------------------------------------------------------------------
   private set_scale(): void {
+    console.log("map, set_scale");
+
     let tmp_scale_h: number = this._height / this._height_map;
     let tmp_scale_w: number = this._width  / this._width_map;
 
@@ -198,13 +223,28 @@ class map_t {
       this._scale = tmp_scale_w;
   }
   //----------------------------------------------------------------------------
-  private add_position(lat: number, lon: number, active: active_t): void {
-    let map_item: map_item_t = new map_item_t(lat, lon);
+  private add_position(data: any): void {
+    let lon_s: string = data[6].LAT;
+    lon_s = lon_s.replace(/\,/, ".");
+    let lon: number = parseFloat(lon_s);
 
-    if(active == active_t.first)
-      this._position_first.push(map_item);
-    else if(active = active_t.second)
-      this._position_second.push(map_item);
+    let lat_s: string = data[7].LON;
+    lat_s = lat_s.replace(/\,/, ".");
+    let lat: number = parseFloat(lat_s);
+
+    // console.log(lat + "  " + lon);
+
+    let map_item: map_item_t = new map_item_t(lat, lon);
+    this._position_first.push(map_item);
+
+    // if(active == active_t.first) {
+    //   console.log("add_position, first");
+    //   this._position_first.push(map_item);
+    // }
+    // else if(active = active_t.second) {
+    //   console.log("add_position, second");
+    //   this._position_second.push(map_item);
+    // }
 
     this.refresh();
   }
@@ -215,36 +255,62 @@ class map_t {
   private clear(): void {
     if (!this._is_init)
       return;
-    this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+
+    // console.log("map, clear");
+
+    // this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
+    this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
   }
   //----------------------------------------------------------------------------
   private begin_draw(): void {
+    // console.log("map, begin_draw");
+
     this.clear();
   }
   //----------------------------------------------------------------------------
   private end_draw(): void {
+    // console.log("map, end_draw");
+
     this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
   private draw_map(): void {
+    console.log("map, draw_map, count: " + this._map_items.length);
+
+    this._ctx.lineWidth = 1;
+    this._ctx.strokeStyle="red";
+
     for(let i = 0; i < this._map_items.length; i++){
       let lat = (this._map_items[i].lat - this._min_h) * this._scale;
       let lon = (this._map_items[i].lon - this._min_w) * this._scale;
-      this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+
+      if((this._map_items[i].lat == 0) && (this._map_items[i].lon == 0)) {
+      }
+      else {
+        this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+      }
     }
   }
   //----------------------------------------------------------------------------
   private draw_client(): void {
+    console.log("map, draw_client, count: " + this._position_first.length);
+
+    this._ctx.lineWidth = 1;
+    this._ctx.strokeStyle="blue";
+
     for(let i = 0; i < this._position_first.length; i++){
       let lat = (this._position_first[i].lat - this._min_h) * this._scale;
       let lon = (this._position_first[i].lon - this._min_w) * this._scale;
-      this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
+
+      this._ctx.arc(lon, lat, 3, 0, 2 * Math.PI);
     }
   }
   //----------------------------------------------------------------------------
   public refresh(): void {
     if (!this._is_init)
       return;
+
+    console.log("map, refresh");
 
     this.begin_draw();
 
@@ -255,7 +321,7 @@ class map_t {
     else{
       this.draw_map();
       this.draw_client();
-      this.draw_client();
+      // this.draw_client();
     }
 
     this.end_draw();
