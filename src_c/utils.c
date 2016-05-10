@@ -38,6 +38,7 @@ extern int  ws_refresh_rate;
 extern BOOL names_enable;
 extern char names_file[256];
 extern BOOL history_enable;
+extern char history_file[256];
 //==============================================================================
 #ifndef __linux__
 /**
@@ -374,7 +375,8 @@ void print_config()
           "%-25s: %s\n" \
           "%-25s: %s\n" \
           "%-25s: %s\n" \
-          "%-25s: %d",
+          "%-25s: %d\n" \
+          "%-25s: %s",
           "web_server_port",       web_server_port,        // 1
           "ws_server_port",        ws_server_port,         // 2
           "cmd_server_port",       cmd_server_port,        // 3
@@ -397,7 +399,8 @@ void print_config()
           "map_path",              map_path,               // 20
           "map_file",              map_file,               // 21
           "web_path",              web_path,               // 22
-          "history_enable",        history_enable          // 23
+          "history_enable",        history_enable,         // 23
+          "history_file",          history_file            // 24
           );
 
   log_add(LOG_NO_IDENT, tmp);

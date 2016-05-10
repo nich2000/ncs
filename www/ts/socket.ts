@@ -14,7 +14,7 @@ class web_socket_t {
   private _data_counter: any = undefined;
   //----------------------------------------------------------------------------
   constructor(host: string) {
-    console.log("constructor: web_socket_t");
+    console.log("constructor, web_socket_t");
 
     this._host = host;
     this._is_connected = false;

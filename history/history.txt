@@ -1,0 +1,6 @@
+--all
+exit
+--client on 5700 127.0.0.1 10
+stream on 100
+stream off
+--client

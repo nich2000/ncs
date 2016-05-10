@@ -2,7 +2,7 @@
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
 var use_clients = 1;
-var use_map = 0;
+var use_map = 1;
 var use_ws = 1;
 //==============================================================================
 var clients: clients_t = undefined;
@@ -17,14 +17,20 @@ function init(): void {
 
   if(use_clients)
     clients = new clients_t();
+  else
+    console.log("clients not enabled");
 
   if(use_map) {
     map = new map_t("canvas_map");
     // map.test_mode = true;
   }
+  else
+    console.log("map not enabled");
 
   if(use_ws)
     ws = new web_socket_t("ws://" + location.hostname + ":5800");
+  else
+    console.log("ws not enabled");
 
   console.log("init success");
 }

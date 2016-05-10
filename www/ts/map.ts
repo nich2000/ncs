@@ -64,7 +64,7 @@ class map_t {
   private _position_second: Array<map_item_t> = [];
   //----------------------------------------------------------------------------
   constructor(id: string) {
-    console.log("constructor: map_t, id: " + id);
+    console.log("constructor, map_t, id: " + id);
 
     this._id = id;
     this._cnv = $("#" + id);

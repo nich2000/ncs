@@ -145,6 +145,8 @@ class table_t extends custom_t {
 class clients_table_t extends table_t {
   //----------------------------------------------------------------------------
   constructor(id: string, cols_count: number) {
+    console.log("constructor, clients_table_t, id: " + id);
+
     super(id, $(window), cols_count);
   }
   //----------------------------------------------------------------------------
@@ -230,6 +232,8 @@ class clients_table_t extends table_t {
 class data_table_t extends table_t {
   //----------------------------------------------------------------------------
   constructor(id: string, cols_count: number) {
+    console.log("constructor, data_table_t, id: " + id);
+
     super(id, $(window), cols_count);
   }
   //----------------------------------------------------------------------------

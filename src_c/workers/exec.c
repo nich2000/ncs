@@ -45,7 +45,8 @@ sock_port_t ws_server_port    = DEFAULT_WS_SERVER_PORT;
 sock_port_t cmd_server_port   = DEFAULT_CMD_SERVER_PORT;
 sock_host_t cmd_server_host   = DEFAULT_SERVER_HOST;
 int         cmd_clients_count = 1;
-BOOL        history_enable    = TRUE;
+BOOL        history_enable    = DEFAULT_HISTORY_ENABLE;
+char        history_file[256] = DEFAULT_HISTORY_NAME;
 //==============================================================================
 extern char worker_name[16];
 extern BOOL session_relay_to_web;
@@ -128,18 +129,16 @@ int history_load()
   if(!history_enable)
     return make_last_error_fmt(ERROR_IGNORE, errno, "history_load, history not enabled");
 
-  char full_file_name[256];
-  sprintf(full_file_name, "%s/%s", "../history", "history.txt");
-
   char *line = NULL;
   size_t len = 0;
   ssize_t read;
 
   _history.count = 0;
 
-  FILE *f = fopen(full_file_name, "r");
+  FILE *f = fopen(history_file, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "history_load, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "history_load, can not open file %s",
+                               history_file);
 
   while ((read = getline(&line, &len, f)) != -1)
   {
@@ -150,7 +149,7 @@ int history_load()
     strcpy(_history.items[_history.count-1], line);
   }
   log_add_fmt(LOG_INFO, "[HISTORY] history_load, file: %s, count: %d",
-              full_file_name, _history.count);
+              history_file, _history.count);
 
   _history_index = _history.count - 1;
 
@@ -253,6 +252,9 @@ int read_config()
   strcpy((char*)map_file,            iniparser_getstring(config, "map:map_file",                  DEFAULT_MAP_NAME));
 
   strcpy((char*)web_path,            iniparser_getstring(config, "web:web_path",                  DEFAULT_WEB_PATH));
+
+  history_enable =                   iniparser_getint   (config, "history:history_enable",        DEFAULT_HISTORY_ENABLE);
+  strcpy((char*)history_file,        iniparser_getstring(config, "history:history_path",          DEFAULT_HISTORY_NAME));
 
   iniparser_freedict(config);
 

@@ -42,6 +42,7 @@ static int             _streamer_pack_counter = 0;
 //==============================================================================
 static session_t       _session;
 static coords_t        _coords;
+static BOOL            cmd_streamer_is_load = FALSE;
 //==============================================================================
 extern char *pack_struct_keys[];
 extern cmd_clients_t _cmd_clients;
@@ -174,6 +175,16 @@ int session_load()
     free(line);
 
   return ERROR_NONE;
+}
+//==============================================================================
+void cmd_streamer_load()
+{
+  if(!cmd_streamer_is_load)
+  {
+    coords_load();
+//    session_load();
+    cmd_streamer_is_load = TRUE;
+  }
 }
 //==============================================================================
 int cmd_streamer(sock_state_t state, int interval)

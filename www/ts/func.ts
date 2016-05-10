@@ -163,14 +163,31 @@ class client_t {
 class clients_t {
   //----------------------------------------------------------------------------
   private _clients: Array<client_t> = [];
-  private _clients_table: clients_table_t;
-  private _data_first_table: data_table_t;
-  private _data_second_table: data_table_t;
+  //----------------------------------------------------------------------------
+  private _clients_table:     clients_table_t = undefined;
+  private _data_first_table:  data_table_t    = undefined;
+  private _data_second_table: data_table_t    = undefined;
   //----------------------------------------------------------------------------
   constructor() {
-    this._clients_table     = new clients_table_t("remote_clients",     3);
-    this._data_first_table  = new data_table_t   ("remote_data_first",  2);
-    this._data_second_table = new data_table_t   ("remote_data_second", 2);
+    console.log("constructor, clients_t");
+
+    try {
+      this._clients_table     = new clients_table_t("remote_clients",     3);
+    }
+    catch(e) {
+    }
+
+    try {
+      this._data_first_table  = new data_table_t   ("remote_data_first",  2);
+    }
+    catch(e) {
+    }
+
+    try {
+      this._data_second_table = new data_table_t   ("remote_data_second", 2);
+    }
+    catch(e){
+    }
 
     Signal.bind("clients",  this.refresh_clients, this);
     Signal.bind("add_data", this.add_data,        this);
@@ -262,6 +279,9 @@ class clients_t {
     else
       return;
 
+    if(data_table == undefined)
+      return;
+
     let id: string = "";
     for(let i = 0; i < data.length; i++){
       if(data[i]._ID != undefined){
@@ -289,13 +309,11 @@ class clients_t {
     let photo: string = "/pilots/" + client.name + ".jpg";
     let info: string  = "/pilots/" + client.name + "_info.html";
 
-    if(current == active_t.first)
-    {
+    if(current == active_t.first) {
       element.set_src("first_pilot_photo", photo);
       element.set_src("first_pilot_info",  info);
     }
-    else if(current == active_t.second)
-    {
+    else if(current == active_t.second) {
       element.set_src("second_pilot_photo", photo);
       element.set_src("second_pilot_info",  info);
     }

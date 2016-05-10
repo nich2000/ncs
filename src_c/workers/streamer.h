@@ -55,10 +55,8 @@ typedef struct
   coords_items_t items;
 } coords_t;
 //==============================================================================
+void cmd_streamer_load();
 int cmd_streamer       (sock_state_t state, int interval);
 int cmd_streamer_status();
-//==============================================================================
-int session_load();
-int coords_load();
 //==============================================================================
 #endif //STREAMER_H

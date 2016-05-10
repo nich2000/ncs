@@ -140,9 +140,25 @@ var client_t = (function () {
 var clients_t = (function () {
     function clients_t() {
         this._clients = [];
-        this._clients_table = new clients_table_t("remote_clients", 3);
-        this._data_first_table = new data_table_t("remote_data_first", 2);
-        this._data_second_table = new data_table_t("remote_data_second", 2);
+        this._clients_table = undefined;
+        this._data_first_table = undefined;
+        this._data_second_table = undefined;
+        console.log("constructor, clients_t");
+        try {
+            this._clients_table = new clients_table_t("remote_clients", 3);
+        }
+        catch (e) {
+        }
+        try {
+            this._data_first_table = new data_table_t("remote_data_first", 2);
+        }
+        catch (e) {
+        }
+        try {
+            this._data_second_table = new data_table_t("remote_data_second", 2);
+        }
+        catch (e) {
+        }
         Signal.bind("clients", this.refresh_clients, this);
         Signal.bind("add_data", this.add_data, this);
     }
@@ -220,6 +236,8 @@ var clients_t = (function () {
             prefix = "second";
         }
         else
+            return;
+        if (data_table == undefined)
             return;
         var id = "";
         for (var i_2 = 0; i_2 < data.length; i_2++) {
@@ -311,7 +329,7 @@ var element = (function () {
 })();
 /// <reference path="./jquery.d.ts"/>
 var use_clients = 1;
-var use_map = 0;
+var use_map = 1;
 var use_ws = 1;
 var clients = undefined;
 var ws = undefined;
@@ -322,11 +340,17 @@ function init() {
     console.log("init");
     if (use_clients)
         clients = new clients_t();
+    else
+        console.log("clients not enabled");
     if (use_map) {
         map = new map_t("canvas_map");
     }
+    else
+        console.log("map not enabled");
     if (use_ws)
         ws = new web_socket_t("ws://" + location.hostname + ":5800");
+    else
+        console.log("ws not enabled");
     console.log("init success");
 }
 function test() {
@@ -383,7 +407,7 @@ var map_t = (function () {
         this._map_items = [];
         this._position_first = [];
         this._position_second = [];
-        console.log("constructor: map_t, id: " + id);
+        console.log("constructor, map_t, id: " + id);
         this._id = id;
         this._cnv = $("#" + id);
         this._canvas = this._cnv[0];
@@ -575,7 +599,7 @@ var web_socket_t = (function () {
         this._last_recv_cmd = undefined;
         this._last_send_cmd = undefined;
         this._data_counter = undefined;
-        console.log("constructor: web_socket_t");
+        console.log("constructor, web_socket_t");
         this._host = host;
         this._is_connected = false;
         this._connection_status = $("#connection_status");
@@ -843,6 +867,7 @@ var table_t = (function (_super) {
 var clients_table_t = (function (_super) {
     __extends(clients_table_t, _super);
     function clients_table_t(id, cols_count) {
+        console.log("constructor, clients_table_t, id: " + id);
         _super.call(this, id, $(window), cols_count);
     }
     clients_table_t.prototype.get_id = function (id) {
@@ -910,6 +935,7 @@ var clients_table_t = (function (_super) {
 var data_table_t = (function (_super) {
     __extends(data_table_t, _super);
     function data_table_t(id, cols_count) {
+        console.log("constructor, data_table_t, id: " + id);
         _super.call(this, id, $(window), cols_count);
     }
     data_table_t.prototype.add_row = function (prefix, key, value) {

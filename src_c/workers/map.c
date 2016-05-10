@@ -43,7 +43,8 @@ int map_load()
 
   FILE *f = fopen(full_file_name, "r");
   if(f == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "map_load, can not open file %s", full_file_name);
+    return make_last_error_fmt(ERROR_NORMAL, errno, "map_load, can not open file %s",
+                               full_file_name);
 
   while ((read = getline(&line, &len, f)) != -1)
   {

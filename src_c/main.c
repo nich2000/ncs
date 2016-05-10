@@ -72,9 +72,6 @@ int main(int argc, char *argv[])
     goto exit;
   #endif
   //---------------------------------------------------------------------------
-  coords_load();
-//  session_load();
-  //---------------------------------------------------------------------------
   char command[256];
   if(argc > 1)
   {
@@ -130,10 +127,10 @@ int main(int argc, char *argv[])
     handle_command_str(NULL, command);
   }
   //---------------------------------------------------------------------------
-  log_add(LOG_INFO, "command mode");
   if(history_load() >= ERROR_NORMAL)
     log_add_fmt(LOG_ERROR, "main,\nmessage: %s",
                 last_error()->message);
+  log_add(LOG_INFO, "command mode");
   //---------------------------------------------------------------------------
   strcpy(command, "\0");
   while(TRUE)

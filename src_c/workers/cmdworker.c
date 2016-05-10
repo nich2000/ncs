@@ -220,6 +220,8 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
   if(count >= SOCK_WORKERS_COUNT)
     return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_client, too match count(%d)", count);
 
+  cmd_streamer_load();
+
   sock_print_client_header(port, host);
 
   _cmd_client_count = count;
