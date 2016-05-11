@@ -113,16 +113,16 @@ enum state_t
 //==============================================================================
 enum active_t
 {
-  active_none,
-  active_first,
-  active_second,
-  active_next
+  active_next = -1,
+  active_none = 0,
+  active_first = 1,
+  active_second = 2
 };
 //==============================================================================
+#define ACTIVE_NEXT            -1
 #define ACTIVE_NONE             0
 #define ACTIVE_FIRST            1
 #define ACTIVE_SECOND           2
-#define ACTIVE_NEXT             3
 //==============================================================================
 enum register_t
 {

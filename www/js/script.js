@@ -12,10 +12,10 @@ var connect_t;
 })(connect_t || (connect_t = {}));
 var active_t;
 (function (active_t) {
+    active_t[active_t["next"] = -1] = "next";
     active_t[active_t["unknown"] = 0] = "unknown";
     active_t[active_t["first"] = 1] = "first";
     active_t[active_t["second"] = 2] = "second";
-    active_t[active_t["next"] = 3] = "next";
 })(active_t || (active_t = {}));
 ;
 var state_t;
@@ -509,8 +509,7 @@ var map_t = (function () {
         }
         this.set_bounds();
         this.set_scale();
-        this.debug_draw();
-        this.draw_map();
+        this.refresh();
     };
     map_t.prototype.set_bounds = function () {
         console.log("map, set_bounds");
@@ -571,11 +570,13 @@ var map_t = (function () {
     };
     map_t.prototype.end_draw = function () {
         // console.log("map, end_draw");
+        this._ctx.stroke();
+        this._ctx.fill();
     };
     map_t.prototype.draw_map = function () {
-        console.log("map, draw_map, count: " + this._map_items.length);
-        this._ctx.beginPath;
+        // console.log("map, draw_map, count: " + this._map_items.length);
         this._ctx.strokeStyle = "Blue";
+        this._ctx.beginPath;
         for (var i = 0; i < this._map_items.length; i++) {
             var lat = (this._map_items[i].lat - this._min_h) * this._scale;
             var lon = (this._map_items[i].lon - this._min_w) * this._scale;
@@ -586,7 +587,7 @@ var map_t = (function () {
         this._ctx.stroke();
     };
     map_t.prototype.draw_client = function (client) {
-        console.log("map, draw_client, count: " + this._position_first.length);
+        // console.log("map, draw_client, count: " + this._position_first.length);
         var list = [];
         if (client == active_t.first) {
             list = this._position_first;
@@ -609,7 +610,6 @@ var map_t = (function () {
         }
         this._ctx.closePath();
         this._ctx.stroke();
-        this._ctx.fill();
     };
     map_t.prototype.refresh = function () {
         if (!this._is_init)
@@ -625,6 +625,7 @@ var Signal = (function () {
     function Signal() {
     }
     Signal.bind = function (signal, method, context) {
+        console.log("bind: " + signal);
         var tmp = {
             signal: signal,
             method: method
@@ -634,7 +635,7 @@ var Signal = (function () {
         this.signals.push(tmp);
     };
     Signal.emit = function (signal, data) {
-        console.log("emit: " + signal);
+        // console.log("emit: " + signal);
         for (var key in this.signals) {
             if (this.signals[key].signal == signal) {
                 if (this.signals[key].context) {

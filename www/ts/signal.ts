@@ -11,6 +11,8 @@ class Signal {
   private static signals: Array<ISignal> = [];
   //----------------------------------------------------------------------------
   public static bind(signal: string, method: Function, context?: any): void {
+    console.log("bind: " + signal);
+
     let tmp: ISignal =
       {
         signal: signal,
@@ -24,7 +26,7 @@ class Signal {
   }
   //----------------------------------------------------------------------------
   public static emit(signal: string, data: any): void {
-    console.log("emit: " + signal);
+    // console.log("emit: " + signal);
 
     for (let key in this.signals) {
       if (this.signals[key].signal == signal) {

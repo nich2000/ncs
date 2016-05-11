@@ -178,10 +178,9 @@ class map_t {
       lat_s = lat_s.replace(/\,/, ".");
       let lat: number = parseFloat(lat_s);
 
-      let map_item: map_item_t = new map_item_t(kind, lat, lon);
-
       // console.log(lat + "  " + lon);
 
+      let map_item: map_item_t = new map_item_t(kind, lat, lon);
       this._map_items.push(map_item);
     }
 
@@ -191,12 +190,8 @@ class map_t {
     // scale
     this.set_scale();
 
-    this.debug_draw();
-
-    this.draw_map();
-
     // draw
-    // this.refresh();
+    this.refresh();
   }
   //----------------------------------------------------------------------------
   private set_bounds(): void {
@@ -273,9 +268,6 @@ class map_t {
     // console.log("map, clear");
 
     this._canvas.width = this._canvas.width;
-
-    // this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-    // this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
   }
   //----------------------------------------------------------------------------
   private begin_draw(): void {
@@ -287,15 +279,16 @@ class map_t {
   private end_draw(): void {
     // console.log("map, end_draw");
 
-    // this._ctx.stroke();
+    this._ctx.stroke();
+    this._ctx.fill();
   }
   //----------------------------------------------------------------------------
   private draw_map(): void {
-    console.log("map, draw_map, count: " + this._map_items.length);
+    // console.log("map, draw_map, count: " + this._map_items.length);
 
-    this._ctx.beginPath;
     this._ctx.strokeStyle="Blue";
 
+    this._ctx.beginPath;
     for(let i = 0; i < this._map_items.length; i++){
       let lat = (this._map_items[i].lat - this._min_h) * this._scale;
       let lon = (this._map_items[i].lon - this._min_w) * this._scale;
@@ -303,13 +296,13 @@ class map_t {
       this._ctx.moveTo(lon, lat);
       this._ctx.arc(lon, lat, 1, 0, 2 * Math.PI);
     }
-
     this._ctx.closePath();
+
     this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
   private draw_client(client: active_t): void {
-    console.log("map, draw_client, count: " + this._position_first.length);
+    // console.log("map, draw_client, count: " + this._position_first.length);
 
     let list: Array<map_item_t> = [];
     if(client == active_t.first) {
@@ -326,7 +319,6 @@ class map_t {
       return;
 
     this._ctx.beginPath;
-
     for(let i = 0; i < list.length; i++){
       let lat = (list[i].lat - this._min_h) * this._scale;
       let lon = (list[i].lon - this._min_w) * this._scale;
@@ -334,10 +326,10 @@ class map_t {
       this._ctx.moveTo(lon, lat);
       this._ctx.arc(lon, lat, 5, 0, 2 * Math.PI);
     }
-
     this._ctx.closePath();
+
     this._ctx.stroke();
-    this._ctx.fill();
+    // this._ctx.fill();
   }
   //----------------------------------------------------------------------------
   public refresh(): void {
