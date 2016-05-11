@@ -707,6 +707,9 @@ int ws_server_send_data(int session_id, pack_packet_t *pack, sock_active_t activ
     if(timedifference_msec(_ws_server.send_time_s, now) < ws_refresh_rate)
       return ERROR_WAIT;
 
+//  log_add_fmt(LOG_INFO, "[WS] ws_server_send_data, active: %d",
+//              active);
+
   pack_add_as_int(pack, (unsigned char*)"ACT", active);
   int res = ws_server_send_pack(session_id, pack);
 

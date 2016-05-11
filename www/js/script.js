@@ -237,6 +237,14 @@ var clients_t = (function () {
         }
         else
             return;
+        try {
+            var begin = new Date();
+            Signal.emit("add_position", data);
+            var end = new Date;
+            profiler.text(end - begin);
+        }
+        catch (e) {
+        }
         if (data_table == undefined)
             return;
         var id = "";
@@ -250,13 +258,9 @@ var clients_t = (function () {
             if (static_filter.indexOf(Object.keys(data[i])[0]) != -1) {
                 var param = Object.keys(data[i])[0];
                 var value = data[i][param];
-                var b = new Date();
                 data_table.add_row(prefix, param, value);
-                var e = new Date;
-                profiler.text(e - b);
             }
         }
-        Signal.emit("add_position", data);
     };
     clients_t.prototype.switch_current = function (current, client) {
         var photo = "/pilots/" + client.name + ".jpg";
@@ -363,8 +367,18 @@ $(window).resize(function () {
     $("body").height($(window).height());
 });
 /// <reference path="./jquery.d.ts"/>
+var map_kind_t;
+(function (map_kind_t) {
+    map_kind_t[map_kind_t["border"] = 0] = "border";
+    map_kind_t[map_kind_t["sector"] = 1] = "sector";
+    map_kind_t[map_kind_t["start"] = 2] = "start";
+    map_kind_t[map_kind_t["finish"] = 3] = "finish";
+    map_kind_t[map_kind_t["path"] = 4] = "path";
+})(map_kind_t || (map_kind_t = {}));
 var map_item_t = (function () {
-    function map_item_t(lat, lon) {
+    function map_item_t(kind, lat, lon) {
+        this.sector = -1;
+        this.kind = map_kind_t.border;
         this.lat_f = 0;
         this.lon_f = 0;
         this.lat_f = lat;
@@ -483,13 +497,14 @@ var map_t = (function () {
         console.log("map, load_map, size: " + data.length);
         this._map_items = [];
         for (var i = 0; i < data.length; i++) {
+            var kind = data[i].PAR[0].KND;
             var lon_s = data[i].PAR[3].LAF;
             lon_s = lon_s.replace(/\,/, ".");
             var lon = parseFloat(lon_s);
             var lat_s = data[i].PAR[4].LOF;
             lat_s = lat_s.replace(/\,/, ".");
             var lat = parseFloat(lat_s);
-            var map_item = new map_item_t(lat, lon);
+            var map_item = new map_item_t(kind, lat, lon);
             this._map_items.push(map_item);
         }
         this.set_bounds();
@@ -532,15 +547,23 @@ var map_t = (function () {
         var lat_s = data[7].LON;
         lat_s = lat_s.replace(/\,/, ".");
         var lat = parseFloat(lat_s);
-        this._position_first = [];
-        var map_item = new map_item_t(lat, lon);
-        this._position_first.push(map_item);
+        var active = parseInt(data[20].ACT);
+        if (active == active_t.first) {
+            this._position_first = [];
+            var map_item = new map_item_t("p", lat, lon);
+            this._position_first.push(map_item);
+        }
+        else if (active = active_t.second) {
+            this._position_second = [];
+            var map_item = new map_item_t("p", lat, lon);
+            this._position_second.push(map_item);
+        }
         this.refresh();
     };
     map_t.prototype.clear = function () {
         if (!this._is_init)
             return;
-        this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
+        this._canvas.width = this._canvas.width;
     };
     map_t.prototype.begin_draw = function () {
         // console.log("map, begin_draw");
@@ -562,23 +585,39 @@ var map_t = (function () {
         this._ctx.closePath();
         this._ctx.stroke();
     };
-    map_t.prototype.draw_client = function () {
+    map_t.prototype.draw_client = function (client) {
         console.log("map, draw_client, count: " + this._position_first.length);
+        var list = [];
+        if (client == active_t.first) {
+            list = this._position_first;
+            this._ctx.strokeStyle = "Red";
+            this._ctx.fillStyle = "Red";
+        }
+        else if (client == active_t.second) {
+            list = this._position_second;
+            this._ctx.strokeStyle = "Green";
+            this._ctx.fillStyle = "Green";
+        }
+        else
+            return;
         this._ctx.beginPath;
-        this._ctx.strokeStyle = "Orange";
-        for (var i = 0; i < this._position_first.length; i++) {
-            var lat = (this._position_first[i].lat - this._min_h) * this._scale;
-            var lon = (this._position_first[i].lon - this._min_w) * this._scale;
+        for (var i = 0; i < list.length; i++) {
+            var lat = (list[i].lat - this._min_h) * this._scale;
+            var lon = (list[i].lon - this._min_w) * this._scale;
             this._ctx.moveTo(lon, lat);
-            this._ctx.arc(lon, lat, 3, 0, 2 * Math.PI);
+            this._ctx.arc(lon, lat, 5, 0, 2 * Math.PI);
         }
         this._ctx.closePath();
         this._ctx.stroke();
+        this._ctx.fill();
     };
     map_t.prototype.refresh = function () {
         if (!this._is_init)
             return;
-        this.draw_client();
+        this.begin_draw();
+        this.draw_map();
+        this.draw_client(active_t.first);
+        this.draw_client(active_t.second);
     };
     return map_t;
 })();

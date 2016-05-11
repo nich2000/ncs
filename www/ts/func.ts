@@ -279,6 +279,15 @@ class clients_t {
     else
       return;
 
+    try{
+      let begin: any = new Date();
+      Signal.emit("add_position", data);
+      let end: any = new Date;
+      profiler.text(end - begin);
+    }
+    catch(e){
+    }
+
     if(data_table == undefined)
       return;
 
@@ -295,14 +304,12 @@ class clients_t {
         let param = Object.keys(data[i])[0];
         let value = data[i][param];
 
-        let b: any = new Date();
+        // let b: any = new Date();
         data_table.add_row(prefix, param, value);
-        let e: any = new Date;
-        profiler.text(e - b);
+        // let e: any = new Date;
+        // profiler.text(e - b);
       }
     }
-
-    Signal.emit("add_position", data);
   }
   //----------------------------------------------------------------------------
   private switch_current(current: active_t, client: client_t): void{

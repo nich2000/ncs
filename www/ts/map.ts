@@ -1,13 +1,22 @@
 //==============================================================================
 /// <reference path="./jquery.d.ts"/>
 //==============================================================================
+enum map_kind_t {
+  border = 0,
+  sector,
+  start,
+  finish,
+  path
+}
+//==============================================================================
 class map_item_t {
   //----------------------------------------------------------------------------
-  // public kind:   string = "";
+  public sector: number = -1;
+  public kind: map_kind_t = map_kind_t.border;
   // public number: number = 0;
   // public index:  number = 0;
-  public lat_f:  number = 0;
-  public lon_f:  number = 0;
+  public lat_f: number = 0;
+  public lon_f: number = 0;
   // public lat:    number = 0;
   // public lon:    number = 0;
   //----------------------------------------------------------------------------
@@ -23,7 +32,7 @@ class map_item_t {
   //   this.lon    = line[6]._LO;
   // }
   //----------------------------------------------------------------------------
-  constructor(lat: number, lon: number) {
+  constructor(kind: string, lat: number, lon: number) {
     this.lat_f  = lat;
     this.lon_f  = lon;
   }
@@ -159,6 +168,8 @@ class map_t {
     for(let i: number = 0; i < data.length; i++){
       // let map_item: map_item_t = new map_item_t(data[i].PAR);
 
+      let kind: string = data[i].PAR[0].KND;
+
       let lon_s: string = data[i].PAR[3].LAF;
       lon_s = lon_s.replace(/\,/, ".");
       let lon: number = parseFloat(lon_s);
@@ -167,7 +178,7 @@ class map_t {
       lat_s = lat_s.replace(/\,/, ".");
       let lat: number = parseFloat(lat_s);
 
-      let map_item: map_item_t = new map_item_t(lat, lon);
+      let map_item: map_item_t = new map_item_t(kind, lat, lon);
 
       // console.log(lat + "  " + lon);
 
@@ -236,20 +247,18 @@ class map_t {
     lat_s = lat_s.replace(/\,/, ".");
     let lat: number = parseFloat(lat_s);
 
-    // console.log(lat + "  " + lon);
+    let active: active_t = parseInt(data[20].ACT);
 
-    this._position_first = [];
-    let map_item: map_item_t = new map_item_t(lat, lon);
-    this._position_first.push(map_item);
-
-    // if(active == active_t.first) {
-    //   console.log("add_position, first");
-    //   this._position_first.push(map_item);
-    // }
-    // else if(active = active_t.second) {
-    //   console.log("add_position, second");
-    //   this._position_second.push(map_item);
-    // }
+    if(active == active_t.first) {
+      this._position_first = [];
+      let map_item: map_item_t = new map_item_t("p", lat, lon);
+      this._position_first.push(map_item);
+    }
+    else if(active = active_t.second) {
+      this._position_second = [];
+      let map_item: map_item_t = new map_item_t("p", lat, lon);
+      this._position_second.push(map_item);
+    }
 
     this.refresh();
   }
@@ -263,10 +272,10 @@ class map_t {
 
     // console.log("map, clear");
 
-    // this._canvas.width = this._canvas.width;
+    this._canvas.width = this._canvas.width;
 
     // this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
-    this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
+    // this._ctx.clearRect(0, 0, this._cnv.width(), this._cnv.height());
   }
   //----------------------------------------------------------------------------
   private begin_draw(): void {
@@ -299,22 +308,36 @@ class map_t {
     this._ctx.stroke();
   }
   //----------------------------------------------------------------------------
-  private draw_client(): void {
+  private draw_client(client: active_t): void {
     console.log("map, draw_client, count: " + this._position_first.length);
 
-    this._ctx.beginPath;
-    this._ctx.strokeStyle="Orange";
+    let list: Array<map_item_t> = [];
+    if(client == active_t.first) {
+      list = this._position_first;
+      this._ctx.strokeStyle="Red";
+      this._ctx.fillStyle="Red";
+    }
+    else if(client == active_t.second) {
+      list = this._position_second;
+      this._ctx.strokeStyle="Green";
+      this._ctx.fillStyle="Green";
+    }
+    else
+      return;
 
-    for(let i = 0; i < this._position_first.length; i++){
-      let lat = (this._position_first[i].lat - this._min_h) * this._scale;
-      let lon = (this._position_first[i].lon - this._min_w) * this._scale;
+    this._ctx.beginPath;
+
+    for(let i = 0; i < list.length; i++){
+      let lat = (list[i].lat - this._min_h) * this._scale;
+      let lon = (list[i].lon - this._min_w) * this._scale;
 
       this._ctx.moveTo(lon, lat);
-      this._ctx.arc(lon, lat, 3, 0, 2 * Math.PI);
+      this._ctx.arc(lon, lat, 5, 0, 2 * Math.PI);
     }
 
     this._ctx.closePath();
     this._ctx.stroke();
+    this._ctx.fill();
   }
   //----------------------------------------------------------------------------
   public refresh(): void {
@@ -323,16 +346,16 @@ class map_t {
 
     // console.log("map, refresh");
 
-    // this.begin_draw();
+    this.begin_draw();
 
     // this.debug_draw();
 
     // if(this._test_mode)
       // this.test_draw()
     // else{
-      // this.draw_map();
-      this.draw_client();
-      // this.draw_client();
+      this.draw_map();
+      this.draw_client(active_t.first);
+      this.draw_client(active_t.second);
     // }
 
     // this.end_draw();
