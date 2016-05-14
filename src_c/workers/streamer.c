@@ -42,15 +42,14 @@ static int             _streamer_pack_counter = 0;
 //==============================================================================
 static session_t       _session;
 static coords_t        _coords;
-static BOOL            cmd_streamer_is_load = FALSE;
-//==============================================================================
-extern char *pack_struct_keys[];
-extern cmd_clients_t _cmd_clients;
-//==============================================================================
-extern char session_path[256];
+static BOOL            _cmd_streamer_is_load = FALSE;
 //==============================================================================
 BOOL session_stream_enable = DEFAULT_SESSION_STREAM_ENABLE;
 char session_stream_file[64] = DEFAULT_SESSION_STREAM_NAME;
+//==============================================================================
+extern char *pack_struct_keys[];
+extern cmd_clients_t _cmd_clients;
+extern char session_path[256];
 //==============================================================================
 session_t *session()
 {
@@ -179,11 +178,11 @@ int session_load()
 //==============================================================================
 void cmd_streamer_load()
 {
-  if(!cmd_streamer_is_load)
+  if(!_cmd_streamer_is_load)
   {
     coords_load();
 //    session_load();
-    cmd_streamer_is_load = TRUE;
+    _cmd_streamer_is_load = TRUE;
   }
 }
 //==============================================================================
@@ -200,12 +199,12 @@ int cmd_streamer(sock_state_t state, int interval)
         break;
       case STATE_STEP:
       {
-        cmd_streamer_step(&_cmd_clients[i].custom_client.custom_remote_client, 0, 1);
+        cmd_streamer_step(&cmd_clients()[i]->custom_client.custom_remote_client, 0, 1);
         break;
       }
       case STATE_START:
       {
-        cmd_streamer_start(&_streamer[i], &_cmd_clients[i].custom_client.custom_remote_client);
+        cmd_streamer_start(&_streamer[i], &cmd_clients()[i]->custom_client.custom_remote_client);
         break;
       }
       case STATE_STOP:
@@ -376,7 +375,7 @@ void fill_pack_struct(custom_remote_client_t *client, int counter, pack_struct_t
   pack->fl_par2         = (float)rand()/(float)(RAND_MAX/1000); // 17
   pack->ExtVoltage      = (float)rand()/(float)(RAND_MAX/1000); // 18
   pack->USBConnected    = '1';                                  // 19
-  pack->_xor            = 0;                                    // 20
+  pack->_xor            = 0xFF;                                 // 20
 }
 //==============================================================================
 int cmd_streamer_make(custom_remote_client_t *client, int counter)

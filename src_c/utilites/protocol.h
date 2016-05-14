@@ -41,6 +41,8 @@ pack_packet_t *_protocol_next_pack(pack_protocol_t *protocol);
 int protocol_add_as_int                  (pack_key_t key, int            value,                   pack_protocol_t *protocol);
 int protocol_add_as_float                (pack_key_t key, float          value,                   pack_protocol_t *protocol);
 int protocol_add_as_char                 (pack_key_t key, char           value,                   pack_protocol_t *protocol);
+int protocol_add_as_bool                 (pack_key_t key, BOOL           value,                   pack_protocol_t *protocol);
+int protocol_add_as_byte                 (pack_key_t key, BYTE           value,                   pack_protocol_t *protocol);
 int protocol_add_as_string               (pack_key_t key, pack_string_t  value,                   pack_protocol_t *protocol);
 int protocol_add_as_bytes                (pack_key_t key, pack_bytes_t   value, pack_size_t size, pack_protocol_t *protocol);
 int protocol_add_as_pack                 (pack_key_t key, pack_packet_t *value,                   pack_protocol_t *protocol);
@@ -50,6 +52,8 @@ int protocol_add_cmd                     (pack_value_t command, pack_protocol_t 
 int protocol_add_param_as_int            (int   param, pack_protocol_t *protocol);
 int protocol_add_param_as_float          (float param, pack_protocol_t *protocol);
 int protocol_add_param_as_char           (char  param, pack_protocol_t *protocol);
+int protocol_add_param_as_bool           (BOOL  param, pack_protocol_t *protocol);
+int protocol_add_param_as_byte           (BYTE  param, pack_protocol_t *protocol);
 int protocol_add_param_as_string         (pack_string_t param, pack_protocol_t *protocol);
 int protocol_add_param_as_bytes          (pack_bytes_t param, pack_size_t size, pack_protocol_t *protocol);
 //==============================================================================

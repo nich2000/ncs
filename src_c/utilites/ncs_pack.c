@@ -597,12 +597,15 @@ int pack_key_by_index(pack_packet_t *pack, pack_index_t index, pack_key_t key)
 //==============================================================================
 int pack_keys_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer)
 {
+  if(pack == NULL)
+    return ERROR_NORMAL;
+
   if(pack->words_count > PACK_WORDS_COUNT)
     return ERROR_NORMAL;
 
   pack_size_t tmp_pos = 0;
 
-  buffer[0] = '\0';
+  memset(buffer, '\0', PACK_BUFFER_SIZE);
 
   for(pack_size_t i = 0; i < pack->words_count; i++)
   {
@@ -627,21 +630,24 @@ int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_
 
   pack_size_t tmp_pos = 0;
 
-  buffer[0] = '\0';
-
-  pack_value_t valueS;
+  memset(buffer, '\0', PACK_BUFFER_SIZE);
 
   for(pack_size_t i = 0; i < pack->words_count; i++)
   {
+    pack_value_t valueS;
     pack_word_as_string(&pack->words[i], valueS);
 
     for(size_t j = 0; j < strlen((char*)valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
     buffer[tmp_pos++] = delimeter;
+
+//    log_add_fmt(LOG_INFO, "pack_values_to_csv: %d %d %s\n", i, tmp_pos, buffer);
   }
 
   buffer[tmp_pos] = '\0';
+
+//  log_add_fmt(LOG_INFO, "pack_values_to_csv: %s", buffer);
 
   return ERROR_NONE;
 }
@@ -654,7 +660,7 @@ int pack_words_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t 
   return ERROR_NONE;
 }
 //==============================================================================
-int pack_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
+int pack_to_buffer_bin(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
 {
   // Version
   memcpy(buffer, (const void*)PACK_VERSION, PACK_VERSION_SIZE);
@@ -662,7 +668,7 @@ int pack_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
 
   pack_size_t tmp_packet_size = _pack_words_size(pack);
   if(tmp_packet_size == 0)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_to_buffer, words size: %d, words count: %d",
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_to_buffer_bin, words size: %d, words count: %d",
                                tmp_packet_size, pack->words_count);
 
   // Size
@@ -696,9 +702,28 @@ int pack_to_buffer(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
   return ERROR_NONE;
 }
 //==============================================================================
+int pack_to_buffer_txt(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
+{
+  memset(buffer, '\0', PACK_BUFFER_SIZE);
+
+  int tmp_size = 0;
+
+  buffer[tmp_size] = '<';
+
+  pack_values_to_csv(pack, '|', &buffer[1]);
+  tmp_size = strlen((char*)&buffer[1]);
+
+  buffer[tmp_size] = '>';
+
+//  *size = tmp_size + 2;
+  *size = strlen(buffer);
+
+  return ERROR_NONE;
+}
+//==============================================================================
 int pack_to_bytes(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
 {
-  return pack_to_buffer(pack, buffer, size);
+  return pack_to_buffer_bin(pack, buffer, size);
 }
 //==============================================================================
 pack_size_t _pack_words_count(pack_packet_t *pack)
@@ -742,13 +767,13 @@ int pack_word_as_char(pack_word_t *word, char *value)
   return ERROR_NONE;
 }
 //==============================================================================
+// TODO: возможна утечка
 const char *_pack_word_as_string(pack_word_t *word)
 {
   pack_value_t tmp_value;
 
   pack_word_as_string(word, tmp_value);
 
-  // TODO: возможна утечка
   char *tmp_string = (char*)malloc(strlen((char*)tmp_value)+1);
   tmp_string[strlen((char*)tmp_value)] = '\0';
 
@@ -757,9 +782,9 @@ const char *_pack_word_as_string(pack_word_t *word)
   return tmp_string;
 }
 //==============================================================================
-int pack_word_as_string(pack_word_t *word, pack_string_t value)
+int pack_word_as_string(pack_word_t *word, pack_value_t value)
 {
-  value[0] = '\0';
+  memset(value, '\0', PACK_VALUE_SIZE);
 
   switch (word->type)
   {
@@ -784,12 +809,13 @@ int pack_word_as_string(pack_word_t *word, pack_string_t value)
         value[0] = word->value[0];
       }
       break;
+    case PACK_WORD_BYTE:
+      break;
+    case PACK_WORD_BOOL:
+      break;
     case PACK_WORD_STRING:
       {
         memcpy(value, word->value, word->size);
-//        for(pack_size_t j = 0; j < word->size; j++)
-//          value[j] = word->value[j];
-        value[word->size] = '\0';
       }
       break;
     case PACK_WORD_BYTES:

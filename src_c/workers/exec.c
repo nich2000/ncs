@@ -68,6 +68,7 @@ extern char web_path[256];
 extern int  ws_refresh_rate;
 extern BOOL names_enable;
 extern char names_file[256];
+extern BOOL binary_protocol;
 //==============================================================================
 sock_state_t cmd_state(char *cmd)
 {
@@ -255,6 +256,8 @@ int read_config()
 
   history_enable =                   iniparser_getint   (config, "history:history_enable",        DEFAULT_HISTORY_ENABLE);
   strcpy((char*)history_file,        iniparser_getstring(config, "history:history_path",          DEFAULT_HISTORY_NAME));
+
+  binary_protocol =                  iniparser_getint   (config, "worker:binary_protocol",        DEFAULT_BINARY_PROTOCOL);
 
   iniparser_freedict(config);
 

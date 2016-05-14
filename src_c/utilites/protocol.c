@@ -395,7 +395,7 @@ int protocol_next_buffer(pack_buffer_t buffer, pack_size_t *size, pack_protocol_
   pack_packet_t *tmp_pack = _protocol_next_pack(protocol);
   if(tmp_pack != NULL)
   {
-    pack_to_buffer(tmp_pack, buffer, size);
+    pack_to_buffer_bin(tmp_pack, buffer, size);
     return PACK_QUEUE_FULL;
   }
   else
@@ -421,6 +421,14 @@ int protocol_add_as_char(pack_key_t key, char value, pack_protocol_t *protocol)
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
 
   return pack_add_as_char(tmp_pack, key, value);
+}
+//==============================================================================
+int protocol_add_as_bool(pack_key_t key, BOOL value, pack_protocol_t *protocol)
+{
+}
+//==============================================================================
+int protocol_add_as_byte(pack_key_t key, BYTE value, pack_protocol_t *protocol)
+{
 }
 //==============================================================================
 int protocol_add_as_string(pack_key_t key, pack_string_t value, pack_protocol_t *protocol)
@@ -470,6 +478,14 @@ int protocol_add_param_as_char(char param, pack_protocol_t *protocol)
   pack_key_t tmp_key = PACK_PARAM_KEY;
 
   return protocol_add_as_char(tmp_key, param, protocol);
+}
+//==============================================================================
+int protocol_add_param_as_bool(BOOL param, pack_protocol_t *protocol)
+{
+}
+//==============================================================================
+int protocol_add_param_as_byte(BYTE param, pack_protocol_t *protocol)
+{
 }
 //==============================================================================
 int protocol_add_param_as_string(pack_string_t param, pack_protocol_t *protocol)
@@ -693,10 +709,15 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 // 3. Должнно быть PACK_TXT_FORMAT_COUNT
 // 4. Должен совпадать xor
 //==============================================================================
-void calc_xor(char *initial, char *string, int count)
+void calc_xor(char *result, char *string, int count)
 {
   for(int i = 0; i < count; i++)
-    *initial ^= string[i];
+    *result ^= string[i];
+}
+//==============================================================================
+void get_xor(char *result, char *string, int count)
+{
+  *result = string[count - 1];
 }
 //==============================================================================
 char *next_token(char *token, char *dst, int *cnt)
@@ -713,24 +734,50 @@ char *next_token(char *token, char *dst, int *cnt)
 int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
   pack_type_t only_validate, pack_protocol_t *protocol, void *sender)
 {
-  int start = 0;
-  int finish = 0;
+  int start = -1;
+  int finish = -1;
   for(int i = 0; i < size; i++)
   {
-    if(buffer[i] == '<')
-      start = i;
-    if(buffer[i] == '>')
-      finish = i;
+    for(; i < size; i++)
+    {
+      if(buffer[i] == '<')
+        start = i;
+      if(buffer[i] == '>')
+        finish = i;
+      if((start == -1) || (finish == -1))
+        continue;
+    }
 
-    char tmp_buffer[size];
-    memset(tmp_buffer, 0, size);
-    memcpy(tmp_buffer, (char*)&buffer[start], finish-start);
+    if(start == -1)
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, start not found");
 
-    if((tmp_buffer[0] != '<') || (tmp_buffer[strlen((char*)tmp_buffer)-3] != '>'))
-      return make_last_error(ERROR_WAIT, errno, "protocol_txt_buffer_validate, invalid format");
+    if(finish == -1)
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, finish not found");
 
+    if(start >= finish)
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, invalid position of start and finish");
+
+    // <data|data|data|xor>, xor size = 1 byte
+    int tmp_size = finish - start + 1;
+    char tmp_buffer[tmp_size];
+    memset(tmp_buffer, '\0', tmp_size);
+
+    // data|data|data|xor, ignore < and >
+    tmp_size -= 2;
+    memcpy(tmp_buffer, (char*)&buffer[start+1], tmp_size);
+
+    char pack_xor = 0xFF;
+    get_xor(&pack_xor, (char*)tmp_buffer, tmp_size);
+
+    // data|data|data, for calc xor irnore xor and |
     char tmp_xor = 0xFF;
-    calc_xor(&tmp_xor, (char*)&buffer[start], finish-start);
+    calc_xor(&tmp_xor, (char*)tmp_buffer, tmp_size-1);
+
+    if(pack_xor != tmp_xor)
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, invalid xor");
+
+    if(only_validate)
+      return ERROR_NORMAL;
 
     int cnt = 0;
     pack_struct_s_t tmp_txt_pack;
@@ -755,13 +802,10 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     token = next_token(token, tmp_txt_pack.sfl_par2,        &cnt);
     token = next_token(token, tmp_txt_pack.sExtVoltage,     &cnt);
     token = next_token(token, tmp_txt_pack.sUSBConnected,   &cnt);  // xor in this token
-            next_token(token, tmp_txt_pack.sxor,            &cnt);  // call just fot copy last token
+            next_token(token, tmp_txt_pack.sxor,            &cnt);  // call just for get last token
 
     if(cnt != PACK_STRUCT_VAL_COUNT)
       return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, not enough data");
-
-    if(tmp_xor != tmp_txt_pack.sxor[0])
-      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, incorrect xor");
 
     protocol->in_packets_list.count++;
     if(protocol->in_packets_list.count >= USHRT_MAX)
@@ -775,7 +819,7 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
     pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
     if(tmp_pack == NULL)
-      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, pack == NULL");
+      return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, current pack not available");
 
     pack_init(tmp_pack);
 
@@ -816,7 +860,7 @@ int protocol_current_buffer(pack_type_t out, pack_buffer_t buffer, pack_size_t *
   if(tmp_pack == NULL)
     return PACK_QUEUE_EMPTY;
 
-  if(pack_to_buffer(tmp_pack, buffer, size) == ERROR_NONE)
+  if(pack_to_buffer_bin(tmp_pack, buffer, size) == ERROR_NONE)
     return PACK_QUEUE_FULL;
   else
     return PACK_QUEUE_EMPTY;

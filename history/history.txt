@@ -9,3 +9,7 @@ stream on 500
 stream on 250stream on 250
 --client on 5700 127.0.0.1 2
 stream on 250
+stream on
+stream step
+-all
+--cliet

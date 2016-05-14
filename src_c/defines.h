@@ -9,7 +9,7 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 //==============================================================================
-#define USE_BINARY_PROTOCOL
+//#define USE_BINARY_PROTOCOL // deprecated
 #define DEBUG_MODE
 
 #if defined(__linux__) || defined(_WIN32)
@@ -28,7 +28,7 @@
 //  #define WRITE_REPORT
 
   // send stream data to ws
-  #define STREAM_TO_WS
+//  #define STREAM_TO_WS // deprecated
 
   // create random pack on test stream
 //  #define STREAM_RANDOM_PACK

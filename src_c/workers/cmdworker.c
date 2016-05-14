@@ -60,16 +60,16 @@ int on_cmd_new_data     (void *sender, void *data);
 int on_server_cmd_state (void *sender, sock_state_t state);
 int on_client_cmd_state (void *sender, sock_state_t state);
 //==============================================================================
-BOOL session_relay_to_web = DEFAULT_SESSION_REALAY_TO_WEB;
-//==============================================================================
 static cmd_server_t  _cmd_server;
 static names_t       _names;
+static cmd_clients_t _cmd_clients;
 static int           _cmd_client_count = 0;
 //==============================================================================
-BOOL names_enable = DEFAULT_NAMES_ENABLE;
-char names_file[256] = DEFAULT_NAMES_FILE;
+BOOL session_relay_to_web = DEFAULT_SESSION_REALAY_TO_WEB;
+BOOL names_enable         = DEFAULT_NAMES_ENABLE;
+char names_file[256]      = DEFAULT_NAMES_FILE;
 //==============================================================================
-cmd_clients_t _cmd_clients;
+extern BOOL binary_protocol;
 //==============================================================================
 static sock_active_t _cmd_active = ACTIVE_NONE;
 //-----------------------------------------------------------------------------
@@ -639,22 +639,48 @@ void *cmd_send_worker(void *arg)
     tmp_pack = _protocol_next_pack(tmp_protocol);
     while(tmp_pack != NULL)
     {
-      if(pack_to_buffer(tmp_pack, tmp_buffer, &tmp_size) > ERROR_WARNING)
+      int validate_result = ERROR_NORMAL;
+
+      if(binary_protocol)
       {
-        log_add_fmt(LOG_ERROR, "cmd_send_worker, protocol id: %d, worker id: %d, worker name: %s\n" \
-                               "message: %s",
-                    tmp_client->protocol.id, tmp_client->custom_worker.id, tmp_client->custom_worker.name,
-                    last_error()->message);
-        goto next_step;
+        if(pack_to_buffer_bin(tmp_pack, tmp_buffer, &tmp_size) > ERROR_WARNING)
+        {
+          log_add_fmt(LOG_ERROR, "cmd_send_worker, protocol id: %d, worker id: %d, worker name: %s\n" \
+                                 "message: %s",
+                      tmp_client->protocol.id, tmp_client->custom_worker.id, tmp_client->custom_worker.name,
+                      last_error()->message);
+          goto next_step;
+        }
+        validate_result = protocol_bin_buffer_validate(tmp_buffer,
+                                                       tmp_size,
+                                                       PACK_VALIDATE_ONLY,
+                                                       tmp_protocol,
+                                                       (void*)tmp_client);
+      }
+      else
+      {
+        if(pack_to_buffer_txt(tmp_pack, tmp_buffer, &tmp_size) > ERROR_WARNING)
+        {
+          log_add_fmt(LOG_ERROR, "cmd_send_worker, protocol id: %d, worker id: %d, worker name: %s\n" \
+                                 "message: %s",
+                      tmp_client->protocol.id, tmp_client->custom_worker.id, tmp_client->custom_worker.name,
+                      last_error()->message);
+          goto next_step;
+        }
+
+        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
+
+        validate_result = protocol_txt_buffer_validate(tmp_buffer,
+                                                       tmp_size,
+                                                       PACK_VALIDATE_ONLY,
+                                                       tmp_protocol,
+                                                       (void*)tmp_client);
       }
 
-      int res = protocol_bin_buffer_validate(tmp_buffer,
-                                                 tmp_size,
-                                                 PACK_VALIDATE_ONLY,
-                                                 tmp_protocol,
-                                                 (void*)tmp_client);
-      if(res == ERROR_NONE)
+      if(validate_result == ERROR_NONE)
       {
+        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
+
         if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
         {
           time_t rawtime;
@@ -737,11 +763,13 @@ int on_cmd_recv(void *sender, char *buffer, int size)
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
   int res;
-#ifdef USE_BINARY_PROTOCOL
-  res = protocol_bin_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
-#else
-  res = protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
-#endif
+//  #ifdef USE_BINARY_PROTOCOL
+  if(binary_protocol)
+    res = protocol_bin_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+//  #else
+  else
+    res = protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
+//  #endif
 
   if(res >= ERROR_WARNING)
     log_add_fmt(LOG_ERROR, "on_cmd_recv,\nmessage: %s",
@@ -897,11 +925,11 @@ int on_cmd_new_data(void *sender, void *data)
     }
     #endif
 
-    #ifdef STREAM_TO_WS
+//    #ifdef STREAM_TO_WS
     // ACTIVE_FIRST or ACTIVE_SECOND
     if((session_relay_to_web) && (tmp_client->active_state))
       return ws_server_send_data(SOCK_SEND_TO_ALL, tmp_packet, tmp_client->active_state);
-    #endif
+//    #endif
   }
 
   return ERROR_NONE;

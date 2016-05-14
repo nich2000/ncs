@@ -36,7 +36,7 @@ int pack_init                    (pack_packet_t *packet);
 //==============================================================================
 pack_size_t _pack_words_count    (pack_packet_t *pack);
 //==============================================================================
-int pack_word_as_string          (pack_word_t *word, pack_string_t value);
+int pack_word_as_string          (pack_word_t *word, pack_value_t value);
 //==============================================================================
 int pack_add_as_int              (pack_packet_t *pack, pack_key_t key, int value);
 int pack_add_as_float            (pack_packet_t *pack, pack_key_t key, float value);
@@ -58,7 +58,8 @@ int pack_val_by_index_as_string  (pack_packet_t *pack, pack_index_t index, pack_
 int pack_val_by_index_as_bytes   (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_bytes_t   value, pack_size_t *size);
 int pack_val_by_index_as_pack    (pack_packet_t *pack, pack_index_t index, pack_key_t key, pack_packet_t *value);
 //==============================================================================
-int pack_to_buffer               (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
+int pack_to_buffer_bin           (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
+int pack_to_buffer_txt           (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
 int pack_to_bytes                (pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size);
 //==============================================================================
 int pack_keys_to_csv             (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);

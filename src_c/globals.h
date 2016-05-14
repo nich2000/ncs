@@ -18,6 +18,7 @@
 #define PROTOCOL_VERSION              "PROT001\0"
 #define PROTOCOL_VERSION_SIZE         8
 //==============================================================================
+#define DEFAULT_BINARY_PROTOCOL       1
 #define DEFAULT_CMD_SERVER_PORT       5700
 #define DEFAULT_WS_SERVER_PORT        5800
 #define DEFAULT_WEB_SERVER_PORT       5900
@@ -149,6 +150,8 @@ typedef int BOOL;
 #ifndef TRUE
 #define TRUE 1
 #endif
+//==============================================================================
+typedef unsigned char BYTE;
 //==============================================================================
 #define PACK_STRUCT_VAL_COUNT   20
 //==============================================================================

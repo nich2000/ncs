@@ -40,9 +40,11 @@ typedef union
 #define PACK_WORD_INT            1
 #define PACK_WORD_FLOAT          2
 #define PACK_WORD_CHAR           3
-#define PACK_WORD_STRING         4
-#define PACK_WORD_BYTES          5
-#define PACK_WORD_PACK           6
+#define PACK_WORD_BYTE           4
+#define PACK_WORD_BOOL           5
+#define PACK_WORD_STRING         6
+#define PACK_WORD_BYTES          7
+#define PACK_WORD_PACK           8
 //==============================================================================
 typedef unsigned char           *pack_string_t;
 typedef unsigned char           *pack_bytes_t;

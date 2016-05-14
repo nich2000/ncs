@@ -39,6 +39,7 @@ extern BOOL names_enable;
 extern char names_file[256];
 extern BOOL history_enable;
 extern char history_file[256];
+extern BOOL binary_protocol;
 //==============================================================================
 #ifndef __linux__
 /**
@@ -376,7 +377,8 @@ void print_config()
           "%-25s: %s\n" \
           "%-25s: %s\n" \
           "%-25s: %d\n" \
-          "%-25s: %s",
+          "%-25s: %s\n" \
+          "%-25s: %d",
           "web_server_port",       web_server_port,        // 1
           "ws_server_port",        ws_server_port,         // 2
           "cmd_server_port",       cmd_server_port,        // 3
@@ -400,7 +402,8 @@ void print_config()
           "map_file",              map_file,               // 21
           "web_path",              web_path,               // 22
           "history_enable",        history_enable,         // 23
-          "history_file",          history_file            // 24
+          "history_file",          history_file,           // 24
+          "binary_protocol",       binary_protocol         // 25
           );
 
   log_add(LOG_NO_IDENT, tmp);
