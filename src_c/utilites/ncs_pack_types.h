@@ -12,17 +12,8 @@
 #include "defines.h"
 #include "globals.h"
 //==============================================================================
-typedef union
-{
-  int  i;
-  char buff[sizeof(int)];
-} intUnion;
-//==============================================================================
-typedef union
-{
-  float f;
-  char  buff[sizeof(float)];
-} floatUnion;
+#define PACK_VERSION             "V01\0"
+#define PACK_VERSION_SIZE        4
 //==============================================================================
 #define PACK_KEY_SIZE            4
 //==============================================================================
@@ -46,20 +37,27 @@ typedef union
 #define PACK_WORD_BYTES          7
 #define PACK_WORD_PACK           8
 //==============================================================================
+#define PACK_FLAG_NONE           0x00
+#define PACK_FLAG_BIN            0x01
+#define PACK_FLAG_TXT            0x02
+#define PACK_FLAG_CMD            0x04
+#define PACK_FLAG_DATA           0x08
+//==============================================================================
+#define PACK_FLAG_DEFAULT        (PACK_FLAG_BIN | PACK_FLAG_CMD)
+//==============================================================================
 typedef unsigned char           *pack_string_t;
 typedef unsigned char           *pack_bytes_t;
 typedef unsigned char            pack_buffer_t[PACK_BUFFER_SIZE];
 typedef unsigned char            pack_value_t [PACK_VALUE_SIZE];
-typedef unsigned char            pack_ver_t   [PACK_VERSION_SIZE];
 typedef unsigned char            pack_key_t   [PACK_KEY_SIZE];
 typedef unsigned char            pack_delim_t;
-//==============================================================================
 typedef unsigned short           pack_count_t;
 typedef unsigned short           pack_size_t;
 typedef unsigned short           pack_index_t;
 typedef unsigned short           pack_number_t;
 typedef unsigned short           pack_crc16_t;
 typedef unsigned char            pack_type_t;
+typedef unsigned char            pack_flag_t;
 //==============================================================================
 #define PACK_SIZE_SIZE           sizeof(pack_size_t)
 #define PACK_INDEX_SIZE          sizeof(pack_index_t)
@@ -72,20 +70,29 @@ typedef struct
   pack_key_t            key;
   pack_value_t          value;
   pack_type_t           type;
-//  char               _align1[3];
   pack_size_t           size;
-//  char               _align2[2];
 } pack_word_t;
 //==============================================================================
 typedef pack_word_t pack_words_t[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
+  pack_flag_t           flag;
   pack_number_t         number;
-//  char               _align1[2];
   pack_size_t           words_count;
-//  char               _align2[2];
   pack_words_t          words;
 } pack_packet_t;
+//==============================================================================
+typedef union
+{
+  int  i;
+  char buff[sizeof(int)];
+} int_union;
+//==============================================================================
+typedef union
+{
+  float f;
+  char  buff[sizeof(float)];
+} float_union;
 //==============================================================================
 #endif //NCS_PACK_TYPES_H

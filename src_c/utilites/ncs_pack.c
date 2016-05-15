@@ -54,6 +54,7 @@
 #include <pthread.h>
 #endif
 
+#include "ncs_pack_utils.h"
 #include "ncs_pack.h"
 #include "ncs_error.h"
 
@@ -131,7 +132,7 @@ unsigned short getCRC16(char *data, unsigned short length)
 //==============================================================================
 int bytes_to_int(unsigned char *bytes, int *value)
 {
-  intUnion tmp_value;
+  int_union tmp_value;
 
   for(unsigned int j = 0; j < sizeof(int); j++)
     tmp_value.buff[j] = bytes[j];
@@ -143,7 +144,7 @@ int bytes_to_int(unsigned char *bytes, int *value)
 //==============================================================================
 int bytes_to_float(unsigned char *bytes, float *value)
 {
-  floatUnion tmp_value;
+  float_union tmp_value;
 
   for(unsigned int j = 0; j < sizeof(float); j++)
     tmp_value.buff[j] = bytes[j];
@@ -155,7 +156,7 @@ int bytes_to_float(unsigned char *bytes, float *value)
 //==============================================================================
 int bytes_from_int(unsigned char *bytes, int value)
 {
-  intUnion tmp_value;
+  int_union tmp_value;
 
   tmp_value.i = value;
 
@@ -167,7 +168,7 @@ int bytes_from_int(unsigned char *bytes, int value)
 //==============================================================================
 int bytes_from_float(unsigned char *bytes, float value)
 {
-  floatUnion tmp_value;
+  float_union tmp_value;
 
   tmp_value.f = value;
 
@@ -212,6 +213,9 @@ int pack_init(pack_packet_t *packet)
   #ifndef DEMS_DEVICE
   pthread_mutex_lock(&mutex_packet_number);
   #endif
+
+  pack_flag_t tmp = PACK_FLAG_DEFAULT;
+  packet->flag = tmp;
 
   packet->number      = pack_global_number++;
   packet->words_count = 0;
@@ -289,7 +293,7 @@ int pack_add_as_float(pack_packet_t *pack, pack_key_t key, float value)
   tmp_word->size = sizeof(float);
 
   // Value
-  floatUnion tmp_value;
+  float_union tmp_value;
   tmp_value.f = value;
   memcpy(tmp_word->value, tmp_value.buff, sizeof(float));
 
@@ -329,7 +333,7 @@ int pack_add_as_string(pack_packet_t *pack, pack_key_t key, pack_string_t value)
   pack_size_t tmp_size = strlen((char *)value);
 
   if(tmp_size >= PACK_VALUE_SIZE)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_add_as_bytes, value too big, key: %s, size: %d of %d",
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_add_as_string, value too big, key: %s, size: %d of %d",
                                key, tmp_size, PACK_VALUE_SIZE);
 
   if(pack->words_count >= PACK_WORDS_COUNT)
@@ -640,7 +644,8 @@ int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_
     for(size_t j = 0; j < strlen((char*)valueS); j++)
       buffer[tmp_pos++] = valueS[j];
 
-    buffer[tmp_pos++] = delimeter;
+    if(i < pack->words_count)
+      buffer[tmp_pos++] = delimeter;
 
 //    log_add_fmt(LOG_INFO, "pack_values_to_csv: %d %d %s\n", i, tmp_pos, buffer);
   }
@@ -706,17 +711,19 @@ int pack_to_buffer_txt(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *s
 {
   memset(buffer, '\0', PACK_BUFFER_SIZE);
 
-  int tmp_size = 0;
-
-  buffer[tmp_size] = '<';
+  buffer[0] = '<';
 
   pack_values_to_csv(pack, '|', &buffer[1]);
-  tmp_size = strlen((char*)&buffer[1]);
 
-  buffer[tmp_size] = '>';
+  int tmp_size = strlen((char*)&buffer[1]);
 
-//  *size = tmp_size + 2;
-  *size = strlen(buffer);
+  char tmp_xor = 0xFF;
+  calc_xor(&tmp_xor, (char*)&buffer[1], tmp_size);
+
+  buffer[tmp_size + 1] = tmp_xor;
+  buffer[tmp_size + 2] = '>';
+
+  *size = (unsigned short)strlen((char*)buffer);
 
   return ERROR_NONE;
 }
@@ -726,9 +733,25 @@ int pack_to_bytes(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *size)
   return pack_to_buffer_bin(pack, buffer, size);
 }
 //==============================================================================
-pack_size_t _pack_words_count(pack_packet_t *pack)
+pack_size_t pack_words_count(pack_packet_t *pack)
 {
   return pack->words_count;
+}
+//==============================================================================
+pack_flag_t pack_flag(pack_packet_t *pack)
+{
+  return pack->flag;
+}
+//==============================================================================
+void pack_set_flag(pack_packet_t *pack, pack_flag_t flag)
+{
+  pack->flag |= flag;
+}
+//==============================================================================
+BOOL pack_is_set_flag(pack_packet_t *pack, pack_flag_t flag)
+{
+  // TODO: is set flag
+  return pack->flag & flag;
 }
 //==============================================================================
 pack_size_t _pack_words_size(pack_packet_t *pack)
@@ -1023,7 +1046,7 @@ int pack_buffer_to_words(pack_buffer_t buffer, pack_size_t buffer_size, pack_wor
 //==============================================================================
 BOOL _pack_is_command(pack_packet_t *pack)
 {
-  pack_count_t tmp_words_count = _pack_words_count(pack);
+  pack_count_t tmp_words_count = pack_words_count(pack);
   if(tmp_words_count >= 1)
   {
     pack_key_t tmp_key;
@@ -1057,7 +1080,7 @@ int pack_command(pack_packet_t *pack, pack_value_t command)
 //==============================================================================
 pack_size_t _pack_params_count(pack_packet_t *pack)
 {
-  pack_size_t tmp_words_count = _pack_words_count(pack);
+  pack_size_t tmp_words_count = pack_words_count(pack);
   pack_size_t tmp_params_count = 0;
   pack_key_t  tmp_key;
 
@@ -1074,7 +1097,7 @@ pack_size_t _pack_params_count(pack_packet_t *pack)
 //==============================================================================
 int pack_next_param(pack_packet_t *pack, pack_index_t *index, pack_string_t value)
 {
-  pack_size_t tmp_words_count = _pack_words_count(pack);
+  pack_size_t tmp_words_count = pack_words_count(pack);
   pack_key_t  tmp_key;
 
   for(int i = (int)(*index); i < tmp_words_count; i++)

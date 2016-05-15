@@ -16,6 +16,12 @@
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================
+void calc_xor(char *result, char *string, int count)
+{
+  for(int i = 0; i < count; i++)
+    *result ^= string[i];
+}
+//==============================================================================
 unsigned char nibbles[] = {"0123456789ABCDEF"};
 int bytes_to_hex(unsigned char *bytes, int size, unsigned char *hex)
 {
@@ -37,7 +43,7 @@ char *do_print_pack(pack_packet_t *packet, int indent)
 {
   pack_key_t    tmp_key;
   pack_value_t  tmp_value;
-  pack_size_t   tmp_words_count = _pack_words_count(packet);
+  pack_size_t   tmp_words_count = pack_words_count(packet);
   pack_string_t tmp = (unsigned char*)malloc(PACK_BUFFER_SIZE);
   memset(tmp, '\0', PACK_BUFFER_SIZE);
 

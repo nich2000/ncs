@@ -21,18 +21,18 @@
 #include "protocol_utils.h"
 //==============================================================================
 int protocol_init                        (pack_protocol_t *protocol);
-int protocol_begin                       (pack_protocol_t *protocol);
+int protocol_begin                       (pack_protocol_t *protocol, pack_flag_t flag);
 int protocol_end                         (pack_protocol_t *protocol);
 //==============================================================================
 int protocol_bin_buffer_validate(pack_buffer_t buffer,
                                  pack_size_t size,
-                                 pack_type_t only_validate,
+                                 pack_type_t validate,
                                  pack_protocol_t *protocol,
                                  void *sender);
 //==============================================================================
 int protocol_txt_buffer_validate(pack_buffer_t buffer,
                                  pack_size_t size,
-                                 pack_type_t only_validate,
+                                 pack_type_t validate,
                                  pack_protocol_t *protocol,
                                  void *sender);
 //==============================================================================

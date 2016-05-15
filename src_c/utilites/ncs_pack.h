@@ -34,7 +34,11 @@ pack_packet_t *packet();
 //==============================================================================
 int pack_init                    (pack_packet_t *packet);
 //==============================================================================
-pack_size_t _pack_words_count    (pack_packet_t *pack);
+pack_size_t pack_words_count     (pack_packet_t *pack);
+//==============================================================================
+pack_flag_t pack_flag            (pack_packet_t *pack);
+void        pack_set_flag        (pack_packet_t *pack, pack_flag_t flag);
+BOOL        pack_is_set_flag     (pack_packet_t *pack, pack_flag_t flag);
 //==============================================================================
 int pack_word_as_string          (pack_word_t *word, pack_value_t value);
 //==============================================================================

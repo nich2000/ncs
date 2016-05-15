@@ -14,6 +14,7 @@
 
 #include "ncs_pack.h"
 //==============================================================================
+void calc_xor(char *result, char *string, int count);
 int print_pack(pack_packet_t *packet, char *prefix, BOOL clear, BOOL buffer, BOOL pack, BOOL csv);
 //==============================================================================
 #endif //PACK_UTILS_H

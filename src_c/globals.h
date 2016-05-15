@@ -11,8 +11,6 @@
 //==============================================================================
 #define APPLICATION_VERSION           "1.0.1.140\0"
 #define APPLICATION_VERSION_SIZE      15
-#define PACK_VERSION                  "V01\0"
-#define PACK_VERSION_SIZE             4
 #define SOCK_VERSION                  "SOCK001\0"
 #define SOCK_VERSION_SIZE             8
 #define PROTOCOL_VERSION              "PROT001\0"

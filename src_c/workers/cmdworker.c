@@ -668,7 +668,7 @@ void *cmd_send_worker(void *arg)
           goto next_step;
         }
 
-        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
+//        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
 
         validate_result = protocol_txt_buffer_validate(tmp_buffer,
                                                        tmp_size,
@@ -679,7 +679,7 @@ void *cmd_send_worker(void *arg)
 
       if(validate_result == ERROR_NONE)
       {
-        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
+//        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
 
         if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
         {
@@ -788,7 +788,7 @@ int cmd_server_send_cmd(int argc, ...)
     {
       pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-      protocol_begin(tmp_protocol);
+      protocol_begin(tmp_protocol, PACK_FLAG_CMD);
 
       va_list params;
       va_start(params, argc);
@@ -821,7 +821,7 @@ int cmd_server_send_pack(pack_packet_t *pack)
     {
       pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-      protocol_begin(tmp_protocol);
+      protocol_begin(tmp_protocol, pack->flag);
 
       protocol_assign_pack(tmp_protocol, pack);
 
@@ -846,7 +846,7 @@ int cmd_client_send_cmd(sock_id_t client_id, int argc, ...)
 //    log_add_fmt(LOG_INFO, "cmd_client_send_cmd, protocol id: %d",
 //            tmp_protocol->id);
 
-    protocol_begin(tmp_protocol);
+    protocol_begin(tmp_protocol, PACK_FLAG_CMD);
 
     va_list tmp_params;
     va_start(tmp_params, argc);
@@ -882,7 +882,7 @@ int cmd_client_send_pack(sock_id_t client_id, pack_packet_t *pack)
 //    log_add_fmt(LOG_INFO, "cmd_client_send_pack, protocol id: %d",
 //            tmp_protocol->id);
 
-    protocol_begin(tmp_protocol);
+    protocol_begin(tmp_protocol, pack->flag);
 
     protocol_assign_pack(tmp_protocol, pack);
 

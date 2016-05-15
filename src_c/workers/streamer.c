@@ -383,7 +383,7 @@ int cmd_streamer_make(custom_remote_client_t *client, int counter)
   pack_struct_t tmp_pack;
   fill_pack_struct(client, counter, &tmp_pack);
 
-  protocol_begin(&client->protocol);
+  protocol_begin(&client->protocol, PACK_FLAG_DATA);
 
   protocol_add_as_string((unsigned char*)pack_struct_keys[0],  (unsigned char*)tmp_pack._ID, &client->protocol);
   protocol_add_as_int   ((unsigned char*)pack_struct_keys[1],  tmp_pack.GPStime,             &client->protocol);
@@ -404,7 +404,7 @@ int cmd_streamer_make(custom_remote_client_t *client, int counter)
   protocol_add_as_float ((unsigned char*)pack_struct_keys[16], tmp_pack.fl_par2,             &client->protocol);
   protocol_add_as_float ((unsigned char*)pack_struct_keys[17], tmp_pack.ExtVoltage,          &client->protocol);
   protocol_add_as_char  ((unsigned char*)pack_struct_keys[18], tmp_pack.USBConnected,        &client->protocol);
-  protocol_add_as_char  ((unsigned char*)pack_struct_keys[19], tmp_pack._xor,                &client->protocol);
+//  protocol_add_as_char  ((unsigned char*)pack_struct_keys[19], tmp_pack._xor,                &client->protocol);
 
   protocol_end(&client->protocol);
 
@@ -423,7 +423,7 @@ int cmd_streamer_make_random(custom_remote_client_t *client)
 
   for(pack_size_t i = 0; i < TEST_PACK_COUNT; i++)
   {
-    protocol_begin(&client->protocol);
+    protocol_begin(&client->protocol, PACK_FLAG_DATA);
 
     protocol_add_as_string((unsigned char*)"NAM", (unsigned char*)client->custom_worker.session_id, &client->protocol);
 
