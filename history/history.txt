@@ -14,3 +14,11 @@ stream step
 -all
 --cliet
 --server
+--webserver
+--wsserver
+--webserver stop
+--webserver off
+--help
+--version
+eixt
+--client 

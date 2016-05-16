@@ -45,9 +45,9 @@
 //==============================================================================
 #ifdef SAFE_MODE
   #define SOCK_WORKERS_COUNT     4
-  #define SOCK_BUFFER_SIZE       (1024 * 100 )
+  #define SOCK_BUFFER_SIZE       (1024 * 512 )
   #define SOCK_WEB_REQUEST_SIZE  (1024 * 1   )
-  #define SOCK_WEB_RESPONSE_SIZE (1024 * 100 )
+  #define SOCK_WEB_RESPONSE_SIZE (1024 * 512 )
   #define SOCK_WS_BUFFER_SIZE    (1024 * 1   )
 #else
   #define SOCK_WORKERS_COUNT     256

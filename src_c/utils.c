@@ -467,10 +467,10 @@ void print_defines_info()
 {
   char tmp[1024];
 
-  SAFE_MODE
-  DEBUG_MODE
-  PI_DEVICE
-  DEMS_DEVICE
+  //SAFE_MODE
+  //DEBUG_MODE
+  //PI_DEVICE
+  //DEMS_DEVICE
 
   sprintf(
     tmp,
