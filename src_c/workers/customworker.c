@@ -306,7 +306,9 @@ int custom_client_work(custom_client_t *client)
     else
     {
       if(client->on_connect != 0)
-        client->on_connect((void*)client);
+        if(client->on_connect((void*)client) >= ERROR_NORMAL)
+          log_add_fmt(ERROR_NORMAL, "custom_client_work,\nmessage: %s",
+                      last_error()->message);
     }
 
 //    sched_yield();

@@ -147,7 +147,10 @@ int ws_server_start(ws_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
+  int res = pthread_create(&server->custom_server.work_thread, &tmp_attr, ws_server_worker, (void*)server);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "ws_server_start, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }
@@ -282,8 +285,15 @@ int on_ws_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  pthread_create(&tmp_client->recv_thread, &tmp_attr, ws_recv_worker, (void*)tmp_client);
-  pthread_create(&tmp_client->send_thread, &tmp_attr, ws_send_worker, (void*)tmp_client);
+  int res = pthread_create(&tmp_client->recv_thread, &tmp_attr, ws_recv_worker, (void*)tmp_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_ws_accept, pthread_create result(%d)",
+                               res);
+
+  res = pthread_create(&tmp_client->send_thread, &tmp_attr, ws_send_worker, (void*)tmp_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_ws_accept, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }

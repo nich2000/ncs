@@ -1,8 +1,14 @@
 --all
+--cleint on 5700 127.0.0.1 3
 --client
 --client
+--client off
 --client on 5700 127.0.0.1 10
+--client on 5700 127.0.0.1 100
+--client on 5700 127.0.0.1 150
 --client on 5700 127.0.0.1 2
+--client on 5700 127.0.0.1 3
+--client on 5700 127.0.0.1 50
 --help
 --server
 --version
@@ -13,7 +19,9 @@ exit
 reconfig
 stream off
 stream on
+stream on 10
 stream on 100
 stream on 250
+stream on 50
 stream on 500
 stream step

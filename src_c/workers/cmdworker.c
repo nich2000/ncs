@@ -111,9 +111,15 @@ int cmd_client_count()
   return _cmd_client_count;
 }
 //==============================================================================
+// TODO: Пока не понял как с этим работать, как получить i элемент
 cmd_clients_t *cmd_clients()
 {
   return &_cmd_clients;
+}
+//==============================================================================
+cmd_client_t *cmd_client_by_index(int index)
+{
+  return &_cmd_clients[index];
 }
 //==============================================================================
 int names_load()
@@ -180,7 +186,9 @@ int cmd_server(sock_state_t state, sock_port_t port)
     }
     case STATE_START:
     {
-      cmd_server_start(&_cmd_server, port);
+      if(cmd_server_start(&_cmd_server, port) >= ERROR_NORMAL)
+        log_add_fmt(LOG_ERROR, "cmd_server,\nmessage: %s",
+                    last_error()->message);
       break;
     }
     case STATE_STOP:
@@ -236,7 +244,9 @@ int cmd_client(sock_state_t state, sock_port_t port, sock_host_t host, int count
       }
       case STATE_START:
       {
-        cmd_client_start(&_cmd_clients[i], port, host);
+        if(cmd_client_start(&_cmd_clients[i], port, host) >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "cmd_client,\nmessage: %s",
+                      last_error()->message);
         break;
       }
       case STATE_STOP:
@@ -306,7 +316,10 @@ int cmd_server_start(cmd_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
+  int res = pthread_create(&server->custom_server.work_thread, &tmp_attr, cmd_server_worker, (void*)server);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_server_start, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }
@@ -413,8 +426,15 @@ int on_cmd_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_JOINABLE);
 
-  pthread_create(&tmp_client->recv_thread, &tmp_attr, custom_recv_worker, (void*)tmp_client);
-  pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker,    (void*)tmp_client);
+  int res = pthread_create(&tmp_client->recv_thread, &tmp_attr, custom_recv_worker, (void*)tmp_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_cmd_accept, pthread_create result(%d)",
+                               res);
+
+  res = pthread_create(&tmp_client->send_thread, &tmp_attr, cmd_send_worker,    (void*)tmp_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_cmd_accept, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }
@@ -477,7 +497,10 @@ int cmd_client_start(cmd_client_t *client, sock_port_t port, sock_host_t host)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
+  int res = pthread_create(&client->custom_client.work_thread, &tmp_attr, cmd_client_worker, (void*)client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_client_start, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }
@@ -572,15 +595,21 @@ int on_cmd_connect(void *sender)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  pthread_create(&tmp_client->custom_remote_client.recv_thread,
-                 &tmp_attr,
-                 custom_recv_worker,
-                 (void*)&tmp_client->custom_remote_client);
+  int res = pthread_create(&tmp_client->custom_remote_client.recv_thread,
+                           &tmp_attr,
+                           custom_recv_worker,
+                           (void*)&tmp_client->custom_remote_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_cmd_connect, pthread_create result(%d)",
+                               res);
 
-  pthread_create(&tmp_client->custom_remote_client.send_thread,
-                 &tmp_attr,
-                 cmd_send_worker,
-                 (void*)&tmp_client->custom_remote_client);
+  res = pthread_create(&tmp_client->custom_remote_client.send_thread,
+                       &tmp_attr,
+                       cmd_send_worker,
+                       (void*)&tmp_client->custom_remote_client);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_cmd_connect, pthread_create result(%d)",
+                               res);
 
   int status_send;
   pthread_join(tmp_client->custom_remote_client.recv_thread, (void**)&status_send);

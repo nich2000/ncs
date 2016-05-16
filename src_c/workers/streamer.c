@@ -44,7 +44,7 @@ static session_t       _session;
 static coords_t        _coords;
 static BOOL            _cmd_streamer_is_load = FALSE;
 //==============================================================================
-BOOL session_stream_enable = DEFAULT_SESSION_STREAM_ENABLE;
+BOOL session_stream_enable   = DEFAULT_SESSION_STREAM_ENABLE;
 char session_stream_file[64] = DEFAULT_SESSION_STREAM_NAME;
 //==============================================================================
 extern char *pack_struct_keys[];
@@ -193,18 +193,22 @@ int cmd_streamer(sock_state_t state, int interval)
 
   for(int i = 0; i < _streamer_count; i++)
   {
+    cmd_client_t *cmd_client = cmd_client_by_index(i);
+
     switch(state)
     {
       case STATE_NONE:
         break;
       case STATE_STEP:
       {
-        cmd_streamer_step(&cmd_clients()[i]->custom_client.custom_remote_client, 0, 1);
+        cmd_streamer_step(&cmd_client->custom_client.custom_remote_client, 0, 1);
         break;
       }
       case STATE_START:
       {
-        cmd_streamer_start(&_streamer[i], &cmd_clients()[i]->custom_client.custom_remote_client);
+        if(cmd_streamer_start(&_streamer[i], &cmd_client->custom_client.custom_remote_client) >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "cmd_streamer,\nmessage: %s",
+                      last_error()->message);
         break;
       }
       case STATE_STOP:
@@ -237,6 +241,12 @@ int cmd_streamer_status()
 //==============================================================================
 int cmd_streamer_init(streamer_worker *worker, custom_remote_client_t *client)
 {
+  if(worker == NULL)
+    return make_last_error(ERROR_NORMAL, errno, "cmd_streamer_init, worker is not available");
+
+  if(client == NULL)
+    return make_last_error(ERROR_NORMAL, errno, "cmd_streamer_init, client is not available");
+
   worker->id          =  client->custom_worker.id;
   worker->is_test     =  0;
   worker->is_work     =  FALSE;
@@ -250,15 +260,18 @@ int cmd_streamer_init(streamer_worker *worker, custom_remote_client_t *client)
 //==============================================================================
 int cmd_streamer_start(streamer_worker *worker, custom_remote_client_t *client)
 {
+  cmd_streamer_init(worker, client);
+
   log_add_fmt(LOG_INFO, "[SRTEAMER] cmd_streamer_start, worker id: %d",
               worker->id);
-
-  cmd_streamer_init(worker, client);
 
   worker->is_work  = TRUE;
   worker->is_pause = FALSE;
 
-  pthread_create(&worker->work_thread, NULL, cmd_streamer_worker_func, (void*)worker);
+  int res = pthread_create(&worker->work_thread, NULL, cmd_streamer_worker_func, (void*)worker);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "cmd_streamer_start, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }

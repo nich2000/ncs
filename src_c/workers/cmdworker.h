@@ -43,6 +43,7 @@ typedef cmd_client_t cmd_clients_t[SOCK_WORKERS_COUNT];
 //==============================================================================
 int cmd_client_count();
 cmd_clients_t *cmd_clients();
+cmd_client_t *cmd_client_by_index(int index);
 //==============================================================================
 int cmd_server(sock_state_t state, sock_port_t port);
 int cmd_server_status();

@@ -69,7 +69,9 @@ int web_server(sock_state_t state, sock_port_t port)
     }
     case STATE_START:
     {
-      web_server_start(&_web_server, port);
+      if(web_server_start(&_web_server, port) >= ERROR_NORMAL)
+        log_add_fmt(LOG_ERROR, "web_server,\nmessage: %s",
+                    last_error()->message);
       break;
     }
     case STATE_STOP:
@@ -120,7 +122,12 @@ int web_server_start(web_server_t *server, sock_port_t port)
   pthread_attr_init(&tmp_attr);
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
-  return pthread_create(&server->custom_server.work_thread, &tmp_attr, web_server_worker, (void*)server);
+  int res = pthread_create(&server->custom_server.work_thread, &tmp_attr, web_server_worker, (void*)server);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "web_server_start, pthread_create result(%d)",
+                               res);
+
+  return ERROR_NONE;
 }
 //==============================================================================
 int web_server_stop(web_server_t *server)
@@ -171,12 +178,12 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
 {
   custom_server_t *tmp_server = (custom_server_t*)sender;
 
-  log_add_fmt(LOG_DEBUG, "[WEB] web_accept, server id: %d, host: %s",
+  log_add_fmt(LOG_DEBUG, "[WEB] on_web_accept, server id: %d, host: %s",
               tmp_server->custom_worker.id, (char*)host);
 
   SOCKET *s = malloc(sizeof(SOCKET));
   if(memcpy(s, &socket, sizeof(SOCKET)) == NULL)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, memcpy == NULL, server id: %d",
+    return make_last_error_fmt(ERROR_NORMAL, errno, "on_web_accept, memcpy == NULL, server id: %d",
                                tmp_server->custom_worker.id);
 
   pthread_attr_t tmp_attr;
@@ -184,9 +191,10 @@ int on_web_accept(void *sender, SOCKET socket, sock_host_t host)
   pthread_attr_setdetachstate(&tmp_attr, PTHREAD_CREATE_DETACHED);
 
   pthread_t tmp_pthread;
-  if(pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s) != 0)
-    return make_last_error_fmt(ERROR_NORMAL, errno, "web_accept, pthread_create != 0, server id: %d",
-                               tmp_server->custom_worker.id);
+  int res = pthread_create(&tmp_pthread, &tmp_attr, web_handle_connection, (void*)s);
+  if(res != 0)
+    return make_last_error_fmt(ERROR_CRITICAL, errno, "on_web_accept, pthread_create result(%d)",
+                               res);
 
   return ERROR_NONE;
 }
