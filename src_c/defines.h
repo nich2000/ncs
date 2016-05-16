@@ -9,29 +9,25 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 //==============================================================================
-//#define USE_BINARY_PROTOCOL // deprecated
+// minimal configuration(sizes and counts)
+#define SAFE_MODE
+// maximum information about working process
 #define DEBUG_MODE
 
-#if defined(__linux__) || defined(_WIN32)
+#if defined(__linux__)
+//  #define PI_DEVICE
+#elif defined(_WIN32)
 #else
   #define DEMS_DEVICE
 #endif
 
-//#define PI_DEVICE
-
 #ifdef DEMS_DEVICE
   #define PACK_USE_OWN_BUFFER
 #else
-  // Flag block or allow writes to file
+  // flag block or allow writes to file
 //  #define WRITE_STAT
   #define WRITE_SESSION
 //  #define WRITE_REPORT
-
-  // send stream data to ws
-//  #define STREAM_TO_WS // deprecated
-
-  // create random pack on test stream
-//  #define STREAM_RANDOM_PACK
 
   // logs manage
 //  #define USE_EXTRA_LOGS
@@ -43,11 +39,17 @@
   // own queue or not
   #define PACK_USE_OWN_QUEUE
 
-  // debug and test
+  // send with random buffer
 //  #define SOCK_RANDOM_BUFFER
+//  #define SOCK_PART_SIZE 100
 
-//  #define SERVER_MODE
-//  #define CLIENT_MODE
+  // make random pack
+//  #define STREAM_RANDOM_PACK
+
+  // send stream data to ws
+//  #define STREAM_TO_WS // deprecated
 #endif
+
+//#define USE_BINARY_PROTOCOL // deprecated
 //==============================================================================
 #endif //DEFINES_H

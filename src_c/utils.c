@@ -339,7 +339,7 @@ void print_version()
   char tmp[1024];
 
   sprintf(tmp,
-          "NIch CLient Server Project\n"                                \
+          "NIch Client Server Project\n"                                \
           "Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n" \
           "Version: %s\n"                                               \
           "Sock: %s, Pack: %s, Protocol: %s",
@@ -466,6 +466,11 @@ void print_types_info()
 void print_defines_info()
 {
   char tmp[1024];
+
+  SAFE_MODE
+  DEBUG_MODE
+  PI_DEVICE
+  DEMS_DEVICE
 
   sprintf(
     tmp,

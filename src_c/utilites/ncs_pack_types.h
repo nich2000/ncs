@@ -17,14 +17,21 @@
 //==============================================================================
 #define PACK_KEY_SIZE            4
 //==============================================================================
+//TODO: разобраться с размерами
 #ifdef DEMS_DEVICE
-#define PACK_BUFFER_SIZE         256
-#define PACK_VALUE_SIZE          12
-#define PACK_WORDS_COUNT         20
+  #define PACK_BUFFER_SIZE       256
+  #define PACK_VALUE_SIZE        12
+  #define PACK_WORDS_COUNT       20
 #else
-#define PACK_BUFFER_SIZE         1024
-#define PACK_VALUE_SIZE          256
-#define PACK_WORDS_COUNT         2048 //256 //TODO: разобраться с кол-вом слов в пакете
+  #ifdef SAFE_MODE
+    #define PACK_BUFFER_SIZE     1024
+    #define PACK_VALUE_SIZE      32
+    #define PACK_WORDS_COUNT     64
+  #else
+    #define PACK_BUFFER_SIZE     1024
+    #define PACK_VALUE_SIZE      256
+    #define PACK_WORDS_COUNT     2048
+  #endif
 #endif
 //==============================================================================
 #define PACK_WORD_NONE           0
@@ -65,32 +72,32 @@ typedef unsigned char            pack_flag_t;
 //==============================================================================
 typedef struct
 {
-  pack_key_t            key;
-  pack_value_t          value;
-  pack_type_t           type;
-  pack_size_t           size;
+  pack_key_t                     key;
+  pack_value_t                   value;
+  pack_type_t                    type;
+  pack_size_t                    size;
 } pack_word_t;
 //==============================================================================
 typedef pack_word_t pack_words_t[PACK_WORDS_COUNT];
 //==============================================================================
 typedef struct
 {
-  pack_flag_t           flag;
-  pack_number_t         number;
-  pack_size_t           words_count;
-  pack_words_t          words;
+  pack_flag_t                    flag;
+  pack_number_t                  number;
+  pack_size_t                    words_count;
+  pack_words_t                   words;
 } pack_packet_t;
 //==============================================================================
 typedef union
 {
-  int  i;
-  char buff[sizeof(int)];
+  int                            i;
+  char                           buff[sizeof(int)];
 } int_union;
 //==============================================================================
 typedef union
 {
-  float f;
-  char  buff[sizeof(float)];
+  float                          f;
+  char                           buff[sizeof(float)];
 } float_union;
 //==============================================================================
 #endif //NCS_PACK_TYPES_H
