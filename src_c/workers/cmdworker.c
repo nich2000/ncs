@@ -643,7 +643,7 @@ void *cmd_send_worker(void *arg)
 
       if(binary_protocol)
       {
-        if(pack_to_buffer_bin(tmp_pack, tmp_buffer, &tmp_size) > ERROR_WARNING)
+        if(pack_to_buffer_bin(tmp_pack, tmp_buffer, &tmp_size) >= ERROR_NORMAL)
         {
           log_add_fmt(LOG_ERROR, "cmd_send_worker, protocol id: %d, worker id: %d, worker name: %s\n" \
                                  "message: %s",
@@ -659,7 +659,7 @@ void *cmd_send_worker(void *arg)
       }
       else
       {
-        if(pack_to_buffer_txt(tmp_pack, tmp_buffer, &tmp_size) > ERROR_WARNING)
+        if(pack_to_buffer_txt(tmp_pack, tmp_buffer, &tmp_size) >= ERROR_NORMAL)
         {
           log_add_fmt(LOG_ERROR, "cmd_send_worker, protocol id: %d, worker id: %d, worker name: %s\n" \
                                  "message: %s",
@@ -667,8 +667,6 @@ void *cmd_send_worker(void *arg)
                       last_error()->message);
           goto next_step;
         }
-
-        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
 
         validate_result = protocol_txt_buffer_validate(tmp_buffer,
                                                        tmp_size,
@@ -760,7 +758,7 @@ int on_cmd_recv(void *sender, char *buffer, int size)
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
 
-  log_add_fmt(LOG_INFO, "on_cmd_recv: %s", buffer);
+//  log_add_fmt(LOG_INFO, "on_cmd_recv: %s", buffer);
 
   int res;
 //  #ifdef USE_BINARY_PROTOCOL
@@ -771,7 +769,7 @@ int on_cmd_recv(void *sender, char *buffer, int size)
     res = protocol_txt_buffer_validate((unsigned char*)buffer, size, PACK_VALIDATE_ADD, tmp_protocol, (void*)tmp_client);
 //  #endif
 
-  if(res >= ERROR_WARNING)
+  if(res >= ERROR_NORMAL)
     log_add_fmt(LOG_ERROR, "on_cmd_recv,\nmessage: %s",
                 last_error()->message);
 

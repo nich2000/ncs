@@ -1,24 +1,19 @@
 --all
-exit
---client on 5700 127.0.0.1 10
-stream on 100
-stream off
 --client
-reconfig
-stream on 500
-stream on 250stream on 250
+--client
+--client on 5700 127.0.0.1 10
 --client on 5700 127.0.0.1 2
-stream on 250
-stream on
-stream step
--all
---cliet
---server
---webserver
---wsserver
---webserver stop
---webserver off
 --help
+--server
 --version
-eixt
---client 
+--webserver
+--webserver off
+--wsserver
+exit
+reconfig
+stream off
+stream on
+stream on 100
+stream on 250
+stream on 500
+stream step

@@ -10,7 +10,8 @@
 #define DEFINES_H
 //==============================================================================
 // minimal configuration(sizes and counts)
-#define SAFE_MODE
+//#define SAFE_MODE
+
 // maximum information about working process
 #define DEBUG_MODE
 
