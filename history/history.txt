@@ -13,3 +13,4 @@ stream on
 stream step
 -all
 --cliet
+--server

@@ -517,6 +517,8 @@ int handle_command_str(void *sender, char *command)
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
+      pack_set_flag(&tmp_packet, PACK_FLAG_CMD);
+
       int cnt = 0;
       arg = strtok(NULL, " ");
       while(arg != NULL)
@@ -550,6 +552,8 @@ int handle_command_str(void *sender, char *command)
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
+      pack_set_flag(&tmp_packet, PACK_FLAG_CMD);
+
       int cnt = 0;
       arg = strtok(NULL, " ");
       while(arg != NULL)
@@ -574,6 +578,8 @@ int handle_command_str(void *sender, char *command)
 
       pack_packet_t tmp_packet;
       pack_init(&tmp_packet);
+      pack_set_flag(&tmp_packet, PACK_FLAG_CMD);
+
       int cnt = 0;
       char *arg = strtok(NULL, " ");
       while(arg != NULL)

@@ -38,6 +38,7 @@ pack_size_t pack_words_count     (pack_packet_t *pack);
 //==============================================================================
 pack_flag_t pack_flag            (pack_packet_t *pack);
 void        pack_set_flag        (pack_packet_t *pack, pack_flag_t flag);
+void        pack_unset_flag      (pack_packet_t *pack, pack_flag_t flag);
 BOOL        pack_is_set_flag     (pack_packet_t *pack, pack_flag_t flag);
 //==============================================================================
 int pack_word_as_string          (pack_word_t *word, pack_value_t value);
@@ -68,6 +69,7 @@ int pack_to_bytes                (pack_packet_t *pack, pack_buffer_t buffer, pac
 //==============================================================================
 int pack_keys_to_csv             (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
 int pack_values_to_csv           (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
+int pack_cmd_to_csv              (pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer);
 //==============================================================================
 int pack_add_cmd                 (pack_packet_t *pack, const pack_string_t command);
 int pack_add_param               (pack_packet_t *pack, const pack_string_t param);

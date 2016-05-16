@@ -17,6 +17,8 @@
 #include "ncs_log.h"
 #include "ncs_pack_utils.h"
 #include "ncs_error.h"
+
+#include "exec.h"
 //==============================================================================
 static int _protocol_id = 0;
 //==============================================================================
@@ -143,6 +145,7 @@ int protocol_init(pack_protocol_t *protocol)
   pack_out_packets_list_init(&protocol->out_packets_list);
 
   protocol->on_error            = NULL;
+  protocol->on_new_cmd          = NULL;
   protocol->on_new_in_data      = NULL;
   protocol->on_new_out_data     = NULL;
 
@@ -290,6 +293,14 @@ int protocol_begin(pack_protocol_t *protocol, pack_flag_t flag)
   pack_packet_t *tmp_pack = _protocol_current_pack(PACK_OUT, protocol);
 
   pack_init(tmp_pack);
+  pack_set_flag(tmp_pack, flag);
+
+//  if((pack_is_set_flag(tmp_pack, PACK_FLAG_DATA)) && (!pack_is_set_flag(tmp_pack, PACK_FLAG_CMD)))
+//    log_add(LOG_INFO, "protocol_begin, data pack");
+//  else if((!pack_is_set_flag(tmp_pack, PACK_FLAG_DATA)) && (pack_is_set_flag(tmp_pack, PACK_FLAG_CMD)))
+//    log_add(LOG_INFO, "protocol_begin, cmd pack");
+//  else
+//    log_add(LOG_INFO, "protocol_begin, unknown pack");
 
 //  log_add_fmt(LOG_DEBUG, "protocol_begin, protocol id: %d, packet number: %d, packet index: %d",
 //              protocol->id, tmp_pack->number, _protocol_current_index(PACK_OUT, protocol));
@@ -669,11 +680,14 @@ int protocol_bin_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     {
       errno = 10;
       return make_last_error_fmt(ERROR_NORMAL, errno, "protocol_bin_buffer_validate, errno: %d,\n" \
-                                                      "message: current pack is null",
+                                                      "message: current pack is not available",
                                  errno);
     }
 
+    pack_flag_t f = tmp_pack->flag;
     pack_init(tmp_pack);
+    pack_set_flag(tmp_pack, f);
+
     tmp_pack->number = tmp_index;
 
     if(pack_buffer_to_words(tmp_value_buffer, tmp_size, tmp_pack->words, &tmp_pack->words_count) == ERROR_NONE)
@@ -724,9 +738,21 @@ char *next_token(char *token, char *dst, int *cnt)
   {
     (*cnt)++;
     strcpy(dst, token);
-    return strtok(NULL, "|");
+    return strtok(NULL, "&");
   }
   return NULL;
+}
+//==============================================================================
+BOOL buffer_is_cmd(char *buffer)
+{
+  BOOL result = TRUE;
+  for(int i = 0; i < PACK_KEY_SIZE - 1; i++)
+    if(buffer[i] != PACK_CMD_KEY[i])
+    {
+      result = FALSE;
+      break;
+    }
+  return result;
 }
 //==============================================================================
 int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
@@ -780,18 +806,22 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
     if(validate == PACK_VALIDATE_ONLY)
       break;
 
-    int cnt = 0;
-    pack_struct_s_t tmp_txt_pack;
-
-    char *token = strtok((char*)&buffer[1], "|");
-
-    if(strcmp(token, PACK_CMD_KEY) == 0)
+    if(buffer_is_cmd(tmp_buffer))
     {
 //      if(protocol->on_new_cmd != 0)
 //        protocol->on_new_cmd((void*)sender, (void*)tmp_pack);
+
+      char tmp_command[256];
+      memset(tmp_command, '\0', 256);
+      strncpy(tmp_command, tmp_buffer, tmp_size-2);
+      handle_command_ajax(sender, tmp_command);
     }
     else
     {
+      int cnt = 0;
+      pack_struct_s_t tmp_txt_pack;
+
+      char *token = strtok((char*)&buffer[1], "&");
       token = next_token(token, tmp_txt_pack._ID,             &cnt);
       token = next_token(token, tmp_txt_pack.sGPStime,        &cnt);
       token = next_token(token, tmp_txt_pack.sGPStime_s,      &cnt);
@@ -828,9 +858,11 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
 
       pack_packet_t *tmp_pack = _protocol_current_pack(PACK_IN, protocol);
       if(tmp_pack == NULL)
-        return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, current pack not available");
+        return make_last_error(ERROR_NORMAL, errno, "protocol_txt_buffer_validate, current pack is not available");
 
+      pack_flag_t f = tmp_pack->flag;
       pack_init(tmp_pack);
+      pack_set_flag(tmp_pack, f);
 
       tmp_pack->number = atoi(tmp_txt_pack.sTickCount);
 

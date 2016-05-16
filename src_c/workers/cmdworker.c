@@ -668,7 +668,7 @@ void *cmd_send_worker(void *arg)
           goto next_step;
         }
 
-//        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
+        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
 
         validate_result = protocol_txt_buffer_validate(tmp_buffer,
                                                        tmp_size,
@@ -679,8 +679,6 @@ void *cmd_send_worker(void *arg)
 
       if(validate_result == ERROR_NONE)
       {
-//        log_add_fmt(LOG_INFO, "cmd_send_worker: %s", tmp_buffer);
-
         if(sock_send(tmp_sock, (char*)tmp_buffer, (int)tmp_size) == ERROR_NONE)
         {
           time_t rawtime;
@@ -761,6 +759,8 @@ int on_cmd_recv(void *sender, char *buffer, int size)
   custom_remote_client_t *tmp_client = (custom_remote_client_t*)sender;
 
   pack_protocol_t *tmp_protocol = &tmp_client->protocol;
+
+  log_add_fmt(LOG_INFO, "on_cmd_recv: %s", buffer);
 
   int res;
 //  #ifdef USE_BINARY_PROTOCOL
@@ -951,9 +951,11 @@ int on_client_cmd_state (void *sender, sock_state_t state)
 int cmd_remote_client_list(pack_packet_t *pack)
 {
   if(pack == NULL)
-    return make_last_error(ERROR_NORMAL, errno, "cmd_remote_clients_list, pack == NULL");
+    return make_last_error(ERROR_NORMAL, errno, "cmd_remote_clients_list, pack is not availabla");
 
   pack_init(pack);
+  pack_set_flag(pack, PACK_FLAG_CMD);
+
   pack_add_cmd(pack, (unsigned char*)"clients");
 
   if(_cmd_remote_clients_count(&_cmd_server) == 0)
@@ -968,6 +970,7 @@ int cmd_remote_client_list(pack_packet_t *pack)
     {
       pack_packet_t tmp_pack;
       pack_init(&tmp_pack);
+      pack_set_flag(&tmp_pack, pack->flag);
 
       pack_add_as_int   (&tmp_pack, (unsigned char*)"_ID", tmp_custom_worker->id);
       pack_add_as_string(&tmp_pack, (unsigned char*)"NAM", tmp_custom_worker->name);
@@ -990,12 +993,15 @@ int cmd_map(pack_packet_t *pack)
     return make_last_error(ERROR_NORMAL, errno, "cmd_map, pack == NULL");
 
   pack_init(pack);
+  pack_set_flag(pack, PACK_FLAG_CMD);
+
   pack_add_cmd(pack, (unsigned char*)"map");
 
   for(int i = 0; i < map()->count; i++)
   {
     pack_packet_t tmp_pack;
     pack_init(&tmp_pack);
+    pack_set_flag(&tmp_pack, pack->flag);
 
     pack_add_as_string(&tmp_pack, (unsigned char*)"KND", (unsigned char*)map()->items[i].kind);
     pack_add_as_string(&tmp_pack, (unsigned char*)"NUM", (unsigned char*)map()->items[i].number);

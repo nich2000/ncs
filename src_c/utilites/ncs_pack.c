@@ -214,9 +214,7 @@ int pack_init(pack_packet_t *packet)
   pthread_mutex_lock(&mutex_packet_number);
   #endif
 
-  pack_flag_t tmp = PACK_FLAG_DEFAULT;
-  packet->flag = tmp;
-
+  packet->flag        = PACK_FLAG_NONE;
   packet->number      = pack_global_number++;
   packet->words_count = 0;
 
@@ -443,7 +441,8 @@ int pack_assign_pack(pack_packet_t *dst, pack_packet_t *src)
   if(src == NULL)
     return ERROR_NORMAL;
 
-  dst->number = src->number;
+  dst->flag        = src->flag;
+  dst->number      = src->number;
   dst->words_count = src->words_count;
 
   for(int i = 0; i < src->words_count; i++)
@@ -616,7 +615,8 @@ int pack_keys_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t 
     for(pack_size_t j = 0; j < PACK_KEY_SIZE; j++)
       buffer[tmp_pos++] = pack->words[i].key[j];
 
-    buffer[tmp_pos++] = delimeter;
+    if(i < pack->words_count)
+      buffer[tmp_pos++] = delimeter;
   }
 
   buffer[tmp_pos] = '\0';
@@ -646,13 +646,44 @@ int pack_values_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_
 
     if(i < pack->words_count)
       buffer[tmp_pos++] = delimeter;
-
-//    log_add_fmt(LOG_INFO, "pack_values_to_csv: %d %d %s\n", i, tmp_pos, buffer);
   }
 
   buffer[tmp_pos] = '\0';
 
-//  log_add_fmt(LOG_INFO, "pack_values_to_csv: %s", buffer);
+  return ERROR_NONE;
+}
+//==============================================================================
+int pack_cmd_to_csv(pack_packet_t *pack, pack_delim_t delimeter, pack_buffer_t buffer)
+{
+  if(pack == NULL)
+    return ERROR_NORMAL;
+
+  if(pack->words_count > PACK_WORDS_COUNT)
+    return ERROR_NORMAL;
+
+  pack_size_t tmp_pos = 0;
+
+  memset(buffer, '\0', PACK_BUFFER_SIZE);
+
+  for(pack_size_t i = 0; i < pack->words_count; i++)
+  {
+    // not consider \0 simbol
+    for(pack_size_t j = 0; j < PACK_KEY_SIZE - 1; j++)
+      buffer[tmp_pos++] = pack->words[i].key[j];
+
+    buffer[tmp_pos++] = '=';
+
+    pack_value_t valueS;
+    pack_word_as_string(&pack->words[i], valueS);
+
+    for(size_t j = 0; j < strlen((char*)valueS); j++)
+      buffer[tmp_pos++] = valueS[j];
+
+    if(i < pack->words_count)
+      buffer[tmp_pos++] = delimeter;
+  }
+
+  buffer[tmp_pos] = '\0';
 
   return ERROR_NONE;
 }
@@ -713,7 +744,15 @@ int pack_to_buffer_txt(pack_packet_t *pack, pack_buffer_t buffer, pack_size_t *s
 
   buffer[0] = '<';
 
-  pack_values_to_csv(pack, '|', &buffer[1]);
+  if((pack_is_set_flag(pack, PACK_FLAG_DATA)) && (!pack_is_set_flag(pack, PACK_FLAG_CMD)))
+    pack_values_to_csv(pack, '&', &buffer[1]);
+
+  else if((!pack_is_set_flag(pack, PACK_FLAG_DATA)) && (pack_is_set_flag(pack, PACK_FLAG_CMD)))
+    pack_cmd_to_csv(pack, '&', &buffer[1]);
+
+  else
+    return make_last_error_fmt(ERROR_NORMAL, errno, "pack_to_buffer_txt, incorrect flag",
+                               pack->flag);
 
   int tmp_size = strlen((char*)&buffer[1]);
 
@@ -748,10 +787,20 @@ void pack_set_flag(pack_packet_t *pack, pack_flag_t flag)
   pack->flag |= flag;
 }
 //==============================================================================
+void pack_unset_flag(pack_packet_t *pack, pack_flag_t flag)
+{
+  pack->flag |= flag;
+}
+//==============================================================================
 BOOL pack_is_set_flag(pack_packet_t *pack, pack_flag_t flag)
 {
-  // TODO: is set flag
-  return pack->flag & flag;
+  pack_flag_t f = pack->flag;
+  f &= flag;
+
+  if(f == 0)
+    return FALSE;
+  else
+    return TRUE;
 }
 //==============================================================================
 pack_size_t _pack_words_size(pack_packet_t *pack)
@@ -953,6 +1002,7 @@ int pack_word_to_buffer(pack_word_t *word, pack_buffer_t buffer, pack_size_t *st
 int pack_buffer_to_pack(pack_buffer_t buffer, pack_size_t size, pack_packet_t *pack)
 {
   pack_init(pack);
+  pack_set_flag(pack, pack->flag);
 
   // TODO: maybe govnocode
   int init_index = PACK_VERSION_SIZE + PACK_SIZE_SIZE;

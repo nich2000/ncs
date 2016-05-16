@@ -40,10 +40,8 @@
 #define PACK_FLAG_NONE           0x00
 #define PACK_FLAG_BIN            0x01
 #define PACK_FLAG_TXT            0x02
-#define PACK_FLAG_CMD            0x04
-#define PACK_FLAG_DATA           0x08
-//==============================================================================
-#define PACK_FLAG_DEFAULT        (PACK_FLAG_BIN | PACK_FLAG_CMD)
+#define PACK_FLAG_CMD            0x03
+#define PACK_FLAG_DATA           0x04
 //==============================================================================
 typedef unsigned char           *pack_string_t;
 typedef unsigned char           *pack_bytes_t;

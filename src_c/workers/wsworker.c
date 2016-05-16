@@ -66,9 +66,9 @@ int on_ws_error     (void *sender, ncs_error_t *error);
 int on_ws_recv      (void *sender, char *buffer, int size);
 int on_ws_send      (void *sender);
 //==============================================================================
-int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size);
+int packet_to_json_str(pack_packet_t *pack, char *buffer, int *size);
 //==============================================================================
-int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size);
+int json_str_to_packet(pack_packet_t *pack, char *buffer, int *size);
 //==============================================================================
 int ws_hand_shake(char *request, char *response, int *size);
 //==============================================================================
@@ -637,16 +637,17 @@ json_t *pack_to_json(pack_packet_t *packet)
   return tmp_json_words;
 }
 //==============================================================================
-int packet_to_json_str(pack_packet_t *packet, char *buffer, int *size)
+int packet_to_json_str(pack_packet_t *pack, char *buffer, int *size)
 {
-  json_t *tmp_json = pack_to_json(packet);
+  json_t *tmp_json = pack_to_json(pack);
 
   return json_to_buffer(tmp_json, (unsigned char*)buffer, size);
 }
 //==============================================================================
-int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
+int json_str_to_packet(pack_packet_t *pack, char *buffer, int *size)
 {
-  pack_init(packet);
+  pack_init(pack);
+  pack_set_flag(pack, PACK_FLAG_CMD);
 
   json_error_t tmp_error;
   json_t *tmp_json = json_loads(buffer, JSON_DECODE_ANY, &tmp_error);
@@ -668,11 +669,11 @@ int json_str_to_packet(pack_packet_t *packet, char *buffer, int *size)
           if(line == 0)
           {
             line++;
-            pack_add_cmd(packet, (unsigned char*)json_string_value(tmp_value));
+            pack_add_cmd(pack, (unsigned char*)json_string_value(tmp_value));
           }
           else
           {
-            pack_add_param(packet, (unsigned char*)json_string_value(tmp_value));
+            pack_add_param(pack, (unsigned char*)json_string_value(tmp_value));
           }
         }
       }
@@ -785,6 +786,7 @@ int ws_server_send_cmd(int session_id, int argc, ...)
 
         pack_packet_t tmp_pack;
         pack_init(&tmp_pack);
+        pack_set_flag(&tmp_pack, PACK_FLAG_CMD);
 
         va_list tmp_params;
         va_start(tmp_params, argc);
