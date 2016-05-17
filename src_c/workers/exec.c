@@ -762,8 +762,8 @@ int handle_command_str(void *sender, char *command)
     {
       log_add_fmt(LOG_EXTRA, "token: %s", CMD_RECONFIG);
 
-      if(read_config() >= ERROR_WARNING)
-        log_add_fmt(LOG_INFO, "handle_command_str,\nmessage: %s",
+      if(read_config() >= ERROR_NORMAL)
+        log_add_fmt(LOG_ERROR, "handle_command_str,\nmessage: %s",
                     last_error()->message);
       print_config();
 
@@ -789,9 +789,27 @@ int handle_command_str(void *sender, char *command)
       log_add_fmt(LOG_INFO, "token: %s", CMD_PY);
 
       #ifdef USE_PYTHON
-#define CMP_PY_SIMPLE           "simple"
-#define CMP_PY_FUNC             "func"
-#define CMP_PY_MAIN             "main"
+      char *param = strtok(NULL, " ");
+      log_add_fmt(LOG_INFO, "handle_command_str, %s %s", token, param);
+
+      if(strcmp(param, CMP_PY_SIMPLE) == 0)
+      {
+        if(py_simple() >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "handle_command_str,\nmessage: %s",
+                      last_error()->message);
+      }
+      else if(strcmp(param, CMP_PY_FUNC) == 0)
+      {
+        if(py_func() >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "handle_command_str,\nmessage: %s",
+                      last_error()->message);
+      }
+      else if(strcmp(param, CMP_PY_MAIN) == 0)
+      {
+        if(py_main() >= ERROR_NORMAL)
+          log_add_fmt(LOG_ERROR, "handle_command_str,\nmessage: %s",
+                      last_error()->message);
+      }
       #endif
 
       result = EXEC_DONE;

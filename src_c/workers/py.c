@@ -19,7 +19,17 @@ int py_init()
   return ERROR_NONE;
 }
 //==============================================================================
-int py_simple()
+int py_simple(...)
+{
+  #ifdef USE_PYTHON
+  // PyRun_SimpleString(code);
+  // PyRun_SimpleFile(file);
+  #endif
+
+  return ERROR_NONE;
+}
+//==============================================================================
+int py_func(...)
 {
   #ifdef USE_PYTHON
   #endif
@@ -27,17 +37,10 @@ int py_simple()
   return ERROR_NONE;
 }
 //==============================================================================
-int py_func()
+int py_main(...)
 {
   #ifdef USE_PYTHON
-  #endif
-
-  return ERROR_NONE;
-}
-//==============================================================================
-int py_main()
-{
-  #ifdef USE_PYTHON
+  Py_Main(0, "");
   #endif
 
   return ERROR_NONE;

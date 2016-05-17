@@ -9,7 +9,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 //==============================================================================
-#define APPLICATION_VERSION           "1.0.1.140\0"
+#define APPLICATION_VERSION           "1.0.1.150\0"
 #define APPLICATION_VERSION_SIZE      15
 #define SOCK_VERSION                  "SOCK001\0"
 #define SOCK_VERSION_SIZE             8

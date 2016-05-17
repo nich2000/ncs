@@ -885,7 +885,7 @@ int protocol_txt_buffer_validate(pack_buffer_t buffer, pack_size_t size,
       pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[16], (unsigned char*)tmp_txt_pack.sfl_par2);        // 17
       pack_add_as_string(tmp_pack, (unsigned char*)pack_struct_keys[17], (unsigned char*)tmp_txt_pack.sExtVoltage);     // 18
       pack_add_as_char  (tmp_pack, (unsigned char*)pack_struct_keys[18],                 tmp_txt_pack.sUSBConnected[0]);// 19
-      pack_add_as_char  (tmp_pack, (unsigned char*)pack_struct_keys[19],                 tmp_txt_pack.sxor[0]);         // 20
+//      pack_add_as_char  (tmp_pack, (unsigned char*)pack_struct_keys[19],                 tmp_txt_pack.sxor[0]);         // 20
 
       if(protocol->on_new_in_data != 0)
         protocol->on_new_in_data((void*)sender, (void*)tmp_pack);
