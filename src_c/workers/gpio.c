@@ -9,16 +9,15 @@
 #include <string.h>
 
 #include "gpio.h"
-
-#include "bcm2835.h"
-
 #include "ncs_error.h"
 #include "ncs_log.h"
 //==============================================================================
+#ifdef PI_DEVICE
 #define PIN_SPEED_L  RPI_GPIO_P1_21
 #define PIN_DIR_L    RPI_GPIO_P1_22
 #define PIN_SPEED_R  RPI_GPIO_P1_23
 #define PIN_DIR_R    RPI_GPIO_P1_24
+#endif
 //==============================================================================
 #define DIR_STOP     "stop"
 #define DIR_FORWARD  "forward"
@@ -26,10 +25,12 @@
 #define DIR_LEFT     "left"
 #define DIR_RIGHT    "right"
 //==============================================================================
+#ifdef PI_DEVICE
 static int _speed_l = 0;
 static int _dir_l   = 0;
 static int _speed_r = 0;
 static int _dir_r   = 0;
+#endif
 //==============================================================================
 int gpio_init()
 {
@@ -50,6 +51,7 @@ int gpio(char *direction)
 {
   log_add_fmt(LOG_INFO, "gpio, direction: %s", direction);
 
+  #ifdef PI_DEVICE
   if(strcmp(direction, DIR_STOP) == 0)
   {
     _speed_l = LOW;
@@ -92,7 +94,6 @@ int gpio(char *direction)
               PIN_SPEED_R, _speed_r,
               PIN_DIR_R,   _dir_r);
 
-  #ifdef PI_DEVICE
   bcm2835_gpio_write(PIN_SPEED_L, _speed_l);
   bcm2835_gpio_write(PIN_DIR_L,   _dir_l);
   bcm2835_gpio_write(PIN_SPEED_R, _speed_r);

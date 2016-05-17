@@ -12,9 +12,7 @@
 cmake_minimum_required(VERSION 3.1)
 #-------------------------------------------------------------------------------
 #set(PI_DEVICE 1)
-#-------------------------------------------------------------------------------
-# included here defines.h
-#add_definitions(-DPI_DEVICE)
+set(USE_PYTHON 1)
 #-------------------------------------------------------------------------------
 include_directories(../libs/bcm2835/src/)
 include_directories(../libs/iniparser/src)
@@ -41,6 +39,10 @@ project(ncs C)
 add_definitions(-DTURN_ON_STDCALL)
 #-------------------------------------------------------------------------------
 find_package(Threads REQUIRED)
+#-------------------------------------------------------------------------------
+find_package(PythonLibs 2.7 REQUIRED)
+message(${PYTHON_INCLUDE_DIRS})
+message(${PYTHON_LIBRARIES})
 #-------------------------------------------------------------------------------
 set(_JANSSON  ../libs/jansson/src/dump.c
               ../libs/jansson/src/error.c
@@ -169,20 +171,28 @@ set(_SOCKET   defines.h
               workers/exec.c
               workers/map.h
               workers/map.c
+              workers/gpio.c
+              workers/py.c
               utilites/ncs_pack_types.h
               utilites/ncs_pack.h
               utilites/ncs_pack.c)
 #...............................................................................
-IF (PI_DEVICE)
-add_library          (socket STATIC ${_SOCKET} workers/gpio.c)
-ELSE()
 add_library          (socket STATIC ${_SOCKET})
-ENDIF()
+
 set_target_properties(socket PROPERTIES C_STANDARD 99)
+
 target_link_libraries(socket protocol log error utils jansson crypto Threads::Threads)
+
 IF (PI_DEVICE)
+message(PI_DEVICE)
 target_link_libraries(socket bcm2835)
 ENDIF()
+
+IF (USE_PYTHON)
+message(USE_PYTHON)
+target_link_libraries(socket ${PYTHON_LIBRARIES})
+ENDIF()
+
 IF (WIN32)
 target_link_libraries(socket wsock32 ws2_32)
 ENDIF()

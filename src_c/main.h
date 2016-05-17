@@ -21,6 +21,10 @@
 #include "gpio.h"
 #endif
 
+#ifdef USE_PYTHON
+#include "py.h"
+#endif
+
 #include "socket.h"
 #include "ncs_log.h"
 #include "ncs_error.h"

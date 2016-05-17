@@ -17,6 +17,7 @@
 
 #if defined(__linux__)
 //  #define PI_DEVICE
+  #define USE_PYTHON
 #elif defined(_WIN32)
 #else
   #define DEMS_DEVICE

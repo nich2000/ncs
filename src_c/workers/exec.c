@@ -19,12 +19,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "exec.h"
+#ifdef USE_PYTHON
+#include "py.h"
+#endif
 
 #ifdef PI_DEVICE
 #include "gpio.h"
 #endif
 
+#include "exec.h"
 #include "test.h"
 #include "utils.h"
 #include "socket.h"
@@ -217,7 +220,7 @@ const char* history_next()
 }
 //==============================================================================
 int read_config()
-{ 
+{
   char full_file_name[256] = "../config/config.ini";
   dictionary *config = iniparser_load(full_file_name);
   if(config == NULL)
@@ -775,6 +778,20 @@ int handle_command_str(void *sender, char *command)
       #ifdef PI_DEVICE
       char *direction = strtok(NULL, " ");
       gpio(direction);
+      #endif
+
+      result = EXEC_DONE;
+      goto exit;
+    }
+    //--------------------------------------------------------------------------
+    else if(strcmp(token, CMD_PY) == 0)
+    {
+      log_add_fmt(LOG_INFO, "token: %s", CMD_PY);
+
+      #ifdef USE_PYTHON
+#define CMP_PY_SIMPLE           "simple"
+#define CMP_PY_FUNC             "func"
+#define CMP_PY_MAIN             "main"
       #endif
 
       result = EXEC_DONE;

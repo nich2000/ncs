@@ -64,11 +64,16 @@ int main(int argc, char *argv[])
   log_add(LOG_INFO, "application started");
   log_add(LOG_INFO, "-------------------");
   //---------------------------------------------------------------------------
-  if(sock_init() >= ERROR_WARNING)
+  if(sock_init() >= ERROR_NORMAL)
     goto exit;
   //---------------------------------------------------------------------------
+  #ifdef USE_PYTHON
+  if(py_init() >= ERROR_NORMAL)
+    goto exit;
+  #endif
+  //---------------------------------------------------------------------------
   #ifdef PI_DEVICE
-  if(gpio_init() >= ERROR_WARNING)
+  if(gpio_init() >= ERROR_NORMAL)
     goto exit;
   #endif
   //---------------------------------------------------------------------------
@@ -191,6 +196,11 @@ int main(int argc, char *argv[])
   #ifdef PI_DEVICE
   gpio_close();
   #endif
+  //---------------------------------------------------------------------------
+  #ifdef USE_PYTHON
+  py_final();
+  #endif
+  //---------------------------------------------------------------------------
   log_add_fmt(LOG_INFO, "application finished, result: %s\n", last_error()->message);
   //---------------------------------------------------------------------------
   return 0;

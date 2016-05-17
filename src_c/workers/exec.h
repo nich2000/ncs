@@ -64,6 +64,7 @@
 #define CMD_WS_ACTIVATE         "ws_activate"
 #define CMD_RECONFIG            "reconfig"
 #define CMD_GPIO                "gpio"
+#define CMD_PY                  "py"
 //==============================================================================
 #define CMD_START               "on"
 #define CMD_STOP                "off"
@@ -74,6 +75,10 @@
 #define CMD_FIRST               "first"
 #define CMD_SECOND              "second"
 #define CMD_NEXT                "next"
+//==============================================================================
+#define CMP_PY_SIMPLE           "simple"
+#define CMP_PY_FUNC             "func"
+#define CMP_PY_MAIN             "main"
 //==============================================================================
 #define EXEC_UNKNOWN            -1
 #define EXEC_NONE                0
