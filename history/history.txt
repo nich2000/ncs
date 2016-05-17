@@ -25,3 +25,7 @@ stream on 250
 stream on 50
 stream on 500
 stream step
+py
+py main
+print ds
+print
