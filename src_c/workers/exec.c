@@ -19,14 +19,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef USE_PYTHON
-#include "py.h"
-#endif
-
-#ifdef PI_DEVICE
-#include "gpio.h"
-#endif
-
 #include "exec.h"
 #include "test.h"
 #include "utils.h"

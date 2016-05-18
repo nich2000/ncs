@@ -29,17 +29,21 @@ int getcode()
   return ch;
 }
 //==============================================================================
+#ifdef USE_PYTHON
 void exec_interactive_interpreter(int argc, char** argv)
 {
   Py_Initialize();
   Py_Main(argc, argv);
   Py_Finalize();
 }
+#endif
 //==============================================================================
 int main(int argc, char *argv[])
 {
   //---------------------------------------------------------------------------
-  //exec_interactive_interpreter(argc, argv);
+  #ifdef USE_PYTHON_APP
+  exec_interactive_interpreter(argc, argv);
+  #endif
   //---------------------------------------------------------------------------
   if(argc > 1)
   {

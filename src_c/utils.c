@@ -339,10 +339,12 @@ void print_version()
   char tmp[1024];
 
   sprintf(tmp,
+          "---------------------------------------------------------\n" \
           "NIch Client Server Project\n"                                \
           "Copyright 2016 NIch(nich2000@mail.ru) All rights reserved\n" \
           "Version: %s\n"                                               \
-          "Sock: %s, Pack: %s, Protocol: %s",
+          "Sock: %s, Pack: %s, Protocol: %s\n"                          \
+          "---------------------------------------------------------",
           APPLICATION_VERSION,
           SOCK_VERSION, PACK_VERSION, PROTOCOL_VERSION);
 

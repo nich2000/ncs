@@ -15,6 +15,14 @@
 #include "iniparser.h"
 #include "dictionary.h"
 
+#ifdef USE_PYTHON
+#include "py.h"
+#endif
+
+#ifdef PI_DEVICE
+#include "gpio.h"
+#endif
+
 #include "ncs_pack.h"
 //==============================================================================
 #define CMD_S_HELP              "-H"
